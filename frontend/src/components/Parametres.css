@@ -1,0 +1,164 @@
+.parametres-page {
+  padding: 2rem;
+  margin-left: 220px;
+  min-height: calc(100vh - 70px);
+  background: #f5f5f5;
+}
+
+.parametres-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.parametres-section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  max-width: 560px;
+}
+
+.parametres-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.parametres-section-desc {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.parametres-delete-account-btn {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.parametres-delete-account-btn:hover {
+  background: #fee2e2;
+}
+
+.parametres-mfa-status {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.parametres-mfa-status--on {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.parametres-mfa-enable-btn {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  background: #fff5f2;
+  color: #ff6b35;
+  border: 1px solid #ff6b35;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.parametres-mfa-enable-btn:hover {
+  background: #ffebe6;
+}
+
+.parametres-mfa-setup {
+  margin-top: 1rem;
+}
+
+.parametres-mfa-qr-label,
+.parametres-mfa-secret-label {
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.parametres-mfa-qr-wrap {
+  display: inline-block;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.parametres-mfa-secret {
+  display: block;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  background: #f5f5f5;
+  border-radius: 6px;
+  word-break: break-all;
+}
+
+.parametres-mfa-setup label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.parametres-mfa-setup .auth-input-mfa {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.parametres-mfa-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.parametres-mfa-disable label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.parametres-mfa-disable input[type="password"] {
+  width: 100%;
+  max-width: 280px;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.parametres-mfa-disable-btn {
+  margin-top: 0.5rem;
+}
+
+.parametres-mfa-success {
+  font-size: 0.9rem;
+  color: #16a34a;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .parametres-page {
+    margin-left: 0;
+    padding: 1rem;
+  }
+}

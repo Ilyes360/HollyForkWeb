@@ -1,0 +1,467 @@
+.salle-page {
+  padding: 1.5rem 2rem;
+  margin-left: 220px;
+  min-height: calc(100vh - 70px);
+  background: #f5f5f5;
+}
+
+.salle-editor-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  flex-wrap: nowrap;
+}
+
+.salle-editor-side {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 220px;
+}
+
+.salle-toolbar {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.salle-toolbar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem 0 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.salle-toolbar-section:first-child {
+  padding-top: 0;
+}
+
+.salle-toolbar-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.salle-toolbar-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #666;
+  margin-bottom: 0.15rem;
+}
+
+.salle-tool {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.salle-tool:hover {
+  background: #f9f9f9;
+  border-color: #ff6b35;
+  color: #ff6b35;
+}
+
+.salle-tool.active {
+  background: #fff5f2;
+  border-color: #ff6b35;
+  color: #ff6b35;
+  font-weight: 600;
+}
+
+.salle-tool--danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.salle-tool--danger:hover {
+  background: #fef2f2;
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+
+.salle-tool-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.salle-tool-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  display: block;
+}
+
+.salle-tool-chevron {
+  font-size: 0.65rem;
+  opacity: 0.8;
+  margin-left: 0.25rem;
+}
+
+.salle-tool-dropdown {
+  position: relative;
+}
+
+.salle-tool-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  min-width: 100%;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.salle-tool-dropdown-item {
+  width: 100%;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.salle-hint-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.salle-hint {
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.4;
+  max-width: 220px;
+}
+
+.salle-finish-wall-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.salle-finish-wall-btn:hover {
+  background: #e55a2b;
+}
+
+.salle-finish-wall-btn--green {
+  background: #22c55e;
+}
+
+.salle-finish-wall-btn--green:hover {
+  background: #16a34a;
+}
+
+.salle-canvas-wrap {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.salle-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 800 / 600;
+  cursor: crosshair;
+  max-width: 100%;
+}
+
+.salle-canvas--eraser {
+  cursor: pointer;
+}
+
+.salle-canvas--dragging {
+  cursor: grabbing;
+}
+
+.salle-element-draggable {
+  cursor: grab;
+}
+
+.salle-element-draggable:active {
+  cursor: grabbing;
+}
+
+.salle-element-clickable {
+  cursor: pointer;
+}
+
+.salle-element-clickable:hover rect,
+.salle-element-clickable:hover circle,
+.salle-element-clickable:hover polygon {
+  opacity: 0.85;
+}
+
+/* Tables */
+.salle-table-rect {
+  fill: #fff;
+  stroke: #333;
+  stroke-width: 2;
+}
+
+.salle-table-round {
+  fill: #fff;
+  stroke: #333;
+  stroke-width: 2;
+}
+
+.salle-table-number {
+  font-size: 16px;
+  font-weight: 700;
+  fill: #333;
+  pointer-events: none;
+  user-select: none;
+}
+
+.salle-table-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  outline: 2px solid #ff6b35;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.salle-table-input--round {
+  border-radius: 50%;
+}
+
+/* Walls – ligne épaisse grisée */
+.salle-wall {
+  fill: #9ca3af;
+  stroke: #6b7280;
+  stroke-width: 1;
+}
+
+.salle-wall-preview {
+  stroke: #9ca3af;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+/* Verdure – rond et ligne épaisse */
+.salle-greenery-round {
+  fill: #22c55e;
+  stroke: #16a34a;
+  stroke-width: 2;
+}
+
+.salle-greenery-line {
+  fill: #22c55e;
+  stroke: #16a34a;
+  stroke-width: 1;
+}
+
+.salle-greenery-preview {
+  stroke: #22c55e;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.salle-edit-actions {
+  margin-top: 1rem;
+}
+
+.salle-delete-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.salle-delete-btn:hover {
+  background: #fee2e2;
+}
+
+/* Maps panel (save / load / export) */
+.salle-maps-panel {
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.salle-maps-panel-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.salle-current-map-name {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.salle-maps-error {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  margin-bottom: 0.5rem;
+}
+
+.salle-maps-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.salle-maps-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.salle-maps-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.salle-maps-loading,
+.salle-maps-empty {
+  font-size: 0.85rem;
+  color: #666;
+  padding: 0.5rem 0;
+}
+
+.salle-maps-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.salle-maps-item:hover {
+  background: #f0f0f0;
+  border-color: #e0e0e0;
+}
+
+.salle-maps-item.active {
+  background: #fff5f2;
+  border-color: #ff6b35;
+  font-weight: 500;
+}
+
+.salle-maps-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salle-maps-item-delete {
+  flex-shrink: 0;
+  padding: 0.2rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  border-radius: 4px;
+}
+
+.salle-maps-item-delete:hover {
+  opacity: 1;
+  background: #fee2e2;
+}
+
+.salle-save-input {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .salle-page {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .salle-editor-layout {
+    flex-direction: column;
+  }
+
+  .salle-editor-side {
+    min-width: 100%;
+  }
+
+  .salle-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .salle-toolbar-section {
+    flex: 1 1 auto;
+    min-width: 120px;
+    border-bottom: none;
+    border-right: 1px solid #eee;
+    padding-right: 0.75rem;
+    margin-right: 0.5rem;
+  }
+
+  .salle-toolbar-section:last-child {
+    border-right: none;
+    margin-right: 0;
+  }
+
+  .salle-hint {
+    max-width: none;
+  }
+}
