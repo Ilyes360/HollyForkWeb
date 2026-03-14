@@ -154,7 +154,9 @@ Système d’**articles** (modèle **Produit**) regroupés par **catégorie** (m
 
 ### Commandes client, historique et facturation
 
-- `/api/commandes/` — Commandes (historique). **Liste et détail** : chaque commande inclut `lignes` et `facture` (résumé : id, date_facture, montant_total, montant_paye, reste_a_payer, statut_facture). CRUD complet. **Filtres** : `?salle=`, `?date_from=YYYY-MM-DD`, `?date_to=YYYY-MM-DD`, `?statut=` ou `?statut_commande=` (open/paid/cancelled), `?has_facture=true|false`, `?statut_facture=` (paid/unpaid/overdue).
+Les commandes **varient par table** : chaque commande est rattachée à une **table** (champ `table`). Une table peut avoir plusieurs commandes (ex. plusieurs services) ; l’historique et la liste peuvent être filtrés par table.
+
+- `/api/commandes/` — Commandes (historique). **Liste et détail** : chaque commande inclut `lignes`, `table`, et `facture` (résumé : id, date_facture, montant_total, montant_paye, reste_a_payer, statut_facture). CRUD complet. **Filtres** : `?salle=`, **`?table=<id>`** (commandes d’une table donnée), `?date_from=YYYY-MM-DD`, `?date_to=YYYY-MM-DD`, `?statut=` ou `?statut_commande=` (open/paid/cancelled), `?has_facture=true|false`, `?statut_facture=` (paid/unpaid/overdue).
 
 - **GET** `/api/commandes/historique/` — Alias de la liste avec les mêmes filtres (historique des commandes avec factures).
 
@@ -220,7 +222,7 @@ Système d’**articles** (modèle **Produit**) regroupés par **catégorie** (m
 
 - **GET** `/api/categories-produit/avec-produits/` — Catégories avec leurs produits (regroupement par catégorie). Filtrage par salle.
 
-- **GET** `/api/commandes/historique/` — Liste des commandes avec lignes et facture (historique). Filtres : date_from, date_to, statut, has_facture, statut_facture, salle.
+- **GET** `/api/commandes/historique/` — Liste des commandes avec lignes et facture (historique). Filtres : salle, **table**, date_from, date_to, statut, has_facture, statut_facture.
 
 - **GET** `/api/commandes/stats/` — Statistiques sur les commandes (CA, effectifs par statut, factures payées/impayées).
 
@@ -238,7 +240,7 @@ Système d’**articles** (modèle **Produit**) regroupés par **catégorie** (m
 
 ## 7. Comportements métier importants
 
-- **Historique des commandes** : `GET /api/commandes/` et `GET /api/commandes/historique/` renvoient chaque commande avec ses lignes et un résumé de la facture (si elle existe) : id, date_facture, montant_total, montant_paye, reste_a_payer, statut_facture. Les filtres (date, statut, salle, has_facture, statut_facture) s’appliquent sur la base de données.
+- **Historique des commandes** : les commandes **varient par table** (champ `table`). `GET /api/commandes/` et `GET /api/commandes/historique/` renvoient chaque commande avec ses lignes, la table, et un résumé de la facture (si elle existe). Filtres : salle, **table**, date, statut, has_facture, statut_facture.
 
 - **Lignes de commande** : à chaque création/modification/suppression, `Commande.total_commande` est recalculé (somme des `total_ligne`).
 

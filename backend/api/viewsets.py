@@ -714,6 +714,12 @@ class CommandeViewSet(viewsets.ModelViewSet):
         statut_facture = params.get('statut_facture')
         if statut_facture:
             qs = qs.filter(facture__statut_facture=statut_facture)
+        table_id = params.get('table')
+        if table_id:
+            try:
+                qs = qs.filter(table_id=int(table_id))
+            except (ValueError, TypeError):
+                pass
         return qs
 
     def get_serializer_class(self):
