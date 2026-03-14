@@ -6,11 +6,11 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 from django.utils import timezone
-from datetime import timedelta
+from datetime import date, timedelta
 import pyotp
 
-from .models import Reservation, SupplierOrder, TeamShift, RoomMap, UserProfile, TempLoginToken
-from .serializers import RegisterSerializer, LoginSerializer, RoomMapSerializer
+from .models import Reservation, SupplierOrder, TeamShift, RoomMap, UserProfile, TempLoginToken, Employee, PlanningShift, PlanningCapacity
+from .serializers import RegisterSerializer, LoginSerializer, RoomMapSerializer, UserProfileSerializer
 
 
 def _default_kpis():
@@ -68,11 +68,12 @@ def api_root(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    """Register with email and password. Returns token and user email."""
+    """Register with email and password. Persists User (auth_user) and UserProfile (api_userprofile). Returns token and user email."""
     ser = RegisterSerializer(data=request.data)
     if not ser.is_valid():
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
     user = ser.save()
+    # Ensure profile exists in DB (links user to ERD: role, salle, MFA)
     UserProfile.objects.get_or_create(user=user)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({
@@ -84,10 +85,23 @@ def register(request):
 TEMP_LOGIN_EXPIRE_MINUTES = 5
 
 
+def _user_response_from_db(user):
+    """Build auth response from DB user (auth_user + api_userprofile)."""
+    out = {'email': user.email, 'first_name': user.first_name or '', 'last_name': user.last_name or ''}
+    try:
+        profile = user.profile
+        out['role_id'] = profile.role_id
+        out['salle_id'] = profile.salle_id
+    except UserProfile.DoesNotExist:
+        out['role_id'] = None
+        out['salle_id'] = None
+    return out
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
-    """Sign in with email and password. If MFA enabled, returns requires_mfa + temp_token; else token + email."""
+    """Sign in with email and password. All auth is from DB: auth_user (password check), api_userprofile (MFA), authtoken_token / api_templogintoken."""
     ser = LoginSerializer(data=request.data)
     if not ser.is_valid():
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -102,23 +116,24 @@ def login(request):
     profile, _ = UserProfile.objects.get_or_create(user=user)
     if profile.mfa_enabled and profile.totp_secret:
         TempLoginToken.objects.filter(user=user).delete()
-        temp = TempLoginToken.objects.create(user=user)
+        expires_at = timezone.now() + timedelta(minutes=TEMP_LOGIN_EXPIRE_MINUTES)
+        temp = TempLoginToken.objects.create(user=user, expires_at=expires_at)
         return Response({
             'requires_mfa': True,
             'temp_token': temp.token,
             'email': user.email,
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
         }, status=status.HTTP_200_OK)
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({
-        'token': token.key,
-        'email': user.email,
-    }, status=status.HTTP_200_OK)
+    resp = {'token': token.key, **(_user_response_from_db(user))}
+    return Response(resp, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_mfa(request):
-    """Verify TOTP code and return auth token. Body: { temp_token, code }."""
+    """Verify TOTP code and return auth token. Uses DB: api_templogintoken, api_userprofile (totp_secret), authtoken_token."""
     temp_token = request.data.get('temp_token', '').strip()
     code = request.data.get('code', '').strip().replace(' ', '')
     if not temp_token or not code:
@@ -130,7 +145,11 @@ def verify_mfa(request):
         temp = TempLoginToken.objects.get(token=temp_token)
     except TempLoginToken.DoesNotExist:
         return Response({'detail': 'Invalid or expired code. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
-    cutoff = timezone.now() - timedelta(minutes=TEMP_LOGIN_EXPIRE_MINUTES)
+    now = timezone.now()
+    if temp.expires_at and temp.expires_at < now:
+        temp.delete()
+        return Response({'detail': 'Session expired. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+    cutoff = now - timedelta(minutes=TEMP_LOGIN_EXPIRE_MINUTES)
     if temp.created_at < cutoff:
         temp.delete()
         return Response({'detail': 'Session expired. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -141,10 +160,8 @@ def verify_mfa(request):
         return Response({'detail': 'Invalid verification code.'}, status=status.HTTP_401_UNAUTHORIZED)
     temp.delete()
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({
-        'token': token.key,
-        'email': user.email,
-    }, status=status.HTTP_200_OK)
+    resp = {'token': token.key, **(_user_response_from_db(user))}
+    return Response(resp, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -211,7 +228,7 @@ def mfa_status(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout(request):
-    """Invalidate current token (logout)."""
+    """Remove auth token from DB (authtoken_token) so the session is invalidated."""
     try:
         request.user.auth_token.delete()
     except Exception:
@@ -222,8 +239,31 @@ def logout(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
-    """Return current authenticated user email."""
-    return Response({'email': request.user.email}, status=status.HTTP_200_OK)
+    """Return current user from DB (auth_user + api_userprofile: email, name, role_id, salle_id)."""
+    return Response(_user_response_from_db(request.user), status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def profile_update(request):
+    """GET or PATCH current user's profile (role, salle). mfa_enabled is read-only."""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'GET':
+        ser = UserProfileSerializer(profile)
+        data = ser.data
+        data['email'] = request.user.email
+        data['first_name'] = request.user.first_name or ''
+        data['last_name'] = request.user.last_name or ''
+        return Response(data, status=status.HTTP_200_OK)
+    ser = UserProfileSerializer(profile, data=request.data, partial=True)
+    if not ser.is_valid():
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+    ser.save()
+    data = ser.data
+    data['email'] = request.user.email
+    data['first_name'] = request.user.first_name or ''
+    data['last_name'] = request.user.last_name or ''
+    return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -245,11 +285,18 @@ def room_maps_list(request):
         maps = RoomMap.objects.filter(user=request.user)
         ser = RoomMapSerializer(maps, many=True)
         return Response(ser.data, status=status.HTTP_200_OK)
-    # POST
+    # POST: link map to user and optionally to their salle (from profile/DB)
     ser = RoomMapSerializer(data=request.data)
     if not ser.is_valid():
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
-    ser.save(user=request.user)
+    salle = None
+    try:
+        profile = request.user.profile
+        if profile.salle_id:
+            salle = profile.salle
+    except UserProfile.DoesNotExist:
+        pass
+    ser.save(user=request.user, salle=salle)
     return Response(ser.data, status=status.HTTP_201_CREATED)
 
 
@@ -276,6 +323,246 @@ def room_map_detail(request, pk):
     return Response(ser.data, status=status.HTTP_200_OK)
 
 
+def _default_capacity():
+    """Default capacity per day (0=Mon..6=Sun) for Midi and Soir."""
+    return {
+        'midi': {0: 4, 1: 4, 2: 4, 3: 4, 4: 5, 5: 5, 6: 3},
+        'soir': {0: 4, 1: 4, 2: 5, 3: 4, 4: 6, 5: 6, 6: 4},
+    }
+
+
+def _capacity_for_salle(salle_id):
+    """Build capacity dict from PlanningCapacity for salle_id; fallback to _default_capacity() if no rows."""
+    if salle_id is None:
+        return _default_capacity()
+    rows = PlanningCapacity.objects.filter(salle_id=salle_id)
+    if not rows.exists():
+        return _default_capacity()
+    midi = {i: 0 for i in range(7)}
+    soir = {i: 0 for i in range(7)}
+    for r in rows:
+        d = midi if r.type_shift == 'Midi' else soir
+        if 0 <= r.day_of_week <= 6:
+            d[r.day_of_week] = r.required_count
+    return {'midi': midi, 'soir': soir}
+
+
+def _get_salle_id(request):
+    """Salle from query param ?salle= or from request.user.profile.salle_id. None = no filter."""
+    raw = request.query_params.get('salle')
+    if raw is not None and raw != '':
+        try:
+            return int(raw)
+        except (ValueError, TypeError):
+            pass
+    try:
+        profile = request.user.profile
+        if getattr(profile, 'salle_id', None) is not None:
+            return profile.salle_id
+    except Exception:
+        pass
+    return None
+
+
+def _week_bounds_from_date(d):
+    """Return (monday, sunday) for the ISO week containing d."""
+    day_of_week = d.weekday()
+    monday = d - timedelta(days=day_of_week)
+    sunday = monday + timedelta(days=6)
+    return monday, sunday
+
+
+def _compute_alerts(shifts_by_emp_date, employees_qs, capacity):
+    """Build list of staffing alerts: { day, type, required, actual, message }."""
+    day_names = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+    alerts = []
+    for day_index in range(7):
+        for shift_type, key in [('Midi', 'midi'), ('Soir', 'soir')]:
+            required = capacity.get(key, {}).get(day_index, 0)
+            actual = 0
+            for emp in employees_qs:
+                for slot in shifts_by_emp_date.get(emp.id, {}).get(day_index, []):
+                    if slot.get('type') == shift_type:
+                        actual += 1
+                        break
+            if required > 0 and actual < required:
+                missing = required - actual
+                day_name = day_names[day_index] if day_index < len(day_names) else f'Jour {day_index}'
+                alerts.append({
+                    'day': day_index,
+                    'dayName': day_name,
+                    'type': shift_type,
+                    'required': required,
+                    'actual': actual,
+                    'message': f'{day_name} {shift_type.lower()}: {missing} personne(s) manquante(s)',
+                })
+    return alerts
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def planning_week(request):
+    """GET ?date=YYYY-MM-DD&salle=ID. POST body: { weekStart, salle_id?, shifts: [{ employee_id, day, type, start, end }] }. Alerts in GET response."""
+    from datetime import datetime as dt
+    if request.method == 'POST':
+        data = request.data or {}
+        raw_start = data.get('weekStart') or request.query_params.get('date', '')
+        try:
+            if raw_start:
+                monday = dt.strptime(str(raw_start)[:10], '%Y-%m-%d').date()
+            else:
+                monday = date.today()
+                monday = monday - timedelta(days=monday.weekday())
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid weekStart'}, status=status.HTTP_400_BAD_REQUEST)
+        sunday = monday + timedelta(days=6)
+        salle_id = data.get('salle_id')
+        if salle_id is None:
+            salle_id = _get_salle_id(request)
+        employees_qs = Employee.objects.all().order_by('nom')
+        if salle_id is not None:
+            employees_qs = employees_qs.filter(salle_id=salle_id)
+        employee_ids = set(employees_qs.values_list('id', flat=True))
+        shifts_payload = data.get('shifts') or []
+        # Dedupe by (employee_id, day, type) to respect DB unique_together on PlanningShift
+        seen = {}
+        for item in shifts_payload:
+            try:
+                emp_id = item.get('employee_id')
+                day_index = item.get('day')
+                if emp_id not in employee_ids or day_index is None or day_index < 0 or day_index > 6:
+                    continue
+                type_shift = item.get('type') or 'Midi'
+                if type_shift not in ('Midi', 'Soir', 'Journée'):
+                    type_shift = 'Midi'
+                key = (emp_id, int(day_index), type_shift)
+                seen[key] = item
+            except (ValueError, TypeError, KeyError):
+                continue
+        PlanningShift.objects.filter(
+            date__gte=monday,
+            date__lte=sunday,
+            employee__in=employees_qs,
+        ).delete()
+        for (emp_id, day_index, type_shift), item in seen.items():
+            shift_date = monday + timedelta(days=day_index)
+            PlanningShift.objects.create(
+                employee_id=emp_id,
+                date=shift_date,
+                type_shift=type_shift,
+                heure_debut=str(item.get('start') or '11:00')[:10],
+                heure_fin=str(item.get('end') or '15:00')[:10],
+            )
+        return Response({'weekStart': monday.isoformat(), 'weekEnd': sunday.isoformat(), 'saved': len(seen)}, status=status.HTTP_200_OK)
+    raw = request.query_params.get('date', '')
+    try:
+        if raw:
+            d = dt.strptime(raw, '%Y-%m-%d').date()
+        else:
+            d = date.today()
+    except ValueError:
+        d = date.today()
+    monday, sunday = _week_bounds_from_date(d)
+    salle_id = _get_salle_id(request)
+    employees_qs = Employee.objects.all().order_by('nom')
+    if salle_id is not None:
+        employees_qs = employees_qs.filter(salle_id=salle_id)
+    shifts_qs = PlanningShift.objects.filter(
+        date__gte=monday,
+        date__lte=sunday,
+        employee__in=employees_qs,
+    ).select_related('employee')
+    shifts_by_emp_date = {}
+    for s in shifts_qs:
+        eid = s.employee_id
+        if eid not in shifts_by_emp_date:
+            shifts_by_emp_date[eid] = {}
+        day_index = (s.date - monday).days
+        if day_index not in shifts_by_emp_date[eid]:
+            shifts_by_emp_date[eid][day_index] = []
+        shifts_by_emp_date[eid][day_index].append({
+            'type': s.type_shift,
+            'start': s.heure_debut,
+            'end': s.heure_fin,
+        })
+    employees = []
+    for emp in employees_qs:
+        shifts = {}
+        for i in range(7):
+            shifts[str(i)] = shifts_by_emp_date.get(emp.id, {}).get(i, [])
+        employees.append({
+            'id': emp.id,
+            'name': emp.nom,
+            'initials': emp.initiales or (emp.nom[:2].upper() if emp.nom else ''),
+            'role': emp.role,
+            'weeklyHours': emp.heures_semaine,
+            'color': emp.color or '#e3f2fd',
+            'shifts': shifts,
+        })
+    capacity = _capacity_for_salle(salle_id)
+    alerts = _compute_alerts(shifts_by_emp_date, employees_qs, capacity)
+    return Response({
+        'employees': employees,
+        'capacity': capacity,
+        'weekStart': monday.isoformat(),
+        'weekEnd': sunday.isoformat(),
+        'alerts': alerts,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def planning_week_copy(request):
+    """POST { source_date, target_date } or { weekStart (source), target_week_start }. Copy shifts from source week to target week (same employees/salle)."""
+    from datetime import datetime as dt
+    data = request.data or {}
+    source_raw = data.get('source_date') or data.get('weekStart') or request.query_params.get('source_date')
+    target_raw = data.get('target_date') or data.get('target_week_start') or request.query_params.get('target_date')
+    if not source_raw or not target_raw:
+        return Response({'error': 'source_date and target_date (or weekStart and target_week_start) required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        source_date = dt.strptime(str(source_raw)[:10], '%Y-%m-%d').date()
+        target_date = dt.strptime(str(target_raw)[:10], '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid date format (YYYY-MM-DD)'}, status=status.HTTP_400_BAD_REQUEST)
+    source_monday, source_sunday = _week_bounds_from_date(source_date)
+    target_monday, target_sunday = _week_bounds_from_date(target_date)
+    salle_id = data.get('salle_id')
+    if salle_id is None:
+        salle_id = _get_salle_id(request)
+    employees_qs = Employee.objects.all()
+    if salle_id is not None:
+        employees_qs = employees_qs.filter(salle_id=salle_id)
+    source_shifts = list(PlanningShift.objects.filter(
+        date__gte=source_monday,
+        date__lte=source_sunday,
+        employee__in=employees_qs,
+    ))
+    PlanningShift.objects.filter(
+        date__gte=target_monday,
+        date__lte=target_sunday,
+        employee__in=employees_qs,
+    ).delete()
+    created = 0
+    for s in source_shifts:
+        day_index = (s.date - source_monday).days
+        if 0 <= day_index <= 6:
+            new_date = target_monday + timedelta(days=day_index)
+            PlanningShift.objects.create(
+                employee=s.employee,
+                date=new_date,
+                type_shift=s.type_shift,
+                heure_debut=s.heure_debut,
+                heure_fin=s.heure_fin,
+            )
+            created += 1
+    return Response({
+        'sourceWeekStart': source_monday.isoformat(),
+        'targetWeekStart': target_monday.isoformat(),
+        'copied': created,
+    }, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def dashboard_data(request):
@@ -286,7 +573,14 @@ def dashboard_data(request):
 
     if reservations:
         res_data = [
-            {'client': r.client, 'heure': r.heure, 'couverts': r.couverts, 'canal': r.canal, 'statut': r.statut, 'statutType': r.statut_type}
+            {
+                'client': f"{r.client.prenom_client} {r.client.nom_client}" if r.client else '',
+                'heure': r.heure_reservation.strftime('%H:%M') if r.heure_reservation else '',
+                'couverts': r.nombre_personnes,
+                'canal': r.get_canal_display() if getattr(r, 'canal', None) else '',
+                'statut': r.get_statut_reservation_display(),
+                'statutType': r.statut_reservation,
+            }
             for r in reservations
         ]
     else:

@@ -56,4 +56,3 @@ const Header = ({ activePage }) => {
 };
 
 export default Header;
-

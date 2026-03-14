@@ -24,12 +24,8 @@ const Planning = () => {
 
   const { monday, sunday, days: weekDays } = getWeekDates(currentWeek);
   const weekRange = `Semaine du ${monday.getDate()} au ${sunday.getDate()} ${monday.toLocaleString('fr-FR', { month: 'long' })} ${monday.getFullYear()}`;
-  
   const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-  
-  const formatDayHeader = (date, dayName) => {
-    return `${dayName} ${date.getDate()}/${date.getMonth() + 1}`;
-  };
+  const formatDayHeader = (date, dayName) => `${dayName} ${date.getDate()}/${date.getMonth() + 1}`;
 
   const employees = [
     {
@@ -136,7 +132,6 @@ const Planning = () => {
     },
   ];
 
-  // Capacity for each day and shift type
   const capacity = {
     midi: { 0: 4, 1: 4, 2: 4, 3: 4, 4: 5, 5: 5, 6: 3 },
     soir: { 0: 4, 1: 4, 2: 5, 3: 4, 4: 6, 5: 6, 6: 4 },
@@ -157,7 +152,6 @@ const Planning = () => {
       const dayShifts = emp.shifts[dayIndex] || [];
       return sum + dayShifts.filter(s => s.type === 'Midi').length;
     }, 0);
-    
     const soirCount = employees.reduce((sum, emp) => {
       const dayShifts = emp.shifts[dayIndex] || [];
       return sum + dayShifts.filter(s => s.type === 'Soir' || s.type === 'Journée').length;
