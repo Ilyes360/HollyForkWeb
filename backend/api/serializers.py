@@ -111,6 +111,19 @@ class CategorieProduitSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class CategorieProduitAvecProduitsSerializer(serializers.ModelSerializer):
+    """Catégorie avec ses produits (regroupement par catégorie)."""
+    produits = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Categorie_Produit
+        fields = ['id', 'nom_categorie_produit', 'description_categorie_produit', 'salle', 'produits']
+        read_only_fields = ['id']
+
+    def get_produits(self, obj):
+        return ProduitSerializer(obj.produits.filter(actif=True).order_by('nom_produit'), many=True, context=self.context).data
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient

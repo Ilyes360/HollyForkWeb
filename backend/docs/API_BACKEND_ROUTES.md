@@ -124,25 +124,33 @@ Chaque ressource expose les actions REST standard : **GET** liste, **POST** cré
 
 - `/api/stock-movements/` — Mouvements de stock (ingrédients). Liste / création. Filtrage par `?ingredient=<id>`. Pas de update/delete. La création peut mettre à jour le stock selon la logique métier.
 
-### Fournisseurs et commandes fournisseur
+### Fournisseurs
 
 - `/api/fournisseurs/` — Fournisseurs par salle. CRUD. Filtrage par `?salle=<id>` ou salle du profil.
 
-- `/api/commandes-fournisseur/` — Commandes fournisseur (fournisseur, salle, statut). CRUD. À la création, la salle peut être déduite du fournisseur. Si statut passé à `livree`, application de la livraison (mouvements de stock).
+### Commandes fournisseur
 
-- **POST** `/api/commandes-fournisseur/<id>/marquer-comme-livree/` — Marquer la commande comme livrée : crée les mouvements de stock ingrédients et met le statut à `livree`. Refus si déjà livrée ou annulée.
+Commandes d’achat auprès des fournisseurs pour réapprovisionner les ingrédients (stock). Données en base : **CommandeFournisseur** (fournisseur, salle, date_commande, **date_livraison_prevue**, statut, notes, livraison_effectuee, created_at, updated_at) et **LigneCommandeFournisseur** (commande, ingrédient, quantite, prix_unitaire optionnel).
 
-- `/api/lignes-commande-fournisseur/` — Lignes commande fournisseur (ingrédient, quantité, etc.). CRUD. Filtrage par salle (via la commande).
+- `/api/commandes-fournisseur/` — **CRUD** des commandes fournisseur. **Champs** (base de données) : `id`, `fournisseur`, `fournisseur_nom` (lecture), `salle`, `date_commande` (date de la commande, auto), **`date_livraison_prevue`** (jour de livraison prévu, optionnel, format YYYY-MM-DD), `statut` (brouillon / envoyee / livree / annulee), `notes`, `livraison_effectuee` (lecture seule), `created_at`, `updated_at`, `lignes` (liste des lignes). À la **création**, si `salle` est omis, elle est déduite du fournisseur. **Filtrage** : `?salle=<id>` ou salle du profil. Si le statut est passé à `livree` (PATCH) et que la livraison n’a pas encore été appliquée, les mouvements de stock ingrédients sont créés automatiquement.
 
-### Produits et stock produit
+- **POST** `/api/commandes-fournisseur/<id>/marquer-comme-livree/` — Marquer la commande comme livrée : crée un **IngredientMovement** par ligne (quantité ajoutée au stock de l’ingrédient), met `livraison_effectuee` à `True` et `statut` à `livree`. Refus si livraison déjà effectuée (200 + message) ou si commande annulée (400). Idempotent côté métier si déjà livrée.
 
-- `/api/categories-produit/` — Catégories de produit (ex. boissons). CRUD complet.
+- `/api/lignes-commande-fournisseur/` — **CRUD** des lignes d’une commande fournisseur. **Champs** : `id`, `commande`, `ingredient`, `ingredient_nom` (lecture), `quantite`, `prix_unitaire` (optionnel). Une ligne par ingrédient par commande (contrainte unique). Filtrage par salle (via la commande).
 
-- `/api/produits/` — Produits vendus (catégorie, salle, stock). CRUD. Filtrage par `?salle=<id>` ou salle du profil.
+### Articles (produits) et catégories
 
-- **PATCH** `/api/produits/<id>/stock/` — Ajuster le stock d’un produit. Corps : `quantity` ou `delta` (entiers). Retourne `stock_produit`.
+Système d’**articles** (modèle **Produit**) regroupés par **catégorie** (modèle **Categorie_Produit**), et non par salle. La salle est un périmètre (multi-tenant) ; l’organisation logique est par catégorie. Données en base : **Categorie_Produit** (nom_categorie_produit, description_categorie_produit, salle) ; **Produit** (nom_produit, description_produit, prix_unitaire_produit, actif, stock_produit, **categorie**, salle) ; **StockMovement** (produit, quantity_delta, created_at, user, notes) — chaque mouvement met à jour `Produit.stock_produit`.
 
-- `/api/product-stock-movements/` — Mouvements de stock (produits). Liste / création. Filtrage par `?produit=<id>`. Pas de update/delete.
+- `/api/categories-produit/` — **CRUD** des catégories d’articles. **Champs** : `id`, `nom_categorie_produit`, `description_categorie_produit`, `salle`. **Filtrage** : `?salle=<id>` ou salle du profil (périmètre établissement). Les produits sont regroupés par catégorie (une catégorie contient plusieurs produits).
+
+- **GET** `/api/categories-produit/avec-produits/` — Liste des catégories **avec leurs produits** (regroupement par catégorie). Chaque élément contient les champs de la catégorie et un tableau `produits` (articles actifs de la catégorie, triés par nom). Même filtrage par salle que la liste des catégories.
+
+- `/api/produits/` — **CRUD** des articles (produits). **Champs** : `id`, `nom_produit`, `description_produit`, `prix_unitaire_produit`, `actif`, `stock_produit`, **`categorie`** (FK), `salle`. **Filtrage** : `?salle=<id>` ou salle du profil ; **`?categorie=<id>`** pour limiter à une catégorie. **Ordre** : par nom de catégorie puis par nom de produit (liste naturellement regroupée par catégorie). Requête optimisée avec `select_related('categorie', 'salle')`.
+
+- **PATCH** `/api/produits/<id>/stock/` — Ajuster le stock d’un article. Corps : `quantity` (valeur absolue) ou `delta` (entier relatif). Retourne `{ "stock_produit": n }`. Refus si stock négatif (400). Ne crée pas de mouvement **StockMovement** (ajustement direct).
+
+- `/api/product-stock-movements/` — **Liste et création** des mouvements de stock produit (entrées/sorties). **Champs** : `id`, `produit`, `produit_nom` (lecture), `quantity_delta` (positif = entrée, négatif = sortie), `created_at`, `user`, `notes`. À la **création**, `stock_produit` du produit est mis à jour automatiquement ; `user` est renseigné avec l’utilisateur connecté. **Filtrage** : `?produit=<id>` ; par salle (via produit) si `?salle=` ou profil. **Pas de** update/delete (méthodes désactivées).
 
 ### Commandes client, historique et facturation
 
@@ -210,6 +218,8 @@ Chaque ressource expose les actions REST standard : **GET** liste, **POST** cré
 
 - **PATCH** `/api/produits/<id>/stock/` — Ajuster stock produit (`quantity` ou `delta`).
 
+- **GET** `/api/categories-produit/avec-produits/` — Catégories avec leurs produits (regroupement par catégorie). Filtrage par salle.
+
 - **GET** `/api/commandes/historique/` — Liste des commandes avec lignes et facture (historique). Filtres : date_from, date_to, statut, has_facture, statut_facture, salle.
 
 - **GET** `/api/commandes/stats/` — Statistiques sur les commandes (CA, effectifs par statut, factures payées/impayées).
@@ -236,6 +246,8 @@ Chaque ressource expose les actions REST standard : **GET** liste, **POST** cré
 
 - **Paiements** : après chaque création/modification/suppression de paiement, la facture est recalculée (`recalculer_statut`) ; si la facture passe en « payée », la commande associée passe en `statut_commande = paid`.
 
-- **Commande fournisseur** : « Marquer comme livrée » crée les mouvements de stock ingrédients et met la commande à `livree`.
+- **Commandes fournisseur** : en base, chaque commande a une **date_livraison_prevue** (jour de livraison prévu, optionnel). « Marquer comme livrée » (POST dédié ou PATCH `statut=livree`) crée les mouvements de stock ingrédients (une entrée par ligne), met `livraison_effectuee` à `True` et le statut à `livree`.
+
+- **Articles (produits) et catégories** : les articles sont des **Produit** (nom, description, prix, actif, stock, **categorie**, salle) ; ils sont **regroupés par catégorie** (Categorie_Produit), pas par salle. La salle est un périmètre de filtrage. PATCH `/api/produits/<id>/stock/` ajuste le stock directement (sans mouvement). La création d’un **StockMovement** via `/api/product-stock-movements/` met à jour automatiquement `Produit.stock_produit` (positif = entrée, négatif = sortie).
 
 - **Planning** : les endpoints `/api/planning/week/` et `/api/planning/week/copy/` gèrent la semaine (lundi–dimanche) et les capacités (alertes sous-effectifs).

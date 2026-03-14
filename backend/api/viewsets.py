@@ -57,6 +57,7 @@ from .serializers import (
     LigneCommandeFournisseurSerializer,
     CommandeFournisseurSerializer,
     CategorieProduitSerializer,
+    CategorieProduitAvecProduitsSerializer,
     ProduitSerializer,
     StockMovementSerializer,
     CommandeSerializer,
@@ -391,9 +392,23 @@ class FormuleViewSet(viewsets.ModelViewSet):
 
 
 class CategorieProduitViewSet(viewsets.ModelViewSet):
-    queryset = Categorie_Produit.objects.all()
+    """Catégories d'articles. Regroupement par catégorie ; filtrage par salle (périmètre)."""
     serializer_class = CategorieProduitSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Categorie_Produit.objects.all().order_by('nom_categorie_produit')
+        salle_id = _produit_salle_id(self.request)
+        if salle_id is not None:
+            qs = qs.filter(salle_id=salle_id)
+        return qs
+
+    @action(detail=False, methods=['get'], url_path='avec-produits')
+    def avec_produits(self, request):
+        """GET /api/categories-produit/avec-produits/ — Catégories avec leurs produits (regroupement par catégorie)."""
+        qs = self.get_queryset().prefetch_related('produits')
+        serializer = CategorieProduitAvecProduitsSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 def _ingredient_salle_id(request):
@@ -578,14 +593,23 @@ def _produit_salle_id(request):
 
 
 class ProduitViewSet(viewsets.ModelViewSet):
+    """Articles (produits) regroupés par catégorie. Filtre ?categorie=<id> ; ordre par catégorie puis nom."""
     serializer_class = ProduitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = Produit.objects.all().select_related('categorie', 'salle')
+        qs = Produit.objects.all().select_related('categorie', 'salle').order_by(
+            'categorie__nom_categorie_produit', 'nom_produit'
+        )
         salle_id = _produit_salle_id(self.request)
         if salle_id is not None:
             qs = qs.filter(salle_id=salle_id)
+        categorie_id = self.request.query_params.get('categorie')
+        if categorie_id:
+            try:
+                qs = qs.filter(categorie_id=int(categorie_id))
+            except (ValueError, TypeError):
+                pass
         return qs
 
     @action(detail=True, methods=['patch'], url_path='stock')
