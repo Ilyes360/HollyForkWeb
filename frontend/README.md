@@ -1,25 +1,21 @@
-# Frontend - React Application
+# React + TypeScript + Vite + shadcn/ui
 
-This is the React frontend for the HollyForkWeb project.
+This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
 
-## Setup
+## Adding components
 
-1. Install dependencies:
+To add components to your app, run the following command:
+
 ```bash
-npm install
+npx shadcn@latest add button
 ```
 
-2. Start the development server:
-```bash
-npm start
+This will place the ui components in the `src/components` directory.
+
+## Using components
+
+To use the components in your app, import them as follows:
+
+```tsx
+import { Button } from "@/components/ui/button"
 ```
-
-The app will run on http://localhost:3000
-
-## Environment Variables
-
-Create a `.env` file in the frontend directory:
-```
-REACT_APP_API_URL=http://localhost:8000/api
-```
-
