@@ -1,18 +1,26 @@
 # HollyForkWeb
 
-A full-stack web application built with Django (backend) and React (frontend).
+Application web full-stack (Django + React), basée sur le backend **Holly Pi** : apps modulaires, JWT, authentification email + mot de passe, MFA (TOTP).
 
-## Project Structure
+## Structure du projet
 
 ```
 HollyForkWeb/
-├── backend/          # Django backend application
-│   ├── config/      # Django project settings
-│   ├── api/         # API app
+├── backend/              # Backend Django (style Holly Pi)
+│   ├── config/           # Settings, urls, wsgi
+│   ├── apps/             # Applications modulaires
+│   │   ├── authentication/  # Auth (login email+password, JWT, MFA, register, profile)
+│   │   ├── restaurant/   # Restaurants, salles, tables
+│   │   ├── menu/         # Articles, catégories
+│   │   ├── commandes/    # Commandes, lignes
+│   │   ├── staff/        # Employés, types, PIN
+│   │   ├── billing/      # Factures, paiements
+│   │   └── ...           # reservations, notes, inventory, planning, etc.
+│   ├── scripts/          # Scripts (ex. generate_fake_data.py)
 │   └── manage.py
-├── frontend/        # React frontend application
-│   ├── src/         # React source files
-│   └── public/      # Public assets
+├── frontend/             # Frontend React
+│   ├── src/
+│   └── public/
 └── README.md
 ```
 
@@ -53,15 +61,17 @@ SECRET_KEY=your-secret-key-here
 DEBUG=True
 ```
 
-5. Run migrations:
+5. (Première installation) Si vous aviez une ancienne base, supprimez `db.sqlite3` puis exécutez les migrations :
 ```bash
 python manage.py migrate
 ```
 
-6. Create a superuser (optional):
+6. Créer un superutilisateur ou générer des données factices (optionnel) :
 ```bash
 python manage.py createsuperuser
+# ou : pip install mimesis && python manage.py generate_fake_data --confirm
 ```
+Comptes de test après génération : `root@hollypi.com` / `root`, `test@lesombres.com` / `Test1234!`
 
 7. Start the Django development server:
 ```bash
@@ -108,16 +118,19 @@ npm start
 
 3. Open your browser and navigate to http://localhost:3000
 
-## API Endpoints
+## API
 
-- `GET /api/` - API root endpoint
+- **Auth** : `POST /api/auth/login/` (email + mot de passe), `POST /api/auth/register/`, `POST /api/auth/delete-account/`, MFA (setup, verify-mfa), etc. En-tête : `Authorization: Bearer <jwt>` ou `Token <jwt>`.
+- **Documentation** : http://localhost:8000/api/docs/ (Swagger), http://localhost:8000/api/redoc/
+- **Préfixes** : `/api/auth/`, `/api/restaurants/`, `/api/salles/`, `/api/commandes/`, `/api/menu/`, etc. Voir `backend/README.md` et `backend/apps/authentication/README.md`.
 
 ## Development
 
 ### Backend
-- Django REST Framework is configured for API development
-- CORS is enabled for localhost:3000
-- SQLite database is used by default
+- Django REST Framework, JWT (Simple JWT), MFA TOTP (pyotp)
+- Authentification par **email + mot de passe** ; header `Authorization: Bearer` ou `Token`
+- CORS activé pour localhost:3000, base SQLite par défaut
+- Documentation OpenAPI (drf-spectacular) : `/api/docs/`, `/api/redoc/`
 
 ### Frontend
 - React 18 with modern hooks
@@ -127,9 +140,9 @@ npm start
 ## Technologies Used
 
 ### Backend
-- Django 4.2.7
-- Django REST Framework
-- django-cors-headers
+- Django, Django REST Framework
+- djangorestframework-simplejwt (JWT), pyotp (MFA)
+- django-cors-headers, drf-spectacular (OpenAPI/Swagger)
 - python-dotenv
 
 ### Frontend
