@@ -69,7 +69,7 @@ python manage.py generate_fake_data --confirm
 
 ## API
 
-- **Authentification** : JWT (Bearer). Login : `POST /api/auth/login/` (username + password) → renvoie `access` / `refresh`.
+- **Authentification** : JWT. Login : `POST /api/auth/login/` avec **email + mot de passe** → renvoie `access_token`, `token` (alias), `refresh_token`. En-tête accepté : `Authorization: Bearer <jwt>` ou `Authorization: Token <jwt>`.
 - **Documentation** : http://localhost:8000/api/docs/ (Swagger), http://localhost:8000/api/redoc/
 - **Schéma** : http://localhost:8000/api/schema/
 
@@ -79,5 +79,5 @@ Principaux préfixes : `/api/restaurants/`, `/api/salles/`, `/api/tables/`, `/ap
 
 Le frontend actuel (React) est conçu pour l’ancienne API (Token auth, routes type `/api/salles/`, `/api/reservations/`, etc.). Pour utiliser ce backend holly_pi il faudra adapter le frontend pour :
 
-- utiliser l’auth **JWT** (Bearer) et les endpoints `/api/auth/login/`, `/api/auth/register/`, etc. ;
+- utiliser l’auth **JWT** (header `Authorization: Bearer` ou `Token`) et les endpoints `/api/auth/login/` (email + mot de passe), `/api/auth/register/`, `/api/auth/delete-account/`, etc. ;
 - appeler les ressources **restaurant** (`/api/restaurants/`) et les URLs telles que définies dans la doc holly_pi (ex. `API_DOCUMENTATION.md` du projet joint).

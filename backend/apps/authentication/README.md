@@ -39,10 +39,10 @@ Employees quickly log in using their 4-digit PIN code on an already-configured d
 
 ### MFA (authentification à deux facteurs — TOTP)
 
-Pour les connexions **username/password** (`POST /api/auth/login/`), un utilisateur peut activer le MFA (code à 6 chiffres type Google Authenticator).
+Pour les connexions **email + mot de passe** (`POST /api/auth/login/`), un utilisateur peut activer le MFA (code à 6 chiffres type Google Authenticator).
 
 - **Activation** : après connexion, `POST /api/auth/mfa/setup/` → reçoit `secret` et `otpauth_url` (pour flasher le QR dans une app TOTP). Puis `POST /api/auth/mfa/confirm/` avec `{"code": "123456"}` pour activer.
-- **Login avec MFA** : `POST /api/auth/login/` renvoie alors `requires_mfa: true` et `temp_token` (pas de JWT). Le client envoie `POST /api/auth/verify-mfa/` avec `{"temp_token": "...", "code": "123456"}` et reçoit les tokens JWT.
+- **Login avec MFA** : `POST /api/auth/login/` renvoie alors `requires_mfa: true` et `temp_token` (pas de JWT). Le client envoie `POST /api/auth/verify-mfa/` avec `{"temp_token": "...", "code": "123456"}` et reçoit les tokens JWT (dont `token` et `access_token`).
 - **Désactivation** : `POST /api/auth/mfa/disable/` avec `{"password": "..."}`.
 - **Statut** : `GET /api/auth/mfa/status/` → `{"mfa_enabled": true/false}`.
 
@@ -179,7 +179,67 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
 
 ---
 
-### 3. User Registration
+### 3. Login (web — email + mot de passe)
+
+**Endpoint:** `POST /api/auth/login/`
+
+**Description:** Connexion par **email et mot de passe** (pas par username). Retourne les tokens JWT ou, si le MFA est activé, `requires_mfa` et `temp_token` pour appeler ensuite `POST /api/auth/verify-mfa/`.
+
+**Authentication Required:** No
+
+**Request Body:**
+```json
+{
+  "email": "root@hollypi.com",
+  "password": "root"
+}
+```
+
+**Required Fields:**
+- `email` (string): Adresse email de l'utilisateur
+- `password` (string): Mot de passe
+
+**Success Response (sans MFA):**
+```json
+{
+  "message": "Connexion réussie",
+  "access_token": "eyJ...",
+  "token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user_id": 1,
+  "username": "root",
+  "email": "root@hollypi.com",
+  "first_name": "Admin",
+  "last_name": "System",
+  "employee_id": 1,
+  "employee_name": "Admin System",
+  "employee_type": "Super Admin Groupe",
+  "restaurant_id": 1,
+  "restaurant_name": "Les Ombres et Bar"
+}
+```
+
+**Success Response (MFA activé — étape 1):**
+```json
+{
+  "requires_mfa": true,
+  "temp_token": "abc123...",
+  "email": "user@example.com",
+  "first_name": "Jean",
+  "last_name": "Dupont"
+}
+```
+→ Envoyer ensuite `POST /api/auth/verify-mfa/` avec `{"temp_token": "...", "code": "123456"}` pour obtenir les tokens JWT.
+
+**HTTP Status Codes:**
+- `200 OK`: Connexion réussie
+- `400 Bad Request`: Identifiants invalides ou validation
+
+**En-tête d'authentification pour les requêtes protégées :** `Authorization: Bearer <access_token>` ou `Authorization: Token <access_token>`.
+
+---
+
+### 4. User Registration
 
 **Endpoint:** `POST /api/auth/register/`
 
@@ -196,8 +256,8 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
   "password2": "SecurePassword123!",
   "first_name": "John",
   "last_name": "Doe",
-  "nom": "Doe",
-  "prenom": "John",
+  "employee_first_name": "John",
+  "employee_last_name": "Doe",
   "pin_code": "1234",
   "type_employe_id": 2,
   "restaurant_id": 1
@@ -209,8 +269,8 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
 - `email` (string): Valid email address (unique)
 - `password` (string): Password meeting validation requirements
 - `password2` (string): Password confirmation
-- `nom` (string): Employee last name
-- `prenom` (string): Employee first name
+- `employee_first_name` (string): Employee first name
+- `employee_last_name` (string): Employee last name
 - `pin_code` (string): 4-digit PIN code (unique per restaurant)
 - `type_employe_id` (integer): Employee type ID (Manager, Serveur, Cuisinier, etc.)
 - `restaurant_id` (integer): Restaurant ID to associate with
@@ -241,7 +301,7 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
 
 ---
 
-### 4. Refresh Access Token
+### 5. Refresh Access Token
 
 **Endpoint:** `POST /api/auth/token/refresh/`
 
@@ -269,7 +329,7 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
 
 ---
 
-### 5. User Logout
+### 6. User Logout
 
 **Endpoint:** `POST /api/auth/logout/`
 
@@ -288,7 +348,7 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
 
 ---
 
-### 6. Get User Profile
+### 7. Get User Profile
 
 **Endpoint:** `GET /api/auth/profile/`
 
@@ -299,6 +359,10 @@ Le profil utilisateur (`GET /api/auth/profile/`) inclut `mfa_enabled` en lecture
 **Request Headers:**
 ```
 Authorization: Bearer <your_access_token>
+```
+ou
+```
+Authorization: Token <your_access_token>
 ```
 
 **Success Response:**
@@ -311,6 +375,7 @@ Authorization: Bearer <your_access_token>
   "last_name": "Doe",
   "date_joined": "2025-01-15T10:30:00Z",
   "is_active": true,
+  "mfa_enabled": false,
   "employee_id": 15,
   "employee_name": "John Doe",
   "employee_first_name": "John",
@@ -326,7 +391,7 @@ Authorization: Bearer <your_access_token>
 
 ---
 
-### 7. Get CSRF Token
+### 8. Get CSRF Token
 
 **Endpoint:** `GET /api/auth/csrf-token/`
 
@@ -343,15 +408,49 @@ Authorization: Bearer <your_access_token>
 
 ---
 
+### 9. Delete Account
+
+**Endpoint:** `POST /api/auth/delete-account/`
+
+**Description:** Supprime le compte de l'utilisateur connecté. Requiert une authentification valide.
+
+**Authentication Required:** Yes
+
+**Request Headers:**
+```
+Authorization: Bearer <your_access_token>
+```
+ou
+```
+Authorization: Token <your_access_token>
+```
+
+**Success Response:**
+```json
+{
+  "message": "Compte utilisateur 'john_doe' supprimé avec succès"
+}
+```
+
+**HTTP Status Codes:**
+- `200 OK`: Compte supprimé
+- `401 Unauthorized`: Non authentifié
+
+---
+
 ## JWT Token Usage
 
 ### Including Tokens in Requests
 
-For all protected endpoints, include the access token in the Authorization header:
+For all protected endpoints, include the access token in the Authorization header. Both prefixes are accepted:
 
 ```http
 GET /api/commandes/ HTTP/1.1
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
+```
+ou
+```http
+Authorization: Token eyJ0eXAiOiJKV1QiLCJhbGc...
 ```
 
 ### Token Expiration
