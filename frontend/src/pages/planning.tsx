@@ -3,7 +3,7 @@ import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
-import { initialShifts } from "@/components/planning/data"
+import { initialShifts, employees as mockEmployees } from "@/components/planning/data"
 import { useAdminStore } from "@/stores/admin-store"
 import type { Shift } from "@/components/planning/types"
 import { ConsultationView } from "@/components/planning/consultation-view"
@@ -30,10 +30,11 @@ const fadeUp = {
 export default function PlanningPage() {
   const adminEmployees = useAdminStore((s) => s.employees)
   const currentEstId = useAdminStore((s) => s.currentEstablishmentId)
-  const employees = useMemo(
-    () => useAdminStore.getState().getPlanningEmployees(),
-    [adminEmployees, currentEstId]
-  )
+  const employees = useMemo(() => {
+    const storeEmployees = useAdminStore.getState().getPlanningEmployees()
+    // Fallback to mock employees if store returns empty (e.g. stale localStorage)
+    return storeEmployees.length > 0 ? storeEmployees : mockEmployees
+  }, [adminEmployees, currentEstId])
   const [shifts, setShifts] = useState<Shift[]>(initialShifts)
   const { isEditing, startEditing, stopEditing } = usePlanningEdition()
   const { weekStart, direction, prev, next, today } = useWeekNavigation()

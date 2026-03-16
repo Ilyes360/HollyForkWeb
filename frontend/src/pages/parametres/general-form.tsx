@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { useAuth } from "@/contexts/auth-context"
+import { useAuthStore } from "@/stores/auth-store"
 import { useAdminStore } from "@/stores/admin-store"
 
 const accountSchema = z.object({
@@ -26,26 +26,33 @@ const accountSchema = z.object({
 type AccountValues = z.infer<typeof accountSchema>
 
 export function GeneralForm() {
-  const { user } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  const setUser = useAuthStore((s) => s.setUser)
   const groupName = useAdminStore((s) => s.groupName)
   const setGroupName = useAdminStore((s) => s.setGroupName)
+
+  const name = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()
 
   const form = useForm<AccountValues>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
       groupName,
-      name: user?.name ?? "",
+      name,
       email: user?.email ?? "",
     },
   })
 
   function onSubmit(data: AccountValues) {
     setGroupName(data.groupName)
-    const stored = localStorage.getItem("auth_user")
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      const updated = { ...parsed, name: data.name, email: data.email }
-      localStorage.setItem("auth_user", JSON.stringify(updated))
+    // Update Zustand store locally — PATCH /api/auth/profile/ will be wired in settings integration
+    if (user) {
+      const [firstName, ...rest] = data.name.split(" ")
+      setUser({
+        ...user,
+        firstName: firstName ?? "",
+        lastName: rest.join(" "),
+        email: data.email,
+      })
     }
     form.reset(data)
   }

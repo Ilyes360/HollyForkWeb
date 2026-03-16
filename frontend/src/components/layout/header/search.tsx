@@ -27,10 +27,14 @@ export function Search() {
         e.preventDefault()
         setOpen((prev) => !prev)
       }
+      if (e.key === "Escape" && open) {
+        e.preventDefault()
+        setOpen(false)
+      }
     }
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [])
+  }, [open])
 
   return (
     <div className="lg:flex-1">

@@ -61,57 +61,53 @@ export const FloorTable = memo(function FloorTable({
 
   const hasRotation = !!table.rotation
 
-  const tableElement = (
-    <motion.div
-      className={`
-        absolute cursor-pointer select-none
-        transition-shadow duration-150
-        ${getShapeClasses(table.type)}
-        ${STATUS_CLASSES[status]}
-        ${isSelected ? "ring-2 ring-primary shadow-lg scale-[1.03]" : ""}
-        ${isHovered && !isSelected ? "shadow-md" : ""}
-      `}
+  return (
+    <div
+      className="absolute transition-opacity duration-300"
       style={{
         left: table.x,
         top: table.y,
         width: table.width,
         height: table.height,
         transform: `translate(-50%, -50%)${hasRotation ? ` rotate(${table.rotation}deg)` : ""}`,
+        opacity: isDimmed ? 0.25 : 1,
       }}
-      whileHover={{ scale: isSelected ? 1.03 : 1.06 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      onClick={handleClick}
-      onMouseEnter={() => onHover(table.id)}
-      onMouseLeave={() => onHover(null)}
-    >
-      {/* Status dot */}
-      <div
-        className={`absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full ${STATUS_DOT_COLORS[status]}`}
-      />
-
-      {/* Text container — counter-rotates to stay horizontal */}
-      <div
-        className="flex flex-col items-center justify-center w-full h-full"
-        style={hasRotation ? { transform: `rotate(${-table.rotation}deg)` } : undefined}
-      >
-        <span className="font-semibold text-xs text-foreground leading-tight">
-          {table.label}
-        </span>
-        <span className="text-[10px] text-muted-foreground leading-tight">
-          {table.seats}p · {STATUS_LABELS[status] ?? status}
-        </span>
-      </div>
-    </motion.div>
-  )
-
-  return (
-    <div
-      className="absolute transition-opacity duration-300"
-      style={{ left: 0, top: 0, opacity: isDimmed ? 0.25 : 1 }}
     >
       <SeatIndicators table={table} />
       <TablePopover table={table} isOpen={isSelected} onClose={() => onSelect("")}>
-        {tableElement}
+        <motion.div
+          className={`
+            absolute inset-0 cursor-pointer select-none
+            transition-shadow duration-150
+            ${getShapeClasses(table.type)}
+            ${STATUS_CLASSES[status]}
+            ${isSelected ? "ring-2 ring-primary shadow-lg scale-[1.03]" : ""}
+            ${isHovered && !isSelected ? "shadow-md" : ""}
+          `}
+          whileHover={{ scale: isSelected ? 1.03 : 1.06 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          onClick={handleClick}
+          onMouseEnter={() => onHover(table.id)}
+          onMouseLeave={() => onHover(null)}
+        >
+          {/* Status dot */}
+          <div
+            className={`absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full ${STATUS_DOT_COLORS[status]}`}
+          />
+
+          {/* Text container — counter-rotates to stay horizontal */}
+          <div
+            className="flex flex-col items-center justify-center w-full h-full"
+            style={hasRotation ? { transform: `rotate(${-table.rotation}deg)` } : undefined}
+          >
+            <span className="font-semibold text-xs text-foreground leading-tight">
+              {table.label}
+            </span>
+            <span className="text-[10px] text-muted-foreground leading-tight">
+              {table.seats}p · {STATUS_LABELS[status] ?? status}
+            </span>
+          </div>
+        </motion.div>
       </TablePopover>
     </div>
   )

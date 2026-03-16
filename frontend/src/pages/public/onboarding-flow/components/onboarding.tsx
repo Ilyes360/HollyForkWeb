@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
@@ -51,7 +52,15 @@ const steps = [
 const progressSteps = steps.slice(0, 4)
 
 export default function Onboarding() {
-  const { currentStep, totalSteps, direction, data, nextStep, prevStep, goToStep } = useOnboardingStore()
+  const { currentStep, totalSteps, direction, data, nextStep, prevStep, goToStep, hydrateFromSession } = useOnboardingStore()
+  const hydrated = useRef(false)
+
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true
+      hydrateFromSession()
+    }
+  }, [hydrateFromSession])
 
   const isCompletion = currentStep === totalSteps - 1
   const CurrentStepComponent = steps[currentStep].component

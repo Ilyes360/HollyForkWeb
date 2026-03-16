@@ -36,14 +36,16 @@ export function ConsultationView({
   onToday,
 }: ConsultationViewProps) {
   return (
-    <div className="flex h-full flex-col gap-4">
-      <WeekNavigator
-        weekStart={weekStart}
-        onPrev={onPrev}
-        onNext={onNext}
-        onToday={onToday}
-      />
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="shrink-0 border-b bg-sidebar px-4 py-2">
+        <WeekNavigator
+          weekStart={weekStart}
+          onPrev={onPrev}
+          onNext={onNext}
+          onToday={onToday}
+        />
+      </div>
+      <div className="relative min-h-0 flex-1 p-4">
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           <motion.div
             key={weekStart.toISOString()}

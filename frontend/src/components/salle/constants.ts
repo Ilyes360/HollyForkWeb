@@ -105,6 +105,10 @@ export const DEFAULT_PLAN: FloorPlan = {
     },
 
     // ── Tables salle principale ──
+    // Statuts alignés avec reservations/data.ts (service midi) et salle/consultation/mock-data.ts
+    // occupied = arrivée (r1→T3, r5→T7, r6→T9)
+    // reserved = confirmée/en_attente (r2→T1, r3→T4, r4→T6)
+    // available = annulée/no_show/pas de résa
     {
       id: "t1",
       kind: "table",
@@ -117,7 +121,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 4,
       number: 1,
       label: "T1",
-      status: "occupied",
+      status: "reserved",       // r2: Sophie Laurent, confirmée
     },
     {
       id: "t2",
@@ -131,7 +135,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 4,
       number: 2,
       label: "T2",
-      status: "reserved",
+      status: "available",      // r7: annulée
     },
     {
       id: "t3",
@@ -145,7 +149,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 2,
       number: 3,
       label: "T3",
-      status: "available",
+      status: "occupied",       // r1: Martin Dupont, arrivée
     },
     {
       id: "t4",
@@ -159,7 +163,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 6,
       number: 4,
       label: "T4",
-      status: "occupied",
+      status: "reserved",       // r3: Pierre Moreau, confirmée
     },
     {
       id: "t5",
@@ -187,7 +191,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 2,
       number: 6,
       label: "T6",
-      status: "reserved",
+      status: "reserved",       // r4: Claire Petit, en_attente
     },
     {
       id: "t7",
@@ -201,7 +205,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 4,
       number: 7,
       label: "T7",
-      status: "available",
+      status: "occupied",       // r5: Jean-Marc Vidal, arrivée
     },
 
     // ── Tables terrasse ──
@@ -217,7 +221,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 2,
       number: 8,
       label: "T8",
-      status: "occupied",
+      status: "available",      // r8: no_show
     },
     {
       id: "t9",
@@ -231,7 +235,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 2,
       number: 9,
       label: "T9",
-      status: "available",
+      status: "occupied",       // r6: Isabelle Roux, arrivée
     },
     {
       id: "t10",
@@ -259,7 +263,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 4,
       number: 11,
       label: "T11",
-      status: "reserved",
+      status: "available",
     },
 
     // ── Bar / comptoir ──
@@ -275,7 +279,7 @@ export const DEFAULT_PLAN: FloorPlan = {
       seats: 6,
       number: 12,
       label: "Bar",
-      status: "occupied",
+      status: "available",
     },
   ],
 }

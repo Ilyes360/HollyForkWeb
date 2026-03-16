@@ -8,7 +8,8 @@ import {
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons"
 
-import { useAuth } from "@/contexts/auth-context"
+import { useAuthStore } from "@/stores/auth-store"
+import { useLogout } from "@/api/auth/mutations"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -37,10 +38,11 @@ function getInitials(name: string) {
 
 export function NavUser() {
   const { isMobile } = useSidebar()
-  const { user, logout } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  const logoutMutation = useLogout()
   const navigate = useNavigate()
 
-  const name = user?.name ?? "Utilisateur"
+  const name = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "Utilisateur"
   const email = user?.email ?? ""
   const initials = getInitials(name)
 
@@ -115,8 +117,9 @@ export function NavUser() {
             <DropdownMenuItem
               variant="destructive"
               onClick={() => {
-                logout()
-                navigate("/login")
+                logoutMutation.mutate(undefined, {
+                  onSettled: () => navigate("/login"),
+                })
               }}
             >
               <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />

@@ -1,13 +1,13 @@
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 from django.urls import path, include
 from .views import FournisseurViewSet, CommandeFournisseurViewSet
 
 # Fournisseurs à /api/suppliers/
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r'', FournisseurViewSet, basename='supplier')
 
 # Commandes à /api/suppliers/orders/
-orders_router = DefaultRouter()
+orders_router = SimpleRouter()
 orders_router.register(r'', CommandeFournisseurViewSet, basename='supplier-order')
 
 urlpatterns = [

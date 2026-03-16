@@ -38,8 +38,8 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 
 // Map KPIs per establishment (mock data for the map sidebar)
 const mapKpis: Record<string, { revenue: number; covers: number; occupancy: number; rating: number }> = {
-  "est-1": { revenue: 127500, covers: 1842, occupancy: 87, rating: 4.6 },
-  "est-2": { revenue: 98200, covers: 1356, occupancy: 74, rating: 4.3 },
+  "est-1": { revenue: 127500, covers: 1890, occupancy: 74, rating: 4.6 },
+  "est-2": { revenue: 98200, covers: 1120, occupancy: 58, rating: 4.1 },
 }
 
 const defaultKpis = { revenue: 0, covers: 0, occupancy: 0, rating: 0 }
@@ -249,7 +249,7 @@ export default function MapCard() {
     if (restaurant) {
       map.flyTo({
         center: [restaurant.address!.longitude, restaurant.address!.latitude],
-        zoom: 14,
+        zoom: 15.5,
         pitch: 45,
         bearing: 20,
         duration: 2500,
@@ -312,7 +312,7 @@ export default function MapCard() {
     if (r) {
       map.flyTo({
         center: [r.address!.longitude, r.address!.latitude],
-        zoom: 14,
+        zoom: 15.5,
         pitch: 45,
         bearing: 20,
         duration: 4000,
@@ -810,7 +810,7 @@ export default function MapCard() {
                       latitude: restaurant
                         ? restaurant.address!.latitude
                         : FRANCE_VIEW.latitude,
-                      zoom: restaurant ? 14 : FRANCE_VIEW.zoom,
+                      zoom: restaurant ? 15.5 : FRANCE_VIEW.zoom,
                       pitch: restaurant ? 45 : 0,
                       bearing: restaurant ? 20 : 0,
                     }}

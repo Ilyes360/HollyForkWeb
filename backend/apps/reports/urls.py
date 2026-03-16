@@ -1,8 +1,8 @@
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 from django.urls import path, include
 from .views import ReportViewSet, EmployeesStatusView
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r'reports', ReportViewSet, basename='report')
 
 urlpatterns = [

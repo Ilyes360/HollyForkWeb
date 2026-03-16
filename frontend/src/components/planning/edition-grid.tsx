@@ -59,7 +59,7 @@ export function EditionGrid({
     const dayIsPast = isPast(date)
     const midiShifts = getShiftsForDayAndService(shifts, day, "midi")
     const soirShifts = getShiftsForDayAndService(shifts, day, "soir")
-    const req = staffingRequirements[day]
+    const req = staffingRequirements[day] ?? { midi: 0, soir: 0 }
     const recap = getDayRecap(midiShifts, soirShifts, req.midi, req.soir)
     return { day, date, dayIsToday, dayIsPast, midiShifts, soirShifts, req, recap }
   })

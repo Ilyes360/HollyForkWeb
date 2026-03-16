@@ -1,18 +1,17 @@
 import { Navigate, Outlet } from "react-router"
-import { useAuth } from "@/contexts/auth-context"
+import { useAuthStore } from "@/stores/auth-store"
+import { getAccessToken, MOCK_MODE } from "@/api/client"
 
 export default function GuestGuard() {
-  const { user, isLoading } = useAuth()
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <p className="text-sm text-muted-foreground">Chargement...</p>
-      </div>
-    )
+  // In mock mode, guest pages still accessible but also redirect to app
+  if (MOCK_MODE) {
+    return <Navigate to="/" replace />
   }
 
-  if (user) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const hasToken = !!getAccessToken()
+
+  if (isAuthenticated && hasToken) {
     return <Navigate to="/" replace />
   }
 

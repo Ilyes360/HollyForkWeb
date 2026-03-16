@@ -175,34 +175,13 @@ export const useAdminStore = create<AdminStore>()(
     }),
     {
       name: "holly-fork-admin",
-      version: 2,
-      migrate: () => ({
-        ...initialState,
-      }),
-      merge: (persistedState, currentState) => {
-        const persisted = persistedState as Partial<typeof initialState> | undefined
-        // If persisted data has empty arrays (stale cache), re-seed with mock data
-        const establishments =
-          persisted?.establishments && persisted.establishments.length > 0
-            ? persisted.establishments
-            : initialState.establishments
-        const employees =
-          persisted?.employees && persisted.employees.length > 0
-            ? persisted.employees
-            : initialState.employees
-        const roles =
-          persisted?.roles && persisted.roles.length > 0
-            ? persisted.roles
-            : initialState.roles
+      version: 4,
+      migrate: () => initialState,
+      merge: (_persistedState, currentState) => {
+        // Always use fresh mock data — no stale localStorage overrides
         return {
           ...currentState,
-          ...persisted,
-          groupName: persisted?.groupName || initialState.groupName,
-          establishments,
-          employees,
-          roles,
-          currentEstablishmentId:
-            persisted?.currentEstablishmentId || initialState.currentEstablishmentId,
+          ...initialState,
         }
       },
     }

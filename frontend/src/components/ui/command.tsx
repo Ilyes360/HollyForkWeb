@@ -66,6 +66,8 @@ function CommandDialog({
           className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground"
           onKeyDown={(e) => {
             if (e.key === "Escape") {
+              e.preventDefault()
+              e.stopPropagation()
               onOpenChange?.(false)
             }
           }}

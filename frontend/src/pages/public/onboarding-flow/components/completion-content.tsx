@@ -8,49 +8,61 @@ import {
   UserGroupIcon,
   ChairBarberIcon,
   Tick02Icon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { useOnboardingStore } from "../store"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
-import { useAdminStore } from "@/stores/admin-store"
+import { useAuthStore } from "@/stores/auth-store"
+import { useCreateRestaurant } from "@/api/restaurants/mutations"
 import { celebrationCheckmark } from "../animations"
+
+function generateRandomPin(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
 
 export function CompletionContent() {
   const navigate = useNavigate()
   const { data, reset } = useOnboardingStore()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
-  const addEstablishment = useAdminStore((s) => s.addEstablishment)
-  const setCurrentEstablishment = useAdminStore((s) => s.setCurrentEstablishment)
+  const user = useAuthStore((s) => s.user)
+  const setUser = useAuthStore((s) => s.setUser)
+  const createRestaurant = useCreateRestaurant()
 
   const planName = data.plan === "pro" ? "Pro" : "Starter"
 
   const handleGoToDashboard = () => {
-    const loc = data.restaurant.location
-    const cap = data.establishment.covers === "100+" ? 120 : parseInt(data.establishment.covers.split("-").pop() ?? "30", 10)
-    const now = new Date().toISOString()
-    const id = `est-${Date.now()}`
-    addEstablishment({
-      id,
-      name: data.restaurant.name,
-      address: loc,
-      phone: "",
-      email: "",
-      siret: "",
-      tvaNumber: "",
-      legalForm: "",
-      totalCapacity: cap,
-      openingDays: ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"],
-      services: [],
-      storageZones: [],
-      isActive: true,
-      legalInfo: { licenseType: "", licenseNumber: "", insurance: "", erpCapacity: cap, notes: "" },
-      createdAt: now,
-      updatedAt: now,
-    })
-    setCurrentEstablishment(id)
-    completeTask("restaurant-profile")
-    reset()
-    navigate("/")
+    createRestaurant.mutate(
+      {
+        name: data.restaurant.name,
+        address: data.restaurant.city,
+        postalCode: "",
+        city: data.restaurant.city,
+        phoneNumber: "",
+        siret: "",
+        pin: generateRandomPin(),
+      },
+      {
+        onSuccess: (restaurant) => {
+          // Sync the new restaurant into the auth store
+          if (user) {
+            setUser({
+              ...user,
+              restaurantId: restaurant.id,
+              restaurantName: restaurant.name,
+            })
+          }
+          sessionStorage.removeItem("holly_pending_restaurant")
+          completeTask("restaurant-profile")
+          reset()
+          navigate("/")
+        },
+        onError: () => {
+          toast.error("Erreur lors de la création du restaurant. Veuillez réessayer.")
+        },
+      },
+    )
   }
 
   const summaryLines = [
@@ -99,8 +111,20 @@ export function CompletionContent() {
       </div>
 
       <div className="w-full max-w-md pt-2">
-        <Button size="lg" onClick={handleGoToDashboard} className="w-full">
-          Accéder à mon tableau de bord
+        <Button
+          size="lg"
+          onClick={handleGoToDashboard}
+          className="w-full"
+          disabled={createRestaurant.isPending}
+        >
+          {createRestaurant.isPending ? (
+            <>
+              <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />
+              Création en cours...
+            </>
+          ) : (
+            "Accéder à mon tableau de bord"
+          )}
         </Button>
       </div>
     </div>

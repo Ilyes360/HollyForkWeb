@@ -135,7 +135,7 @@ export const MOCK_RECIPES: Recipe[] = [
   },
   {
     id: "r7",
-    name: "Tarte aux pommes de terre sucrée",
+    name: "Tarte aux pommes caramélisées",
     icon: "cakeslice",
     category: "dessert",
     sellingPrice: 9,

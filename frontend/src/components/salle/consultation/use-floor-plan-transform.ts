@@ -25,12 +25,30 @@ export function useFloorPlanTransform(
     let maxY = -Infinity
 
     for (const el of elements) {
-      const padding = el.kind === "table" ? Math.max(el.width, el.height) / 2 + 20 : 100
-      minX = Math.min(minX, el.x - padding)
-      minY = Math.min(minY, el.y - padding)
-      maxX = Math.max(maxX, el.x + padding)
-      maxY = Math.max(maxY, el.y + padding)
+      if (el.kind === "table") {
+        const padding = Math.max(el.width, el.height) / 2 + 20
+        minX = Math.min(minX, el.x - padding)
+        minY = Math.min(minY, el.y - padding)
+        maxX = Math.max(maxX, el.x + padding)
+        maxY = Math.max(maxY, el.y + padding)
+      } else if (el.kind === "zone" || el.kind === "wall") {
+        // Use actual points to compute real extent
+        const pts = el.points
+        for (let i = 0; i < pts.length; i += 2) {
+          minX = Math.min(minX, el.x + pts[i])
+          minY = Math.min(minY, el.y + pts[i + 1])
+          maxX = Math.max(maxX, el.x + pts[i])
+          maxY = Math.max(maxY, el.y + pts[i + 1])
+        }
+      }
     }
+
+    // Add some margin around the content
+    const margin = 30
+    minX -= margin
+    minY -= margin
+    maxX += margin
+    maxY += margin
 
     const contentW = maxX - minX || 1
     const contentH = maxY - minY || 1

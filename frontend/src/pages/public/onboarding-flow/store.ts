@@ -34,6 +34,7 @@ interface OnboardingStore {
   prevStep: () => void
   goToStep: (step: number) => void
   reset: () => void
+  hydrateFromSession: () => boolean
 }
 
 const initialData: OnboardingData = {
@@ -89,4 +90,29 @@ export const useOnboardingStore = create<OnboardingStore>((set) => ({
       direction: step < state.currentStep ? -1 : 1,
     })),
   reset: () => set({ currentStep: 0, direction: 1, data: initialData }),
+  hydrateFromSession: () => {
+    const pending = sessionStorage.getItem("holly_pending_restaurant")
+    if (!pending) return false
+    try {
+      const data = JSON.parse(pending)
+      set((state) => ({
+        data: {
+          ...state.data,
+          restaurant: {
+            ...state.data.restaurant,
+            name: data.restaurantName ?? "",
+            cuisineType: data.cuisineType ?? "",
+            city: data.city ?? "",
+          },
+          establishment: {
+            covers: data.covers ?? "",
+            teamSize: data.teamSize ?? "",
+          },
+        },
+      }))
+      return true
+    } catch {
+      return false
+    }
+  },
 }))

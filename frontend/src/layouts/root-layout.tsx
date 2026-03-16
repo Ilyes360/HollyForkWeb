@@ -1,6 +1,7 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { Outlet } from "react-router"
 import { DragDropProvider } from "@dnd-kit/react"
+import { toast } from "sonner"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
@@ -133,6 +134,15 @@ function LayoutInner() {
 }
 
 export default function RootLayout() {
+  // Listen for 403 events from the API client
+  useEffect(() => {
+    const handler = () => {
+      toast.error("Vous n'avez pas la permission d'effectuer cette action.")
+    }
+    window.addEventListener("api:forbidden", handler)
+    return () => window.removeEventListener("api:forbidden", handler)
+  }, [])
+
   return (
     <PlanningEditionProvider>
       <SalleEditionProvider>

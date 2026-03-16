@@ -78,6 +78,13 @@ export const useGettingStartedStore = create<GettingStartedStore>()(
     }),
     {
       name: "holly-fork-getting-started",
+      version: 2,
+      migrate: () => ({ tasks: initialTasks, dismissed: false }),
+      merge: (_persisted, current) => ({
+        ...current,
+        tasks: initialTasks,
+        dismissed: false,
+      }),
     }
   )
 )

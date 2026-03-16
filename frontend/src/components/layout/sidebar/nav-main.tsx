@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { IconSvgElement } from "@hugeicons/react"
+import { usePermissions } from "@/hooks/use-permissions"
 import {
   DashboardSquare01Icon,
   Calendar03Icon,
@@ -49,6 +50,7 @@ type NavItem = {
   to: string
   label: string
   icon: IconSvgElement
+  permission?: string
   items?: NavSubItem[]
 }
 
@@ -90,6 +92,7 @@ export const navItems: NavGroup[] = [
         to: "/admin",
         label: "Administration",
         icon: UserGroupIcon,
+        permission: "manage_staff",
         items: [
           { to: "/admin", label: "Établissements" },
           { to: "/admin/employes", label: "Employés" },
@@ -112,15 +115,21 @@ export const navItems: NavGroup[] = [
 
 export function NavMain() {
   const { pathname } = useLocation()
+  const { can } = usePermissions()
 
   return (
     <>
-      {navItems.map((group) => (
+      {navItems.map((group) => {
+        const visibleItems = group.items.filter(
+          (item) => !item.permission || can(item.permission),
+        )
+        if (visibleItems.length === 0) return null
+        return (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {group.items.map((item) =>
+              {visibleItems.map((item) =>
                 item.items && item.items.length > 0 ? (
                   <CollapsibleNavItem
                     key={item.to}
@@ -138,7 +147,8 @@ export function NavMain() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      ))}
+        )
+      })}
     </>
   )
 }

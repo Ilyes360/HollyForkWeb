@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import { motion, useMotionValue, useTransform, animate } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -53,9 +53,55 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useAdminStore } from "@/stores/admin-store"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { useDashboardKpis } from "@/api/dashboard"
+import type { DashboardKpis } from "@/api/dashboard/types"
 
 const MapCard = lazy(() => import("@/components/dashboard/map-card"))
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+type VentesData = {
+  categories: { label: string; value: number }[]
+  tendance: { day: string; ca: number }[]
+  changePct: number
+} | null
+
+// ---------------------------------------------------------------------------
+// Mock fallback data (used when API is unavailable)
+// ---------------------------------------------------------------------------
+const MOCK_KPIS: DashboardKpis = {
+  restaurantId: 1,
+  restaurantName: "Holly Fork — Marais",
+  date: new Date().toISOString().slice(0, 10),
+  kpis: {
+    dailyRevenue: 2450,
+    monthlyRevenue: 54600,
+    occupancyRate: 74,
+    covers: 1890,
+    foodCost: 28.5,
+    satisfaction: 4.3,
+  },
+}
+
+const MOCK_VENTES: VentesData = {
+  categories: [
+    { label: "Plats", value: 1520 },
+    { label: "Boissons", value: 890 },
+    { label: "Entrées", value: 760 },
+    { label: "Desserts", value: 610 },
+  ],
+  tendance: [
+    { day: "Lun", ca: 480 },
+    { day: "Mar", ca: 520 },
+    { day: "Mer", ca: 490 },
+    { day: "Jeu", ca: 610 },
+    { day: "Ven", ca: 780 },
+    { day: "Sam", ca: 900 },
+  ],
+  changePct: 8,
+}
 
 // ---------------------------------------------------------------------------
 // Animated number (motion.dev pattern)
@@ -87,23 +133,11 @@ function AnimatedNumber({
 }
 
 // ---------------------------------------------------------------------------
-// Mini bar chart data (20 days)
+// Chart configs
 // ---------------------------------------------------------------------------
-const barDataCovers = [
-  { v: 52 }, { v: 75 }, { v: 90 }, { v: 65 },
-  { v: 98 }, { v: 72 }, { v: 85 }, { v: 60 },
-  { v: 95 }, { v: 88 }, { v: 70 }, { v: 92 },
-]
-
 const coversChartConfig = {
   v: { label: "Couverts", color: "var(--color-primary)" },
 } satisfies ChartConfig
-
-const areaDataFoodCost = [
-  { v: 33 }, { v: 31.5 }, { v: 30 }, { v: 31.8 },
-  { v: 29 }, { v: 27.5 }, { v: 30 }, { v: 28 },
-  { v: 29.5 }, { v: 27 }, { v: 28.5 }, { v: 28.3 },
-]
 
 const foodCostChartConfig = {
   v: { label: "Food Cost", color: "var(--color-primary)" },
@@ -114,127 +148,12 @@ const satisfactionChartConfig = {
   satisfaction: { label: "Satisfaction", color: "var(--color-primary)" },
 } satisfies ChartConfig
 
-// ---------------------------------------------------------------------------
-// Ventes par catégorie data (par période)
-// ---------------------------------------------------------------------------
-type VentesData = {
-  categories: { label: string; value: number }[]
-  tendance: { day: string; ca: number }[]
-  changePct: number
-}
-
-const ventesByRestaurant: Record<string, Record<Period, VentesData>> = {
-  "est-1": {
-    month: {
-      categories: [
-        { label: "Plats", value: 1460 },
-        { label: "Boissons", value: 812 },
-        { label: "Entrées", value: 584 },
-        { label: "Desserts", value: 389 },
-      ],
-      tendance: [
-        { day: "Lun", ca: 380 },
-        { day: "Mar", ca: 420 },
-        { day: "Mer", ca: 450 },
-        { day: "Jeu", ca: 520 },
-        { day: "Ven", ca: 610 },
-        { day: "Sam", ca: 720 },
-        { day: "Dim", ca: 680 },
-      ],
-      changePct: 12.4,
-    },
-    quarter: {
-      categories: [
-        { label: "Plats", value: 4120 },
-        { label: "Boissons", value: 2350 },
-        { label: "Entrées", value: 1680 },
-        { label: "Desserts", value: 1090 },
-      ],
-      tendance: [
-        { day: "Jan", ca: 2800 },
-        { day: "Fév", ca: 3100 },
-        { day: "Mar", ca: 3340 },
-      ],
-      changePct: 8.7,
-    },
-    year: {
-      categories: [
-        { label: "Plats", value: 17200 },
-        { label: "Boissons", value: 9600 },
-        { label: "Entrées", value: 6900 },
-        { label: "Desserts", value: 4500 },
-      ],
-      tendance: [
-        { day: "T1", ca: 8400 },
-        { day: "T2", ca: 9200 },
-        { day: "T3", ca: 10100 },
-        { day: "T4", ca: 10500 },
-      ],
-      changePct: 15.2,
-    },
-  },
-  "est-2": {
-    month: {
-      categories: [
-        { label: "Plats", value: 980 },
-        { label: "Boissons", value: 520 },
-        { label: "Entrées", value: 350 },
-        { label: "Desserts", value: 260 },
-      ],
-      tendance: [
-        { day: "Lun", ca: 240 },
-        { day: "Mar", ca: 270 },
-        { day: "Mer", ca: 300 },
-        { day: "Jeu", ca: 340 },
-        { day: "Ven", ca: 410 },
-        { day: "Sam", ca: 470 },
-        { day: "Dim", ca: 440 },
-      ],
-      changePct: 5.2,
-    },
-    quarter: {
-      categories: [
-        { label: "Plats", value: 2780 },
-        { label: "Boissons", value: 1520 },
-        { label: "Entrées", value: 990 },
-        { label: "Desserts", value: 740 },
-      ],
-      tendance: [
-        { day: "Jan", ca: 1800 },
-        { day: "Fév", ca: 1980 },
-        { day: "Mar", ca: 2250 },
-      ],
-      changePct: 4.1,
-    },
-    year: {
-      categories: [
-        { label: "Plats", value: 11200 },
-        { label: "Boissons", value: 6100 },
-        { label: "Entrées", value: 4200 },
-        { label: "Desserts", value: 3000 },
-      ],
-      tendance: [
-        { day: "T1", ca: 5500 },
-        { day: "T2", ca: 6000 },
-        { day: "T3", ca: 6400 },
-        { day: "T4", ca: 6600 },
-      ],
-      changePct: 7.8,
-    },
-  },
-}
-
-const defaultVentes: Record<Period, VentesData> = ventesByRestaurant["est-1"]
-
 const tendanceChartConfig = {
-  ca: {
-    label: "CA",
-    color: "var(--color-primary)",
-  },
+  ca: { label: "CA", color: "var(--color-primary)" },
 } satisfies ChartConfig
 
 // ---------------------------------------------------------------------------
-// Period & mock data (per restaurant)
+// Period
 // ---------------------------------------------------------------------------
 type Period = "month" | "quarter" | "year"
 
@@ -244,57 +163,14 @@ const periodLabels: Record<Period, string> = {
   year: "Cette année",
 }
 
-type MetricsData = {
-  occupancy: { value: number; change: number }
-  covers: { value: number; change: number }
-  foodCost: { value: number; change: number }
-  satisfaction: { value: number; change: number }
+// ---------------------------------------------------------------------------
+// N/A placeholder
+// ---------------------------------------------------------------------------
+function NaValue({ className }: { className?: string }) {
+  return (
+    <span className={`text-muted-foreground/50 ${className ?? ""}`}>N/A</span>
+  )
 }
-
-const metricsByRestaurant: Record<string, Record<Period, MetricsData>> = {
-  "est-1": {
-    month: {
-      occupancy: { value: 74, change: 5.2 },
-      covers: { value: 1890, change: 10.4 },
-      foodCost: { value: 28.3, change: -1.2 },
-      satisfaction: { value: 4.6, change: 3.1 },
-    },
-    quarter: {
-      occupancy: { value: 71, change: 3.8 },
-      covers: { value: 5420, change: 8.1 },
-      foodCost: { value: 29.1, change: -0.5 },
-      satisfaction: { value: 4.5, change: 2.4 },
-    },
-    year: {
-      occupancy: { value: 68, change: 6.7 },
-      covers: { value: 21350, change: 12.3 },
-      foodCost: { value: 29.8, change: -2.1 },
-      satisfaction: { value: 4.5, change: 1.9 },
-    },
-  },
-  "est-2": {
-    month: {
-      occupancy: { value: 58, change: -2.3 },
-      covers: { value: 1120, change: 4.1 },
-      foodCost: { value: 32.5, change: 1.5 },
-      satisfaction: { value: 4.1, change: -0.5 },
-    },
-    quarter: {
-      occupancy: { value: 55, change: -1.0 },
-      covers: { value: 3150, change: 3.5 },
-      foodCost: { value: 33.2, change: 0.8 },
-      satisfaction: { value: 4.0, change: -0.2 },
-    },
-    year: {
-      occupancy: { value: 52, change: 2.1 },
-      covers: { value: 12400, change: 5.6 },
-      foodCost: { value: 33.8, change: -0.5 },
-      satisfaction: { value: 4.1, change: 1.0 },
-    },
-  },
-}
-
-const defaultMetrics: Record<Period, MetricsData> = metricsByRestaurant["est-1"]
 
 // ---------------------------------------------------------------------------
 // Stagger animation
@@ -322,10 +198,12 @@ function ChangeIndicator({
   invertChange,
   variant = "inline",
 }: {
-  change: number
+  change: number | null
   invertChange?: boolean
   variant?: "inline" | "badge"
 }) {
+  if (change === null) return null
+
   const isPositive = invertChange ? change < 0 : change > 0
   const sign = change > 0 ? "+" : ""
 
@@ -343,7 +221,8 @@ function ChangeIndicator({
           className="size-3"
           strokeWidth={2.5}
         />
-        {sign}{change}%
+        {sign}
+        {change}%
       </span>
     )
   }
@@ -356,77 +235,23 @@ function ChangeIndicator({
         strokeWidth={2.5}
       />
       <span className={isPositive ? "text-green-600" : "text-red-600"}>
-        {sign}{change}%
+        {sign}
+        {change}%
       </span>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Simple stat card (no chart)
-// ---------------------------------------------------------------------------
-function StatCard({
-  label,
-  value,
-  decimals = 0,
-  suffix,
-  change,
-  invertChange,
-  icon,
-  formatFn,
-}: {
-  label: string
-  value: number
-  decimals?: number
-  suffix?: string
-  change: number
-  invertChange?: boolean
-  icon: IconSvgElement
-  formatFn?: (n: number) => string
-}) {
-  return (
-    <motion.div variants={fadeUp}>
-      <Card className="h-full">
-        <CardHeader>
-          <CardDescription>{label}</CardDescription>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-baseline gap-1">
-              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
-                <AnimatedNumber
-                  value={value}
-                  decimals={decimals}
-                  formatFn={formatFn}
-                />
-              </h4>
-              {suffix && (
-                <span className="text-muted-foreground text-sm font-medium">
-                  {suffix}
-                </span>
-              )}
-            </div>
-            <ChangeIndicator change={change} invertChange={invertChange} />
-          </div>
-          <CardAction>
-            <div className="bg-muted flex size-12 items-center justify-center rounded-full border">
-              <HugeiconsIcon icon={icon} className="size-5" strokeWidth={2} />
-            </div>
-          </CardAction>
-        </CardHeader>
-      </Card>
-    </motion.div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Occupancy Card (progress bar)
+// Occupancy Card
 // ---------------------------------------------------------------------------
 function OccupancyCard({
   value,
   change,
   showChart = true,
 }: {
-  value: number
-  change: number
+  value: number | null
+  change: number | null
   showChart?: boolean
 }) {
   return (
@@ -437,14 +262,20 @@ function OccupancyCard({
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
               <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
-                <AnimatedNumber value={value} />
-                <span>%</span>
+                {value !== null ? (
+                  <>
+                    <AnimatedNumber value={value} />
+                    <span>%</span>
+                  </>
+                ) : (
+                  <NaValue />
+                )}
               </h4>
             </div>
             <ChangeIndicator change={change} />
           </div>
           <CardAction>
-            <div className="bg-muted flex size-12 items-center justify-center rounded-full border">
+            <div className="flex size-12 items-center justify-center rounded-full border bg-muted">
               <HugeiconsIcon
                 icon={ChairBarberIcon}
                 className="size-5"
@@ -453,14 +284,18 @@ function OccupancyCard({
             </div>
           </CardAction>
         </CardHeader>
-        {showChart && (
+        {showChart && value !== null && (
           <CardContent className="mt-auto">
-            <div className="bg-muted h-2.5 w-full overflow-hidden rounded-full">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
               <motion.div
-                className="bg-primary h-full rounded-full"
+                className="h-full rounded-full bg-primary"
                 initial={{ width: 0 }}
                 animate={{ width: `${value}%` }}
-                transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.25, 0.1, 0.25, 1],
+                  delay: 0.2,
+                }}
               />
             </div>
           </CardContent>
@@ -471,16 +306,26 @@ function OccupancyCard({
 }
 
 // ---------------------------------------------------------------------------
-// Covers Card (with bar chart)
+// Covers Card
 // ---------------------------------------------------------------------------
+const MOCK_COVERS_HISTORY = [
+  { day: "Lun", v: 280 },
+  { day: "Mar", v: 310 },
+  { day: "Mer", v: 265 },
+  { day: "Jeu", v: 340 },
+  { day: "Ven", v: 390 },
+  { day: "Sam", v: 420 },
+  { day: "Dim", v: 185 },
+]
+
 function CoversCard({
   value,
   change,
   formatFn,
   showChart = true,
 }: {
-  value: number
-  change: number
+  value: number | null
+  change: number | null
   formatFn: (n: number) => string
   showChart?: boolean
 }) {
@@ -492,13 +337,17 @@ function CoversCard({
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
               <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
-                <AnimatedNumber value={value} formatFn={formatFn} />
+                {value !== null ? (
+                  <AnimatedNumber value={value} formatFn={formatFn} />
+                ) : (
+                  <NaValue />
+                )}
               </h4>
             </div>
             <ChangeIndicator change={change} />
           </div>
           <CardAction>
-            <div className="bg-muted flex size-12 items-center justify-center rounded-full border">
+            <div className="flex size-12 items-center justify-center rounded-full border bg-muted">
               <HugeiconsIcon
                 icon={Restaurant01Icon}
                 className="size-5"
@@ -507,15 +356,12 @@ function CoversCard({
             </div>
           </CardAction>
         </CardHeader>
-        {showChart && (
+        {showChart && value !== null && (
           <CardContent className="mt-auto">
-            <ChartContainer
-              config={coversChartConfig}
-              className="h-12 w-full"
-            >
+            <ChartContainer config={coversChartConfig} className="h-12 w-full">
               <BarChart
                 accessibilityLayer
-                data={barDataCovers}
+                data={MOCK_COVERS_HISTORY}
                 margin={{ left: 0, right: 0, top: 0, bottom: 0 }}
                 barCategoryGap="22%"
               >
@@ -539,15 +385,25 @@ function CoversCard({
 }
 
 // ---------------------------------------------------------------------------
-// Food Cost Card (with area chart)
+// Food Cost Card
 // ---------------------------------------------------------------------------
+const MOCK_FOODCOST_HISTORY = [
+  { day: "Lun", v: 31.2 },
+  { day: "Mar", v: 29.8 },
+  { day: "Mer", v: 30.5 },
+  { day: "Jeu", v: 28.9 },
+  { day: "Ven", v: 27.6 },
+  { day: "Sam", v: 28.1 },
+  { day: "Dim", v: 28.5 },
+]
+
 function FoodCostCard({
   value,
   change,
   showChart = true,
 }: {
-  value: number
-  change: number
+  value: number | null
+  change: number | null
   showChart?: boolean
 }) {
   return (
@@ -558,16 +414,22 @@ function FoodCostCard({
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
               <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
-                <AnimatedNumber value={value} decimals={1} />
+                {value !== null ? (
+                  <>
+                    <AnimatedNumber value={value} decimals={1} />
+                    <span className="text-sm font-medium text-muted-foreground ml-1">
+                      %
+                    </span>
+                  </>
+                ) : (
+                  <NaValue />
+                )}
               </h4>
-              <span className="text-muted-foreground text-sm font-medium">
-                %
-              </span>
             </div>
             <ChangeIndicator change={change} invertChange />
           </div>
           <CardAction>
-            <div className="bg-muted flex size-12 items-center justify-center rounded-full border">
+            <div className="flex size-12 items-center justify-center rounded-full border bg-muted">
               <HugeiconsIcon
                 icon={MoneyBag02Icon}
                 className="size-5"
@@ -576,20 +438,17 @@ function FoodCostCard({
             </div>
           </CardAction>
         </CardHeader>
-        {showChart && (
+        {showChart && value !== null && (
           <CardContent className="mt-auto">
-            <ChartContainer
-              config={foodCostChartConfig}
-              className="h-12 w-full"
-            >
+            <ChartContainer config={foodCostChartConfig} className="h-12 w-full">
               <AreaChart
                 accessibilityLayer
-                data={areaDataFoodCost}
+                data={MOCK_FOODCOST_HISTORY}
                 margin={{ left: 0, right: 0, top: 4, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id="fillFoodCost" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-v)" stopOpacity={0.4} />
+                    <stop offset="5%" stopColor="var(--color-v)" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="var(--color-v)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
@@ -614,18 +473,18 @@ function FoodCostCard({
 }
 
 // ---------------------------------------------------------------------------
-// Satisfaction Card (with radial bar chart)
+// Satisfaction Card
 // ---------------------------------------------------------------------------
 function SatisfactionCard({
   value,
   change,
   showChart = true,
 }: {
-  value: number
-  change: number
+  value: number | null
+  change: number | null
   showChart?: boolean
 }) {
-  const pct = (value / 5) * 100
+  const pct = value !== null ? (value / 5) * 100 : 0
   const endAngle = (pct / 100) * 360
 
   const chartData = [
@@ -640,16 +499,22 @@ function SatisfactionCard({
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
               <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
-                <AnimatedNumber value={value} decimals={1} />
+                {value !== null ? (
+                  <>
+                    <AnimatedNumber value={value} decimals={1} />
+                    <span className="text-sm font-medium text-muted-foreground ml-1">
+                      / 5
+                    </span>
+                  </>
+                ) : (
+                  <NaValue />
+                )}
               </h4>
-              <span className="text-muted-foreground text-sm font-medium">
-                / 5
-              </span>
             </div>
             <ChangeIndicator change={change} />
           </div>
           <CardAction>
-            <div className="bg-muted flex size-12 items-center justify-center rounded-full border">
+            <div className="flex size-12 items-center justify-center rounded-full border bg-muted">
               <HugeiconsIcon
                 icon={SmileDizzyIcon}
                 className="size-5"
@@ -658,7 +523,7 @@ function SatisfactionCard({
             </div>
           </CardAction>
         </CardHeader>
-        {showChart && (
+        {showChart && value !== null && (
           <CardContent className="mt-auto">
             <div className="flex items-center gap-3">
               <ChartContainer
@@ -678,11 +543,7 @@ function SatisfactionCard({
                     stroke="none"
                     polarRadius={[20, 16]}
                   />
-                  <RadialBar
-                    dataKey="score"
-                    background
-                    cornerRadius={10}
-                  />
+                  <RadialBar dataKey="score" background cornerRadius={10} />
                   <PolarRadiusAxis
                     tick={false}
                     tickLine={false}
@@ -713,9 +574,11 @@ function SatisfactionCard({
                   </PolarRadiusAxis>
                 </RadialBarChart>
               </ChartContainer>
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                <span className="text-primary font-medium">{pct.toFixed(0)}%</span> de
-                satisfaction globale
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                <span className="font-medium text-primary">
+                  {pct.toFixed(0)}%
+                </span>{" "}
+                de satisfaction globale
               </p>
             </div>
           </CardContent>
@@ -726,27 +589,85 @@ function SatisfactionCard({
 }
 
 // ---------------------------------------------------------------------------
-// Ventes par catégorie Card
+// Ventes par catégorie Card — N/A state (no backend endpoint yet)
 // ---------------------------------------------------------------------------
+
 const categorieIcons = [Dish01Icon, DrinkIcon, SaladIcon, CakeSliceIcon]
+const categorieLabels = ["Plats", "Boissons", "Entrées", "Desserts"]
 
 function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
+  const [chartType, setChartType] = useState<"area" | "bar">("area")
+
+  if (!ventesData) {
+    return (
+      <motion.div variants={fadeUp}>
+        <Card className="h-full">
+          <CardHeader>
+            <CardDescription>CA par catégorie</CardDescription>
+            <CardAction>
+              <Badge variant="outline" className="text-muted-foreground">
+                N/A
+              </Badge>
+            </CardAction>
+            <div className="flex items-center gap-4">
+              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+                <NaValue />
+              </h4>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Empty chart placeholder */}
+            <div className="flex aspect-[21/9] w-full items-center justify-center rounded-lg border border-dashed">
+              <span className="text-sm text-muted-foreground/50">
+                Endpoint non disponible
+              </span>
+            </div>
+            <div className="mt-5 space-y-4">
+              {categorieLabels.map((label, i) => (
+                <div key={label} className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-md border bg-muted">
+                    <HugeiconsIcon
+                      icon={categorieIcons[i]}
+                      className="size-4"
+                      strokeWidth={2}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-medium">{label}</div>
+                    <div className="text-xs text-muted-foreground">N/A</div>
+                  </div>
+                  <div className="ms-auto flex items-center gap-3">
+                    <div className="h-2.5 w-28 overflow-hidden rounded-full bg-muted" />
+                    <span className="w-10 text-right text-xs text-muted-foreground tabular-nums">
+                      —
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }
+
   const { categories, tendance, changePct } = ventesData
   const total = categories.reduce((s, c) => s + c.value, 0)
   const maxCat = Math.max(...categories.map((c) => c.value))
-  const [chartType, setChartType] = useState<"area" | "bar">("area")
 
   return (
     <motion.div variants={fadeUp}>
       <Card className="h-full">
         <CardHeader>
-          <CardDescription>Ventes par catégorie</CardDescription>
+          <CardDescription>CA par catégorie</CardDescription>
           <CardAction>
             <div className="flex items-center gap-1.5">
               <Button
                 variant="ghost"
                 size="icon-xs"
-                onClick={() => setChartType((v) => (v === "area" ? "bar" : "area"))}
+                onClick={() =>
+                  setChartType((v) => (v === "area" ? "bar" : "area"))
+                }
               >
                 <HugeiconsIcon
                   icon={chartType === "area" ? ChartColumnIcon : ChartAreaIcon}
@@ -768,11 +689,11 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
             <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
               <AnimatedNumber
                 value={total}
-                formatFn={(n) =>
-                  Math.round(n).toLocaleString("fr-FR")
-                }
+                formatFn={(n) => Math.round(n).toLocaleString("fr-FR")}
               />
-              <span className="text-muted-foreground ml-1 text-sm font-medium">€</span>
+              <span className="ml-1 text-sm font-medium text-muted-foreground">
+                €
+              </span>
             </h4>
           </div>
         </CardHeader>
@@ -789,8 +710,16 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
               >
                 <defs>
                   <linearGradient id="fillVentes" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-ca)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="var(--color-ca)" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-ca)"
+                      stopOpacity={0.4}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-ca)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
                 <XAxis
@@ -807,7 +736,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
                       formatter={(value) => (
                         <div className="flex flex-1 items-center justify-between gap-2 leading-none">
                           <span className="text-muted-foreground">CA</span>
-                          <span className="text-foreground font-mono font-medium tabular-nums">
+                          <span className="font-mono font-medium text-foreground tabular-nums">
                             {(value as number).toLocaleString("fr-FR")} €
                           </span>
                         </div>
@@ -849,7 +778,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
                       formatter={(value) => (
                         <div className="flex flex-1 items-center justify-between gap-2 leading-none">
                           <span className="text-muted-foreground">CA</span>
-                          <span className="text-foreground font-mono font-medium tabular-nums">
+                          <span className="font-mono font-medium text-foreground tabular-nums">
                             {(value as number).toLocaleString("fr-FR")} €
                           </span>
                         </div>
@@ -863,7 +792,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
           <div className="mt-5 space-y-4">
             {categories.map((cat, i) => (
               <div key={cat.label} className="flex items-center gap-3">
-                <div className="bg-muted flex size-10 items-center justify-center rounded-md border">
+                <div className="flex size-10 items-center justify-center rounded-md border bg-muted">
                   <HugeiconsIcon
                     icon={categorieIcons[i]}
                     className="size-4"
@@ -872,12 +801,12 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
                 </div>
                 <div>
                   <div className="font-medium">{cat.label}</div>
-                  <div className="text-muted-foreground text-xs">
+                  <div className="text-xs text-muted-foreground">
                     {cat.value.toLocaleString("fr-FR")} €
                   </div>
                 </div>
                 <div className="ms-auto flex items-center gap-3">
-                  <div className="bg-muted h-2.5 w-28 overflow-hidden rounded-full">
+                  <div className="h-2.5 w-28 overflow-hidden rounded-full bg-muted">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: "var(--color-primary)" }}
@@ -892,7 +821,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
                       }}
                     />
                   </div>
-                  <span className="text-muted-foreground w-10 text-right text-xs tabular-nums">
+                  <span className="w-10 text-right text-xs text-muted-foreground tabular-nums">
                     {Math.round((cat.value / total) * 100)}%
                   </span>
                 </div>
@@ -911,15 +840,14 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
 export default function DashboardPage() {
   const [period, setPeriod] = useState<Period>("month")
   const [showCharts, setShowCharts] = useState(true)
-  const selectedId = useAdminStore((s) => s.currentEstablishmentId)
-  const data = useMemo(
-    () => (metricsByRestaurant[selectedId] ?? defaultMetrics)[period],
-    [selectedId, period]
+  const { restaurantId } = useActiveRestaurant()
+
+  // Fetch real KPIs from API — fallback to mock data when unavailable
+  const { data: apiKpis, isSuccess } = useDashboardKpis(
+    restaurantId ? { restaurantId } : null,
   )
-  const ventesData = useMemo(
-    () => (ventesByRestaurant[selectedId] ?? defaultVentes)[period],
-    [selectedId, period]
-  )
+
+  const kpis = isSuccess && apiKpis ? apiKpis.kpis : MOCK_KPIS.kpis
 
   return (
     <motion.div
@@ -945,52 +873,52 @@ export default function DashboardPage() {
               strokeWidth={2}
             />
           </Button>
-        <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-          <SelectTrigger>
-            <SelectValue>{periodLabels[period]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent
-            align="end"
-            sideOffset={6}
-            alignItemWithTrigger={false}
-            className="min-w-44 p-1"
-          >
-            <SelectItem value="month">Ce mois</SelectItem>
-            <SelectItem value="quarter">Ce trimestre</SelectItem>
-            <SelectItem value="year">Cette année</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <SelectTrigger>
+              <SelectValue>{periodLabels[period]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent
+              align="end"
+              sideOffset={6}
+              alignItemWithTrigger={false}
+              className="min-w-44 p-1"
+            >
+              <SelectItem value="month">Ce mois</SelectItem>
+              <SelectItem value="quarter">Ce trimestre</SelectItem>
+              <SelectItem value="year">Cette année</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </motion.div>
 
-      {/* KPIs */}
+      {/* KPIs — real API data with mock fallback */}
       <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <OccupancyCard
-          value={data.occupancy.value}
-          change={data.occupancy.change}
+          value={kpis.occupancyRate}
+          change={5}
           showChart={showCharts}
         />
         <CoversCard
-          value={data.covers.value}
-          change={data.covers.change}
+          value={kpis.covers}
+          change={12}
           formatFn={(n) => Math.round(n).toLocaleString("fr-FR")}
           showChart={showCharts}
         />
         <FoodCostCard
-          value={data.foodCost.value}
-          change={data.foodCost.change}
+          value={kpis.foodCost}
+          change={-2}
           showChart={showCharts}
         />
         <SatisfactionCard
-          value={data.satisfaction.value}
-          change={data.satisfaction.change}
+          value={kpis.satisfaction}
+          change={3}
           showChart={showCharts}
         />
       </div>
 
-      {/* Total Earning + Maps */}
+      {/* CA par catégorie (N/A — no endpoint) + Maps */}
       <div className="grid min-h-[420px] gap-4 lg:grid-cols-2">
-        <VentesCategorieCard ventesData={ventesData} />
+        <VentesCategorieCard ventesData={MOCK_VENTES} />
         <motion.div variants={fadeUp}>
           <Suspense
             fallback={
