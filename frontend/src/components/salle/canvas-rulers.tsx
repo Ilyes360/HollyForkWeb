@@ -73,7 +73,7 @@ export const CanvasRulers = memo(function CanvasRulers({ width, height }: Canvas
                   y={9}
                   fontSize={8}
                   fill="currentColor"
-                  fontFamily="DM Sans, sans-serif"
+                  fontFamily="Satoshi, sans-serif"
                 >
                   {tick.label}
                 </text>
@@ -105,7 +105,7 @@ export const CanvasRulers = memo(function CanvasRulers({ width, height }: Canvas
                   y={tick.pos - RULER_SIZE + 2}
                   fontSize={8}
                   fill="currentColor"
-                  fontFamily="DM Sans, sans-serif"
+                  fontFamily="Satoshi, sans-serif"
                   transform={`rotate(-90, 2, ${tick.pos - RULER_SIZE + 2})`}
                 >
                   {tick.label}

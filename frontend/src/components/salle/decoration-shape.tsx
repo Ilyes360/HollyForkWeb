@@ -194,7 +194,7 @@ export const DecorationShape = memo(
                   fill={detail.fill ?? colors.decorationText}
                   width={detail.width}
                   align={detail.align ?? "center"}
-                  fontFamily="DM Sans, sans-serif"
+                  fontFamily="Satoshi, sans-serif"
                   fontStyle="bold"
                   listening={false}
                 />
@@ -210,7 +210,7 @@ export const DecorationShape = memo(
             text={element.label}
             fontSize={10}
             fill={colors.decorationText}
-            fontFamily="DM Sans, sans-serif"
+            fontFamily="Satoshi, sans-serif"
             fontStyle="bold"
             align="center"
             verticalAlign="middle"

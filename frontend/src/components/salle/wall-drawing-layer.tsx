@@ -69,7 +69,7 @@ export const WallDrawingLayer = memo(function WallDrawingLayer({
             y={midY - 16}
             fontSize={11}
             fill={colors.wallStroke}
-            fontFamily="DM Sans, sans-serif"
+            fontFamily="Satoshi, sans-serif"
             listening={false}
           />
         )
@@ -101,7 +101,7 @@ export const WallDrawingLayer = memo(function WallDrawingLayer({
         y={(lastPoint[1] + (canClose ? firstPoint[1] : snapped.y)) / 2 - 16}
         fontSize={11}
         fill={colors.wallStroke}
-        fontFamily="DM Sans, sans-serif"
+        fontFamily="Satoshi, sans-serif"
         opacity={0.6}
         listening={false}
       />

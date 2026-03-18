@@ -1,13 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/dm-sans";
 @import "mapbox-gl/dist/mapbox-gl.css";
 
 @font-face {
-  font-family: 'Clash Display';
-  src: url('/fonts/ClashDisplay-Variable.woff2') format('woff2');
-  font-weight: 200 700;
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
+  font-weight: 300 900;
   font-display: swap;
   font-style: normal;
 }
@@ -107,8 +114,8 @@
 }
 
 @theme inline {
-    --font-sans: 'DM Sans Variable', sans-serif;
-    --font-display: 'Clash Display', sans-serif;
+    --font-sans: 'Satoshi', sans-serif;
+    --font-display: 'Cabinet Grotesk', sans-serif;
     --color-flush-orange-50: var(--flush-orange-50);
     --color-flush-orange-100: var(--flush-orange-100);
     --color-flush-orange-200: var(--flush-orange-200);
@@ -169,10 +176,13 @@
     @apply border-border outline-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-medium;
     }
   html {
     @apply font-sans;
+    }
+  .font-display {
+    font-weight: 800;
     }
 }
 
@@ -220,7 +230,7 @@
 /* Fullscreen map — discreet attribution */
 .mapboxgl-ctrl-attrib {
   background: transparent !important;
-  font-family: 'DM Sans Variable', sans-serif !important;
+  font-family: 'Satoshi', sans-serif !important;
   font-size: 10px !important;
   opacity: 0.4 !important;
 }
