@@ -35,6 +35,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 // Admin Établissement — rôle par défaut à l'inscription
 const DEFAULT_EMPLOYEE_TYPE_ID = 2
@@ -89,6 +90,7 @@ const teamOptions = [
 ]
 
 export default function RegisterPage() {
+  usePageTitle("Inscription")
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
   const [addressLocation, setAddressLocation] = useState<LocationData | null>(null)
@@ -250,7 +252,7 @@ export default function RegisterPage() {
           </nav>
 
           <div className="text-center">
-            <h2 className="text-3xl font-bold">Créer un compte</h2>
+            <h2 className="font-display text-3xl font-bold">Créer un compte</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {step === 0 && "Renseignez vos informations de connexion"}
               {step === 1 && "Parlez-nous de votre restaurant"}

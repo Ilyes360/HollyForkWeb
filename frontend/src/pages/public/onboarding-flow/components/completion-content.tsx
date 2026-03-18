@@ -87,7 +87,7 @@ export function CompletionContent() {
       </motion.div>
 
       <div>
-        <h1 className="text-2xl font-bold">C'est parti, {data.restaurant.name} !</h1>
+        <h1 className="font-display text-2xl font-bold">C'est parti, {data.restaurant.name} !</h1>
         <p className="text-muted-foreground mt-2 leading-relaxed">
           Votre espace Holly Fork est prêt. Voici un récapitulatif.
         </p>

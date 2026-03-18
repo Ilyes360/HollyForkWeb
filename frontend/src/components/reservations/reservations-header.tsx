@@ -27,7 +27,7 @@ export function ReservationsHeader({
 }: ReservationsHeaderProps) {
   return (
     <div className="flex shrink-0 items-center gap-3">
-      <h1 className="text-lg font-semibold tracking-tight">Réservations</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Réservations</h1>
 
       <div className="flex items-center gap-1">
         <Button variant="outline" size="icon-sm" className="rounded-r-none" onClick={onPrev}>

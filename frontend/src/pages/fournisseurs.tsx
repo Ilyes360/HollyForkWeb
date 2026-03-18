@@ -11,6 +11,7 @@ import { OrdersTab } from "@/components/fournisseurs/orders-tab"
 import { AddSupplierDialog } from "@/components/fournisseurs/add-supplier-dialog"
 import type { AddSupplierFormValues } from "@/components/fournisseurs/add-supplier-dialog"
 import { OrderDialog } from "@/components/fournisseurs/order-dialog"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const container = {
   hidden: {},
@@ -43,6 +44,7 @@ function daysFromNow(n: number): string {
 const TODAY = toLocalDateString(new Date())
 
 export default function FournisseursPage() {
+  usePageTitle("Fournisseurs")
   const {
     suppliers,
     orders,

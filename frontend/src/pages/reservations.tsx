@@ -10,6 +10,7 @@ import { ReservationDetail } from "@/components/reservations/reservation-detail"
 import { NewReservationDialog } from "@/components/reservations/new-reservation-dialog"
 import { ReservationsRecap } from "@/components/reservations/reservations-recap"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const container = {
   hidden: {},
@@ -27,6 +28,7 @@ const fadeUp = {
 }
 
 export default function ReservationsPage() {
+  usePageTitle("Réservations")
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS)
   const [service, setService] = useState<ServiceType>("midi")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)

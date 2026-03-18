@@ -30,6 +30,7 @@ import { EtablissementOperationsSection } from "@/components/administration/etab
 import { EtablissementZonesSection } from "@/components/administration/etablissements/etablissement-zones-section"
 import { EtablissementLegalSection } from "@/components/administration/etablissements/etablissement-legal-section"
 import { DeleteEtablissementDialog } from "@/components/administration/etablissements/delete-etablissement-dialog"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
@@ -90,6 +91,7 @@ const fadeUp = {
 }
 
 export default function EtablissementDetailPage() {
+  usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const establishments = useAdminStore((s) => s.establishments)
@@ -188,7 +190,7 @@ export default function EtablissementDetailPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="flex items-center gap-3">
-        <h1 className="text-lg font-semibold tracking-tight">{establishment.name}</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">{establishment.name}</h1>
         <Badge variant={establishment.isActive ? "success" : "outline"}>
           {establishment.isActive ? "Actif" : "Inactif"}
         </Badge>

@@ -39,6 +39,7 @@ import {
 } from "@/components/administration/types"
 import type { PositionType, ContractType } from "@/components/administration/types"
 import { getInitials } from "@/components/administration/utils"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const schema = z
   .object({
@@ -98,6 +99,7 @@ const AVATAR_COLORS = [
 ]
 
 export default function EmployeDetailPage() {
+  usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const employees = useAdminStore((s) => s.employees)
@@ -256,7 +258,7 @@ export default function EmployeDetailPage() {
               {getInitials(employee.firstName, employee.lastName)}
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight">
+              <h1 className="font-display text-lg font-semibold tracking-tight">
                 {employee.firstName} {employee.lastName}
               </h1>
               <p className="text-sm text-muted-foreground">{POSITION_LABELS[employee.position]}</p>
@@ -268,7 +270,7 @@ export default function EmployeDetailPage() {
             )}
           </>
         ) : (
-          <h1 className="text-lg font-semibold tracking-tight">Nouvel employé</h1>
+          <h1 className="font-display text-lg font-semibold tracking-tight">Nouvel employé</h1>
         )}
       </motion.div>
 

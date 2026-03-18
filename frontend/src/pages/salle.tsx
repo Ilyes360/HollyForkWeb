@@ -10,6 +10,7 @@ import { EditionOverlay } from "@/components/salle/edition-overlay"
 import { useSalleEdition } from "@/components/salle/salle-context"
 import { useSalleStore } from "@/components/salle/store"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const container: Variants = {
   hidden: {},
@@ -27,6 +28,7 @@ const fadeUp: Variants = {
 }
 
 export default function SallePage() {
+  usePageTitle("Salle")
   const [plan, setPlan] = useState<FloorPlan>(DEFAULT_PLAN)
   const [activeTab, setActiveTab] = useState("plan")
   const { isEditing, startEditing, stopEditing } = useSalleEdition()
@@ -147,7 +149,7 @@ export default function SallePage() {
         variants={fadeUp}
         className="flex shrink-0 items-center justify-between"
       >
-        <h1 className="text-lg font-semibold tracking-tight">Plan de salle</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Plan de salle</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>

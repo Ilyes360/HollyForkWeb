@@ -64,6 +64,7 @@ import {
 import { OrderDialog } from "@/components/fournisseurs/order-dialog"
 import type { OrderItem } from "@/components/fournisseurs/types"
 import { useInventoryStore } from "@/stores/inventory-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const editSupplierSchema = z.object({
   name: z.string().min(2, "Le nom est requis"),
@@ -126,6 +127,7 @@ function daysFromNow(n: number): string {
 }
 
 export default function FournisseurDetailPage() {
+  usePageTitle("Fournisseurs")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const {
@@ -218,7 +220,7 @@ export default function FournisseurDetailPage() {
                     {getInitials(supplier.name)}
                   </AvatarFallback>
                 </Avatar>
-                <h1 className="mt-3 text-lg font-semibold">{supplier.name}</h1>
+                <h1 className="font-display mt-3 text-lg font-semibold">{supplier.name}</h1>
                 <Badge variant="outline" className="mt-1">
                   {getCategoryLabel(supplier.category, categories)}
                 </Badge>

@@ -4,7 +4,30 @@
 @import "@fontsource-variable/dm-sans";
 @import "mapbox-gl/dist/mapbox-gl.css";
 
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/ClashDisplay-Variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: normal;
+}
+
 @custom-variant dark (&:is(.dark *));
+
+/* Flush Orange palette */
+:root {
+    --flush-orange-50: #fffaec;
+    --flush-orange-100: #fff3d3;
+    --flush-orange-200: #ffe4a5;
+    --flush-orange-300: #ffcf6d;
+    --flush-orange-400: #ffaf32;
+    --flush-orange-500: #ff950a;
+    --flush-orange-600: #ff8000;
+    --flush-orange-700: #cc5d02;
+    --flush-orange-800: #a1480b;
+    --flush-orange-900: #823d0c;
+    --flush-orange-950: #461d04;
+}
 
 :root {
     --background: oklch(1 0 0);
@@ -13,36 +36,36 @@
     --card-foreground: oklch(0.141 0.005 285.823);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.141 0.005 285.823);
-    --primary: oklch(0.7 0.24 48);
-    --primary-foreground: oklch(0.98 0.01 75);
+    --primary: var(--flush-orange-600);
+    --primary-foreground: #fff;
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
     --muted: oklch(0.967 0.001 286.375);
     --muted-foreground: oklch(0.552 0.016 285.938);
-    --accent: oklch(0.967 0.001 286.375);
-    --accent-foreground: oklch(0.21 0.006 285.885);
+    --accent: var(--flush-orange-100);
+    --accent-foreground: var(--flush-orange-800);
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.92 0.004 286.32);
     --input: oklch(0.92 0.004 286.32);
-    --ring: oklch(0.705 0.015 286.067);
-    --chart-1: oklch(0.85 0.14 60);
-    --chart-2: oklch(0.75 0.22 50);
-    --chart-3: oklch(0.7 0.24 48);
-    --chart-4: oklch(0.6 0.21 42);
-    --chart-5: oklch(0.5 0.17 38);
+    --ring: var(--flush-orange-500);
+    --chart-1: var(--flush-orange-200);
+    --chart-2: var(--flush-orange-300);
+    --chart-3: var(--flush-orange-500);
+    --chart-4: var(--flush-orange-700);
+    --chart-5: var(--flush-orange-900);
     --success: oklch(0.55 0.18 145);
     --success-foreground: oklch(0.98 0.02 145);
-    --warning: oklch(0.75 0.18 85);
-    --warning-foreground: oklch(0.25 0.05 85);
+    --warning: var(--flush-orange-400);
+    --warning-foreground: var(--flush-orange-950);
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.141 0.005 285.823);
-    --sidebar-primary: oklch(0.7 0.24 48);
-    --sidebar-primary-foreground: oklch(0.98 0.01 75);
-    --sidebar-accent: oklch(0.967 0.001 286.375);
-    --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+    --sidebar-primary: var(--flush-orange-600);
+    --sidebar-primary-foreground: #fff;
+    --sidebar-accent: var(--flush-orange-100);
+    --sidebar-accent-foreground: var(--flush-orange-800);
     --sidebar-border: oklch(0.92 0.004 286.32);
-    --sidebar-ring: oklch(0.705 0.015 286.067);
+    --sidebar-ring: var(--flush-orange-500);
 }
 
 .dark {
@@ -52,8 +75,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.21 0.006 285.885);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.72 0.22 48);
-    --primary-foreground: oklch(0.98 0.01 75);
+    --primary: var(--flush-orange-500);
+    --primary-foreground: var(--flush-orange-950);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.274 0.006 286.033);
@@ -63,28 +86,40 @@
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.552 0.016 285.938);
-    --chart-1: oklch(0.85 0.14 60);
-    --chart-2: oklch(0.75 0.22 50);
-    --chart-3: oklch(0.7 0.24 48);
-    --chart-4: oklch(0.6 0.21 42);
-    --chart-5: oklch(0.5 0.17 38);
+    --ring: var(--flush-orange-400);
+    --chart-1: var(--flush-orange-200);
+    --chart-2: var(--flush-orange-400);
+    --chart-3: var(--flush-orange-500);
+    --chart-4: var(--flush-orange-600);
+    --chart-5: var(--flush-orange-800);
     --success: oklch(0.65 0.2 145);
     --success-foreground: oklch(0.15 0.03 145);
-    --warning: oklch(0.7 0.16 85);
-    --warning-foreground: oklch(0.15 0.03 85);
+    --warning: var(--flush-orange-400);
+    --warning-foreground: var(--flush-orange-950);
     --sidebar: oklch(0.21 0.006 285.885);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.72 0.22 48);
-    --sidebar-primary-foreground: oklch(0.98 0.01 75);
+    --sidebar-primary: var(--flush-orange-500);
+    --sidebar-primary-foreground: var(--flush-orange-950);
     --sidebar-accent: oklch(0.274 0.006 286.033);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.552 0.016 285.938);
+    --sidebar-ring: var(--flush-orange-400);
 }
 
 @theme inline {
     --font-sans: 'DM Sans Variable', sans-serif;
+    --font-display: 'Clash Display', sans-serif;
+    --color-flush-orange-50: var(--flush-orange-50);
+    --color-flush-orange-100: var(--flush-orange-100);
+    --color-flush-orange-200: var(--flush-orange-200);
+    --color-flush-orange-300: var(--flush-orange-300);
+    --color-flush-orange-400: var(--flush-orange-400);
+    --color-flush-orange-500: var(--flush-orange-500);
+    --color-flush-orange-600: var(--flush-orange-600);
+    --color-flush-orange-700: var(--flush-orange-700);
+    --color-flush-orange-800: var(--flush-orange-800);
+    --color-flush-orange-900: var(--flush-orange-900);
+    --color-flush-orange-950: var(--flush-orange-950);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -139,6 +174,42 @@
   html {
     @apply font-sans;
     }
+}
+
+/* Holly Fork brand touches */
+::selection {
+  background-color: var(--flush-orange-200);
+  color: var(--flush-orange-900);
+}
+
+/* Custom scrollbar — appears on hover only */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: var(--flush-orange-300) transparent;
+}
+.dark *:hover {
+  scrollbar-color: var(--flush-orange-800) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--flush-orange-300);
+}
+.dark *:hover::-webkit-scrollbar-thumb {
+  background: var(--flush-orange-800);
 }
 
 .map-card .mapboxgl-ctrl-attrib,

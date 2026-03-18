@@ -24,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { LoginMfaForm } from "./login-mfa-form"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const formSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide"),
@@ -35,6 +36,7 @@ type FormValues = z.infer<typeof formSchema>
 type MfaState = { tempToken: string; email: string } | null
 
 export default function LoginPage() {
+  usePageTitle("Connexion")
   const [mfaState, setMfaState] = useState<MfaState>(null)
   const loginMutation = useLogin()
   const navigate = useNavigate()
@@ -127,7 +129,7 @@ export default function LoginPage() {
                 exit={{ opacity: 0, x: 20 }}
               >
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold">Bon retour parmi nous</h2>
+                  <h2 className="font-display text-3xl font-bold">Bon retour parmi nous</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Connectez-vous à votre compte
                   </p>

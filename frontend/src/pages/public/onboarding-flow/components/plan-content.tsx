@@ -74,7 +74,7 @@ export function PlanContent() {
                 </span>
               )}
               <div className="mb-4">
-                <h3 className="text-lg font-bold">{plan.name}</h3>
+                <h3 className="font-display text-lg font-bold">{plan.name}</h3>
                 <p className="text-muted-foreground text-sm">{plan.description}</p>
               </div>
               <div className="mb-4 flex items-baseline gap-1">

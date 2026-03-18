@@ -11,6 +11,7 @@ import { RecipesGrid } from "@/components/cuisine/recipes-grid"
 import { RecipesTable } from "@/components/cuisine/recipes-table"
 import { RecipeDetail } from "@/components/cuisine/recipe-detail"
 import { useRecipeStore } from "@/stores/recipe-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const container = {
   hidden: {},
@@ -28,6 +29,7 @@ const fadeUp = {
 }
 
 export default function CuisinePage() {
+  usePageTitle("Cuisine")
   const navigate = useNavigate()
   const products = MOCK_PRODUCTS
 

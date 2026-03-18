@@ -31,6 +31,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { useInventoryStore } from "@/stores/inventory-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 import type { StorageZoneConfig, CategoryConfig } from "@/stores/inventory-store"
 
 // ── Schemas ──
@@ -271,6 +272,7 @@ function DeleteConfirmDialog({
 // ── Main Page ──
 
 export default function StocksConfigurationPage() {
+  usePageTitle("Configuration")
   const {
     storageZones,
     categories,
@@ -304,7 +306,7 @@ export default function StocksConfigurationPage() {
     >
       {/* Header */}
       <motion.div variants={fadeUp}>
-        <h1 className="text-2xl font-bold tracking-tight">Configuration</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Configuration</h1>
         <p className="text-sm text-muted-foreground">
           Gérez les zones de stockage et les catégories de produits.
         </p>

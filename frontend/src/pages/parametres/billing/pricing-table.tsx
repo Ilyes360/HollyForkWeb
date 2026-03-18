@@ -66,7 +66,7 @@ export default function PricingTable() {
         </Button>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Changer de plan</h1>
+            <h1 className="font-display text-3xl font-bold">Changer de plan</h1>
             <p className="mt-1 text-muted-foreground">
               Essai gratuit de 14 jours, sans engagement.
             </p>
@@ -104,7 +104,7 @@ export default function PricingTable() {
               </Badge>
             )}
             <div className="mb-4">
-              <h3 className="text-lg font-bold">{plan.name}</h3>
+              <h3 className="font-display text-lg font-bold">{plan.name}</h3>
               <p className="text-sm text-muted-foreground">{plan.description}</p>
             </div>
             <div className="mb-6 flex items-baseline gap-1">

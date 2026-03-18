@@ -10,7 +10,7 @@ interface StocksHeaderProps {
 export function StocksHeader({ onExport, onAddProduct }: StocksHeaderProps) {
   return (
     <div className="flex shrink-0 items-center gap-3">
-      <h1 className="text-lg font-semibold tracking-tight">Gestion des stocks</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Gestion des stocks</h1>
       <span className="text-sm text-muted-foreground">
         Suivez vos inventaires en temps réel
       </span>

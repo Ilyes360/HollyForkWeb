@@ -36,7 +36,7 @@ export function ReservationsKpis({ reservations }: ReservationsKpisProps) {
         <CardHeader>
           <CardDescription>Taux de remplissage</CardDescription>
           <div className="flex flex-col gap-2">
-            <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+            <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
               {fillRate}
               <span className="text-muted-foreground text-sm font-medium">%</span>
             </h4>
@@ -84,7 +84,7 @@ function KpiCard({
       <CardHeader>
         <CardDescription>{label}</CardDescription>
         <div className="flex flex-col gap-2">
-          <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+          <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
             {value}
           </h4>
         </div>

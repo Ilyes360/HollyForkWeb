@@ -10,7 +10,7 @@ interface FournisseursHeaderProps {
 export function FournisseursHeader({ onOrder, onAddSupplier }: FournisseursHeaderProps) {
   return (
     <div className="flex shrink-0 items-center gap-3">
-      <h1 className="text-lg font-semibold tracking-tight">Fournisseurs</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Fournisseurs</h1>
       <span className="text-sm text-muted-foreground">
         Gérez vos fournisseurs et commandes
       </span>

@@ -160,6 +160,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
+        <div className="flex items-center justify-center gap-1.5 py-2 text-[10px] text-muted-foreground/50 group-data-[collapsible=icon]:px-0">
+          <span className="flex size-4 shrink-0 items-center justify-center rounded bg-flush-orange-600/10 text-[7px] font-bold text-flush-orange-600">
+            HF
+          </span>
+          <span className="truncate group-data-[collapsible=icon]:hidden">
+            Holly Fork
+          </span>
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

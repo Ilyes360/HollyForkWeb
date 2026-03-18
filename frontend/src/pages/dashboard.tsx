@@ -54,7 +54,9 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { usePageTitle } from "@/hooks/use-page-title"
 import { useDashboardKpis } from "@/api/dashboard"
+import { useAuthStore } from "@/stores/auth-store"
 import type { DashboardKpis } from "@/api/dashboard/types"
 
 const MapCard = lazy(() => import("@/components/dashboard/map-card"))
@@ -261,7 +263,7 @@ function OccupancyCard({
           <CardDescription>Taux de remplissage</CardDescription>
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
-              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+              <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
                 {value !== null ? (
                   <>
                     <AnimatedNumber value={value} />
@@ -336,7 +338,7 @@ function CoversCard({
           <CardDescription>Couverts servis</CardDescription>
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
-              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+              <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
                 {value !== null ? (
                   <AnimatedNumber value={value} formatFn={formatFn} />
                 ) : (
@@ -413,7 +415,7 @@ function FoodCostCard({
           <CardDescription>Food Cost</CardDescription>
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
-              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+              <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
                 {value !== null ? (
                   <>
                     <AnimatedNumber value={value} decimals={1} />
@@ -498,7 +500,7 @@ function SatisfactionCard({
           <CardDescription>Satisfaction client</CardDescription>
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline gap-1">
-              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+              <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
                 {value !== null ? (
                   <>
                     <AnimatedNumber value={value} decimals={1} />
@@ -610,7 +612,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
               </Badge>
             </CardAction>
             <div className="flex items-center gap-4">
-              <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+              <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
                 <NaValue />
               </h4>
             </div>
@@ -686,7 +688,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
             </div>
           </CardAction>
           <div className="flex items-center gap-4">
-            <h4 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+            <h4 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
               <AnimatedNumber
                 value={total}
                 formatFn={(n) => Math.round(n).toLocaleString("fr-FR")}
@@ -838,6 +840,16 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
 // Dashboard
 // ---------------------------------------------------------------------------
 export default function DashboardPage() {
+  usePageTitle("Dashboard")
+  const user = useAuthStore((s) => s.user)
+
+  const greeting = (() => {
+    const h = new Date().getHours()
+    if (h < 12) return "Bonjour"
+    if (h < 18) return "Bon après-midi"
+    return "Bonsoir"
+  })()
+
   const [period, setPeriod] = useState<Period>("month")
   const [showCharts, setShowCharts] = useState(true)
   const { restaurantId } = useActiveRestaurant()
@@ -860,7 +872,14 @@ export default function DashboardPage() {
         variants={fadeUp}
         className="flex items-center justify-between"
       >
-        <h1 className="text-lg font-semibold tracking-tight">Dashboard</h1>
+        <div>
+          <h1 className="font-display text-lg font-semibold tracking-tight">
+            {greeting}{user?.firstName ? `, ${user.firstName}` : ""}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Pilotez votre journée, tout est là.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             variant={showCharts ? "secondary" : "ghost"}

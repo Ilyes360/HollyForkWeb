@@ -35,6 +35,7 @@ import { getMaterialCost, getFoodCostPercent, getGrossMargin, getFoodCostColor }
 import { IngredientCombobox } from "@/components/cuisine/ingredient-combobox"
 import { PRODUCT_ICONS } from "@/components/stocks/product-icons"
 import { useRecipeStore } from "@/stores/recipe-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
@@ -70,6 +71,7 @@ const container = {
 }
 
 export default function CuisineRecipePage() {
+  usePageTitle("Cuisine")
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const products = MOCK_PRODUCTS
@@ -206,7 +208,7 @@ export default function CuisineRecipePage() {
         >
           <HugeiconsIcon icon={ArrowLeft02Icon} className="size-4" strokeWidth={2} />
         </Button>
-        <h1 className="text-lg font-semibold tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {isEditing ? "Modifier la recette" : "Nouvelle recette"}
         </h1>
         <span className="text-sm text-muted-foreground">

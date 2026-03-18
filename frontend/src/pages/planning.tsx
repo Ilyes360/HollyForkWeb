@@ -11,6 +11,7 @@ import { EditionOverlay } from "@/components/planning/edition-overlay"
 import { usePlanningEdition } from "@/components/planning/planning-context"
 import { useWeekNavigation } from "@/hooks/use-week-navigation"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const container = {
   hidden: {},
@@ -28,6 +29,7 @@ const fadeUp = {
 }
 
 export default function PlanningPage() {
+  usePageTitle("Planning")
   const adminEmployees = useAdminStore((s) => s.employees)
   const currentEstId = useAdminStore((s) => s.currentEstablishmentId)
   const employees = useMemo(() => {
@@ -71,7 +73,7 @@ export default function PlanningPage() {
         variants={fadeUp}
         className="flex shrink-0 items-center justify-between"
       >
-        <h1 className="text-lg font-semibold tracking-tight">Planning</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">Planning</h1>
         <Button onClick={handleOpenEditor}>
           <HugeiconsIcon
             icon={PencilEdit01Icon}

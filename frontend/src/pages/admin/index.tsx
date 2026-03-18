@@ -2,6 +2,7 @@ import { useState, createContext, useContext, useCallback } from "react"
 import { Link, Outlet, useLocation } from "react-router"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminHeader } from "@/components/administration/admin-header"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 type AdminLayoutContextType = {
   onAdd: (() => void) | null
@@ -32,6 +33,7 @@ function getTabValue(pathname: string) {
 }
 
 export default function AdminLayout() {
+  usePageTitle("Administration")
   const { pathname } = useLocation()
   const isDetailPage = pathname.startsWith("/admin/etablissements/") || /^\/admin\/employes\/[^/]+$/.test(pathname)
   const [onAdd, setOnAdd] = useState<(() => void) | null>(null)

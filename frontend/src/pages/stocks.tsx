@@ -11,6 +11,7 @@ import { StocksTable } from "@/components/stocks/stocks-table"
 import { ProductDetail } from "@/components/stocks/product-detail"
 import { OrderDialog } from "@/components/fournisseurs/order-dialog"
 import type { OrderItem } from "@/components/fournisseurs/types"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const container = {
   hidden: {},
@@ -43,6 +44,7 @@ function daysFromNow(n: number): string {
 const TODAY = toLocalDateString(new Date())
 
 export default function StocksPage() {
+  usePageTitle("Stocks")
   const navigate = useNavigate()
   const { products, suppliers, deleteProduct, addOrder } =
     useInventoryStore()
