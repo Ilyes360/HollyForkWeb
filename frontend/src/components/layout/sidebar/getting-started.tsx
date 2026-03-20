@@ -33,7 +33,7 @@ export function GettingStarted() {
         <button
           type="button"
           onClick={dismiss}
-          className="flex size-4 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="flex size-4 items-center justify-center rounded-sm text-sidebar-foreground/50 transition-colors hover:text-sidebar-foreground"
           aria-label="Masquer les premiers pas"
         >
           <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3" />
@@ -42,7 +42,7 @@ export function GettingStarted() {
       <SidebarGroupContent>
         <div className="px-2 pb-2">
           <Progress value={progressPercent}>
-            <ProgressLabel className="text-xs text-muted-foreground">
+            <ProgressLabel className="text-xs text-sidebar-foreground/50">
               {allDone ? "Terminé !" : `${completedCount}/${totalCount}`}
             </ProgressLabel>
             <ProgressValue className="text-xs" />
@@ -62,8 +62,8 @@ export function GettingStarted() {
                 <div
                   className={`flex size-4 shrink-0 items-center justify-center rounded-full ring-1 transition-colors ${
                     task.completed
-                      ? "bg-primary ring-primary text-primary-foreground"
-                      : "ring-border"
+                      ? "bg-sidebar-primary ring-sidebar-primary text-sidebar-primary-foreground"
+                      : "ring-sidebar-border"
                   }`}
                 >
                   {task.completed && (
@@ -74,8 +74,8 @@ export function GettingStarted() {
                   <span
                     className={`truncate text-xs leading-tight ${
                       task.completed
-                        ? "text-muted-foreground line-through"
-                        : "text-foreground"
+                        ? "text-sidebar-foreground/40 line-through"
+                        : "text-sidebar-foreground"
                     }`}
                   >
                     {task.label}
@@ -85,7 +85,7 @@ export function GettingStarted() {
                   <HugeiconsIcon
                     icon={ArrowRight01Icon}
                     strokeWidth={2}
-                    className="ml-auto size-3 text-muted-foreground group-data-[collapsible=icon]:hidden"
+                    className="ml-auto size-3 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden"
                   />
                 )}
               </SidebarMenuButton>

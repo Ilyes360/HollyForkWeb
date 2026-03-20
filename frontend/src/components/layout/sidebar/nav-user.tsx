@@ -63,14 +63,14 @@ export function NavUser() {
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-medium">{name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="truncate text-xs text-sidebar-foreground/50">
                     {email}
                   </span>
                 </div>
                 <HugeiconsIcon
                   icon={MoreVerticalIcon}
                   strokeWidth={2}
-                  className="ml-auto size-4 group-data-[collapsible=icon]:hidden"
+                  className="ml-auto size-4 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden"
                 />
               </SidebarMenuButton>
             }

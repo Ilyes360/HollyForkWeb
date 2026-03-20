@@ -73,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuTrigger
                 render={
                   <SidebarMenuButton
-                    className="hover:text-foreground h-10"
+                    className="hover:text-sidebar-foreground h-10"
                     tooltip={displayName}
                   />
                 }
@@ -81,13 +81,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground">
                   {restaurantId === null ? "★" : displayName.charAt(0)}
                 </span>
-                <span className="truncate text-foreground font-semibold group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-sidebar-foreground font-semibold group-data-[collapsible=icon]:hidden">
                   {displayName}
                 </span>
                 <HugeiconsIcon
                   icon={ArrowDown01Icon}
                   strokeWidth={2}
-                  className="ml-auto size-4 text-muted-foreground group-data-[collapsible=icon]:hidden"
+                  className="ml-auto size-4 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden"
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent
