@@ -78,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   />
                 }
               >
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-[10px] font-bold text-sidebar-primary-foreground">
                   {restaurantId === null ? "★" : displayName.charAt(0)}
                 </span>
                 <span className="truncate text-sidebar-foreground font-semibold group-data-[collapsible=icon]:hidden">
