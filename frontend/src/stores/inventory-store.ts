@@ -1,10 +1,10 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Product } from "@/components/stocks/types"
-import type { SupplierFull, Order } from "@/components/fournisseurs/types"
-import { MOCK_PRODUCTS } from "@/components/stocks/data"
-import { MOCK_SUPPLIERS_FULL, MOCK_ORDERS } from "@/components/fournisseurs/data"
-import { CATEGORY_LABELS, ZONE_LABELS } from "@/components/stocks/types"
+import type { Product } from "@/components/stock/types"
+import type { SupplierFull, Order } from "@/components/commandes/types"
+import { MOCK_PRODUCTS } from "@/components/stock/data"
+import { MOCK_SUPPLIERS_FULL, MOCK_ORDERS } from "@/components/commandes/data"
+import { CATEGORY_LABELS, ZONE_LABELS } from "@/components/stock/types"
 
 // ── Config types ──
 
@@ -51,7 +51,7 @@ interface InventoryStore {
 
   // Order actions
   addOrder: (order: Order) => void
-  markOrderDelivered: (orderId: string) => void
+  markOrderDelivered: (orderId: string, receivedQuantities?: Record<string, number>) => void
   cancelOrder: (orderId: string) => void
 
   // Config actions
@@ -114,7 +114,7 @@ export const useInventoryStore = create<InventoryStore>()(
       addOrder: (order) =>
         set((state) => ({ orders: [order, ...state.orders] })),
 
-      markOrderDelivered: (orderId) =>
+      markOrderDelivered: (orderId, receivedQuantities) =>
         set((state) => {
           const today = toLocalDateString(new Date())
           const order = state.orders.find((o) => o.id === orderId)
@@ -132,18 +132,19 @@ export const useInventoryStore = create<InventoryStore>()(
             const orderItem = order.items.find((item) => item.productId === p.id)
             if (!orderItem) return p
 
+            const receivedQty = receivedQuantities?.[p.id] ?? orderItem.quantity
             const supplier = state.suppliers.find((s) => s.id === order.supplierId)
             const historyEntry = {
               id: `oh-${Date.now()}-${p.id}`,
               date: today,
-              quantity: orderItem.quantity,
+              quantity: receivedQty,
               supplier: supplier?.name ?? "—",
               unitPrice: orderItem.unitPrice,
             }
 
             return {
               ...p,
-              quantity: p.quantity + orderItem.quantity,
+              quantity: p.quantity + receivedQty,
               lastOrderDate: today,
               orderHistory: [historyEntry, ...p.orderHistory],
             }

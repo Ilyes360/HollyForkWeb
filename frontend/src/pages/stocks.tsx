@@ -1,16 +1,18 @@
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router"
 import { motion } from "motion/react"
-import type { Product } from "@/components/stocks/types"
+import type { Product } from "@/components/stock/types"
 import { useInventoryStore } from "@/stores/inventory-store"
-import { getSupplierProducts } from "@/components/fournisseurs/utils"
-import { StocksHeader } from "@/components/stocks/stocks-header"
-import { StocksKpis } from "@/components/stocks/stocks-kpis"
-import { StorageZones } from "@/components/stocks/storage-zones"
-import { StocksTable } from "@/components/stocks/stocks-table"
-import { ProductDetail } from "@/components/stocks/product-detail"
-import { OrderDialog } from "@/components/fournisseurs/order-dialog"
-import type { OrderItem } from "@/components/fournisseurs/types"
+import { useRecipeStore } from "@/stores/recipe-store"
+import { usePortionCalculator } from "@/hooks/use-portion-calculator"
+import { getSupplierProducts } from "@/components/commandes/utils"
+import { StockHeader } from "@/components/stock/stock-header"
+import { StorageZones } from "@/components/stock/storage-zones"
+import { StockTable } from "@/components/stock/stock-table"
+import { ProductDetailModal } from "@/components/stock/product-detail-modal"
+import { SupplierModal } from "@/components/shared/supplier-modal"
+import { OrderDialog } from "@/components/commandes/order-dialog"
+import type { OrderItem } from "@/components/commandes/types"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const container = {
@@ -44,10 +46,19 @@ function daysFromNow(n: number): string {
 const TODAY = toLocalDateString(new Date())
 
 export default function StocksPage() {
-  usePageTitle("Stocks")
+  usePageTitle("Mon stock")
   const navigate = useNavigate()
-  const { products, suppliers, deleteProduct, addOrder } =
-    useInventoryStore()
+  const recipes = useRecipeStore((s) => s.recipes)
+  const { products, suppliers, orders, deleteProduct, addOrder } = useInventoryStore()
+
+  // Portions
+  const { recipePortions, productPortionSummaries } = usePortionCalculator(
+    recipes,
+    products,
+    suppliers
+  )
+
+  // State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState("tous")
@@ -55,19 +66,29 @@ export default function StocksPage() {
   const [orderDialogOpen, setOrderDialogOpen] = useState(false)
   const [orderSupplierId, setOrderSupplierId] = useState<string | null>(null)
   const [preSelectedProductId, setPreSelectedProductId] = useState<string | undefined>(undefined)
+  const [supplierSheetOpen, setSupplierSheetOpen] = useState(false)
+  const [supplierSheetId, setSupplierSheetId] = useState<string | null>(null)
 
   // Keep selectedProduct in sync with store
   const currentProduct = selectedProduct
     ? products.find((p) => p.id === selectedProduct.id) ?? null
     : null
 
+  const currentSupplier = currentProduct
+    ? suppliers.find((s) => s.id === currentProduct.supplierId) ?? null
+    : null
+
+  const currentPortionSummary = currentProduct
+    ? productPortionSummaries.find((s) => s.productId === currentProduct.id) ?? null
+    : null
+
+  const supplierSheetSupplier = supplierSheetId
+    ? suppliers.find((s) => s.id === supplierSheetId) ?? null
+    : null
+
   const handleSelectProduct = useCallback((product: Product) => {
     setSelectedProduct(product)
     setDetailOpen(true)
-  }, [])
-
-  const handleAlertClick = useCallback(() => {
-    setStatusFilter("rupture")
   }, [])
 
   const handleOrderFromDetail = useCallback(
@@ -81,6 +102,12 @@ export default function StocksPage() {
     },
     [suppliers]
   )
+
+  const handleOrderFromSupplier = useCallback((supplierId: string) => {
+    setOrderSupplierId(supplierId)
+    setPreSelectedProductId(undefined)
+    setOrderDialogOpen(true)
+  }, [])
 
   const handleSubmitOrder = useCallback(
     (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
@@ -115,8 +142,9 @@ export default function StocksPage() {
     [deleteProduct, selectedProduct]
   )
 
-  const handleExport = useCallback(() => {
-    // no-op V1
+  const handleOpenSupplierSheet = useCallback((supplierId: string) => {
+    setSupplierSheetId(supplierId)
+    setSupplierSheetOpen(true)
   }, [])
 
   const orderSupplier = orderSupplierId
@@ -127,7 +155,7 @@ export default function StocksPage() {
     ? getSupplierProducts(orderSupplier.id, products)
     : []
 
-  // Build simple suppliers list for table/detail
+  // Build simple suppliers list for table
   const simpleSuppliers = suppliers.map((s) => ({ id: s.id, name: s.name }))
 
   return (
@@ -138,11 +166,7 @@ export default function StocksPage() {
       animate="show"
     >
       <motion.div variants={fadeUp}>
-        <StocksHeader onExport={handleExport} onAddProduct={() => navigate("/stocks/nouveau")} />
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
-        <StocksKpis products={products} onAlertClick={handleAlertClick} />
+        <StockHeader onAddProduct={() => navigate("/stocks/nouveau")} />
       </motion.div>
 
       <motion.div variants={fadeUp}>
@@ -154,25 +178,45 @@ export default function StocksPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="min-h-0 flex-1">
-        <StocksTable
+        <StockTable
           products={products}
           suppliers={simpleSuppliers}
+          portionSummaries={productPortionSummaries}
+          recipePortions={recipePortions}
           statusFilter={statusFilter}
           zoneFilter={zoneFilter}
           onStatusFilterChange={setStatusFilter}
           onSelectProduct={handleSelectProduct}
           onOrder={handleOrderFromDetail}
           onDelete={handleDelete}
+          onAddProduct={() => navigate("/stocks/nouveau")}
         />
       </motion.div>
 
-      <ProductDetail
+      <ProductDetailModal
         product={currentProduct}
-        suppliers={simpleSuppliers}
+        supplier={currentSupplier}
+        portionSummary={currentPortionSummary}
+        recipes={recipes}
+        allProducts={products}
+        allOrders={orders}
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onOrder={handleOrderFromDetail}
         onDelete={handleDelete}
+        onOpenSupplierSheet={handleOpenSupplierSheet}
+      />
+
+      <SupplierModal
+        supplier={supplierSheetSupplier}
+        products={products}
+        orders={orders}
+        productPortionSummaries={productPortionSummaries}
+        recipes={recipes}
+        open={supplierSheetOpen}
+        onOpenChange={setSupplierSheetOpen}
+        onOrder={handleOrderFromSupplier}
+        zIndex={62}
       />
 
       <OrderDialog

@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { GETTING_STARTED } from "@/lib/copy/onboarding"
 
 export interface GettingStartedTask {
   id: string
@@ -18,43 +19,33 @@ interface GettingStartedStore {
   reset: () => void
 }
 
-const initialTasks: GettingStartedTask[] = [
-  {
-    id: "restaurant-profile",
-    label: "Complétez votre restaurant",
-    description: "Horaires, couverts, équipe",
-    to: "/settings",
-    completed: true, // Done via onboarding
-  },
-  {
-    id: "floor-plan",
-    label: "Configurez votre salle",
-    description: "Ajoutez tables et zones",
-    to: "/salle",
-    completed: false,
-  },
-  {
-    id: "team-member",
-    label: "Ajoutez un employé",
-    description: "Serveurs, cuisine, managers",
-    to: "/admin",
-    completed: false,
-  },
-  {
-    id: "first-service",
-    label: "Créez votre premier service",
-    description: "Planifiez un service midi ou soir",
-    to: "/planning",
-    completed: false,
-  },
-  {
-    id: "first-reservation",
-    label: "Acceptez une réservation",
-    description: "Créez ou acceptez une résa",
-    to: "/reservations",
-    completed: false,
-  },
-]
+type TaskId = keyof typeof GETTING_STARTED.tasks
+
+const TASK_ROUTES: Record<TaskId, string> = {
+  "restaurant-profile": "/settings",
+  "floor-plan": "/salle",
+  "team-member": "/admin",
+  "first-service": "/planning",
+  "first-reservation": "/reservations",
+}
+
+const TASK_DEFAULTS: Record<TaskId, boolean> = {
+  "restaurant-profile": true,
+  "floor-plan": false,
+  "team-member": false,
+  "first-service": false,
+  "first-reservation": false,
+}
+
+const initialTasks: GettingStartedTask[] = (Object.keys(GETTING_STARTED.tasks) as TaskId[]).map(
+  (id) => ({
+    id,
+    label: GETTING_STARTED.tasks[id].label,
+    description: GETTING_STARTED.tasks[id].description,
+    to: TASK_ROUTES[id],
+    completed: TASK_DEFAULTS[id],
+  })
+)
 
 export const useGettingStartedStore = create<GettingStartedStore>()(
   persist(

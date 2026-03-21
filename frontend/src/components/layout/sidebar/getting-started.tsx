@@ -6,6 +6,7 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
+import { GETTING_STARTED } from "@/lib/copy/onboarding"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -29,12 +30,12 @@ export function GettingStarted() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="flex items-center justify-between">
-        <span>Premiers pas</span>
+        <span>{GETTING_STARTED.title}</span>
         <button
           type="button"
           onClick={dismiss}
           className="flex size-4 items-center justify-center rounded-sm text-sidebar-foreground/50 transition-colors hover:text-sidebar-foreground"
-          aria-label="Masquer les premiers pas"
+          aria-label={GETTING_STARTED.dismissAriaLabel}
         >
           <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3" />
         </button>
@@ -43,7 +44,7 @@ export function GettingStarted() {
         <div className="px-2 pb-2">
           <Progress value={progressPercent}>
             <ProgressLabel className="text-xs text-sidebar-foreground/50">
-              {allDone ? "Terminé !" : `${completedCount}/${totalCount}`}
+              {allDone ? GETTING_STARTED.done : GETTING_STARTED.progress(completedCount, totalCount)}
             </ProgressLabel>
             <ProgressValue className="text-xs" />
           </Progress>

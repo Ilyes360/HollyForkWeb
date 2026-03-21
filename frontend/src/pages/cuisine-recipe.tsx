@@ -26,14 +26,19 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { MOCK_PRODUCTS } from "@/components/stocks/data"
-import { UNIT_LABELS } from "@/components/stocks/types"
-import { formatCurrency } from "@/components/stocks/utils"
-import type { RecipeCategory, RecipeIngredient } from "@/components/cuisine/types"
-import { CATEGORY_LABELS, ALLERGEN_OPTIONS } from "@/components/cuisine/types"
-import { getMaterialCost, getFoodCostPercent, getGrossMargin, getFoodCostColor } from "@/components/cuisine/utils"
-import { IngredientCombobox } from "@/components/cuisine/ingredient-combobox"
-import { PRODUCT_ICONS } from "@/components/stocks/product-icons"
+import { MOCK_PRODUCTS } from "@/components/stock/data"
+import { UNIT_LABELS } from "@/components/stock/types"
+import { formatCurrency } from "@/components/stock/utils"
+import type { RecipeCategory, RecipeIngredient } from "@/components/carte/types"
+import { CATEGORY_LABELS, ALLERGEN_OPTIONS } from "@/components/carte/types"
+import {
+  getMaterialCost,
+  getFoodCostPercent,
+  getGrossMargin,
+  getFoodCostColor,
+} from "@/components/carte/utils"
+import { IngredientCombobox } from "@/components/carte/ingredient-combobox"
+import { PRODUCT_ICONS } from "@/components/stock/product-icons"
 import { useRecipeStore } from "@/stores/recipe-store"
 import { usePageTitle } from "@/hooks/use-page-title"
 
@@ -80,7 +85,7 @@ export default function CuisineRecipePage() {
   const addRecipe = useRecipeStore((s) => s.addRecipe)
   const updateRecipe = useRecipeStore((s) => s.updateRecipe)
 
-  const editRecipe = id ? recipes.find((r) => r.id === id) ?? null : null
+  const editRecipe = id ? (recipes.find((r) => r.id === id) ?? null) : null
   const isEditing = !!editRecipe
 
   const [ingredients, setIngredients] = useState<IngredientLine[]>([])
@@ -146,9 +151,7 @@ export default function CuisineRecipePage() {
 
   const handleQuantityChange = (productId: string, quantity: number) => {
     setIngredients((prev) =>
-      prev.map((i) =>
-        i.productId === productId ? { ...i, quantity } : i
-      )
+      prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
     )
   }
 
@@ -163,7 +166,8 @@ export default function CuisineRecipePage() {
   const recipeIngredients: RecipeIngredient[] = ingredients.map((i) => ({
     productId: i.productId,
     quantity: i.quantity,
-    unit: (products.find((p) => p.id === i.productId)?.unit ?? i.unit) as RecipeIngredient["unit"],
+    unit: (products.find((p) => p.id === i.productId)?.unit ??
+      i.unit) as RecipeIngredient["unit"],
   }))
 
   const materialCost = getMaterialCost(recipeIngredients, products)
@@ -200,13 +204,20 @@ export default function CuisineRecipePage() {
       animate="show"
     >
       {/* Header */}
-      <motion.div variants={fadeUp} className="flex shrink-0 items-center gap-3">
+      <motion.div
+        variants={fadeUp}
+        className="flex shrink-0 items-center gap-3"
+      >
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={() => navigate("/cuisine")}
         >
-          <HugeiconsIcon icon={ArrowLeft02Icon} className="size-4" strokeWidth={2} />
+          <HugeiconsIcon
+            icon={ArrowLeft02Icon}
+            className="size-4"
+            strokeWidth={2}
+          />
         </Button>
         <h1 className="font-display text-lg font-semibold tracking-tight">
           {isEditing ? "Modifier la recette" : "Nouvelle recette"}
@@ -232,7 +243,10 @@ export default function CuisineRecipePage() {
                 <FormItem>
                   <FormLabel>Nom de la recette</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Filet de bœuf sauce poivre" {...field} />
+                    <Input
+                      placeholder="Ex: Filet de bœuf sauce poivre"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -256,7 +270,11 @@ export default function CuisineRecipePage() {
                     ].join(" ")}
                     onClick={() => setIcon(icon === entry.key ? "" : entry.key)}
                   >
-                    <HugeiconsIcon icon={entry.icon} className="size-4" strokeWidth={2} />
+                    <HugeiconsIcon
+                      icon={entry.icon}
+                      className="size-4"
+                      strokeWidth={2}
+                    />
                   </button>
                 ))}
               </div>
@@ -278,11 +296,13 @@ export default function CuisineRecipePage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.keys(CATEGORY_LABELS) as RecipeCategory[]).map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {CATEGORY_LABELS[key]}
-                          </SelectItem>
-                        ))}
+                        {(Object.keys(CATEGORY_LABELS) as RecipeCategory[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {CATEGORY_LABELS[key]}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -346,7 +366,10 @@ export default function CuisineRecipePage() {
                         step="0.01"
                         value={ing.quantity}
                         onChange={(e) =>
-                          handleQuantityChange(ing.productId, Number(e.target.value))
+                          handleQuantityChange(
+                            ing.productId,
+                            Number(e.target.value)
+                          )
                         }
                         className="h-8 w-20"
                       />
@@ -362,7 +385,11 @@ export default function CuisineRecipePage() {
                         size="icon-xs"
                         onClick={() => handleRemoveIngredient(ing.productId)}
                       >
-                        <HugeiconsIcon icon={Delete02Icon} className="size-4" strokeWidth={2} />
+                        <HugeiconsIcon
+                          icon={Delete02Icon}
+                          className="size-4"
+                          strokeWidth={2}
+                        />
                       </Button>
                     </div>
                   ))}
@@ -374,11 +401,15 @@ export default function CuisineRecipePage() {
                   <div className="space-y-0.5">
                     <p>
                       Coût matière :{" "}
-                      <span className="font-medium">{formatCurrency(materialCost)}</span>
+                      <span className="font-medium">
+                        {formatCurrency(materialCost)}
+                      </span>
                     </p>
                     <p>
                       Food Cost :{" "}
-                      <span className={`font-medium ${getFoodCostColor(foodCostPct)}`}>
+                      <span
+                        className={`font-medium ${getFoodCostColor(foodCostPct)}`}
+                      >
                         {foodCostPct.toFixed(1)}%
                       </span>
                     </p>
@@ -436,7 +467,12 @@ export default function CuisineRecipePage() {
             />
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/cuisine")}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => navigate("/cuisine")}
+              >
                 Annuler
               </Button>
               <Button type="submit" className="flex-1">

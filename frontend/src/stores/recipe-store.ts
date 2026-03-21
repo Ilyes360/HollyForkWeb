@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Recipe } from "@/components/cuisine/types"
-import { MOCK_RECIPES } from "@/components/cuisine/data"
+import type { Recipe } from "@/components/carte/types"
+import { MOCK_RECIPES } from "@/components/carte/data"
 
 function toLocalDateString(date: Date): string {
   const y = date.getFullYear()

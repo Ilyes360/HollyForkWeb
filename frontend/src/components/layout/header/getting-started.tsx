@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { useGettingStartedStore } from "@/stores/getting-started-store"
+import { GETTING_STARTED } from "@/lib/copy/onboarding"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
@@ -52,7 +53,7 @@ export function GettingStartedButton() {
               <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary" />
             )}
           </span>
-          <span className="sr-only">Guide de demarrage</span>
+          <span className="sr-only">{GETTING_STARTED.srOnlyLabel}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align={isMobile ? "center" : "end"}
@@ -60,12 +61,12 @@ export function GettingStartedButton() {
         >
           <DropdownMenuGroup>
             <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Premiers pas</span>
+              <span>{GETTING_STARTED.title}</span>
               <button
                 type="button"
                 onClick={dismiss}
                 className="flex size-5 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Masquer le guide"
+                aria-label={GETTING_STARTED.headerDismissAriaLabel}
               >
                 <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3.5" />
               </button>
@@ -83,8 +84,8 @@ export function GettingStartedButton() {
                 <HugeiconsIcon icon={Rocket01Icon} className="size-4 text-primary" strokeWidth={2} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-primary">Lancer l'assistant</p>
-                <p className="text-[10px] text-muted-foreground">Configuration guidee en 4 etapes</p>
+                <p className="text-sm font-medium text-primary">{GETTING_STARTED.launchWizard}</p>
+                <p className="text-[10px] text-muted-foreground">{GETTING_STARTED.wizardSubtitle}</p>
               </div>
               <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5 text-primary" strokeWidth={2} />
             </button>
@@ -94,7 +95,7 @@ export function GettingStartedButton() {
 
           <div className="px-2 py-2">
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>{completedCount}/{totalCount} terminees</span>
+              <span>{GETTING_STARTED.progress(completedCount, totalCount)}</span>
               <span>{progressPercent}%</span>
             </div>
             <Progress value={progressPercent} />

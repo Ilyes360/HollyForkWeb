@@ -2,6 +2,7 @@ import React, { useEffect } from "react"
 import { Outlet } from "react-router"
 import { DragDropProvider } from "@dnd-kit/react"
 import { toast } from "sonner"
+import { TOAST } from "@/lib/copy/toasts"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
@@ -20,6 +21,11 @@ import {
 import { EditorStepper } from "@/components/salle/editor-stepper"
 import { SalleToolbar } from "@/components/salle/salle-toolbar"
 import { useSalleStore } from "@/components/salle/store"
+import {
+  CarteOperationalProvider,
+  useCarteOperational,
+} from "@/components/carte/operational-view-context"
+import { CarteProductSidebar } from "@/components/carte/carte-product-sidebar"
 
 function getSidebarDefaultOpen(): boolean {
   const match = document.cookie.match(/(?:^|;\s*)sidebar_state=([^;]*)/)
@@ -30,6 +36,7 @@ function getSidebarDefaultOpen(): boolean {
 function LayoutInner() {
   const planning = usePlanningEdition()
   const salle = useSalleEdition()
+  const carte = useCarteOperational()
   const salleIsDirty = useSalleStore((s) => s.isDirty)
   const salleExportPlan = useSalleStore((s) => s.exportPlan)
   const salleZoomToFit = useSalleStore((s) => s.zoomToFit)
@@ -86,6 +93,8 @@ function LayoutInner() {
         <EmployeePanel employees={planning.employees} shifts={planning.state.shifts} />
       ) : salle.isEditing ? (
         <EditorStepper />
+      ) : carte.isEditing ? (
+        <CarteProductSidebar />
       ) : (
         <AppSidebar variant="inset" />
       )}
@@ -137,7 +146,7 @@ export default function RootLayout() {
   // Listen for 403 events from the API client
   useEffect(() => {
     const handler = () => {
-      toast.error("Vous n'avez pas la permission d'effectuer cette action.")
+      toast.error(TOAST.permissionDenied)
     }
     window.addEventListener("api:forbidden", handler)
     return () => window.removeEventListener("api:forbidden", handler)
@@ -146,7 +155,9 @@ export default function RootLayout() {
   return (
     <PlanningEditionProvider>
       <SalleEditionProvider>
-        <LayoutInner />
+        <CarteOperationalProvider>
+          <LayoutInner />
+        </CarteOperationalProvider>
       </SalleEditionProvider>
     </PlanningEditionProvider>
   )

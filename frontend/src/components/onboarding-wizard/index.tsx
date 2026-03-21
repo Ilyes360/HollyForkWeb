@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { TOAST } from "@/lib/copy/toasts"
+import { ONBOARDING } from "@/lib/copy/onboarding"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { useWizardStore } from "./store"
 import { StepWelcome } from "./steps/step-welcome"
@@ -39,10 +41,10 @@ const stepSlideTransition = {
 }
 
 const STEPS = [
-  { label: "Bienvenue", component: StepWelcome },
-  { label: "Restaurant", component: StepRestaurant },
-  { label: "Salle", component: StepSalle },
-  { label: "Equipe", component: StepTeam },
+  { label: ONBOARDING.steps.welcome, component: StepWelcome },
+  { label: ONBOARDING.steps.restaurant, component: StepRestaurant },
+  { label: ONBOARDING.steps.salle, component: StepSalle },
+  { label: ONBOARDING.steps.team, component: StepTeam },
 ]
 
 interface OnboardingWizardProps {
@@ -100,7 +102,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
       completeTask("team-member")
     }
 
-    toast.success("Configuration terminee ! Bienvenue sur Holly Fork.")
+    toast.success(TOAST.onboardingComplete)
     onOpenChange(false)
   }, [data, completeTask, onOpenChange])
 
@@ -134,9 +136,9 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                   <img src="/hollyfork-logo.svg" alt="" className="h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Configuration</h2>
+                  <h2 className="text-lg font-semibold">{ONBOARDING.header.title}</h2>
                   <p className="text-xs text-muted-foreground">
-                    Etape {currentStep + 1} sur {STEPS.length}
+                    {ONBOARDING.header.stepOf(currentStep + 1, STEPS.length)}
                   </p>
                 </div>
               </div>
@@ -225,7 +227,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     className="gap-1.5"
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} className="size-3.5" strokeWidth={2} />
-                    Retour
+                    {ONBOARDING.footer.back}
                   </Button>
                 )}
               </div>
@@ -238,7 +240,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     onClick={nextStep}
                     className="text-muted-foreground"
                   >
-                    Passer cette etape
+                    {ONBOARDING.footer.skip}
                   </Button>
                 )}
 
@@ -248,7 +250,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     onClick={nextStep}
                     className="gap-1.5"
                   >
-                    Commencer la configuration
+                    {ONBOARDING.footer.start}
                     <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" strokeWidth={2} />
                   </Button>
                 ) : isLastStep ? (
@@ -258,7 +260,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     className="gap-1.5"
                   >
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-3.5" strokeWidth={2} />
-                    Terminer
+                    {ONBOARDING.footer.finish}
                   </Button>
                 ) : (
                   <Button
@@ -266,7 +268,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     onClick={nextStep}
                     className="gap-1.5"
                   >
-                    Suivant
+                    {ONBOARDING.footer.next}
                     <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" strokeWidth={2} />
                   </Button>
                 )}

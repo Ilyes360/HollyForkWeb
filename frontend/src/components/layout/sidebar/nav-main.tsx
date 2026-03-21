@@ -2,11 +2,12 @@ import { Link, useLocation } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { IconSvgElement } from "@hugeicons/react"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useInventoryStore } from "@/stores/inventory-store"
 import {
   DashboardSquare01Icon,
   Calendar03Icon,
-  ChairBarberIcon,
-  Clock01Icon,
+  FloorPlanIcon,
+  TimeScheduleIcon,
   CookBookIcon,
   PackageIcon,
   TruckDeliveryIcon,
@@ -34,6 +35,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -52,6 +54,7 @@ type NavItem = {
   icon: IconSvgElement
   permission?: string
   items?: NavSubItem[]
+  badge?: string
 }
 
 type NavGroup = {
@@ -64,25 +67,25 @@ export const navItems: NavGroup[] = [
     label: "Principal",
     items: [
       { to: "/", label: "Dashboard", icon: DashboardSquare01Icon },
-      { to: "/reservations", label: "Réservations", icon: Calendar03Icon },
-      { to: "/salle", label: "Salle", icon: ChairBarberIcon },
-      { to: "/planning", label: "Planning", icon: Clock01Icon },
+      { to: "/reservations", label: "Réservations", icon: Calendar03Icon, badge: "12" },
+      { to: "/salle", label: "Salle", icon: FloorPlanIcon },
+      { to: "/planning", label: "Planning", icon: TimeScheduleIcon },
     ],
   },
   {
     label: "Opérations",
     items: [
-      { to: "/cuisine", label: "Cuisine", icon: CookBookIcon },
+      { to: "/cuisine", label: "Ma carte", icon: CookBookIcon },
       {
         to: "/stocks",
-        label: "Stocks",
+        label: "Mon stock",
         icon: PackageIcon,
         items: [
           { to: "/stocks", label: "Produits" },
           { to: "/stocks/configuration", label: "Configuration" },
         ],
       },
-      { to: "/fournisseurs", label: "Fournisseurs", icon: TruckDeliveryIcon },
+      { to: "/commandes", label: "Commandes", icon: TruckDeliveryIcon },
     ],
   },
   {
@@ -116,12 +119,19 @@ export const navItems: NavGroup[] = [
 export function NavMain() {
   const { pathname } = useLocation()
   const { can } = usePermissions()
+  const pendingCount = useInventoryStore(
+    (s) => s.orders.filter((o) => o.status === "pending").length
+  )
 
   return (
     <>
       {navItems.map((group) => {
         const visibleItems = group.items.filter(
           (item) => !item.permission || can(item.permission),
+        ).map((item) =>
+          item.to === "/commandes" && pendingCount > 0
+            ? { ...item, badge: String(pendingCount) }
+            : item
         )
         if (visibleItems.length === 0) return null
         return (
@@ -176,6 +186,11 @@ function SimpleNavItem({
         <HugeiconsIcon icon={item.icon} strokeWidth={2} />
         <span>{item.label}</span>
       </SidebarMenuButton>
+      {item.badge && (
+        <SidebarMenuBadge className="bg-primary/10 text-primary">
+          {item.badge}
+        </SidebarMenuBadge>
+      )}
     </SidebarMenuItem>
   )
 }

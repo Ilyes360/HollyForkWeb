@@ -9,12 +9,11 @@ import DashboardPage from "@/pages/dashboard"
 import ReservationsPage from "@/pages/reservations"
 import SallePage from "@/pages/salle"
 import PlanningPage from "@/pages/planning"
-import CuisinePage from "@/pages/cuisine"
+import CartePage from "@/pages/carte"
 import CuisineRecipePage from "@/pages/cuisine-recipe"
 import StocksPage from "@/pages/stocks"
 import StocksProductPage from "@/pages/stocks-product"
-import FournisseursPage from "@/pages/fournisseurs"
-import FournisseurDetailPage from "@/pages/fournisseur-detail"
+import CommandesPage from "@/pages/commandes"
 import AdminLayout from "@/pages/admin"
 import EtablissementsPage from "@/pages/admin/etablissements"
 import EtablissementDetailPage from "@/pages/admin/etablissement-detail"
@@ -45,15 +44,16 @@ export const router = createBrowserRouter([
           { path: "reservations", element: <ReservationsPage /> },
           { path: "salle", element: <SallePage /> },
           { path: "planning", element: <PlanningPage /> },
-          { path: "cuisine", element: <CuisinePage /> },
+          { path: "cuisine", element: <CartePage /> },
           { path: "cuisine/nouvelle", element: <CuisineRecipePage /> },
           { path: "cuisine/:id/modifier", element: <CuisineRecipePage /> },
           { path: "stocks", element: <StocksPage /> },
           { path: "stocks/configuration", element: <StocksConfigurationPage /> },
           { path: "stocks/nouveau", element: <StocksProductPage /> },
           { path: "stocks/:id/modifier", element: <StocksProductPage /> },
-          { path: "fournisseurs", element: <FournisseursPage /> },
-          { path: "fournisseurs/:id", element: <FournisseurDetailPage /> },
+          { path: "commandes", element: <CommandesPage /> },
+          { path: "fournisseurs", element: <Navigate to="/commandes" replace /> },
+          { path: "fournisseurs/:id", element: <Navigate to="/commandes" replace /> },
           {
             path: "admin",
             element: <AdminLayout />,

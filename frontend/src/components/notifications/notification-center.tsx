@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { TOAST } from "@/lib/copy/toasts"
+import {
+  NOTIFICATION_FILTERS,
+  NOTIFICATION_LABELS,
+  getNotificationEmptyState,
+} from "@/lib/copy/notifications"
 import { NotificationCard } from "./notification-card"
 import {
   MOCK_NOTIFICATIONS,
@@ -35,14 +41,6 @@ const EXPAND_TRANSITION = {
 }
 
 type FilterTab = "all" | "unread" | NotificationCategory
-
-const FILTER_TABS: { value: FilterTab; label: string }[] = [
-  { value: "all", label: "Toutes" },
-  { value: "unread", label: "Non lues" },
-  { value: "reservations", label: "Reservations" },
-  { value: "stocks", label: "Stocks" },
-  { value: "planning", label: "Planning" },
-]
 
 interface NotificationCenterProps {
   open: boolean
@@ -106,7 +104,7 @@ export function NotificationCenter({
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    toast.success("Toutes les notifications ont ete marquees comme lues.")
+    toast.success(TOAST.allNotificationsRead)
   }, [])
 
   const dismiss = useCallback((id: string) => {
@@ -124,22 +122,22 @@ export function NotificationCenter({
 
       switch (actionType) {
         case "confirm":
-          toast.success(`Reservation de ${(notification.richContent as { clientName?: string }).clientName ?? ""} confirmee.`)
+          toast.success(TOAST.reservationConfirmed((notification.richContent as { clientName?: string }).clientName ?? ""))
           dismiss(id)
           break
         case "refuse":
-          toast.error(`Reservation de ${(notification.richContent as { clientName?: string }).clientName ?? ""} refusee.`)
+          toast.error(TOAST.reservationRefused((notification.richContent as { clientName?: string }).clientName ?? ""))
           dismiss(id)
           break
         case "approve":
-          toast.success("Demande de conge approuvee.")
+          toast.success(TOAST.leaveApproved)
           dismiss(id)
           break
         case "order":
-          toast.success(`Commande lancee pour ${(notification.richContent as { ingredientName?: string }).ingredientName ?? ""}.`)
+          toast.success(TOAST.orderStarted((notification.richContent as { ingredientName?: string }).ingredientName ?? ""))
           break
         default:
-          toast.info("Action en cours de developpement.")
+          toast.info(TOAST.actionInDevelopment)
           break
       }
     },
@@ -178,10 +176,10 @@ export function NotificationCenter({
                   />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Notifications</h2>
+                  <h2 className="text-lg font-semibold">{NOTIFICATION_LABELS.title}</h2>
                   {unreadCount > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      {unreadCount} non lue{unreadCount > 1 ? "s" : ""}
+                      {NOTIFICATION_LABELS.unreadCount(unreadCount)}
                     </p>
                   )}
                 </div>
@@ -199,7 +197,7 @@ export function NotificationCenter({
                       className="size-3.5"
                       strokeWidth={2}
                     />
-                    Tout marquer comme lu
+                    {NOTIFICATION_LABELS.markAllRead}
                   </Button>
                 )}
                 <Button
@@ -217,7 +215,7 @@ export function NotificationCenter({
             {/* Filter tabs */}
             <div className="shrink-0 px-6 py-3">
               <div className="inline-flex items-center gap-1 rounded-full bg-muted p-1">
-                {FILTER_TABS.map((tab) => {
+                {NOTIFICATION_FILTERS.map((tab) => {
                   const isActive = activeTab === tab.value
                   const count =
                     tab.value === "all"
@@ -343,14 +341,7 @@ export function NotificationCenter({
 }
 
 function EmptyState({ tab }: { tab: FilterTab }) {
-  const messages: Record<FilterTab, string> = {
-    all: "Aucune notification",
-    unread: "Aucune notification non lue",
-    reservations: "Aucune notification de reservation",
-    stocks: "Aucune notification de stock",
-    planning: "Aucune notification de planning",
-    system: "Aucune notification systeme",
-  }
+  const empty = getNotificationEmptyState(tab)
 
   return (
     <motion.div
@@ -366,10 +357,10 @@ function EmptyState({ tab }: { tab: FilterTab }) {
         />
       </div>
       <p className="mt-3 text-sm font-medium text-muted-foreground">
-        {messages[tab]}
+        {empty.title}
       </p>
       <p className="mt-1 text-xs text-muted-foreground/60">
-        Les nouvelles notifications apparaitront ici
+        {empty.description}
       </p>
     </motion.div>
   )

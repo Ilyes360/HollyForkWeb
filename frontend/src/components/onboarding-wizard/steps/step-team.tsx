@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ONBOARDING } from "@/lib/copy/onboarding"
 import { useWizardStore } from "../store"
 
 const ROLES = [
@@ -29,17 +30,17 @@ export function StepTeam() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div className="text-center">
-        <h2 className="text-xl font-semibold">Votre equipe</h2>
+        <h2 className="text-xl font-semibold">{ONBOARDING.team.title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ajoutez vos premiers membres. Vous pourrez en ajouter d'autres plus tard.
+          {ONBOARDING.team.description}
         </p>
       </div>
 
       {/* Column headers */}
       <div className="flex items-center gap-3 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className="flex-1">Prenom</span>
-        <span className="w-40">Poste</span>
-        <span className="w-20 text-center">Heures</span>
+        <span className="flex-1">{ONBOARDING.team.columns.firstName}</span>
+        <span className="w-40">{ONBOARDING.team.columns.role}</span>
+        <span className="w-20 text-center">{ONBOARDING.team.columns.hours}</span>
         <span className="w-8" />
       </div>
 
@@ -50,7 +51,7 @@ export function StepTeam() {
             <Input
               value={member.firstName}
               onChange={(e) => updateMember(index, { firstName: e.target.value })}
-              placeholder="Prenom"
+              placeholder={ONBOARDING.team.columns.firstName}
               className="h-9 flex-1"
             />
             <Select
@@ -58,7 +59,7 @@ export function StepTeam() {
               onValueChange={(val) => updateMember(index, { role: val })}
             >
               <SelectTrigger className="h-9 w-40">
-                <SelectValue placeholder="Poste" />
+                <SelectValue placeholder={ONBOARDING.team.columns.role} />
               </SelectTrigger>
               <SelectContent>
                 {ROLES.map((r) => (
@@ -98,7 +99,7 @@ export function StepTeam() {
         onClick={addMember}
       >
         <HugeiconsIcon icon={Add01Icon} className="size-3.5" strokeWidth={2} />
-        Ajouter un membre
+        {ONBOARDING.team.addMember}
       </Button>
     </div>
   )

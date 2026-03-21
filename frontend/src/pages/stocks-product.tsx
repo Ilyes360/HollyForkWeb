@@ -25,9 +25,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { UNIT_LABELS } from "@/components/stocks/types"
-import type { ProductUnit } from "@/components/stocks/types"
-import { getIconsForCategory, PRODUCT_ICONS } from "@/components/stocks/product-icons"
+import { UNIT_LABELS } from "@/components/stock/types"
+import type { ProductUnit } from "@/components/stock/types"
+import { getIconsForCategory, PRODUCT_ICONS } from "@/components/stock/product-icons"
 import { useInventoryStore } from "@/stores/inventory-store"
 import { usePageTitle } from "@/hooks/use-page-title"
 

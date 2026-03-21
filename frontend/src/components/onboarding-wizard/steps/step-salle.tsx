@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
+import { ONBOARDING } from "@/lib/copy/onboarding"
 import { useWizardStore } from "../store"
 
 type Template = {
@@ -46,9 +47,9 @@ export function StepSalle() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div className="text-center">
-        <h2 className="text-xl font-semibold">Votre salle</h2>
+        <h2 className="text-xl font-semibold">{ONBOARDING.salle.title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choisissez un modele de depart. Vous pourrez tout personnaliser ensuite dans l'editeur.
+          {ONBOARDING.salle.description}
         </p>
       </div>
 
@@ -128,9 +129,9 @@ export function StepSalle() {
               strokeWidth={2}
             />
           </div>
-          <h3 className="mt-3 text-sm font-semibold">Commencer de zero</h3>
+          <h3 className="mt-3 text-sm font-semibold">{ONBOARDING.salle.scratchTitle}</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Configurez manuellement dans l'editeur
+            {ONBOARDING.salle.scratchDescription}
           </p>
         </button>
       </div>

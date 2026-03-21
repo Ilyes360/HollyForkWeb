@@ -18,6 +18,7 @@ import type {
   PlanningContent,
 } from "./data"
 import { CATEGORY_META } from "./data"
+import { NOTIFICATION_EVENT_LABELS } from "@/lib/copy/notifications"
 
 interface NotificationCardProps {
   notification: Notification
@@ -147,12 +148,7 @@ function ReservationInfo({ content }: { content: ReservationContent }) {
     arrival: "bg-emerald-500/10 text-emerald-600",
   }
 
-  const eventLabels: Record<string, string> = {
-    new: "Nouvelle",
-    cancel: "Annulee",
-    modify: "Modifiee",
-    arrival: "Arrivee",
-  }
+  const eventLabels = NOTIFICATION_EVENT_LABELS
 
   return (
     <div className="flex flex-wrap items-center gap-2">

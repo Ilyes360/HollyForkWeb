@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react"
+import { useState, useMemo, useEffect, lazy, Suspense } from "react"
 import { motion, useMotionValue, useTransform, animate } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -44,19 +44,15 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { useDashboardKpis } from "@/api/dashboard"
 import { useAuthStore } from "@/stores/auth-store"
+import { useGreeting } from "@/hooks/use-greeting"
+import { PeriodPicker, type PeriodRange } from "@/components/dashboard/period-picker"
+import { startOfWeek, endOfWeek } from "date-fns"
 import type { DashboardKpis } from "@/api/dashboard/types"
 
 const MapCard = lazy(() => import("@/components/dashboard/map-card"))
@@ -155,14 +151,15 @@ const tendanceChartConfig = {
 } satisfies ChartConfig
 
 // ---------------------------------------------------------------------------
-// Period
+// Initial period (this week)
 // ---------------------------------------------------------------------------
-type Period = "month" | "quarter" | "year"
-
-const periodLabels: Record<Period, string> = {
-  month: "Ce mois",
-  quarter: "Ce trimestre",
-  year: "Cette année",
+function getThisWeek(): PeriodRange {
+  const now = new Date()
+  return {
+    from: startOfWeek(now, { weekStartsOn: 1 }),
+    to: endOfWeek(now, { weekStartsOn: 1 }),
+    label: "",
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -842,16 +839,10 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
 export default function DashboardPage() {
   usePageTitle("Dashboard")
   const user = useAuthStore((s) => s.user)
+  const { title: greetingTitle, subtitle: greetingSubtitle } = useGreeting()
 
-  const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 12) return "Bonjour"
-    if (h < 18) return "Bon après-midi"
-    return "Bonsoir"
-  })()
-
-  const [period, setPeriod] = useState<Period>("month")
-  const [showCharts, setShowCharts] = useState(false)
+  const [period, setPeriod] = useState<PeriodRange>(getThisWeek)
+  const [showCharts, setShowCharts] = useState(true)
   const { restaurantId } = useActiveRestaurant()
 
   // Fetch real KPIs from API — fallback to mock data when unavailable
@@ -874,10 +865,10 @@ export default function DashboardPage() {
       >
         <div>
           <h1 className="font-display text-lg font-semibold tracking-tight">
-            {greeting}{user?.firstName ? `, ${user.firstName}` : ""}
+            {greetingTitle}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Pilotez votre journée, tout est là.
+            {greetingSubtitle}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -892,21 +883,7 @@ export default function DashboardPage() {
               strokeWidth={2}
             />
           </Button>
-          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger>
-              <SelectValue>{periodLabels[period]}</SelectValue>
-            </SelectTrigger>
-            <SelectContent
-              align="end"
-              sideOffset={6}
-              alignItemWithTrigger={false}
-              className="min-w-44 p-1"
-            >
-              <SelectItem value="month">Ce mois</SelectItem>
-              <SelectItem value="quarter">Ce trimestre</SelectItem>
-              <SelectItem value="year">Cette année</SelectItem>
-            </SelectContent>
-          </Select>
+          <PeriodPicker value={period} onChange={setPeriod} />
         </div>
       </motion.div>
 
