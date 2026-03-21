@@ -65,11 +65,11 @@
     --warning: var(--flush-orange-400);
     --warning-foreground: var(--flush-orange-950);
     --radius: 0.625rem;
-    --sidebar: oklch(0.16 0.01 270);
+    --sidebar: oklch(0.20 0.01 270);
     --sidebar-foreground: oklch(0.88 0.006 270);
     --sidebar-primary: var(--flush-orange-500);
     --sidebar-primary-foreground: #fff;
-    --sidebar-accent: oklch(0.22 0.012 270);
+    --sidebar-accent: oklch(0.26 0.012 270);
     --sidebar-accent-foreground: oklch(0.98 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: var(--flush-orange-500);
@@ -258,4 +258,26 @@
 
 .marker-enter {
   animation: marker-enter 0.4s ease-out both;
+}
+
+/* Gantt block entrance animation */
+@keyframes gantt-block-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* No-show pulse animation — plays for 30s then stops */
+@keyframes gantt-noshow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.35; }
+}
+
+.gantt-noshow-pulse {
+  animation: gantt-noshow-pulse 1.5s ease-in-out 20;
 }

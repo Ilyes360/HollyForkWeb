@@ -1,0 +1,66 @@
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  Calendar03Icon,
+  Clock01Icon,
+  GridTableIcon,
+} from "@hugeicons/core-free-icons"
+
+const FEATURES = [
+  {
+    icon: Calendar03Icon,
+    title: "Reservations",
+    description: "Gerez vos reservations, votre carnet de clients et le service en temps reel.",
+  },
+  {
+    icon: Clock01Icon,
+    title: "Planning",
+    description: "Organisez les services, les horaires et les conges de votre equipe.",
+  },
+  {
+    icon: GridTableIcon,
+    title: "Plan de salle",
+    description: "Configurez vos salles, placez vos tables et visualisez l'occupation.",
+  },
+]
+
+export function StepWelcome() {
+  return (
+    <div className="mx-auto flex max-w-lg flex-col items-center text-center">
+      {/* Logo */}
+      <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10">
+        <img src="/hollyfork-logo.svg" alt="Holly Fork" className="h-8" />
+      </div>
+
+      <h1 className="mt-6 text-2xl font-semibold tracking-tight">
+        Bienvenue sur Holly Fork
+      </h1>
+      <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-sm">
+        Configurez votre restaurant en quelques etapes. Vous pourrez tout modifier plus tard.
+      </p>
+
+      {/* Feature cards */}
+      <div className="mt-8 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+        {FEATURES.map((feature) => (
+          <div
+            key={feature.title}
+            className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5"
+          >
+            <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
+              <HugeiconsIcon
+                icon={feature.icon}
+                className="size-5 text-primary"
+                strokeWidth={2}
+              />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">{feature.title}</h3>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                {feature.description}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

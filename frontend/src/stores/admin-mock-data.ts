@@ -21,6 +21,7 @@ export const mockEstablishments: Establishment[] = [
     tvaNumber: "FR12345678901",
     legalForm: "sas",
     totalCapacity: 48,
+    pipelineTemplateId: "brasserie",
     openingDays: ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"],
     services: [
       { id: "svc-1", name: "Midi", startTime: "10:00", endTime: "15:00" },
@@ -62,6 +63,7 @@ export const mockEstablishments: Establishment[] = [
     tvaNumber: "FR98765432109",
     legalForm: "sarl",
     totalCapacity: 32,
+    pipelineTemplateId: "bistrot",
     openingDays: ["mardi", "mercredi", "jeudi", "vendredi", "samedi"],
     services: [
       { id: "svc-4", name: "Midi", startTime: "12:00", endTime: "14:30" },

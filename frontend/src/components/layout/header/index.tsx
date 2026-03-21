@@ -8,13 +8,8 @@ import { UserMenu } from "@/components/layout/header/user-menu"
 
 function Logo() {
   return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-1.5">
-      <div className="flex size-7 items-center justify-center rounded-lg bg-flush-orange-600 text-white font-display text-xs font-black">
-        HF
-      </div>
-      <span className="font-display text-sm font-black tracking-tight text-foreground">
-        HOLLY FORK
-      </span>
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center">
+      <img src="/hollyfork-logo.svg" alt="Holly Fork" className="h-7" />
     </div>
   )
 }

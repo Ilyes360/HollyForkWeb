@@ -1,14 +1,15 @@
-import { useState, useMemo, useCallback } from "react"
-import { motion } from "motion/react"
+import { useState, useMemo, useCallback, useEffect } from "react"
+import type { ReservationViewMode } from "@/components/reservations/types"
+import { LiveSidePanel } from "@/components/reservations/live-side-panel"
+import { GanttTimeline } from "@/components/reservations/gantt"
+import { motion, AnimatePresence } from "motion/react"
 import { useDayNavigation } from "@/hooks/use-day-navigation"
 import { MOCK_RESERVATIONS } from "@/components/reservations/data"
 import type { Reservation, ReservationStatus, ServiceType } from "@/components/reservations/types"
 import { ReservationsHeader } from "@/components/reservations/reservations-header"
-import { ReservationsKpis } from "@/components/reservations/reservations-kpis"
 import { ReservationsTable } from "@/components/reservations/reservations-table"
 import { ReservationDetail } from "@/components/reservations/reservation-detail"
 import { NewReservationDialog } from "@/components/reservations/new-reservation-dialog"
-import { ReservationsRecap } from "@/components/reservations/reservations-recap"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { usePageTitle } from "@/hooks/use-page-title"
 
@@ -34,6 +35,7 @@ export default function ReservationsPage() {
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [newDialogOpen, setNewDialogOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ReservationViewMode>("table")
   const { currentDate, prev, next, today } = useDayNavigation()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
 
@@ -66,6 +68,25 @@ export default function ReservationsPage() {
       prev.map((r) => (r.id === id ? { ...r, notes } : r))
     )
   }, [])
+
+  const handleReschedule = useCallback((id: string, newTime: string) => {
+    setReservations((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, time: newTime } : r))
+    )
+  }, [])
+
+  const handleDurationChange = useCallback((id: string, newDurationMinutes: number) => {
+    setReservations((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, estimatedDurationMinutes: newDurationMinutes } : r))
+    )
+  }, [])
+
+  const handleNewFromPanel = useCallback(
+    (_prefill: { tableNumber: number; time: string }) => {
+      setNewDialogOpen(true)
+    },
+    []
+  )
 
   const handleNewReservation = useCallback(
     (data: {
@@ -102,6 +123,37 @@ export default function ReservationsPage() {
     [completeTask]
   )
 
+  // --- Keyboard shortcuts: N = new reservation, Escape = close detail ---
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return
+      if ((e.target as HTMLElement).isContentEditable) return
+
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault()
+        setNewDialogOpen(true)
+      }
+      if (e.key === "Escape") {
+        setDetailOpen(false)
+        setSelectedReservation(null)
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  // --- Responsive: auto-switch from gantt to table below 1024px ---
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)")
+    function handleChange(e: MediaQueryListEvent | MediaQueryList) {
+      if (e.matches) setViewMode("table")
+    }
+    handleChange(mql)
+    mql.addEventListener("change", handleChange as (e: MediaQueryListEvent) => void)
+    return () => mql.removeEventListener("change", handleChange as (e: MediaQueryListEvent) => void)
+  }, [])
+
   return (
     <motion.div
       className="flex h-full flex-col gap-6"
@@ -116,26 +168,65 @@ export default function ReservationsPage() {
           onNext={next}
           onToday={today}
           onNewReservation={() => setNewDialogOpen(true)}
-        />
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
-        <ReservationsKpis reservations={serviceReservations} />
-      </motion.div>
-
-      <motion.div variants={fadeUp} className="min-h-0 flex-1">
-        <ReservationsTable
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           reservations={serviceReservations}
-          selectedId={currentSelected?.id ?? null}
-          service={service}
-          onServiceChange={setService}
-          onSelectReservation={handleSelectReservation}
-          onStatusChange={handleStatusChange}
         />
       </motion.div>
 
-      <motion.div variants={fadeUp}>
-        <ReservationsRecap reservations={serviceReservations} service={service} currentDate={currentDate} />
+      <motion.div variants={fadeUp} className="flex min-h-0 flex-1 gap-6">
+        <div className="min-h-0 min-w-0 flex-1">
+          <AnimatePresence mode="wait">
+            {viewMode === "table" ? (
+              <motion.div
+                key="table"
+                className="h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ReservationsTable
+                  reservations={serviceReservations}
+                  selectedId={currentSelected?.id ?? null}
+                  service={service}
+                  onServiceChange={setService}
+                  onSelectReservation={handleSelectReservation}
+                  onStatusChange={handleStatusChange}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="gantt"
+                className="h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <GanttTimeline
+                  reservations={serviceReservations}
+                  service={service}
+                  onServiceChange={setService}
+                  onSelectReservation={handleSelectReservation}
+                  onNewReservation={handleNewFromPanel}
+                  onReschedule={handleReschedule}
+                  onDurationChange={handleDurationChange}
+                  selectedReservationId={currentSelected?.id ?? null}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        {viewMode === "table" && (
+          <aside className="hidden min-h-0 xl:block">
+            <LiveSidePanel
+              reservations={serviceReservations}
+              onSelectReservation={handleSelectReservation}
+              onNewReservation={handleNewFromPanel}
+            />
+          </aside>
+        )}
       </motion.div>
 
       <ReservationDetail

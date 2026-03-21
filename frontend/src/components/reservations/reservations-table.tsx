@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Search01Icon, Message01Icon, Tick02Icon, CheckmarkCircle02Icon, Cancel01Icon, Clock01Icon } from "@hugeicons/core-free-icons"
+import { Search01Icon, Message01Icon, Tick02Icon, CheckmarkCircle02Icon, Cancel01Icon, Clock01Icon, Sun02Icon, Moon02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/table"
 import { RESTAURANT_TABLES } from "./data"
 import type { Reservation, ReservationStatus, ServiceType } from "./types"
-import { STATUS_CONFIG, CANAL_LABELS, STATUS_FILTER_OPTIONS } from "./types"
+import { STATUS_CONFIG, STATUS_FILTER_OPTIONS } from "./types"
 import { useTableSort } from "@/hooks/use-table-sort"
 
-type SortKey = "client" | "time" | "covers" | "table" | "canal" | "status"
+type SortKey = "client" | "time" | "covers" | "table" | "status"
 
 const STATUS_PRIORITY: Record<string, number> = {
   en_attente: 0,
@@ -70,7 +70,11 @@ export function ReservationsTable({
 
     if (search.trim()) {
       const q = search.toLowerCase()
-      result = result.filter((r) => r.clientName.toLowerCase().includes(q))
+      result = result.filter((r) => {
+        if (r.clientName.toLowerCase().includes(q)) return true
+        const label = getTableLabel(r.tableNumber)
+        return label.toLowerCase().includes(q)
+      })
     }
 
     return result
@@ -82,7 +86,6 @@ export function ReservationsTable({
       case "time": return r.time
       case "covers": return r.covers
       case "table": return r.tableNumber ?? 999
-      case "canal": return r.canal
       case "status": return STATUS_PRIORITY[r.status] ?? 99
       default: return 0
     }
@@ -105,8 +108,14 @@ export function ReservationsTable({
           onValueChange={(v) => onServiceChange(v as ServiceType)}
         >
           <TabsList>
-            <TabsTrigger value="midi">Midi</TabsTrigger>
-            <TabsTrigger value="soir">Soir</TabsTrigger>
+            <TabsTrigger value="midi">
+              <HugeiconsIcon icon={Sun02Icon} className="mr-1 size-3.5 text-amber-500" strokeWidth={2} />
+              Midi
+            </TabsTrigger>
+            <TabsTrigger value="soir">
+              <HugeiconsIcon icon={Moon02Icon} className="mr-1 size-3.5 text-indigo-400" strokeWidth={2} />
+              Soir
+            </TabsTrigger>
           </TabsList>
         </Tabs>
         <Separator orientation="vertical" className="h-6" />
@@ -125,7 +134,7 @@ export function ReservationsTable({
               <HugeiconsIcon icon={Search01Icon} className="size-4" strokeWidth={2} />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder="Rechercher un client..."
+              placeholder="Nom ou table..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -141,7 +150,6 @@ export function ReservationsTable({
               <SortableTableHead label="Heure" sortKey="time" {...sortProps} className="w-[80px]" />
               <SortableTableHead label="Couverts" sortKey="covers" {...sortProps} className="w-[90px]" />
               <SortableTableHead label="Table" sortKey="table" {...sortProps} className="w-[70px]" />
-              <SortableTableHead label="Canal" sortKey="canal" {...sortProps} className="w-[100px]" />
               <SortableTableHead label="Statut" sortKey="status" {...sortProps} className="w-[110px]" />
               <TableHead className="w-[120px]" />
             </TableRow>
@@ -164,7 +172,6 @@ export function ReservationsTable({
                 <TableCell>{r.time}</TableCell>
                 <TableCell>{r.covers}</TableCell>
                 <TableCell>{getTableLabel(r.tableNumber)}</TableCell>
-                <TableCell>{CANAL_LABELS[r.canal]}</TableCell>
                 <TableCell>
                   <Badge variant={STATUS_CONFIG[r.status].variant}>
                     {STATUS_CONFIG[r.status].label}
@@ -180,7 +187,7 @@ export function ReservationsTable({
             ))}
             {sortedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   Aucune réservation trouvée.
                 </TableCell>
               </TableRow>

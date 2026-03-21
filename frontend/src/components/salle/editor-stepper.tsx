@@ -44,14 +44,14 @@ export function EditorStepper() {
   const isDrawing = !!(wallDrawing && wallDrawing.points.length > 0)
 
   return (
-    <Sidebar collapsible="none" variant="inset">
+    <Sidebar collapsible="none" variant="sidebar" className="!bg-background !text-foreground border-r">
       <SidebarHeader>
-        <h3 className="text-sm font-semibold">Créer une salle</h3>
+        <h3 className="text-sm font-semibold text-foreground">Créer une salle</h3>
       </SidebarHeader>
       <Separator />
       <SidebarContent>
         <ScrollArea className="h-full">
-          <div className="py-3 pr-4">
+          <div className="py-3 px-4">
             {/* Step navigation */}
             <nav className="space-y-1 mb-4">
               {STEPS.map((step, index) => {
@@ -82,8 +82,8 @@ export function EditorStepper() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{step.label}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{step.description}</div>
+                      <div className="text-sm font-medium text-foreground truncate">{step.label}</div>
+                      <div className="text-[10px] text-muted-foreground/80 truncate">{step.description}</div>
                     </div>
                   </button>
                 )

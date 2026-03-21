@@ -42,6 +42,7 @@ export interface Establishment {
   tvaNumber: string
   legalForm: string
   totalCapacity: number
+  pipelineTemplateId?: string
   openingDays: DayOfWeek[]
   services: ServiceConfig[]
   storageZones: StorageZone[]

@@ -39,6 +39,16 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "site",
     status: "arrivee",
     notes: "Anniversaire de mariage",
+    pipeline: {
+      currentStageId: "plat_servi",
+      history: [
+        { stageId: "installe", enteredAt: "2026-03-21T12:00:00" },
+        { stageId: "commande_passee", enteredAt: "2026-03-21T12:08:00" },
+        { stageId: "entree_servie", enteredAt: "2026-03-21T12:25:00" },
+        { stageId: "plat_servi", enteredAt: "2026-03-21T12:45:00" },
+      ],
+    },
+    estimatedDurationMinutes: 75,
     createdAt: new Date().toISOString(),
   },
   {
@@ -53,6 +63,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "thefork",
     status: "confirmee",
     notes: "Allergie gluten",
+    estimatedDurationMinutes: 75,
     createdAt: new Date().toISOString(),
   },
   {
@@ -67,6 +78,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "telephone",
     status: "confirmee",
     notes: "Repas d'affaires — menu dégustation",
+    estimatedDurationMinutes: 75,
     createdAt: new Date().toISOString(),
   },
   {
@@ -81,6 +93,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "site",
     status: "en_attente",
     notes: "",
+    estimatedDurationMinutes: 75,
     createdAt: new Date().toISOString(),
   },
   {
@@ -96,6 +109,14 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "telephone",
     status: "arrivee",
     notes: "Client VIP — habitué",
+    pipeline: {
+      currentStageId: "commande_passee",
+      history: [
+        { stageId: "installe", enteredAt: "2026-03-21T13:00:00" },
+        { stageId: "commande_passee", enteredAt: "2026-03-21T13:10:00" },
+      ],
+    },
+    estimatedDurationMinutes: 75,
     createdAt: new Date().toISOString(),
   },
   {
@@ -110,6 +131,13 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "walk_in",
     status: "arrivee",
     notes: "",
+    pipeline: {
+      currentStageId: "installe",
+      history: [
+        { stageId: "installe", enteredAt: "2026-03-21T13:02:00" },
+      ],
+    },
+    estimatedDurationMinutes: 75,
     createdAt: new Date().toISOString(),
   },
   {
@@ -154,6 +182,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "site",
     status: "confirmee",
     notes: "Demande terrasse si possible",
+    estimatedDurationMinutes: 105,
     createdAt: new Date().toISOString(),
   },
   {
@@ -168,6 +197,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "telephone",
     status: "confirmee",
     notes: "Végétarien × 2",
+    estimatedDurationMinutes: 105,
     createdAt: new Date().toISOString(),
   },
   {
@@ -182,6 +212,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "telephone",
     status: "en_attente",
     notes: "Grande tablée — anniversaire surprise",
+    estimatedDurationMinutes: 105,
     createdAt: new Date().toISOString(),
   },
   {
@@ -196,6 +227,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "thefork",
     status: "en_attente",
     notes: "",
+    estimatedDurationMinutes: 105,
     createdAt: new Date().toISOString(),
   },
   {
@@ -225,6 +257,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     canal: "walk_in",
     status: "confirmee",
     notes: "Menu dégustation accord mets-vins",
+    estimatedDurationMinutes: 105,
     createdAt: new Date().toISOString(),
   },
   {

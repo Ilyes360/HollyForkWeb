@@ -15,6 +15,8 @@ import {
 import type { Reservation, ReservationStatus } from "./types"
 import { STATUS_CONFIG, CANAL_LABELS } from "./types"
 import { RESTAURANT_TABLES } from "./data"
+import { PipelineStepper } from "./pipeline-stepper"
+import { useAdminStore } from "@/stores/admin-store"
 
 interface ReservationDetailProps {
   reservation: Reservation | null
@@ -47,6 +49,7 @@ export function ReservationDetail({
   onNotesChange,
 }: ReservationDetailProps) {
   const [notes, setNotes] = useState("")
+  const pipelineStages = useAdminStore((s) => s.getPipelineStages())
 
   useEffect(() => {
     if (reservation) {
@@ -78,6 +81,18 @@ export function ReservationDetail({
             <span className="text-sm text-muted-foreground">Statut</span>
             <Badge variant={config.variant}>{config.label}</Badge>
           </div>
+          {pipelineStages.length > 0 && reservation.pipeline && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <span className="text-xs font-medium text-muted-foreground">Pipeline</span>
+                <PipelineStepper
+                  stages={pipelineStages}
+                  currentStageId={reservation.pipeline?.currentStageId}
+                />
+              </div>
+            </>
+          )}
           <Separator />
 
           <div className="grid grid-cols-2 gap-4">
@@ -91,18 +106,7 @@ export function ReservationDetail({
           <Separator />
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Notes</Label>
-              {notes !== reservation.notes && (
-                <Button
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => onNotesChange(reservation.id, notes)}
-                >
-                  Enregistrer
-                </Button>
-              )}
-            </div>
+            <Label>Notes</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -113,6 +117,14 @@ export function ReservationDetail({
         </div>
 
         <SheetFooter>
+          {notes !== reservation.notes && (
+            <Button
+              className="w-full"
+              onClick={() => onNotesChange(reservation.id, notes)}
+            >
+              Enregistrer les notes
+            </Button>
+          )}
           {reservation.status === "en_attente" && (
             <>
               <Button className="w-full" onClick={() => onStatusChange(reservation.id, "confirmee")}>

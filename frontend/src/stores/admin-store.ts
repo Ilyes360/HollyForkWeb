@@ -7,6 +7,8 @@ import type {
   ServiceConfig,
   StorageZone,
 } from "./admin-types"
+import type { PipelineStageDefinition } from "@/components/reservations/types"
+import { getTemplateById } from "@/components/reservations/pipeline-templates"
 import { POSITION_DISPLAY_MAP } from "./admin-types"
 import type {
   Employee as PlanningEmployee,
@@ -48,6 +50,7 @@ interface AdminStore {
   getPlanningEmployees: () => PlanningEmployee[]
   getPlanningServiceConfig: () => PlanningServiceConfig
   getTotalCapacity: () => number
+  getPipelineStages: () => PipelineStageDefinition[]
 }
 
 const initialState = {
@@ -172,10 +175,16 @@ export const useAdminStore = create<AdminStore>()(
         const est = get().getActiveEstablishment()
         return est?.totalCapacity ?? 48
       },
+
+      getPipelineStages: () => {
+        const est = get().getActiveEstablishment()
+        const template = getTemplateById(est?.pipelineTemplateId ?? "brasserie")
+        return template?.stages ?? []
+      },
     }),
     {
       name: "holly-fork-admin",
-      version: 4,
+      version: 5,
       migrate: () => initialState,
       merge: (_persistedState, currentState) => {
         // Always use fresh mock data — no stale localStorage overrides

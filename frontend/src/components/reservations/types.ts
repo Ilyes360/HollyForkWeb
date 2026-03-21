@@ -1,6 +1,7 @@
 export type ReservationStatus = "confirmee" | "en_attente" | "arrivee" | "annulee" | "no_show"
 export type ReservationCanal = "site" | "telephone" | "thefork" | "walk_in"
 export type ServiceType = "midi" | "soir"
+export type ReservationViewMode = "table" | "gantt"
 
 export interface RestaurantTable {
   number: number
@@ -21,6 +22,8 @@ export interface Reservation {
   canal: ReservationCanal
   status: ReservationStatus
   notes: string
+  pipeline?: ReservationPipelineState
+  estimatedDurationMinutes?: number
   createdAt: string
 }
 
@@ -50,3 +53,25 @@ export const STATUS_FILTER_OPTIONS = [
   { value: "en_attente", label: "En attente" },
   { value: "arrivee", label: "Arrivées" },
 ] as const
+
+// --- Pipeline configurable ---
+
+export interface PipelineStageDefinition {
+  id: string
+  label: string
+  shortLabel: string
+  color: string
+  avgDurationMinutes: number
+  order: number
+}
+
+export interface PipelineTemplate {
+  id: string
+  name: string
+  stages: PipelineStageDefinition[]
+}
+
+export interface ReservationPipelineState {
+  currentStageId: string
+  history: { stageId: string; enteredAt: string }[]
+}

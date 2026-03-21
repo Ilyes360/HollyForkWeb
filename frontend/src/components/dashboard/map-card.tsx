@@ -549,7 +549,7 @@ export default function MapCard() {
           <AnimatePresence>
             {isExpanded && (
               <motion.div
-                className="fixed inset-4 z-[61] flex overflow-hidden rounded-2xl shadow-2xl"
+                className="fixed inset-y-6 inset-x-10 z-[61] flex overflow-hidden rounded-2xl shadow-2xl"
                 initial={{ opacity: 0, scale: 0.92 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.92 }}
