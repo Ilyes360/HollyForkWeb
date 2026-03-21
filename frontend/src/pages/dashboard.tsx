@@ -851,7 +851,7 @@ export default function DashboardPage() {
   })()
 
   const [period, setPeriod] = useState<Period>("month")
-  const [showCharts, setShowCharts] = useState(true)
+  const [showCharts, setShowCharts] = useState(false)
   const { restaurantId } = useActiveRestaurant()
 
   // Fetch real KPIs from API — fallback to mock data when unavailable
