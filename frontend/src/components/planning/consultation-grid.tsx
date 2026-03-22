@@ -4,15 +4,12 @@ import {
   getShiftsForDayAndService,
   getDayDate,
   formatDateShort,
-  isToday,
-  isPast,
   getDayRecap,
 } from "./utils"
 import { staffingRequirements } from "./data"
 import { ConsultationCell } from "./consultation-cell"
 import { StaffingIndicator } from "./staffing-indicator"
 import { DayRecap } from "./day-recap"
-import { cn } from "@/lib/utils"
 
 interface ConsultationGridProps {
   shifts: Shift[]
@@ -28,15 +25,13 @@ export function ConsultationGrid({
   // Pre-compute data for all days
   const daysData = DAYS.map((day) => {
     const date = getDayDate(weekStart, day)
-    const dayIsToday = isToday(date)
-    const dayIsPast = isPast(date)
     const midiShifts = getShiftsForDayAndService(shifts, day, "midi")
     const soirShifts = getShiftsForDayAndService(shifts, day, "soir")
     const req = staffingRequirements[day] ?? { midi: 0, soir: 0 }
 
     const recap = getDayRecap(midiShifts, soirShifts, req.midi, req.soir)
 
-    return { day, date, dayIsToday, dayIsPast, midiShifts, soirShifts, req, recap }
+    return { day, date, midiShifts, soirShifts, req, recap }
   })
 
   return (
@@ -48,16 +43,12 @@ export function ConsultationGrid({
       }}
     >
       {/* Row 1: Day headers */}
-      {daysData.map(({ day, date, dayIsToday, dayIsPast, recap }) => (
+      {daysData.map(({ day, date, recap }) => (
         <div
           key={`header-${day}`}
-          className={cn(
-            "relative border-r border-b bg-card px-2 py-2 text-center",
-            dayIsToday && "border-t-2 border-t-primary",
-            dayIsPast && "opacity-50"
-          )}
+          className="relative border-r border-b bg-card px-2 py-2 text-center"
         >
-          <div className={cn("text-sm font-medium", dayIsToday && "text-primary")}>{DAY_LABELS_FULL[day]}</div>
+          <div className="text-sm font-medium">{DAY_LABELS_FULL[day]}</div>
           <div className="text-xs text-muted-foreground">
             {formatDateShort(date)}
             {recap.totalHours > 0 && (
@@ -68,13 +59,10 @@ export function ConsultationGrid({
       ))}
 
       {/* Row 2: Midi */}
-      {daysData.map(({ day, dayIsPast, midiShifts, req }) => (
+      {daysData.map(({ day, midiShifts, req }) => (
         <div
           key={`midi-${day}`}
-          className={cn(
-            "flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2",
-            dayIsPast && "opacity-50"
-          )}
+          className="flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2"
         >
           <div className="mb-1 flex shrink-0 items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">
@@ -96,13 +84,10 @@ export function ConsultationGrid({
       ))}
 
       {/* Row 3: Soir */}
-      {daysData.map(({ day, dayIsPast, soirShifts, req }) => (
+      {daysData.map(({ day, soirShifts, req }) => (
         <div
           key={`soir-${day}`}
-          className={cn(
-            "flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2",
-            dayIsPast && "opacity-50"
-          )}
+          className="flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2"
         >
           <div className="mb-1 flex shrink-0 items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">
@@ -124,13 +109,10 @@ export function ConsultationGrid({
       ))}
 
       {/* Row 4: Récap */}
-      {daysData.map(({ day, dayIsPast, recap }) => (
+      {daysData.map(({ day, recap }) => (
         <div
           key={`recap-${day}`}
-          className={cn(
-            "border-r bg-muted/30 px-2 py-2",
-            dayIsPast && "opacity-50"
-          )}
+          className="border-r bg-muted/30 px-2 py-2"
         >
           <div className="mb-1">
             <span className="text-xs font-medium text-muted-foreground">
