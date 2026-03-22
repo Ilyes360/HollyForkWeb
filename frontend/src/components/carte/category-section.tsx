@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import {
   Collapsible,
@@ -9,6 +10,7 @@ import { CATEGORY_LABELS_PLURAL } from "@/components/carte/types"
 import type { Product } from "@/components/stock/types"
 import type { SupplierFull } from "@/components/commandes/types"
 import { CarteRecipeCard } from "./carte-recipe-card"
+import { useCarteOperational } from "./operational-view-context"
 
 interface CategorySectionProps {
   category: RecipeCategory
@@ -40,9 +42,19 @@ export function CategorySection({
 
   const recipeMap = new Map(recipes.map((r) => [r.id, r]))
 
+  const { isEditing } = useCarteOperational()
+
   const servable = portionInfos.filter((r) => r.maxPortions >= 10).length
   const stockFaible = portionInfos.filter((r) => r.maxPortions > 0 && r.maxPortions < 10).length
   const rupture = portionInfos.filter((r) => r.maxPortions === 0).length
+
+  // Ambient heatmap background (operational mode only)
+  const sectionTint = useMemo(() => {
+    if (!isEditing) return undefined
+    if (rupture > 0) return "rgba(226, 75, 74, 0.025)"
+    if (stockFaible > 0) return "rgba(239, 159, 39, 0.02)"
+    return "rgba(151, 196, 89, 0.02)"
+  }, [isEditing, rupture, stockFaible])
 
   return (
     <Collapsible defaultOpen>
@@ -69,7 +81,11 @@ export function CategorySection({
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <motion.div layout className="mt-3 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <motion.div
+          layout
+          className="mt-3 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 rounded-lg transition-colors duration-500"
+          style={sectionTint ? { backgroundColor: sectionTint, padding: 12, margin: -12 } : undefined}
+        >
           <AnimatePresence mode="popLayout">
             {sorted.map((info, i) => {
               const recipe = recipeMap.get(info.recipeId)

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router"
 import { motion } from "motion/react"
 import type { Recipe, RecipeCategory } from "@/components/carte/types"
@@ -13,6 +13,8 @@ import { CarteFilters } from "@/components/carte/carte-filters"
 import { CategorySection } from "@/components/carte/category-section"
 import { RecipeDetailModal } from "@/components/carte/recipe-detail-modal"
 import { ProductDetailModal } from "@/components/stock/product-detail-modal"
+import { OperationalBreadcrumb } from "@/components/carte/operational-breadcrumb"
+import { useCarteOperational } from "@/components/carte/operational-view-context"
 
 const container = {
   hidden: {},
@@ -39,6 +41,18 @@ const CATEGORY_ORDER: RecipeCategory[] = [
 export default function CartePage() {
   usePageTitle("Ma carte")
   const navigate = useNavigate()
+  const opView = useCarteOperational()
+
+  // Escape key to unlock
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && opView.isLocked) {
+        opView.clearChain()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [opView.isLocked, opView.clearChain])
 
   const recipes = useRecipeStore((s) => s.recipes)
   const deleteRecipe = useRecipeStore((s) => s.deleteRecipe)
@@ -204,23 +218,31 @@ export default function CartePage() {
       </motion.div>
 
       <motion.div variants={fadeUp}>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-emerald-600">
-            {servableCount}/{totalCount} recettes servables
-          </span>
-          {ruptureCount > 0 && (
-            <>
-              {" · "}
-              <button
-                type="button"
-                className="font-medium text-destructive hover:underline"
-                onClick={handleAlertClick}
-              >
-                {ruptureCount} en rupture
-              </button>
-            </>
-          )}
-        </p>
+        {opView.isLocked ? (
+          <OperationalBreadcrumb
+            products={products}
+            suppliers={suppliers}
+            recipePortions={recipePortions}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-emerald-600">
+              {servableCount}/{totalCount} recettes servables
+            </span>
+            {ruptureCount > 0 && (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  className="font-medium text-destructive hover:underline"
+                  onClick={handleAlertClick}
+                >
+                  {ruptureCount} en rupture
+                </button>
+              </>
+            )}
+          </p>
+        )}
       </motion.div>
 
       <motion.div variants={fadeUp}>

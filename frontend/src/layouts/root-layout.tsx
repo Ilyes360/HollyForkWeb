@@ -26,6 +26,7 @@ import {
   useCarteOperational,
 } from "@/components/carte/operational-view-context"
 import { CarteProductSidebar } from "@/components/carte/carte-product-sidebar"
+import { OperationalToolbar } from "@/components/carte/operational-toolbar"
 
 function getSidebarDefaultOpen(): boolean {
   const match = document.cookie.match(/(?:^|;\s*)sidebar_state=([^;]*)/)
@@ -41,7 +42,8 @@ function LayoutInner() {
   const salleExportPlan = useSalleStore((s) => s.exportPlan)
   const salleZoomToFit = useSalleStore((s) => s.zoomToFit)
 
-  const isEditing = planning.isEditing || salle.isEditing
+  const isFullscreenEditing = planning.isEditing || salle.isEditing
+  const isEditing = isFullscreenEditing || carte.isEditing
 
   const handlePlanningCancel = React.useCallback(() => {
     if (planning.state.isDirty) {
@@ -77,14 +79,14 @@ function LayoutInner() {
     <SidebarProvider
       defaultOpen={getSidebarDefaultOpen()}
       open={isEditing ? true : undefined}
-      className={isEditing ? "!h-svh !min-h-0 overflow-hidden" : undefined}
+      className={isFullscreenEditing ? "!h-svh !min-h-0 overflow-hidden" : undefined}
       style={
         {
-          "--sidebar-width": isEditing
+          "--sidebar-width": isFullscreenEditing
             ? "calc(var(--spacing) * 80)"
             : "calc(var(--spacing) * 64)",
           "--header-height": "calc(var(--spacing) * 14)",
-          "--content-padding": isEditing ? "0px" : "calc(var(--spacing) * 4)",
+          "--content-padding": isFullscreenEditing ? "0px" : "calc(var(--spacing) * 4)",
           "--content-margin": "calc(var(--spacing) * 1.5)",
         } as React.CSSProperties
       }
@@ -98,7 +100,7 @@ function LayoutInner() {
       ) : (
         <AppSidebar variant="inset" />
       )}
-      <SidebarInset className={isEditing ? "min-h-0 overflow-hidden" : undefined}>
+      <SidebarInset className={isFullscreenEditing ? "min-h-0 overflow-hidden" : undefined}>
         {planning.isEditing ? (
           <EditionToolbar
             isDirty={planning.state.isDirty}
@@ -112,14 +114,16 @@ function LayoutInner() {
             onSave={handleSalleSave}
             onZoomToFit={handleZoomToFit}
           />
+        ) : carte.isEditing ? (
+          <OperationalToolbar />
         ) : (
           <SiteHeader />
         )}
         <div className={cn(
           "flex min-h-0 flex-1 flex-col bg-muted/40",
-          isEditing ? "overflow-hidden" : "overflow-y-auto"
+          isFullscreenEditing ? "overflow-hidden" : "overflow-y-auto"
         )}>
-          {isEditing ? (
+          {isFullscreenEditing ? (
             <Outlet />
           ) : (
             <div className="@container/main flex min-h-0 flex-1 flex-col p-(--content-padding)">

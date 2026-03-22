@@ -1,19 +1,33 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router"
 import { motion } from "motion/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ClipboardIcon } from "@hugeicons/core-free-icons"
+import { Button } from "@/components/ui/button"
 import type { Product } from "@/components/stock/types"
 import { useInventoryStore } from "@/stores/inventory-store"
 import { useRecipeStore } from "@/stores/recipe-store"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
+import { usePageTitle } from "@/hooks/use-page-title"
+import {
+  getProductStatus,
+  getZoneHealth,
+  getTotalStockValue,
+} from "@/components/stock/utils"
 import { getSupplierProducts } from "@/components/commandes/utils"
+import { getStockEmptyState } from "@/lib/copy/stock"
+import type { OrderItem } from "@/components/commandes/types"
+
 import { StockHeader } from "@/components/stock/stock-header"
-import { StorageZones } from "@/components/stock/storage-zones"
-import { StockTable } from "@/components/stock/stock-table"
+import { StockFilters } from "@/components/stock/stock-filters"
+import { StockZoneSection } from "@/components/stock/stock-zone-section"
+import { StockInventoryBanner } from "@/components/stock/stock-inventory-banner"
+import { ZoneManagerPanel } from "@/components/stock/zone-manager-panel"
 import { ProductDetailModal } from "@/components/stock/product-detail-modal"
+import { RecipeDetailModal } from "@/components/carte/recipe-detail-modal"
 import { SupplierModal } from "@/components/shared/supplier-modal"
 import { OrderDialog } from "@/components/commandes/order-dialog"
-import type { OrderItem } from "@/components/commandes/types"
-import { usePageTitle } from "@/hooks/use-page-title"
+import { EmptyState } from "@/components/shared/empty-state"
 
 const container = {
   hidden: {},
@@ -43,65 +57,143 @@ function daysFromNow(n: number): string {
   return toLocalDateString(d)
 }
 
-const TODAY = toLocalDateString(new Date())
-
 export default function StocksPage() {
   usePageTitle("Mon stock")
   const navigate = useNavigate()
-  const recipes = useRecipeStore((s) => s.recipes)
-  const { products, suppliers, orders, deleteProduct, addOrder } = useInventoryStore()
 
-  // Portions
+  // ── Stores ──
+  const products = useInventoryStore((s) => s.products)
+  const suppliers = useInventoryStore((s) => s.suppliers)
+  const orders = useInventoryStore((s) => s.orders)
+  const storageZones = useInventoryStore((s) => s.storageZones)
+  const categories = useInventoryStore((s) => s.categories)
+  const updateProduct = useInventoryStore((s) => s.updateProduct)
+  const deleteProduct = useInventoryStore((s) => s.deleteProduct)
+  const addOrder = useInventoryStore((s) => s.addOrder)
+  const recipes = useRecipeStore((s) => s.recipes)
+
+  // ── Portions ──
   const { recipePortions, productPortionSummaries } = usePortionCalculator(
-    recipes,
-    products,
-    suppliers
+    recipes, products, suppliers
+  )
+  const portionMap = useMemo(
+    () => new Map(productPortionSummaries.map((s) => [s.productId, s])),
+    [productPortionSummaries]
   )
 
-  // State
+  // ── State ──
+  const [search, setSearch] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("toutes")
+  const [supplierFilter, setSupplierFilter] = useState("tous")
+
+  // Modals
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [statusFilter, setStatusFilter] = useState("tous")
-  const [zoneFilter, setZoneFilter] = useState("toutes")
+  const [zoneManagerOpen, setZoneManagerOpen] = useState(false)
   const [orderDialogOpen, setOrderDialogOpen] = useState(false)
   const [orderSupplierId, setOrderSupplierId] = useState<string | null>(null)
   const [preSelectedProductId, setPreSelectedProductId] = useState<string | undefined>(undefined)
   const [supplierSheetOpen, setSupplierSheetOpen] = useState(false)
   const [supplierSheetId, setSupplierSheetId] = useState<string | null>(null)
 
-  // Keep selectedProduct in sync with store
+  // Recipe detail (for chip clicks)
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
+  const [recipeDetailOpen, setRecipeDetailOpen] = useState(false)
+
+  // Inventory mode
+  const [inventoryMode, setInventoryMode] = useState(false)
+  const [inventoryValues, setInventoryValues] = useState<Map<string, number>>(new Map())
+
+  // ── Computed ──
   const currentProduct = selectedProduct
     ? products.find((p) => p.id === selectedProduct.id) ?? null
     : null
-
   const currentSupplier = currentProduct
     ? suppliers.find((s) => s.id === currentProduct.supplierId) ?? null
     : null
-
   const currentPortionSummary = currentProduct
-    ? productPortionSummaries.find((s) => s.productId === currentProduct.id) ?? null
+    ? portionMap.get(currentProduct.id) ?? null
     : null
-
   const supplierSheetSupplier = supplierSheetId
     ? suppliers.find((s) => s.id === supplierSheetId) ?? null
     : null
 
+  const selectedRecipe = selectedRecipeId
+    ? recipes.find((r) => r.id === selectedRecipeId) ?? null
+    : null
+  const selectedRecipePortionInfo = selectedRecipeId
+    ? recipePortions.find((p) => p.recipeId === selectedRecipeId) ?? null
+    : null
+
+  // ── Filtering ──
+  const filtered = useMemo(() => {
+    let result = products
+    if (categoryFilter !== "toutes") {
+      result = result.filter((p) => p.category === categoryFilter)
+    }
+    if (supplierFilter !== "tous") {
+      result = result.filter((p) => p.supplierId === supplierFilter)
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter((p) => p.name.toLowerCase().includes(q))
+    }
+    return result
+  }, [products, categoryFilter, supplierFilter, search])
+
+  // ── Compteurs ──
+  const ruptureCount = products.filter((p) => getProductStatus(p) === "rupture").length
+  const faibleCount = products.filter((p) => getProductStatus(p) === "stock_faible").length
+  const okCount = products.length - ruptureCount - faibleCount
+  const totalValue = getTotalStockValue(products)
+
+  // ── Filter options ──
+  const categoryOptions = useMemo(() => [
+    { value: "toutes", label: "Toutes catégories" },
+    ...categories.map((c) => ({ value: c.id, label: c.label })),
+  ], [categories])
+
+  const supplierOptions = useMemo(() => [
+    { value: "tous", label: "Tous fournisseurs" },
+    ...suppliers.map((s) => ({ value: s.id, label: s.name })),
+  ], [suppliers])
+
+  // ── Groupement par zone ──
+  const productsByZone = useMemo(() => {
+    const map = new Map<string, Product[]>()
+    for (const zone of storageZones) {
+      map.set(zone.id, [])
+    }
+    for (const product of filtered) {
+      const arr = map.get(product.storageZone)
+      if (arr) arr.push(product)
+      else {
+        if (!map.has("non_assigne")) map.set("non_assigne", [])
+        map.get("non_assigne")!.push(product)
+      }
+    }
+    return map
+  }, [filtered, storageZones])
+
+  // ── Handlers ──
   const handleSelectProduct = useCallback((product: Product) => {
     setSelectedProduct(product)
     setDetailOpen(true)
   }, [])
 
-  const handleOrderFromDetail = useCallback(
-    (product: Product) => {
-      const supplier = suppliers.find((s) => s.id === product.supplierId)
-      if (supplier) {
-        setOrderSupplierId(supplier.id)
-        setPreSelectedProductId(product.id)
-        setOrderDialogOpen(true)
-      }
-    },
-    [suppliers]
-  )
+  const handleSelectRecipe = useCallback((recipeId: string) => {
+    setSelectedRecipeId(recipeId)
+    setRecipeDetailOpen(true)
+  }, [])
+
+  const handleOrderFromDetail = useCallback((product: Product) => {
+    const supplier = suppliers.find((s) => s.id === product.supplierId)
+    if (supplier) {
+      setOrderSupplierId(supplier.id)
+      setPreSelectedProductId(product.id)
+      setOrderDialogOpen(true)
+    }
+  }, [suppliers])
 
   const handleOrderFromSupplier = useCallback((supplierId: string) => {
     setOrderSupplierId(supplierId)
@@ -112,15 +204,14 @@ export default function StocksPage() {
   const handleSubmitOrder = useCallback(
     (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
       const totalAmount = data.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
-        0
+        (sum, item) => sum + item.quantity * item.unitPrice, 0
       )
       const supplier = suppliers.find((s) => s.id === data.supplierId)
       const newOrder = {
         id: `ord-${Date.now()}`,
         supplierId: data.supplierId,
         items: data.items,
-        date: TODAY,
+        date: toLocalDateString(new Date()),
         status: "pending" as const,
         totalAmount,
         expectedDelivery: daysFromNow(supplier?.averageDeliveryDays ?? 3),
@@ -147,51 +238,134 @@ export default function StocksPage() {
     setSupplierSheetOpen(true)
   }, [])
 
+  // ── Inventory mode ──
+  const handleStartInventory = useCallback(() => {
+    setViewMode("zone")
+    setInventoryMode(true)
+    setInventoryValues(new Map())
+  }, [])
+
+  const handleInventoryChange = useCallback((productId: string, value: number) => {
+    setInventoryValues((prev) => {
+      const next = new Map(prev)
+      next.set(productId, value)
+      return next
+    })
+  }, [])
+
+  const handleSaveInventory = useCallback(() => {
+    inventoryValues.forEach((value, productId) => {
+      const product = products.find((p) => p.id === productId)
+      if (product && product.quantity !== value) {
+        updateProduct(productId, { quantity: value })
+      }
+    })
+    setInventoryMode(false)
+    setInventoryValues(new Map())
+  }, [inventoryValues, products, updateProduct])
+
+  const handleCancelInventory = useCallback(() => {
+    setInventoryMode(false)
+    setInventoryValues(new Map())
+  }, [])
+
+  // Order helpers
   const orderSupplier = orderSupplierId
     ? suppliers.find((s) => s.id === orderSupplierId) ?? null
     : null
-
   const orderProducts = orderSupplier
     ? getSupplierProducts(orderSupplier.id, products)
     : []
 
-  // Build simple suppliers list for table
-  const simpleSuppliers = suppliers.map((s) => ({ id: s.id, name: s.name }))
-
   return (
     <motion.div
-      className="flex h-full flex-col gap-6"
+      className="flex h-full flex-col gap-3"
       variants={container}
       initial="hidden"
       animate="show"
     >
+      {/* Header */}
       <motion.div variants={fadeUp}>
-        <StockHeader onAddProduct={() => navigate("/stocks/nouveau")} />
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
-        <StorageZones
-          products={products}
-          activeZone={zoneFilter}
-          onZoneChange={setZoneFilter}
-        />
-      </motion.div>
-
-      <motion.div variants={fadeUp} className="min-h-0 flex-1">
-        <StockTable
-          products={products}
-          suppliers={simpleSuppliers}
-          portionSummaries={productPortionSummaries}
-          recipePortions={recipePortions}
-          statusFilter={statusFilter}
-          zoneFilter={zoneFilter}
-          onStatusFilterChange={setStatusFilter}
-          onSelectProduct={handleSelectProduct}
-          onOrder={handleOrderFromDetail}
-          onDelete={handleDelete}
+        <StockHeader
+          totalProducts={products.length}
+          totalValue={totalValue}
+          ruptureCount={ruptureCount}
+          faibleCount={faibleCount}
+          okCount={okCount}
           onAddProduct={() => navigate("/stocks/nouveau")}
+          onOpenZoneManager={() => setZoneManagerOpen(true)}
         />
       </motion.div>
+
+      {/* Filtres */}
+      <motion.div variants={fadeUp}>
+        <div className="flex items-center justify-between gap-3">
+          <StockFilters
+            search={search}
+            categoryFilter={categoryFilter}
+            supplierFilter={supplierFilter}
+            onSearchChange={setSearch}
+            onCategoryFilterChange={setCategoryFilter}
+            onSupplierFilterChange={setSupplierFilter}
+            categories={categoryOptions}
+            suppliers={supplierOptions}
+          />
+
+          {!inventoryMode && (
+            <Button variant="outline" size="sm" onClick={handleStartInventory}>
+              <HugeiconsIcon icon={ClipboardIcon} className="size-4" strokeWidth={2} />
+              Inventaire
+            </Button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Bannière mode inventaire */}
+      {inventoryMode && (
+        <motion.div variants={fadeUp}>
+          <StockInventoryBanner
+            changedCount={inventoryValues.size}
+            onSave={handleSaveInventory}
+            onCancel={handleCancelInventory}
+          />
+        </motion.div>
+      )}
+
+      {/* Contenu principal */}
+      <motion.div variants={fadeUp} className="min-h-0 flex-1 space-y-4">
+        {filtered.length > 0 ? (
+          storageZones.map((zone) => {
+            const zoneProducts = productsByZone.get(zone.id) ?? []
+            const health = zoneProducts.length > 0 ? getZoneHealth(zoneProducts) : "ok"
+            return (
+              <StockZoneSection
+                key={zone.id}
+                zone={zone}
+                products={zoneProducts}
+                portionSummaries={portionMap}
+                defaultCollapsed={health === "ok"}
+                onSelectProduct={handleSelectProduct}
+                inventoryMode={inventoryMode}
+                inventoryValues={inventoryValues}
+                onInventoryChange={handleInventoryChange}
+              />
+            )
+          })
+        ) : (() => {
+          const hasFilters = search.trim() !== "" || categoryFilter !== "toutes" || supplierFilter !== "tous"
+          const empty = getStockEmptyState(hasFilters)
+          return (
+            <EmptyState
+              title={empty.title}
+              description={empty.description}
+              actionLabel={empty.actionLabel}
+              onAction={() => navigate("/stocks/nouveau")}
+            />
+          )
+        })()}
+      </motion.div>
+
+      {/* ── Modals ── */}
 
       <ProductDetailModal
         product={currentProduct}
@@ -205,6 +379,19 @@ export default function StocksPage() {
         onOrder={handleOrderFromDetail}
         onDelete={handleDelete}
         onOpenSupplierSheet={handleOpenSupplierSheet}
+      />
+
+      <RecipeDetailModal
+        recipe={selectedRecipe}
+        portionInfo={selectedRecipePortionInfo}
+        products={products}
+        suppliers={suppliers}
+        open={recipeDetailOpen}
+        onOpenChange={setRecipeDetailOpen}
+        onEdit={(r) => { setRecipeDetailOpen(false); navigate(`/cuisine/${r.id}/modifier`) }}
+        onDuplicate={() => {}}
+        onToggleActive={() => {}}
+        onDelete={() => {}}
       />
 
       <SupplierModal
@@ -226,6 +413,11 @@ export default function StocksPage() {
         onOpenChange={setOrderDialogOpen}
         onSubmit={handleSubmitOrder}
         preSelectedProductId={preSelectedProductId}
+      />
+
+      <ZoneManagerPanel
+        open={zoneManagerOpen}
+        onOpenChange={setZoneManagerOpen}
       />
     </motion.div>
   )

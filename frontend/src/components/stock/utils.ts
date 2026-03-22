@@ -1,4 +1,4 @@
-import type { Product, ProductStatus, PortionEquivalent, Supplier } from "./types"
+import type { Product, ProductStatus, ProductPortionSummary, PortionEquivalent, Supplier, UrgencyCategory } from "./types"
 import type { StorageZoneConfig, CategoryConfig } from "@/stores/inventory-store"
 
 export function getProductStatus(product: Product): ProductStatus {
@@ -51,4 +51,66 @@ export function formatPortionEquivalents(
     parts.push(`+${remaining} autre${remaining > 1 ? "s" : ""}`)
   }
   return parts.join(" | ")
+}
+
+// ── Nouvelles fonctions pour la refonte ──
+
+export function getDaysUntilExpiration(product: Product): number {
+  const exp = new Date(product.expirationDate)
+  const now = new Date()
+  return Math.ceil((exp.getTime() - now.getTime()) / 86400000)
+}
+
+export function getUrgencyCategory(product: Product): UrgencyCategory {
+  const status = getProductStatus(product)
+  if (status === "rupture" || status === "stock_faible") return "a_commander"
+
+  const daysUntilExp = getDaysUntilExpiration(product)
+  if (daysUntilExp <= 3) return "a_surveiller"
+
+  if (product.quantity < product.minStock * 1.5) return "a_surveiller"
+
+  return "stock_ok"
+}
+
+export function getZoneHealth(
+  products: Product[]
+): "ok" | "warning" | "danger" {
+  if (products.some((p) => getProductStatus(p) === "rupture")) return "danger"
+  if (products.some((p) => getProductStatus(p) === "stock_faible")) return "warning"
+  return "ok"
+}
+
+export function getZoneFillPercent(products: Product[]): number {
+  if (products.length === 0) return 0
+  const total = products.reduce(
+    (sum, p) => sum + (p.maxStock > 0 ? Math.min(p.quantity / p.maxStock, 1) : 1),
+    0
+  )
+  return Math.round((total / products.length) * 100)
+}
+
+export function sortProductsByUrgency(
+  products: Product[],
+  portionSummaries: Map<string, ProductPortionSummary>
+): Product[] {
+  const statusPriority: Record<ProductStatus, number> = {
+    rupture: 0,
+    stock_faible: 1,
+    stock_ok: 2,
+    surstock: 3,
+  }
+  return [...products].sort((a, b) => {
+    const sa = statusPriority[getProductStatus(a)]
+    const sb = statusPriority[getProductStatus(b)]
+    if (sa !== sb) return sa - sb
+    const ra = portionSummaries.get(a.id)?.portionEquivalents.length ?? 0
+    const rb = portionSummaries.get(b.id)?.portionEquivalents.length ?? 0
+    if (ra !== rb) return rb - ra
+    return a.name.localeCompare(b.name, "fr")
+  })
+}
+
+export function getTotalStockValue(products: Product[]): number {
+  return products.reduce((sum, p) => sum + p.quantity * p.unitPrice, 0)
 }

@@ -25,7 +25,7 @@ import { GeneralForm } from "@/pages/parametres/general-form"
 import { NotificationsForm } from "@/pages/parametres/notifications-form"
 import { BillingPage } from "@/pages/parametres/billing/page"
 import PricingTable from "@/pages/parametres/billing/pricing-table"
-import StocksConfigurationPage from "@/pages/stocks/configuration"
+// Configuration page removed — zones managed inline via side panel
 
 import { Navigate } from "react-router"
 
@@ -48,7 +48,7 @@ export const router = createBrowserRouter([
           { path: "cuisine/nouvelle", element: <CuisineRecipePage /> },
           { path: "cuisine/:id/modifier", element: <CuisineRecipePage /> },
           { path: "stocks", element: <StocksPage /> },
-          { path: "stocks/configuration", element: <StocksConfigurationPage /> },
+          { path: "stocks/configuration", element: <Navigate to="/stocks" replace /> },
           { path: "stocks/nouveau", element: <StocksProductPage /> },
           { path: "stocks/:id/modifier", element: <StocksProductPage /> },
           { path: "commandes", element: <CommandesPage /> },

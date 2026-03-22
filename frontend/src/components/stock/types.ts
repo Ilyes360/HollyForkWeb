@@ -88,6 +88,28 @@ export const CATEGORY_FILTER_OPTIONS = [
   { value: "autres", label: "Autres" },
 ] as const
 
+// ── View modes ──
+
+/** Vue active sur la page stock */
+export type StockViewMode = "zone" | "urgency"
+
+/** Catégorie d'urgence pour la vue "Par urgence" */
+export type UrgencyCategory = "a_commander" | "a_surveiller" | "stock_ok"
+
+/** Labels pour les sections urgence */
+export const URGENCY_LABELS: Record<UrgencyCategory, string> = {
+  a_commander: "À commander",
+  a_surveiller: "À surveiller",
+  stock_ok: "Stock OK",
+}
+
+/** Couleurs des sections urgence */
+export const URGENCY_COLORS: Record<UrgencyCategory, { text: string; dot: string }> = {
+  a_commander: { text: "#A32D2D", dot: "#E24B4A" },
+  a_surveiller: { text: "#BA7517", dot: "#EF9F27" },
+  stock_ok: { text: "#639922", dot: "#97C459" },
+}
+
 // ── Portion equivalents types ──
 
 export interface PortionEquivalent {

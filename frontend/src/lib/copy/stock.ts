@@ -2,6 +2,19 @@ import type { CopyInsight, EmptyStateCopy } from "./types"
 
 type StockStatus = "rupture" | "stock_faible" | "stock_ok" | "surstock"
 
+const currencyShort = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+})
+
+export function getStockSummaryText(
+  totalProducts: number,
+  totalValue: number,
+): string {
+  return `${totalProducts} produit${totalProducts > 1 ? "s" : ""} · Valeur stock : ${currencyShort.format(totalValue)}`
+}
+
 export function getStockStatusInsight(
   status: StockStatus,
   impactedRecipeCount: number,

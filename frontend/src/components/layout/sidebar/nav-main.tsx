@@ -76,15 +76,7 @@ export const navItems: NavGroup[] = [
     label: "Opérations",
     items: [
       { to: "/cuisine", label: "Ma carte", icon: CookBookIcon },
-      {
-        to: "/stocks",
-        label: "Mon stock",
-        icon: PackageIcon,
-        items: [
-          { to: "/stocks", label: "Produits" },
-          { to: "/stocks/configuration", label: "Configuration" },
-        ],
-      },
+      { to: "/stocks", label: "Mon stock", icon: PackageIcon },
       { to: "/commandes", label: "Commandes", icon: TruckDeliveryIcon },
     ],
   },
