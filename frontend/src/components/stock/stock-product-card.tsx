@@ -1,5 +1,4 @@
 import { motion } from "motion/react"
-import { Card } from "@/components/ui/card"
 import { IngredientIcon } from "@/components/carte/ingredient-icon"
 import type { Product } from "./types"
 import { UNIT_LABELS } from "./types"
@@ -26,18 +25,6 @@ export function StockProductCard({
 
   const stockTextColor = isRupture ? "#A32D2D" : isFaible ? "#BA7517" : "#639922"
 
-  const cardStyle: React.CSSProperties = {
-    padding: "8px 6px",
-    ...(isRupture && {
-      backgroundColor: "rgba(226,75,74,0.04)",
-      borderColor: "rgba(226,75,74,0.15)",
-    }),
-    ...(isFaible && {
-      backgroundColor: "rgba(239,159,39,0.04)",
-      borderColor: "rgba(239,159,39,0.15)",
-    }),
-  }
-
   const handleClick = () => {
     if (!inventoryMode) onClick(product)
   }
@@ -50,15 +37,18 @@ export function StockProductCard({
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.12 } }}
       transition={{ duration: 0.18, delay: index * 0.015, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <Card
+      <div
         className={cn(
-          "overflow-visible rounded-lg transition-all duration-150",
-          !inventoryMode && "cursor-pointer hover:shadow-sm hover:border-border/80"
+          "rounded-md px-2 py-1.5 transition-colors duration-150",
+          isRupture && "bg-[rgba(226,75,74,0.07)]",
+          isFaible && "bg-[rgba(239,159,39,0.10)]",
+          !isRupture && !isFaible && "bg-muted/60",
+          !inventoryMode && "cursor-pointer hover:bg-muted/80"
         )}
-        style={cardStyle}
         onClick={handleClick}
         onKeyDown={(e) => { if (e.key === "Enter") handleClick() }}
         tabIndex={0}
+        role="button"
       >
         <div className="flex items-center gap-2">
           <IngredientIcon product={product} size="md" />
@@ -87,8 +77,7 @@ export function StockProductCard({
             </span>
           )}
         </div>
-
-      </Card>
+      </div>
     </motion.div>
   )
 }

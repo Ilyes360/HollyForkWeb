@@ -217,41 +217,45 @@ export default function CartePage() {
         <CarteHeader onAddRecipe={() => navigate("/cuisine/nouvelle")} />
       </motion.div>
 
-      <motion.div variants={fadeUp}>
-        {opView.isLocked ? (
+      {opView.isLocked && (
+        <motion.div variants={fadeUp}>
           <OperationalBreadcrumb
             products={products}
             suppliers={suppliers}
             recipePortions={recipePortions}
           />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-emerald-600">
-              {servableCount}/{totalCount} recettes servables
-            </span>
-            {ruptureCount > 0 && (
-              <>
-                {" · "}
-                <button
-                  type="button"
-                  className="font-medium text-destructive hover:underline"
-                  onClick={handleAlertClick}
-                >
-                  {ruptureCount} en rupture
-                </button>
-              </>
-            )}
-          </p>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
       <motion.div variants={fadeUp}>
-        <CarteFilters
-          search={search}
-          feasibilityFilter={feasibilityFilter}
-          onSearchChange={setSearch}
-          onFeasibilityFilterChange={setFeasibilityFilter}
-        />
+        <div className="flex items-center justify-between gap-3">
+          <CarteFilters
+            search={search}
+            feasibilityFilter={feasibilityFilter}
+            onSearchChange={setSearch}
+            onFeasibilityFilterChange={setFeasibilityFilter}
+          />
+
+          {!opView.isLocked && (
+            <p className="shrink-0 text-sm text-muted-foreground">
+              <span className="font-medium text-emerald-600">
+                {servableCount}/{totalCount} recettes servables
+              </span>
+              {ruptureCount > 0 && (
+                <>
+                  {" · "}
+                  <button
+                    type="button"
+                    className="font-medium text-destructive hover:underline"
+                    onClick={handleAlertClick}
+                  >
+                    {ruptureCount} en rupture
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+        </div>
       </motion.div>
 
       <motion.div variants={fadeUp} className="min-h-0 flex-1 space-y-6">

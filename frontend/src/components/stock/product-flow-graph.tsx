@@ -49,16 +49,18 @@ export function ProductFlowGraph({
   const config = STATUS_CONFIG[status]
   const iconEntry = getProductIcon(product.icon)
 
-  // Build recipe nodes from portion equivalents
-  const recipeNodes = (portionSummary?.portionEquivalents ?? []).map((eq) => {
-    const recipe = recipes.find((r) => r.id === eq.recipeId)
-    return {
-      id: eq.recipeId,
-      name: eq.recipeName,
-      portions: eq.portionsEnabled,
-      icon: recipe?.icon,
-    }
-  })
+  // Build recipe nodes from all recipes that use this product
+  const portionMap = new Map(
+    (portionSummary?.portionEquivalents ?? []).map((eq) => [eq.recipeId, eq.portionsEnabled])
+  )
+  const recipeNodes = recipes
+    .filter((r) => r.ingredients.some((i) => i.productId === product.id))
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      portions: portionMap.get(r.id) ?? 0,
+      icon: r.icon,
+    }))
 
   const visibleRecipes = recipeNodes.slice(0, MAX_VISIBLE_RECIPES)
   const hiddenCount = recipeNodes.length - MAX_VISIBLE_RECIPES
@@ -67,7 +69,7 @@ export function ProductFlowGraph({
 
   return (
     <div
-      className="flex items-stretch gap-0"
+      className="flex items-stretch justify-center gap-0"
       role="img"
       aria-label={`Flux : ${supplier?.name ?? "pas de fournisseur"} → ${product.name} → ${recipeNodes.map((r) => r.name).join(", ") || "aucune recette"}`}
     >

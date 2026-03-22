@@ -240,7 +240,6 @@ export default function StocksPage() {
 
   // ── Inventory mode ──
   const handleStartInventory = useCallback(() => {
-    setViewMode("zone")
     setInventoryMode(true)
     setInventoryValues(new Map())
   }, [])

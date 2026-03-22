@@ -37,6 +37,7 @@ const HEALTH_COLORS = {
   ok: { bar: "#97C459" },
 }
 
+
 interface StockZoneSectionProps {
   zone: StorageZoneConfig
   products: Product[]
@@ -68,74 +69,76 @@ export function StockZoneSection({
 
   return (
     <Collapsible defaultOpen={!defaultCollapsed}>
-      <CollapsibleTrigger
-        className={cn(
-          "flex w-full items-center justify-between border-b border-border pb-1.5 pt-1 text-left",
-          defaultCollapsed && "opacity-50 transition-opacity hover:opacity-100"
-        )}
-      >
-        <div className="flex items-center gap-1.5">
-          <div className="flex size-5 items-center justify-center rounded bg-muted">
-            <HugeiconsIcon
-              icon={ZONE_ICON_MAP[zone.id] ?? DEFAULT_ZONE_ICON}
-              className="size-3 text-muted-foreground"
-              strokeWidth={2}
-            />
-          </div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {zone.label} · {products.length}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {ruptureCount > 0 && (
-            <span className="text-[10px] font-medium" style={{ color: "#A32D2D" }}>
-              {ruptureCount} rupture{ruptureCount > 1 ? "s" : ""}
-            </span>
+      <div className="rounded-xl bg-card ring-1 ring-border/60">
+        <CollapsibleTrigger
+          className={cn(
+            "flex w-full items-center justify-between px-3 py-2.5 text-left",
+            defaultCollapsed && "opacity-50 transition-opacity hover:opacity-100"
           )}
-          {faibleCount > 0 && (
-            <span className="text-[10px] font-medium" style={{ color: "#BA7517" }}>
-              {faibleCount} faible
-            </span>
-          )}
-          {alertCount === 0 && (
-            <span className="text-[10px] font-medium" style={{ color: "#639922" }}>
-              OK
-            </span>
-          )}
-
-          <div
-            className="h-[3px] w-10 overflow-hidden rounded-full"
-            style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
-          >
-            <div
-              className="h-full rounded-full transition-[width] duration-500"
-              style={{ width: `${fillPercent}%`, backgroundColor: colors.bar }}
-            />
-          </div>
-        </div>
-      </CollapsibleTrigger>
-
-      <CollapsibleContent>
-        <motion.div
-          layout
-          className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
-          <AnimatePresence mode="popLayout">
-            {sorted.map((product, i) => (
-              <StockProductCard
-                key={product.id}
-                product={product}
-                onClick={onSelectProduct}
-                inventoryMode={inventoryMode}
-                inventoryValue={inventoryValues?.get(product.id)}
-                onInventoryChange={onInventoryChange}
-                index={i}
+          <div className="flex items-center gap-1.5">
+            <div className="flex size-5 items-center justify-center rounded bg-muted">
+              <HugeiconsIcon
+                icon={ZONE_ICON_MAP[zone.id] ?? DEFAULT_ZONE_ICON}
+                className="size-3 text-muted-foreground"
+                strokeWidth={2}
               />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </CollapsibleContent>
+            </div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {zone.label} · {products.length}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {ruptureCount > 0 && (
+              <span className="text-[10px] font-medium" style={{ color: "#A32D2D" }}>
+                {ruptureCount} rupture{ruptureCount > 1 ? "s" : ""}
+              </span>
+            )}
+            {faibleCount > 0 && (
+              <span className="text-[10px] font-medium" style={{ color: "#BA7517" }}>
+                {faibleCount} faible
+              </span>
+            )}
+            {alertCount === 0 && (
+              <span className="text-[10px] font-medium" style={{ color: "#639922" }}>
+                OK
+              </span>
+            )}
+
+            <div
+              className="h-[3px] w-10 overflow-hidden rounded-full"
+              style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
+            >
+              <div
+                className="h-full rounded-full transition-[width] duration-500"
+                style={{ width: `${fillPercent}%`, backgroundColor: colors.bar }}
+              />
+            </div>
+          </div>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <motion.div
+            layout
+            className="px-3 pb-3 pt-0.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {sorted.map((product, i) => (
+                <StockProductCard
+                  key={product.id}
+                  product={product}
+                  onClick={onSelectProduct}
+                  inventoryMode={inventoryMode}
+                  inventoryValue={inventoryValues?.get(product.id)}
+                  onInventoryChange={onInventoryChange}
+                  index={i}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </CollapsibleContent>
+      </div>
     </Collapsible>
   )
 }

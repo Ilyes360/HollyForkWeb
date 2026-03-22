@@ -248,33 +248,17 @@ export function CarteRecipeCard({
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div
-          className="mt-1.5 h-[5px] w-full overflow-hidden rounded-full"
-          style={{ backgroundColor: barTrackColor }}
-        >
+        {/* Progress bar + expand toggle */}
+        <div className="mt-0 flex items-center gap-2">
           <div
-            className="h-full rounded-full transition-[width] duration-700 ease-out"
-            style={{ width: `${barPercent}%`, backgroundColor: barFillColor }}
-          />
-        </div>
-
-        {/* Bottom row: limit text (left) + expand toggle (right, normal mode only) */}
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          {hasProblems && portionInfo.limitingIngredient ? (
-            <p
-              className="min-w-0 truncate text-[11px]"
-              style={{
-                color: limitingStatus === "rupture" ? "#A32D2D"
-                  : limitingStatus === "stock_faible" ? "#BA7517" : undefined,
-              }}
-            >
-              {isRupture ? "Rupture" : "Limité par"} : {portionInfo.limitingIngredient.productName}
-              {limitingSupplier && ` · ${limitingSupplier.name}`}
-            </p>
-          ) : (
-            <span />
-          )}
+            className="h-[6px] flex-1 overflow-hidden rounded-full"
+            style={{ backgroundColor: barTrackColor }}
+          >
+            <div
+              className="h-full rounded-full transition-[width] duration-700 ease-out"
+              style={{ width: `${barPercent}%`, backgroundColor: barFillColor }}
+            />
+          </div>
 
           {/* Chevron toggle — hidden in operational mode */}
           {totalIngredients > 0 && !isEditing && (
@@ -285,10 +269,10 @@ export function CarteRecipeCard({
               onClick={(e) => { e.stopPropagation(); setManualExpanded(!manualExpanded) }}
             >
               <span className={cn(
-                "flex size-7 items-center justify-center rounded-full border border-border bg-muted/50 text-muted-foreground transition-transform",
+                "flex size-6 items-center justify-center rounded-full border border-border bg-muted/50 text-muted-foreground transition-transform",
                 manualExpanded && "rotate-180"
               )}>
-                <HugeiconsIcon icon={ArrowDown01Icon} className="size-4" strokeWidth={2} />
+                <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5" strokeWidth={2} />
               </span>
             </button>
           )}
