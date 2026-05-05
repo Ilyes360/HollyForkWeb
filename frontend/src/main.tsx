@@ -8,6 +8,7 @@ import "./index.css"
 import { queryClient } from "@/api/query-client"
 import { ensureCsrfCookie } from "@/api/client"
 import { ThemeProvider } from "@/components/theme-provider"
+import { DevModeToggle } from "@/components/dev-mode-toggle"
 import { router } from "@/router"
 
 // Fetch CSRF cookie early so POST requests (login, register) have it available
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
       <ThemeProvider>
         <RouterProvider router={router} />
         <Toaster richColors position="top-right" />
+        {import.meta.env.DEV && <DevModeToggle />}
       </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>

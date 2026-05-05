@@ -1,10 +1,13 @@
 import { Navigate, Outlet } from "react-router"
 import { useAuthStore } from "@/stores/auth-store"
-import { getAccessToken, MOCK_MODE } from "@/api/client"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { getAccessToken } from "@/api/client"
 
 export default function GuestGuard() {
-  // In mock mode, guest pages still accessible but also redirect to app
-  if (MOCK_MODE) {
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+
+  // Dev mode: redirect to app (user is "logged in")
+  if (isDevMode) {
     return <Navigate to="/" replace />
   }
 

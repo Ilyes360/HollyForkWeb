@@ -11,11 +11,6 @@ import type { ApiError } from "./types"
  * - Gère le refresh token automatique sur 401
  */
 
-/**
- * MOCK MODE — set to `true` to bypass all API calls and run 100% frontend.
- * Flip back to `false` when the backend is available again.
- */
-export const MOCK_MODE = true
 
 const TOKEN_KEY = "holly_access_token"
 const REFRESH_KEY = "holly_refresh_token"
@@ -38,6 +33,11 @@ export function clearTokens(): void {
   localStorage.removeItem(REFRESH_KEY)
 }
 
+const API_BASE_URL =
+  typeof window !== "undefined" && window.location?.origin !== "null"
+    ? `${window.location.origin}/api`
+    : "http://localhost:3000/api"
+
 function getCsrfToken(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/)
   return match ? decodeURIComponent(match[1]) : null
@@ -45,7 +45,7 @@ function getCsrfToken(): string | null {
 
 export async function ensureCsrfCookie(): Promise<void> {
   if (!getCsrfToken()) {
-    await ky.get("/api/auth/csrf-token/")
+    await ky.get(`${API_BASE_URL}/auth/csrf-token/`)
   }
 }
 
@@ -59,7 +59,7 @@ async function refreshAccessToken(): Promise<string | null> {
   try {
     // Appel direct sans passer par `api` pour éviter la boucle infinie
     const response = await ky
-      .post("/api/auth/token/refresh/", {
+      .post(`${API_BASE_URL}/auth/token/refresh/`, {
         json: { refresh },
       })
       .json<{ access: string }>()
@@ -73,7 +73,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export const api: KyInstance = ky.create({
-  prefixUrl: "/api",
+  prefixUrl: API_BASE_URL,
   timeout: 30_000,
   hooks: {
     beforeRequest: [

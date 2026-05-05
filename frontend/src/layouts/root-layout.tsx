@@ -123,13 +123,12 @@ function LayoutInner() {
           "flex min-h-0 flex-1 flex-col bg-muted/40",
           isFullscreenEditing ? "overflow-hidden" : "overflow-y-auto"
         )}>
-          {isFullscreenEditing ? (
+          <div className={cn(
+            "flex min-h-0 flex-1 flex-col",
+            !isFullscreenEditing && "@container/main p-(--content-padding)"
+          )}>
             <Outlet />
-          ) : (
-            <div className="@container/main flex min-h-0 flex-1 flex-col p-(--content-padding)">
-              <Outlet />
-            </div>
-          )}
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

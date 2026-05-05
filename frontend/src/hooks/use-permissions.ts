@@ -1,7 +1,8 @@
 import { useMyPermissions } from "@/api/permissions/queries"
-import { getAccessToken, MOCK_MODE } from "@/api/client"
+import { getAccessToken } from "@/api/client"
+import { useDevModeStore } from "@/stores/dev-mode-store"
 
-// Fallback: grant all permissions when API is unavailable (dev/mock mode)
+// Fallback: grant all permissions when API is unavailable (dev mode)
 const DEV_FALLBACK_PERMISSIONS = [
   "manage_staff",
   "manage_establishments",
@@ -14,15 +15,18 @@ const DEV_FALLBACK_PERMISSIONS = [
 ]
 
 export function usePermissions() {
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
-  const { data } = useMyPermissions(!MOCK_MODE && hasToken)
+  const { data } = useMyPermissions(!isDevMode && hasToken)
 
-  // Use API permissions when available, otherwise always grant dev permissions
-  const permissions = data?.permissions ?? DEV_FALLBACK_PERMISSIONS
+  // Dev mode: always grant all permissions
+  const permissions = isDevMode
+    ? DEV_FALLBACK_PERMISSIONS
+    : (data?.permissions ?? DEV_FALLBACK_PERMISSIONS)
 
   return {
     permissions,
-    role: data?.roleName ?? "Gérant",
+    role: isDevMode ? "Gérant" : (data?.roleName ?? "Gérant"),
     isLoading: false,
     can: (perm: string) => permissions.includes(perm),
     canAny: (...perms: string[]) => perms.some((p) => permissions.includes(p)),

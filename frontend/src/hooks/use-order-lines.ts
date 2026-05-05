@@ -1,0 +1,88 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import type { PaginatedResponse } from "@/api/types"
+
+type ApiOrderLine = {
+  id: number
+  commandeId: number
+  articleId: number
+  articleNom: string
+  quantite: number
+  prixUnitaire: number
+  montantTotal: number
+}
+
+const keys = {
+  orderLines: (commandeId?: number) => ["order-lines", commandeId] as const,
+}
+
+/**
+ * Fetch order lines for a given order.
+ * Dev mode: returns empty array. User mode: fetches from API.
+ */
+export function useOrderLines(commandeId: number | null) {
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const hasToken = !!getAccessToken()
+
+  const query = useQuery({
+    queryKey: keys.orderLines(commandeId ?? undefined),
+    queryFn: async () => {
+      const res = await apiGet<PaginatedResponse<ApiOrderLine>>("lignes-commandes/", {
+        commandeId: commandeId!,
+      })
+      return res.results
+    },
+    enabled: !isDevMode && hasToken && !!commandeId,
+    staleTime: 30 * 1000,
+  })
+
+  if (isDevMode) {
+    return {
+      data: [] as ApiOrderLine[],
+      isLoading: false,
+      source: "mock" as const,
+    }
+  }
+
+  return {
+    data: query.data ?? [],
+    isLoading: query.isLoading,
+    source: "api" as const,
+  }
+}
+
+/**
+ * Create order line mutation.
+ */
+export function useCreateOrderLine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiPost<ApiOrderLine>("lignes-commandes/", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
+  })
+}
+
+/**
+ * Update order line mutation.
+ */
+export function useUpdateOrderLine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      apiPut<ApiOrderLine>(`lignes-commandes/${id}/`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
+  })
+}
+
+/**
+ * Delete order line mutation.
+ */
+export function useDeleteOrderLine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiDelete(`lignes-commandes/${id}/`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
+  })
+}

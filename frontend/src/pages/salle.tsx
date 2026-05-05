@@ -2,13 +2,13 @@ import { useState, useCallback, useRef } from "react"
 import { motion, type Variants } from "motion/react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { FloorPlan, FloorElement, ZoneShape } from "@/components/salle/types"
-import { DEFAULT_PLAN } from "@/components/salle/constants"
-import { findRoomForPoint } from "@/components/salle/utils"
+import { findRoomForPoint, pointInPolygon } from "@/components/salle/utils"
 import { ConsultationView } from "@/components/salle/consultation-view"
-import { PlanView } from "@/components/salle/plan-view"
+import { PlanCardView } from "@/components/salle/plan-card-view"
 import { EditionOverlay } from "@/components/salle/edition-overlay"
 import { useSalleEdition } from "@/components/salle/salle-context"
 import { useSalleStore } from "@/components/salle/store"
+import { useFloorPlanStore } from "@/stores/floor-plan-store"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { usePageTitle } from "@/hooks/use-page-title"
 
@@ -27,9 +27,63 @@ const fadeUp: Variants = {
   },
 }
 
+/**
+ * Find which room (zone) an element belongs to.
+ * Handles tables, decorations (center point), and walls (midpoint nudged
+ * toward zone centroid to handle boundary walls where ray-casting is ambiguous).
+ */
+function findRoomForElement(
+  el: FloorElement,
+  zones: ZoneShape[]
+): string | null {
+  if (el.kind === "zone") return el.id
+
+  // Tables & decorations: simple center point test
+  if (el.kind === "table" || el.kind === "decoration") {
+    return findRoomForPoint(el.x, el.y, zones)
+  }
+
+  // Walls: midpoint test, then nudge toward each zone centroid for boundary walls
+  if (el.kind === "wall" && el.points.length >= 4) {
+    const midX = el.x + (el.points[0] + el.points[2]) / 2
+    const midY = el.y + (el.points[1] + el.points[3]) / 2
+
+    // Quick test: exact midpoint
+    const mid = findRoomForPoint(midX, midY, zones)
+    if (mid) return mid
+
+    // Boundary walls: nudge midpoint 2px toward each zone centroid and test
+    for (const zone of zones) {
+      const n = zone.points.length / 2
+      let cx = 0, cy = 0
+      for (let i = 0; i < zone.points.length; i += 2) {
+        cx += zone.points[i]
+        cy += zone.points[i + 1]
+      }
+      cx = zone.x + cx / n
+      cy = zone.y + cy / n
+
+      const dx = cx - midX
+      const dy = cy - midY
+      const d = Math.sqrt(dx * dx + dy * dy)
+      if (d === 0) continue
+
+      const nudgedX = midX + (dx / d) * 2
+      const nudgedY = midY + (dy / d) * 2
+
+      if (pointInPolygon(nudgedX, nudgedY, zone.points, zone.x, zone.y)) {
+        return zone.id
+      }
+    }
+  }
+
+  return null
+}
+
 export default function SallePage() {
   usePageTitle("Salle")
-  const [plan, setPlan] = useState<FloorPlan>(DEFAULT_PLAN)
+  const plan = useFloorPlanStore((s) => s.plan)
+  const setPlan = useFloorPlanStore((s) => s.setPlan)
   const [activeTab, setActiveTab] = useState("plan")
   const { isEditing, startEditing, stopEditing } = useSalleEdition()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
@@ -45,15 +99,9 @@ export default function SallePage() {
     const roomElements: FloorElement[] = [targetZone]
     for (const el of fullPlan.elements) {
       if (el.kind === "zone") continue
-      const elRoomId =
-        el.kind === "table"
-          ? findRoomForPoint(el.x, el.y, zones)
-          : findRoomForPoint(
-              el.x + (el.points[0] + el.points[2]) / 2,
-              el.y + (el.points[1] + el.points[3]) / 2,
-              zones
-            )
-      if (elRoomId === roomId) roomElements.push(el)
+      if (findRoomForElement(el, zones) === roomId) {
+        roomElements.push(el)
+      }
     }
     return roomElements
   }, [])
@@ -92,15 +140,9 @@ export default function SallePage() {
         oldRoomElementIds.add(rid)
         for (const el of full.elements) {
           if (el.kind === "zone") continue
-          const elRoomId =
-            el.kind === "table"
-              ? findRoomForPoint(el.x, el.y, allZones)
-              : findRoomForPoint(
-                  el.x + (el.points[0] + el.points[2]) / 2,
-                  el.y + (el.points[1] + el.points[3]) / 2,
-                  allZones
-                )
-          if (elRoomId === rid) oldRoomElementIds.add(el.id)
+          if (findRoomForElement(el, allZones) === rid) {
+            oldRoomElementIds.add(el.id)
+          }
         }
         const keptElements = full.elements.filter((el) => !oldRoomElementIds.has(el.id))
         finalElements = [...keptElements, ...editedPlan.elements]
@@ -132,7 +174,23 @@ export default function SallePage() {
       useSalleStore.getState().setEditorStep("doors")
     }
     // else stays on "walls" (default from loadPlan)
-  }, [plan, startEditing, stopEditing, extractRoomElements])
+  }, [plan, startEditing, stopEditing, extractRoomElements, completeTask])
+
+  const handleDeleteRoom = useCallback((roomId: string) => {
+    const zones = plan.elements.filter((el): el is ZoneShape => el.kind === "zone")
+    const idsToRemove = new Set<string>()
+    idsToRemove.add(roomId)
+    for (const el of plan.elements) {
+      if (el.kind === "zone") continue
+      if (findRoomForElement(el, zones) === roomId) {
+        idsToRemove.add(el.id)
+      }
+    }
+    setPlan({
+      ...plan,
+      elements: plan.elements.filter((el) => !idsToRemove.has(el.id)),
+    })
+  }, [plan])
 
   if (isEditing) {
     return <EditionOverlay />
@@ -167,7 +225,7 @@ export default function SallePage() {
         {activeTab === "service" ? (
           <ConsultationView plan={plan} />
         ) : (
-          <PlanView plan={plan} onEdit={handleOpenEditor} />
+          <PlanCardView plan={plan} onEdit={handleOpenEditor} onDelete={handleDeleteRoom} />
         )}
       </motion.div>
     </motion.div>

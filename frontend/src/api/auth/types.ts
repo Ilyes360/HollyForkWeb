@@ -6,11 +6,11 @@
 // ─── Login (email + password) ────────────────────────────────────────────────
 
 export type LoginRequest = {
-  email: string
+  username: string
   password: string
 }
 
-/** Réponse login standard (sans MFA) */
+/** Réponse login standard */
 export type LoginResponse = {
   message: string
   accessToken: string
@@ -29,24 +29,6 @@ export type LoginResponse = {
   employeeTypeId: number | null
   restaurantId: number | null
   restaurantName: string | null
-}
-
-/** Réponse login quand MFA est requis */
-export type LoginMfaRequiredResponse = {
-  requiresMfa: true
-  tempToken: string
-  email: string
-  firstName: string
-  lastName: string
-}
-
-/** Union des deux réponses possibles au login */
-export type LoginResult = LoginResponse | LoginMfaRequiredResponse
-
-export function isMfaRequired(
-  result: LoginResult,
-): result is LoginMfaRequiredResponse {
-  return "requiresMfa" in result && result.requiresMfa === true
 }
 
 // ─── Register ────────────────────────────────────────────────────────────────
@@ -82,22 +64,6 @@ export type RegisterResponse = {
   employeeTypeId: number | null
 }
 
-// ─── MFA ─────────────────────────────────────────────────────────────────────
-
-export type VerifyMfaRequest = {
-  tempToken: string
-  code: string
-}
-
-export type MfaSetupResponse = {
-  secret: string
-  otpauthUrl: string
-}
-
-export type MfaStatusResponse = {
-  mfaEnabled: boolean
-}
-
 // ─── Refresh ─────────────────────────────────────────────────────────────────
 
 export type RefreshRequest = {
@@ -118,7 +84,6 @@ export type UserProfile = {
   lastName: string
   dateJoined: string
   isActive: boolean
-  mfaEnabled: boolean
   employeeId?: number
   employeeName?: string
   employeeFirstName?: string
@@ -137,7 +102,6 @@ export type LogoutResponse = {
 
 /**
  * Mappe une LoginResponse vers un AuthUser pour le store Zustand.
- * Note : `LoginResponse.token` est un alias legacy de `accessToken` (ne pas utiliser).
  */
 export function toAuthUser(data: LoginResponse): AuthUser {
   return {

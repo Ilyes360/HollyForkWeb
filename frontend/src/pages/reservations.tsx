@@ -4,7 +4,8 @@ import { LiveSidePanel } from "@/components/reservations/live-side-panel"
 import { GanttTimeline } from "@/components/reservations/gantt"
 import { motion, AnimatePresence } from "motion/react"
 import { useDayNavigation } from "@/hooks/use-day-navigation"
-import { MOCK_RESERVATIONS } from "@/components/reservations/data"
+import { useReservations } from "@/hooks/use-reservations"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import type { Reservation, ReservationStatus, ServiceType } from "@/components/reservations/types"
 import { ReservationsHeader } from "@/components/reservations/reservations-header"
 import { ReservationsTable } from "@/components/reservations/reservations-table"
@@ -30,7 +31,9 @@ const fadeUp = {
 
 export default function ReservationsPage() {
   usePageTitle("Réservations")
-  const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS)
+  const { restaurantId } = useActiveRestaurant()
+  const { data: apiReservations } = useReservations(restaurantId)
+  const [reservations, setReservations] = useState<Reservation[]>(apiReservations as Reservation[])
   const [service, setService] = useState<ServiceType>("midi")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)

@@ -48,7 +48,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePageTitle } from "@/hooks/use-page-title"
-import { useDashboardKpis } from "@/api/dashboard"
+import { useDashboard } from "@/hooks/use-dashboard"
 import { useAuthStore } from "@/stores/auth-store"
 import { useGreeting } from "@/hooks/use-greeting"
 import { PeriodPicker, type PeriodRange } from "@/components/dashboard/period-picker"
@@ -845,12 +845,12 @@ export default function DashboardPage() {
   const [showCharts, setShowCharts] = useState(true)
   const { restaurantId } = useActiveRestaurant()
 
-  // Fetch real KPIs from API — fallback to mock data when unavailable
-  const { data: apiKpis, isSuccess } = useDashboardKpis(
+  // Fetch KPIs — dev mode returns mock, user mode fetches from API
+  const { data: dashboardData } = useDashboard(
     restaurantId ? { restaurantId } : null,
   )
 
-  const kpis = isSuccess && apiKpis ? apiKpis.kpis : MOCK_KPIS.kpis
+  const kpis = dashboardData?.kpis ?? MOCK_KPIS.kpis
 
   return (
     <motion.div
@@ -915,7 +915,7 @@ export default function DashboardPage() {
       {/* CA par catégorie (N/A — no endpoint) + Maps */}
       <div className="grid min-h-[420px] gap-4 lg:grid-cols-2">
         <VentesCategorieCard ventesData={MOCK_VENTES} />
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} className="h-full">
           <Suspense
             fallback={
               <Card className="flex h-full items-center justify-center">

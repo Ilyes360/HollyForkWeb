@@ -1,6 +1,9 @@
 import { useState, useMemo, useCallback, useContext, useEffect } from "react"
 import { useNavigate } from "react-router"
 import { useAdminStore } from "@/stores/admin-store"
+import { useEstablishments } from "@/hooks/use-establishments"
+import { useEmployees } from "@/hooks/use-employees"
+import { useRoles } from "@/hooks/use-roles"
 import { AdminLayoutContext } from "./index"
 import { EmployesFilters } from "@/components/administration/employes/employes-filters"
 import { EmployesTable } from "@/components/administration/employes/employes-table"
@@ -9,9 +12,9 @@ import type { Employee } from "@/components/administration/types"
 
 export default function EmployesPage() {
   const navigate = useNavigate()
-  const establishments = useAdminStore((s) => s.establishments)
-  const employees = useAdminStore((s) => s.employees)
-  const roles = useAdminStore((s) => s.roles)
+  const { data: establishments } = useEstablishments()
+  const { data: employees } = useEmployees()
+  const { data: roles } = useRoles()
   const removeEmployee = useAdminStore((s) => s.removeEmployee)
 
   const { setOnAdd } = useContext(AdminLayoutContext)
@@ -25,7 +28,7 @@ export default function EmployesPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter((emp) => {
+    return employees.filter((emp: Employee) => {
       if (search) {
         const q = search.toLowerCase()
         const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
@@ -58,7 +61,7 @@ export default function EmployesPage() {
 
   const handleToggleStatus = useCallback(
     (id: string) => {
-      const emp = employees.find((e) => e.id === id)
+      const emp = employees.find((e: Employee) => e.id === id)
       if (emp) {
         useAdminStore.getState().updateEmployee(id, {
           accountStatus: emp.accountStatus === "active" ? "disabled" : "active",

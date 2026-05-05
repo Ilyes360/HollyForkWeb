@@ -1,19 +1,20 @@
 import { Navigate, Outlet, useLocation } from "react-router"
 import { useAuthStore } from "@/stores/auth-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useProfile } from "@/api/auth/queries"
-import { getAccessToken, clearTokens, MOCK_MODE } from "@/api/client"
+import { getAccessToken, clearTokens } from "@/api/client"
 
 export default function AuthGuard() {
   const location = useLocation()
-
-  // ── Mock mode: skip all auth checks ──────────────────────────────
-  if (MOCK_MODE) {
-    return <Outlet />
-  }
-
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const token = getAccessToken()
   const clearUser = useAuthStore((s) => s.clearUser)
-  const { isLoading, isError } = useProfile(!!token)
+  const { isLoading, isError } = useProfile(!isDevMode && !!token)
+
+  // Dev mode: bypass all auth checks
+  if (isDevMode) {
+    return <Outlet />
+  }
 
   // No token at all → login
   if (!token) {

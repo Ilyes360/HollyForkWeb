@@ -1,12 +1,11 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { useAuthStore } from "@/stores/auth-store"
+import { useDevModeStore, DEV_MOCK_RESTAURANTS } from "@/stores/dev-mode-store"
 import { useRestaurants } from "@/api/restaurants/queries"
-import { MOCK_MODE } from "@/api/client"
 
 /**
  * Minimal store for tracking which restaurant is currently selected.
- * Stores the numeric restaurant ID from the backend.
  */
 type ActiveRestaurantStore = {
   selectedId: number | null
@@ -23,28 +22,19 @@ export const useActiveRestaurantStore = create<ActiveRestaurantStore>()(
   ),
 )
 
-const MOCK_RESTAURANTS = [
-  { restaurantId: 1, name: "Holly Fork — Marais", address: "12 rue des Rosiers, Paris 4e" },
-  { restaurantId: 2, name: "Holly Fork — Opéra", address: "8 bd des Capucines, Paris 9e" },
-]
-
 /**
  * Hook combining the selected restaurant ID with auth context.
- *
- * Priority:
- * 1. If a valid selectedId is persisted and exists in the restaurant list → use it
- * 2. Otherwise, fallback to the user's own restaurantId from auth
- * 3. Otherwise, fallback to the first restaurant in the list
+ * In dev mode, uses mock restaurants. In user mode, fetches from API.
  */
 export function useActiveRestaurant() {
   const user = useAuthStore((s) => s.user)
-  const { data: restaurants, isLoading } = useRestaurants(!MOCK_MODE && !!user)
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const { data: restaurants, isLoading } = useRestaurants(!isDevMode && !!user)
   const selectedId = useActiveRestaurantStore((s) => s.selectedId)
   const setSelectedId = useActiveRestaurantStore((s) => s.setSelectedId)
 
-  const list = MOCK_MODE ? MOCK_RESTAURANTS : (restaurants ?? [])
+  const list = isDevMode ? DEV_MOCK_RESTAURANTS : (restaurants ?? [])
 
-  // Check if selectedId is valid (exists in the loaded list)
   const selectedIsValid =
     selectedId !== null && list.some((r) => r.restaurantId === selectedId)
 
@@ -60,13 +50,9 @@ export function useActiveRestaurant() {
   }
 
   return {
-    /** Currently active restaurant ID. `null` only if no restaurants exist. */
     restaurantId: effectiveId,
-    /** All restaurants accessible to this user */
     restaurants: list,
-    /** Whether restaurants are still loading */
-    isLoading: MOCK_MODE ? false : isLoading,
-    /** Change the active restaurant. Pass `null` for "Tous les restaurants". */
+    isLoading: isDevMode ? false : isLoading,
     setRestaurantId: setSelectedId,
   }
 }

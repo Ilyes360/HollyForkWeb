@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { apiGet, MOCK_MODE } from "../client"
+import { apiGet } from "../client"
 import type {
   DashboardKpis,
   DashboardKpisParams,
@@ -27,7 +27,7 @@ export function useDashboardKpis(params: DashboardKpisParams | null) {
         restaurantId: params!.restaurantId,
         date: params?.date,
       }),
-    enabled: !MOCK_MODE && !!params?.restaurantId,
+    enabled: !!params?.restaurantId,
     staleTime: 2 * 60 * 1000, // 2 min — dashboard data refreshes often
   })
 }
@@ -43,7 +43,7 @@ export function useDashboardMap(params?: DashboardMapParams) {
       apiGet<DashboardMapResponse>("dashboard/map/", {
         restaurantId: params?.restaurantId,
       }),
-    enabled: !MOCK_MODE,
+    enabled: !!params?.restaurantId,
     staleTime: 10 * 60 * 1000, // 10 min — map data is stable
   })
 }

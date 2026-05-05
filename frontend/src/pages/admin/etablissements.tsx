@@ -1,6 +1,8 @@
 import { useState, useCallback, useContext, useEffect } from "react"
 import { useNavigate } from "react-router"
 import { useAdminStore } from "@/stores/admin-store"
+import { useEstablishments } from "@/hooks/use-establishments"
+import { useEmployees } from "@/hooks/use-employees"
 import { AdminLayoutContext } from "./index"
 import { EtablissementList } from "@/components/administration/etablissements/etablissement-list"
 import { AddEtablissementDialog } from "@/components/administration/etablissements/add-etablissement-dialog"
@@ -9,8 +11,8 @@ import { DeleteEtablissementDialog } from "@/components/administration/etablisse
 
 export default function EtablissementsPage() {
   const navigate = useNavigate()
-  const establishments = useAdminStore((s) => s.establishments)
-  const employees = useAdminStore((s) => s.employees)
+  const { data: establishments } = useEstablishments()
+  const { data: employees } = useEmployees()
   const addEstablishment = useAdminStore((s) => s.addEstablishment)
   const updateEstablishment = useAdminStore((s) => s.updateEstablishment)
   const removeEstablishment = useAdminStore((s) => s.removeEstablishment)
@@ -62,17 +64,17 @@ export default function EtablissementsPage() {
 
   const handleToggleActive = useCallback(
     (id: string) => {
-      const est = establishments.find((e) => e.id === id)
-      if (est) updateEstablishment(id, { isActive: !est.isActive })
+      const est = establishments.find((e: { id: string; isActive?: boolean }) => e.id === id)
+      if (est) updateEstablishment(id, { isActive: !(est as { isActive: boolean }).isActive })
     },
     [establishments, updateEstablishment]
   )
 
   const handleDelete = useCallback(
     (id: string) => {
-      const est = establishments.find((e) => e.id === id)
+      const est = establishments.find((e: { id: string; name: string }) => e.id === id)
       if (est) {
-        setDeleteTarget({ id, name: est.name })
+        setDeleteTarget({ id, name: (est as { name: string }).name })
         setDeleteDialogOpen(true)
       }
     },

@@ -2,7 +2,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { GettingStartedButton } from "@/components/layout/header/getting-started"
 import { Notifications } from "@/components/layout/header/notifications"
-import { ThemeSwitch } from "@/components/layout/header/theme-switch"
+
 import { Search } from "@/components/layout/header/search"
 import { UserMenu } from "@/components/layout/header/user-menu"
 
@@ -30,11 +30,6 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <GettingStartedButton />
           <Notifications />
-          <ThemeSwitch />
-          <Separator
-            orientation="vertical"
-            className="mx-2 data-[orientation=vertical]:h-4"
-          />
           <UserMenu />
         </div>
       </div>

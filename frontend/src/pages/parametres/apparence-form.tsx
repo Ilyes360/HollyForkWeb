@@ -2,7 +2,6 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -22,7 +21,6 @@ import {
 } from "@/components/ui/form"
 
 const apparenceSchema = z.object({
-  theme: z.enum(["light", "dark", "system"]),
   langue: z.enum(["fr", "en"]),
   fuseauHoraire: z.enum(["europe-paris", "europe-london", "america-new_york"]),
 })
@@ -30,12 +28,9 @@ const apparenceSchema = z.object({
 type ApparenceValues = z.infer<typeof apparenceSchema>
 
 export function ApparenceForm() {
-  const { theme, setTheme } = useTheme()
-
   const form = useForm<ApparenceValues>({
     resolver: zodResolver(apparenceSchema),
     defaultValues: {
-      theme: theme,
       langue: "fr",
       fuseauHoraire: "europe-paris",
     },
@@ -48,37 +43,6 @@ export function ApparenceForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="theme"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Thème</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value)
-                    setTheme(value as "light" | "dark" | "system")
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="light">Clair</SelectItem>
-                    <SelectItem value="dark">Sombre</SelectItem>
-                    <SelectItem value="system">Système</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Sélectionnez le thème d'affichage du tableau de bord.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="langue"
