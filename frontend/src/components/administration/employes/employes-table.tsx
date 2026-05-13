@@ -125,7 +125,7 @@ export function EmployesTable({
         <TableBody>
           {sortedData.map((employee) => {
             const est = establishments.find((e) => e.id === employee.establishmentId)
-            const statusConfig = ACCOUNT_STATUS_CONFIG[employee.accountStatus]
+            const statusConfig = ACCOUNT_STATUS_CONFIG[employee.accountStatus ?? "active"]
             return (
               <TableRow
                 key={employee.id}
@@ -135,7 +135,7 @@ export function EmployesTable({
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div
-                      className={`flex size-8 items-center justify-center rounded-full text-xs font-medium text-white ${employee.avatarColor}`}
+                      className={`flex size-8 items-center justify-center rounded-full text-xs font-medium text-white ${employee.avatarColor ?? "bg-gray-400"}`}
                     >
                       {getInitials(employee.firstName, employee.lastName)}
                     </div>
@@ -146,15 +146,15 @@ export function EmployesTable({
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="gap-1">
-                    <HugeiconsIcon icon={POSITION_ICONS[employee.position]} strokeWidth={2} className="size-3" />
-                    {POSITION_LABELS[employee.position]}
+                    <HugeiconsIcon icon={POSITION_ICONS[employee.position] ?? POSITION_ICONS.serveur} strokeWidth={2} className="size-3" />
+                    {POSITION_LABELS[employee.position] ?? employee.position ?? "—"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{est?.name ?? "—"}</TableCell>
-                <TableCell>{employee.weeklyHours}h</TableCell>
-                <TableCell>{employee.hourlyRate.toFixed(2)} €</TableCell>
+                <TableCell>{employee.weeklyHours ?? "—"}h</TableCell>
+                <TableCell>{(employee.hourlyRate ?? 0).toFixed(2)} €</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(employee.hireDate).toLocaleDateString("fr-FR")}
+                  {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString("fr-FR") : "—"}
                 </TableCell>
                 <TableCell>
                   <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
