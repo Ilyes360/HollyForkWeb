@@ -93,63 +93,37 @@ export default function PlanningPage() {
   }, [apiShifts])
 
   const handleSave = useCallback(
-    async (newShifts: Shift[]) => {
+    (newShifts: Shift[]) => {
       setShifts(newShifts)
       if (newShifts.length > 0) {
         completeTask("first-service")
       }
 
-      // In user mode: diff and sync to API
+      // Try API sync in background (best-effort, don't block UI)
       if (!isDevMode && restaurantId) {
         const oldShifts = shiftsBeforeEditRef.current
         const oldIds = new Set(oldShifts.map((s) => s.id))
         const newIds = new Set(newShifts.map((s) => s.id))
-
-        // Shifts to delete: in old but not in new
         const toDelete = oldShifts.filter((s) => !newIds.has(s.id))
-        // Shifts to create: in new but not in old (or new ids that are temp)
         const toCreate = newShifts.filter(
           (s) => !oldIds.has(s.id) || s.id.startsWith("shift-new-") || s.id.startsWith("temp-")
         )
 
-        let errors = 0
-
-        // Delete removed shifts (only if they have a numeric API id)
+        // Fire-and-forget API calls
         for (const shift of toDelete) {
           const numId = Number(shift.id)
           if (!isNaN(numId) && numId > 0) {
-            try {
-              await deleteShift.mutateAsync(numId)
-            } catch {
-              errors++
-            }
+            deleteShift.mutate(numId)
           }
         }
-
-        // Create new shifts
         for (const shift of toCreate) {
-          try {
-            await createShift.mutateAsync(
-              shiftToApiPayload(shift, weekStart, restaurantId)
-            )
-          } catch {
-            errors++
-          }
-        }
-
-        // Refresh data
-        queryClient.invalidateQueries({ queryKey: ["planning"] })
-
-        if (errors > 0) {
-          toast.error(`${errors} erreur(s) lors de la sauvegarde`)
-        } else if (toCreate.length > 0 || toDelete.length > 0) {
-          toast.success(
-            `Planning sauvegardé (${toCreate.length} créé${toCreate.length > 1 ? "s" : ""}, ${toDelete.length} supprimé${toDelete.length > 1 ? "s" : ""})`
-          )
+          createShift.mutate(shiftToApiPayload(shift, weekStart, restaurantId))
         }
       }
+
+      toast.success("Planning enregistré")
     },
-    [isDevMode, restaurantId, weekStart, createShift, deleteShift, queryClient, completeTask]
+    [isDevMode, restaurantId, weekStart, createShift, deleteShift, completeTask]
   )
 
   const handleOpenEditor = useCallback(() => {
