@@ -91,7 +91,19 @@ def create(self, request):
 
 ---
 
-## 6. Restaurant : champs supplémentaires (optionnel)
+## 6. Ingredients : POST crash avec `KeyError: 'name'` (BUG)
+
+**Fichier** : `apps/inventory/views.py` (ou le ViewSet ingredients)
+
+**Symptôme** : `POST /api/ingredients/` avec body `{"name":"...","unit":"kg","unit_price":"5.00"}` retourne 500 avec `KeyError: 'name'`.
+
+**Cause** : même pattern que le bug #5 — la vue accède à `request.data['name']` au lieu de `serializer.validated_data`.
+
+**Impact** : impossible de créer des ingrédients/produits depuis le front.
+
+---
+
+## 7. Restaurant : champs supplémentaires (optionnel)
 
 Les champs suivants n'existent pas dans l'API mais sont utiles côté front :
 - `is_active` (boolean) — statut ouvert/fermé
