@@ -158,7 +158,7 @@ export function FrenchAddressInput({
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border bg-popover p-1 shadow-lg">
+        <div className="absolute z-[9999] mt-1 w-full max-h-[240px] overflow-y-auto rounded-lg border bg-popover p-1 shadow-lg">
           {suggestions.map((result, i) => (
             <button
               key={`${result.label}-${i}`}
