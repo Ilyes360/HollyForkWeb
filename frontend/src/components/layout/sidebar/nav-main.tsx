@@ -3,6 +3,8 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import type { IconSvgElement } from "@hugeicons/react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useInventoryStore } from "@/stores/inventory-store"
+import { useReservations } from "@/hooks/use-reservations"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import {
   DashboardSquare01Icon,
   Calendar03Icon,
@@ -67,7 +69,7 @@ export const navItems: NavGroup[] = [
     label: "Principal",
     items: [
       { to: "/", label: "Dashboard", icon: DashboardSquare01Icon },
-      { to: "/reservations", label: "Réservations", icon: Calendar03Icon, badge: "12" },
+      { to: "/reservations", label: "Réservations", icon: Calendar03Icon },
       { to: "/salle", label: "Salle", icon: FloorPlanIcon },
       { to: "/planning", label: "Planning", icon: TimeScheduleIcon },
     ],
@@ -114,17 +116,22 @@ export function NavMain() {
   const pendingCount = useInventoryStore(
     (s) => s.orders.filter((o) => o.status === "pending").length
   )
+  const { restaurantId } = useActiveRestaurant()
+  const { data: reservations } = useReservations(restaurantId)
+  const resaCount = reservations.length
 
   return (
     <>
       {navItems.map((group) => {
         const visibleItems = group.items.filter(
           (item) => !item.permission || can(item.permission),
-        ).map((item) =>
-          item.to === "/commandes" && pendingCount > 0
-            ? { ...item, badge: String(pendingCount) }
-            : item
-        )
+        ).map((item) => {
+          if (item.to === "/commandes" && pendingCount > 0)
+            return { ...item, badge: String(pendingCount) }
+          if (item.to === "/reservations" && resaCount > 0)
+            return { ...item, badge: String(resaCount) }
+          return item
+        })
         if (visibleItems.length === 0) return null
         return (
         <SidebarGroup key={group.label}>

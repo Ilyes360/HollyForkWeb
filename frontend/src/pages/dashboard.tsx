@@ -49,6 +49,7 @@ import { Button } from "@/components/ui/button"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { useDashboard } from "@/hooks/use-dashboard"
+import { useRevenueByCategory } from "@/hooks/use-revenue-by-category"
 import { useAuthStore } from "@/stores/auth-store"
 import { useGreeting } from "@/hooks/use-greeting"
 import { PeriodPicker, type PeriodRange } from "@/components/dashboard/period-picker"
@@ -845,12 +846,16 @@ export default function DashboardPage() {
   const [showCharts, setShowCharts] = useState(true)
   const { restaurantId } = useActiveRestaurant()
 
+  // Format period start date for API
+  const periodDate = period.from.toISOString().slice(0, 10)
+
   // Fetch KPIs — dev mode returns mock, user mode fetches from API
   const { data: dashboardData } = useDashboard(
-    restaurantId ? { restaurantId } : null,
+    restaurantId ? { restaurantId, date: periodDate } : null,
   )
 
   const kpis = dashboardData?.kpis ?? MOCK_KPIS.kpis
+  const { data: revenueData } = useRevenueByCategory(restaurantId)
 
   return (
     <motion.div
@@ -914,7 +919,7 @@ export default function DashboardPage() {
 
       {/* CA par catégorie (N/A — no endpoint) + Maps */}
       <div className="grid min-h-[420px] gap-4 lg:grid-cols-2">
-        <VentesCategorieCard ventesData={MOCK_VENTES} />
+        <VentesCategorieCard ventesData={revenueData} />
         <motion.div variants={fadeUp} className="h-full">
           <Suspense
             fallback={

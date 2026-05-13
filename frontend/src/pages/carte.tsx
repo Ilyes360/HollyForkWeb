@@ -3,7 +3,11 @@ import { useNavigate } from "react-router"
 import { motion } from "motion/react"
 import type { Recipe, RecipeCategory } from "@/components/carte/types"
 import { useRecipeStore } from "@/stores/recipe-store"
-import { useInventoryStore } from "@/stores/inventory-store"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { useArticles } from "@/hooks/use-articles"
+import { useStocks } from "@/hooks/use-stocks"
+import { useSuppliers } from "@/hooks/use-suppliers"
+import { useOrders } from "@/hooks/use-orders"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { getCarteEmptyState } from "@/lib/copy/carte"
@@ -54,14 +58,15 @@ export default function CartePage() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [opView.isLocked, opView.clearChain])
 
-  const recipes = useRecipeStore((s) => s.recipes)
+  const { restaurantId } = useActiveRestaurant()
+  const { data: recipes } = useArticles()
   const deleteRecipe = useRecipeStore((s) => s.deleteRecipe)
   const duplicateRecipe = useRecipeStore((s) => s.duplicateRecipe)
   const toggleActive = useRecipeStore((s) => s.toggleActive)
 
-  const products = useInventoryStore((s) => s.products)
-  const suppliers = useInventoryStore((s) => s.suppliers)
-  const orders = useInventoryStore((s) => s.orders)
+  const { data: products } = useStocks(restaurantId)
+  const { data: suppliers } = useSuppliers()
+  const { data: orders } = useOrders(restaurantId)
 
   const { recipePortions, productPortionSummaries } = usePortionCalculator(
     recipes,

@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { useShifts } from "@/hooks/use-planning"
-import { useAdminStore } from "@/stores/admin-store"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { Shift } from "@/components/planning/types"
 import { ConsultationView } from "@/components/planning/consultation-view"
 import { EditionOverlay } from "@/components/planning/edition-overlay"
@@ -32,25 +32,31 @@ const fadeUp = {
 export default function PlanningPage() {
   usePageTitle("Planning")
   const { restaurantId } = useActiveRestaurant()
-  const { data: planningShifts, employees: planningEmployees } = useShifts(restaurantId)
-  const adminEmployees = useAdminStore((s) => s.employees)
-  const currentEstId = useAdminStore((s) => s.currentEstablishmentId)
-  const employees = useMemo(() => {
-    // In dev mode, useShifts returns mock employees; in user mode, use admin store
-    if (planningEmployees.length > 0) return planningEmployees
-    const storeEmployees = useAdminStore.getState().getPlanningEmployees()
-    return storeEmployees
-  }, [planningEmployees, adminEmployees, currentEstId])
-  const [shifts, setShifts] = useState<Shift[]>(planningShifts as Shift[])
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const {
+    data: apiShifts,
+    employees,
+    isLoading,
+  } = useShifts(restaurantId)
+
+  const [shifts, setShifts] = useState<Shift[]>([])
   const { isEditing, startEditing, stopEditing } = usePlanningEdition()
   const { weekStart, direction, prev, next, today } = useWeekNavigation()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
+
+  // Sync API data → local state
+  useEffect(() => {
+    if (apiShifts.length > 0) {
+      setShifts(apiShifts as Shift[])
+    }
+  }, [apiShifts])
 
   const handleSave = useCallback((newShifts: Shift[]) => {
     setShifts(newShifts)
     if (newShifts.length > 0) {
       completeTask("first-service")
     }
+    // TODO: in user mode, diff old vs new shifts and POST/PUT/DELETE via API
   }, [completeTask])
 
   const handleOpenEditor = useCallback(() => {
@@ -60,10 +66,18 @@ export default function PlanningPage() {
       onSave: handleSave,
       onClose: stopEditing,
     })
-  }, [shifts, handleSave, startEditing, stopEditing])
+  }, [shifts, employees, handleSave, startEditing, stopEditing])
 
   if (isEditing) {
     return <EditionOverlay initialShifts={shifts} />
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (

@@ -34,16 +34,12 @@ export function useDashboardKpis(params: DashboardKpisParams | null) {
 
 /**
  * Fetch map data for the dashboard.
- * `GET /api/dashboard/map/?restaurant_id=X`
+ * `GET /api/dashboard/map/` — returns all restaurants with coordinates.
  */
-export function useDashboardMap(params?: DashboardMapParams) {
+export function useDashboardMap() {
   return useQuery({
-    queryKey: dashboardKeys.map(params?.restaurantId),
-    queryFn: () =>
-      apiGet<DashboardMapResponse>("dashboard/map/", {
-        restaurantId: params?.restaurantId,
-      }),
-    enabled: !!params?.restaurantId,
+    queryKey: dashboardKeys.map(),
+    queryFn: () => apiGet<DashboardMapResponse>("dashboard/map/"),
     staleTime: 10 * 60 * 1000, // 10 min — map data is stable
   })
 }

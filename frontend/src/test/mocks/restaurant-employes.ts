@@ -5,16 +5,26 @@
 export const mockRestaurantEmployes = [
   {
     id: 1,
-    restaurant_id: 1,
-    employe_id: 1,
-    date_affectation: "2025-01-15",
-    actif: true,
+    employe: {
+      id: 1,
+      first_name: "Lucas",
+      last_name: "Martin",
+      type_employe: { id: 1, type_name: "Chef de rang" },
+      salary: "2200.00",
+      hire_date: "2022-09-01",
+      phone_number: null,
+    },
   },
   {
     id: 2,
-    restaurant_id: 1,
-    employe_id: 2,
-    date_affectation: "2025-03-01",
-    actif: true,
+    employe: {
+      id: 2,
+      first_name: "Emma",
+      last_name: "Dubois",
+      type_employe: { id: 2, type_name: "Serveur" },
+      salary: "1900.00",
+      hire_date: "2023-01-15",
+      phone_number: null,
+    },
   },
 ]

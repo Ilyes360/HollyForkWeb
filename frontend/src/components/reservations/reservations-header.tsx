@@ -46,7 +46,15 @@ export function ReservationsHeader({
         </Button>
       </div>
 
-      <Button variant="outline" size="sm" onClick={onToday}>
+      <Button
+        variant={
+          currentDate.toDateString() === new Date().toDateString()
+            ? "outline"
+            : "default"
+        }
+        size="sm"
+        onClick={onToday}
+      >
         Aujourd&apos;hui
       </Button>
 

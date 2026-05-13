@@ -60,7 +60,7 @@ describe("Dashboard queries", () => {
 
   describe("useDashboardMap", () => {
     it("fetches map data with camelized keys", async () => {
-      const { result } = renderHook(() => useDashboardMap({ restaurantId: 1 }), {
+      const { result } = renderHook(() => useDashboardMap(), {
         wrapper: createWrapper(),
       })
 

@@ -6,7 +6,11 @@ import { ClipboardIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import type { Product } from "@/components/stock/types"
 import { useInventoryStore } from "@/stores/inventory-store"
-import { useRecipeStore } from "@/stores/recipe-store"
+import { useArticles } from "@/hooks/use-articles"
+import { useStocks } from "@/hooks/use-stocks"
+import { useSuppliers } from "@/hooks/use-suppliers"
+import { useOrders } from "@/hooks/use-orders"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
 import {
@@ -61,16 +65,17 @@ export default function StocksPage() {
   usePageTitle("Mon stock")
   const navigate = useNavigate()
 
-  // ── Stores ──
-  const products = useInventoryStore((s) => s.products)
-  const suppliers = useInventoryStore((s) => s.suppliers)
-  const orders = useInventoryStore((s) => s.orders)
+  // ── Data (API hooks + store fallbacks) ──
+  const { restaurantId } = useActiveRestaurant()
+  const { data: products } = useStocks(restaurantId)
+  const { data: suppliers } = useSuppliers()
+  const { data: orders } = useOrders(restaurantId)
   const storageZones = useInventoryStore((s) => s.storageZones)
   const categories = useInventoryStore((s) => s.categories)
   const updateProduct = useInventoryStore((s) => s.updateProduct)
   const deleteProduct = useInventoryStore((s) => s.deleteProduct)
   const addOrder = useInventoryStore((s) => s.addOrder)
-  const recipes = useRecipeStore((s) => s.recipes)
+  const { data: recipes } = useArticles()
 
   // ── Portions ──
   const { recipePortions, productPortionSummaries } = usePortionCalculator(

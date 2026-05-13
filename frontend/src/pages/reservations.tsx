@@ -4,8 +4,37 @@ import { LiveSidePanel } from "@/components/reservations/live-side-panel"
 import { GanttTimeline } from "@/components/reservations/gantt"
 import { motion, AnimatePresence } from "motion/react"
 import { useDayNavigation } from "@/hooks/use-day-navigation"
-import { useReservations } from "@/hooks/use-reservations"
+import { useReservations, useCreateReservation, useUpdateReservation, useDeleteReservation, useSalles } from "@/hooks/use-reservations"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { toast } from "sonner"
+
+/**
+ * Maps API reservation (camelized) to frontend Reservation type.
+ */
+function mapApiReservation(api: Record<string, unknown>): Reservation {
+  const dt = String(api.datetime ?? "")
+  const [datePart, timePart] = dt.includes("T") ? dt.split("T") : [dt, ""]
+  const time = (timePart ?? "").slice(0, 5) // "HH:MM"
+  const hour = parseInt(time.split(":")[0] ?? "12", 10)
+  const service: ServiceType = hour < 16 ? "midi" : "soir"
+
+  return {
+    id: String(api.id ?? ""),
+    clientName: String(api.clientName ?? ""),
+    clientPhone: String(api.phoneNumber ?? ""),
+    clientEmail: undefined,
+    date: datePart,
+    time,
+    service,
+    covers: Number(api.partySize ?? 0),
+    tableNumber: api.tableId ? Number(api.tableId) : null,
+    canal: "telephone",
+    status: "confirmee",
+    notes: "",
+    createdAt: dt,
+  }
+}
 import type { Reservation, ReservationStatus, ServiceType } from "@/components/reservations/types"
 import { ReservationsHeader } from "@/components/reservations/reservations-header"
 import { ReservationsTable } from "@/components/reservations/reservations-table"
@@ -33,7 +62,23 @@ export default function ReservationsPage() {
   usePageTitle("Réservations")
   const { restaurantId } = useActiveRestaurant()
   const { data: apiReservations } = useReservations(restaurantId)
-  const [reservations, setReservations] = useState<Reservation[]>(apiReservations as Reservation[])
+  const [reservations, setReservations] = useState<Reservation[]>([])
+
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+
+  useEffect(() => {
+    if (apiReservations && apiReservations.length > 0) {
+      if (isDevMode) {
+        // Dev mode: data is already Reservation[]
+        setReservations(apiReservations as Reservation[])
+      } else {
+        // User mode: map API shape to Reservation
+        setReservations(
+          (apiReservations as Record<string, unknown>[]).map(mapApiReservation)
+        )
+      }
+    }
+  }, [apiReservations, isDevMode])
   const [service, setService] = useState<ServiceType>("midi")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -49,6 +94,12 @@ export default function ReservationsPage() {
     [reservations, currentDateStr, service]
   )
 
+  const createReservation = useCreateReservation()
+  const updateReservation = useUpdateReservation()
+  const deleteReservation = useDeleteReservation()
+  const { data: salles } = useSalles(restaurantId)
+  const defaultSalleId = salles.length > 0 ? (salles[0] as { id: number }).id : null
+
   // Keep selected reservation in sync with latest data
   const currentSelected = useMemo(() => {
     if (!selectedReservation) return null
@@ -61,27 +112,43 @@ export default function ReservationsPage() {
   }, [])
 
   const handleStatusChange = useCallback((id: string, newStatus: ReservationStatus) => {
+    // Update local state immediately (optimistic)
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
     )
+    // Note: backend doesn't have a status field — local only
   }, [])
 
   const handleNotesChange = useCallback((id: string, notes: string) => {
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, notes } : r))
     )
+    // Note: backend doesn't have a notes field — local only
   }, [])
 
   const handleReschedule = useCallback((id: string, newTime: string) => {
+    // Update local state immediately (optimistic)
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, time: newTime } : r))
     )
-  }, [])
+    // Persist to API in user mode
+    if (!isDevMode) {
+      const resa = reservations.find((r) => r.id === id)
+      if (resa) {
+        const datetime = `${resa.date}T${newTime}:00`
+        updateReservation.mutate({
+          id: Number(id),
+          data: { datetime } as Record<string, unknown>,
+        })
+      }
+    }
+  }, [isDevMode, reservations, updateReservation])
 
   const handleDurationChange = useCallback((id: string, newDurationMinutes: number) => {
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, estimatedDurationMinutes: newDurationMinutes } : r))
     )
+    // Note: backend doesn't have a duration field — local only
   }, [])
 
   const handleNewFromPanel = useCallback(
@@ -103,27 +170,54 @@ export default function ReservationsPage() {
       tableNumber: string
       notes: string
     }) => {
-      const deducedService: ServiceType =
-        parseInt(data.time.split(":")[0], 10) < 16 ? "midi" : "soir"
-      const newReservation: Reservation = {
-        id: `r-${Date.now()}`,
-        clientName: data.clientName,
-        clientPhone: data.clientPhone,
-        clientEmail: data.clientEmail || undefined,
-        date: data.date,
-        time: data.time,
-        service: deducedService,
-        covers: data.covers,
-        tableNumber: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
-        canal: data.canal as Reservation["canal"],
-        status: "confirmee",
-        notes: data.notes,
-        createdAt: new Date().toISOString(),
+      if (!isDevMode && restaurantId) {
+        // User mode: POST to API
+        if (!defaultSalleId) {
+          toast.error("Aucune salle configurée pour ce restaurant")
+          return
+        }
+        const datetime = `${data.date}T${data.time}:00`
+        createReservation.mutate(
+          {
+            client_name: data.clientName,
+            party_size: data.covers,
+            datetime,
+            phone_number: data.clientPhone,
+            salle_id: defaultSalleId,
+            table_id: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
+          } as Record<string, unknown>,
+          {
+            onSuccess: () => {
+              toast.success("Réservation créée")
+              completeTask("first-reservation")
+            },
+            onError: () => toast.error("Erreur lors de la création"),
+          },
+        )
+      } else {
+        // Dev mode: local state
+        const deducedService: ServiceType =
+          parseInt(data.time.split(":")[0], 10) < 16 ? "midi" : "soir"
+        const newReservation: Reservation = {
+          id: `r-${Date.now()}`,
+          clientName: data.clientName,
+          clientPhone: data.clientPhone,
+          clientEmail: data.clientEmail || undefined,
+          date: data.date,
+          time: data.time,
+          service: deducedService,
+          covers: data.covers,
+          tableNumber: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
+          canal: data.canal as Reservation["canal"],
+          status: "confirmee",
+          notes: data.notes,
+          createdAt: new Date().toISOString(),
+        }
+        setReservations((prev) => [...prev, newReservation])
+        completeTask("first-reservation")
       }
-      setReservations((prev) => [...prev, newReservation])
-      completeTask("first-reservation")
     },
-    [completeTask]
+    [isDevMode, restaurantId, createReservation, defaultSalleId, completeTask]
   )
 
   // --- Keyboard shortcuts: N = new reservation, Escape = close detail ---

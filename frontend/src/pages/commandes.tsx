@@ -1,7 +1,11 @@
 import { useState, useCallback, useMemo } from "react"
 import { motion } from "motion/react"
 import { useInventoryStore } from "@/stores/inventory-store"
-import { useRecipeStore } from "@/stores/recipe-store"
+import { useArticles } from "@/hooks/use-articles"
+import { useStocks } from "@/hooks/use-stocks"
+import { useSuppliers } from "@/hooks/use-suppliers"
+import { useOrders } from "@/hooks/use-orders"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { getTotalMonthlySpend } from "@/components/commandes/utils"
@@ -59,9 +63,12 @@ const TODAY = toLocalDateString(new Date())
 
 export default function CommandesPage() {
   usePageTitle("Commandes")
-  const recipes = useRecipeStore((s) => s.recipes)
+  const { restaurantId } = useActiveRestaurant()
+  const { data: recipes } = useArticles()
+  const { data: products } = useStocks(restaurantId)
+  const { data: suppliers } = useSuppliers()
+  const { data: orders } = useOrders(restaurantId)
   const {
-    products, suppliers, orders,
     addOrder, markOrderDelivered, cancelOrder,
     addSupplier, updateSupplier, deleteSupplier,
   } = useInventoryStore()

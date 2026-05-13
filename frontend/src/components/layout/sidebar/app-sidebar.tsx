@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLocation } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -6,6 +6,7 @@ import {
   Store04Icon,
   Tick02Icon,
   GridViewIcon,
+  Add01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { useIsTablet } from "@/hooks/use-mobile"
@@ -34,6 +35,7 @@ import { NavUser } from "@/components/layout/sidebar/nav-user"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { useAuthStore } from "@/stores/auth-store"
+import { CreateRestaurantDialog } from "./create-restaurant-dialog"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { pathname } = useLocation()
@@ -41,10 +43,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isTablet = useIsTablet()
   const prevIsTablet = useRef(isTablet)
   const user = useAuthStore((s) => s.user)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const { restaurantId, restaurants, setRestaurantId } = useActiveRestaurant()
 
-  const allCount = restaurants.length
+
   const selectedRestaurant = restaurants.find(
     (r) => r.restaurantId === restaurantId,
   )
@@ -91,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="min-w-56 rounded-lg"
+                className="min-w-56 max-h-[70vh] flex flex-col rounded-lg"
                 side={isMobile ? "bottom" : "right"}
                 align="start"
                 sideOffset={4}
@@ -100,53 +103,50 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <DropdownMenuLabel>Restaurants</DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
+                <div className="flex-1 overflow-y-auto">
+                  <DropdownMenuGroup>
+                    {restaurants.map((restaurant) => (
+                      <DropdownMenuItem
+                        key={restaurant.restaurantId}
+                        className="flex items-center gap-3"
+                        onClick={() => setRestaurantId(restaurant.restaurantId)}
+                      >
+                        <div className="flex size-8 items-center justify-center rounded-md border">
+                          <HugeiconsIcon
+                            icon={restaurant.restaurantId === restaurantId ? Tick02Icon : Store04Icon}
+                            strokeWidth={2}
+                            className="text-muted-foreground size-4"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            {restaurant.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {restaurant.city}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  {/* "Tous les restaurants" option */}
-                  {allCount > 1 && (
-                    <DropdownMenuItem
-                      className="flex items-center gap-3"
-                      onSelect={() => setRestaurantId(null)}
-                    >
-                      <div className="flex size-8 items-center justify-center rounded-md border">
-                        <HugeiconsIcon
-                          icon={restaurantId === null ? Tick02Icon : GridViewIcon}
-                          strokeWidth={2}
-                          className="text-muted-foreground size-4"
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          Tous les restaurants ({allCount})
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Vue agrégée
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                  )}
-                  {restaurants.map((restaurant) => (
-                    <DropdownMenuItem
-                      key={restaurant.restaurantId}
-                      className="flex items-center gap-3"
-                      onSelect={() => setRestaurantId(restaurant.restaurantId)}
-                    >
-                      <div className="flex size-8 items-center justify-center rounded-md border">
-                        <HugeiconsIcon
-                          icon={restaurant.restaurantId === restaurantId ? Tick02Icon : Store04Icon}
-                          strokeWidth={2}
-                          className="text-muted-foreground size-4"
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {restaurant.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {restaurant.city}
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
+                  <DropdownMenuItem
+                    className="flex items-center gap-3"
+                    onClick={() => setCreateDialogOpen(true)}
+                  >
+                    <div className="flex size-8 items-center justify-center rounded-md border border-dashed">
+                      <HugeiconsIcon
+                        icon={Add01Icon}
+                        strokeWidth={2}
+                        className="text-muted-foreground size-4"
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Ajouter un restaurant
+                    </span>
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -162,6 +162,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser />
       </SidebarFooter>
       <SidebarRail />
+      <CreateRestaurantDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </Sidebar>
   )
 }

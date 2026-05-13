@@ -1,96 +1,99 @@
 /**
  * Planning fixtures in snake_case — matching real backend responses.
- * API: GET /api/planning/emploi-du-temps/?restaurant_id=X&semaine=DD/MM/YYYY
  */
-
-export const mockEmploiDuTemps = {
-  restaurant: { id: 1, nom: "Holly Fork" },
-  semaine: { debut: "05/05/2026", fin: "11/05/2026" },
-  jours: [
-    {
-      date: "05/05",
-      jour: "Lundi",
-      creneaux: [
-        { debut: "10:00", fin: "15:00" },
-        { debut: "18:00", fin: "23:00" },
-      ],
-      total_heures: 10,
-    },
-    {
-      date: "06/05",
-      jour: "Mardi",
-      creneaux: [
-        { debut: "10:00", fin: "15:00" },
-        { debut: "18:00", fin: "23:00" },
-      ],
-      total_heures: 10,
-    },
-    {
-      date: "07/05",
-      jour: "Mercredi",
-      creneaux: [
-        { debut: "10:00", fin: "15:00" },
-        { debut: "18:00", fin: "23:00" },
-      ],
-      total_heures: 10,
-    },
-    {
-      date: "08/05",
-      jour: "Jeudi",
-      creneaux: [
-        { debut: "10:00", fin: "15:00" },
-        { debut: "18:00", fin: "23:00" },
-      ],
-      total_heures: 10,
-    },
-    {
-      date: "09/05",
-      jour: "Vendredi",
-      creneaux: [
-        { debut: "10:00", fin: "15:00" },
-        { debut: "18:00", fin: "23:30" },
-      ],
-      total_heures: 10.5,
-    },
-    {
-      date: "10/05",
-      jour: "Samedi",
-      creneaux: [
-        { debut: "10:00", fin: "15:00" },
-        { debut: "18:00", fin: "23:30" },
-      ],
-      total_heures: 10.5,
-    },
-  ],
-  total_semaine_heures: 61,
-}
 
 export const mockShifts = [
   {
     id: 1,
-    employe_id: 1,
-    restaurant_id: 1,
-    date: "2026-05-05",
-    debut: "10:00",
-    fin: "15:00",
-    type: "midi",
+    employe: {
+      id: 1,
+      first_name: "Lucas",
+      last_name: "Martin",
+      type_employe: { id: 1, type_name: "Chef de rang" },
+      salary: "2200.00",
+      hire_date: "2022-09-01",
+    },
+    restaurant: { restaurant_id: 1, name: "Holly Fork" },
+    start_date: "2026-05-11T10:00:00+02:00",
+    end_date: "2026-05-11T15:00:00+02:00",
+    shift_type: "MORNING",
+    notes: null,
+    created_at: "2026-05-01T10:00:00Z",
+    updated_at: "2026-05-01T10:00:00Z",
   },
   {
     id: 2,
-    employe_id: 2,
-    restaurant_id: 1,
-    date: "2026-05-05",
-    debut: "18:00",
-    fin: "23:00",
-    type: "soir",
+    employe: {
+      id: 2,
+      first_name: "Emma",
+      last_name: "Dubois",
+      type_employe: { id: 2, type_name: "Serveur" },
+      salary: "1900.00",
+      hire_date: "2023-01-15",
+    },
+    restaurant: { restaurant_id: 1, name: "Holly Fork" },
+    start_date: "2026-05-11T18:00:00+02:00",
+    end_date: "2026-05-11T23:00:00+02:00",
+    shift_type: "EVENING",
+    notes: null,
+    created_at: "2026-05-01T10:00:00Z",
+    updated_at: "2026-05-01T10:00:00Z",
   },
   {
     id: 3,
-    employe_id: 3,
-    restaurant_id: 1,
-    date: "2026-05-05",
-    debut: "09:00",
-    fin: "15:00",
-    type: "midi",
+    employe: {
+      id: 3,
+      first_name: "Hugo",
+      last_name: "Bernard",
+      type_employe: { id: 3, type_name: "Chef Cuisinier" },
+      salary: "2800.00",
+      hire_date: "2020-06-01",
+    },
+    restaurant: { restaurant_id: 1, name: "Holly Fork" },
+    start_date: "2026-05-12T09:00:00+02:00",
+    end_date: "2026-05-12T15:00:00+02:00",
+    shift_type: "MORNING",
+    notes: "Prep desserts",
+    created_at: "2026-05-01T10:00:00Z",
+    updated_at: "2026-05-01T10:00:00Z",
+  },
+]
+
+export const mockRestaurantEmployes = [
+  {
+    id: 1,
+    employe: {
+      id: 1,
+      first_name: "Lucas",
+      last_name: "Martin",
+      type_employe: { id: 1, type_name: "Chef de rang" },
+      salary: "2200.00",
+      hire_date: "2022-09-01",
+      phone_number: null,
+    },
+  },
+  {
+    id: 2,
+    employe: {
+      id: 2,
+      first_name: "Emma",
+      last_name: "Dubois",
+      type_employe: { id: 2, type_name: "Serveur" },
+      salary: "1900.00",
+      hire_date: "2023-01-15",
+      phone_number: null,
+    },
+  },
+  {
+    id: 3,
+    employe: {
+      id: 3,
+      first_name: "Hugo",
+      last_name: "Bernard",
+      type_employe: { id: 3, type_name: "Chef Cuisinier" },
+      salary: "2800.00",
+      hire_date: "2020-06-01",
+      phone_number: null,
+    },
   },
 ]

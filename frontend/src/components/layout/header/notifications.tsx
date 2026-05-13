@@ -37,14 +37,13 @@ export function Notifications() {
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon-sm" disabled className="opacity-40 pointer-events-none" />}
+        >
           <span className="relative">
             <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary" />
-            )}
           </span>
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">Notifications (bientôt disponible)</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align={isMobile ? "center" : "end"}

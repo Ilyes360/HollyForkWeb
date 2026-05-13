@@ -48,10 +48,11 @@ export function useDashboard(params: DashboardKpisParams | null) {
 
 /**
  * Dashboard map with dev mode fallback.
+ * Fetches ALL restaurants with coordinates (no restaurant filter).
  */
-export function useDashboardMapData(restaurantId?: number) {
+export function useDashboardMapData() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const query = useDashboardMap(isDevMode ? undefined : { restaurantId })
+  const query = useDashboardMap()
 
   if (isDevMode) {
     return {

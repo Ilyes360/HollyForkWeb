@@ -11,13 +11,17 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
-  subWeeks,
-  subMonths,
-  addWeeks,
   startOfQuarter,
   endOfQuarter,
+  subWeeks,
+  addWeeks,
+  subMonths,
+  addMonths,
+  subQuarters,
+  addQuarters,
   format,
   isSameDay,
+  differenceInDays,
 } from "date-fns"
 import { fr } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -39,6 +43,8 @@ export interface PeriodRange {
   label: string
 }
 
+type PeriodType = "week" | "month" | "quarter" | "custom"
+
 type PresetId =
   | "this-week"
   | "last-week"
@@ -50,6 +56,7 @@ type PresetId =
 interface Preset {
   id: PresetId
   label: string
+  periodType: PeriodType
   getRange: () => { from: Date; to: Date }
 }
 
@@ -59,6 +66,7 @@ const PRESETS: Preset[] = [
   {
     id: "this-week",
     label: "Cette semaine",
+    periodType: "week",
     getRange: () => ({
       from: startOfWeek(new Date(), { weekStartsOn: 1 }),
       to: endOfWeek(new Date(), { weekStartsOn: 1 }),
@@ -66,7 +74,8 @@ const PRESETS: Preset[] = [
   },
   {
     id: "last-week",
-    label: "Semaine derniere",
+    label: "Semaine dernière",
+    periodType: "week",
     getRange: () => {
       const d = subWeeks(new Date(), 1)
       return {
@@ -78,6 +87,7 @@ const PRESETS: Preset[] = [
   {
     id: "this-month",
     label: "Ce mois",
+    periodType: "month",
     getRange: () => ({
       from: startOfMonth(new Date()),
       to: endOfMonth(new Date()),
@@ -86,6 +96,7 @@ const PRESETS: Preset[] = [
   {
     id: "last-month",
     label: "Mois dernier",
+    periodType: "month",
     getRange: () => {
       const d = subMonths(new Date(), 1)
       return { from: startOfMonth(d), to: endOfMonth(d) }
@@ -94,6 +105,7 @@ const PRESETS: Preset[] = [
   {
     id: "this-quarter",
     label: "Ce trimestre",
+    periodType: "quarter",
     getRange: () => ({
       from: startOfQuarter(new Date()),
       to: endOfQuarter(new Date()),
@@ -120,6 +132,21 @@ function findActivePreset(from: Date, to: Date): PresetId | null {
   return null
 }
 
+function detectPeriodType(from: Date, to: Date): PeriodType {
+  const preset = PRESETS.find((p) => {
+    const r = p.getRange()
+    return isSameDay(r.from, from) && isSameDay(r.to, to)
+  })
+  if (preset) return preset.periodType
+
+  // Heuristic for custom ranges
+  const days = differenceInDays(to, from)
+  if (days <= 7) return "week"
+  if (days <= 31) return "month"
+  if (days <= 92) return "quarter"
+  return "month"
+}
+
 // ── Component ──
 
 interface PeriodPickerProps {
@@ -138,23 +165,69 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
     () => findActivePreset(value.from, value.to),
     [value.from, value.to]
   )
-  const isThisWeek = activePreset === "this-week"
 
-  const prevWeek = () => {
-    const from = startOfWeek(subWeeks(value.from, 1), { weekStartsOn: 1 })
-    const to = endOfWeek(from, { weekStartsOn: 1 })
+  const periodType = useMemo(
+    () => detectPeriodType(value.from, value.to),
+    [value.from, value.to]
+  )
+
+  const isCurrentPeriod = useMemo(() => {
+    const now = new Date()
+    if (periodType === "week") {
+      return isSameDay(value.from, startOfWeek(now, { weekStartsOn: 1 }))
+    }
+    if (periodType === "month") {
+      return isSameDay(value.from, startOfMonth(now))
+    }
+    if (periodType === "quarter") {
+      return isSameDay(value.from, startOfQuarter(now))
+    }
+    return false
+  }, [value.from, periodType])
+
+  const goPrev = () => {
+    let from: Date, to: Date
+    if (periodType === "month") {
+      from = startOfMonth(subMonths(value.from, 1))
+      to = endOfMonth(from)
+    } else if (periodType === "quarter") {
+      from = startOfQuarter(subQuarters(value.from, 1))
+      to = endOfQuarter(from)
+    } else {
+      from = startOfWeek(subWeeks(value.from, 1), { weekStartsOn: 1 })
+      to = endOfWeek(from, { weekStartsOn: 1 })
+    }
     onChange({ from, to, label: formatRange(from, to) })
   }
 
-  const nextWeek = () => {
-    const from = startOfWeek(addWeeks(value.from, 1), { weekStartsOn: 1 })
-    const to = endOfWeek(from, { weekStartsOn: 1 })
+  const goNext = () => {
+    let from: Date, to: Date
+    if (periodType === "month") {
+      from = startOfMonth(addMonths(value.from, 1))
+      to = endOfMonth(from)
+    } else if (periodType === "quarter") {
+      from = startOfQuarter(addQuarters(value.from, 1))
+      to = endOfQuarter(from)
+    } else {
+      from = startOfWeek(addWeeks(value.from, 1), { weekStartsOn: 1 })
+      to = endOfWeek(from, { weekStartsOn: 1 })
+    }
     onChange({ from, to, label: formatRange(from, to) })
   }
 
   const goToday = () => {
-    const r = PRESETS[0].getRange()
-    onChange({ ...r, label: formatRange(r.from, r.to) })
+    let from: Date, to: Date
+    if (periodType === "month") {
+      from = startOfMonth(new Date())
+      to = endOfMonth(new Date())
+    } else if (periodType === "quarter") {
+      from = startOfQuarter(new Date())
+      to = endOfQuarter(new Date())
+    } else {
+      from = startOfWeek(new Date(), { weekStartsOn: 1 })
+      to = endOfWeek(new Date(), { weekStartsOn: 1 })
+    }
+    onChange({ from, to, label: formatRange(from, to) })
   }
 
   const selectPreset = (preset: Preset) => {
@@ -179,6 +252,13 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
     setOpen(false)
   }
 
+  const todayLabel =
+    periodType === "month"
+      ? "Ce mois"
+      : periodType === "quarter"
+        ? "Ce trimestre"
+        : "Cette semaine"
+
   return (
     <div className="flex items-center gap-1.5">
       <div className="flex items-center">
@@ -186,7 +266,7 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
           variant="outline"
           size="icon-sm"
           className="rounded-r-none"
-          onClick={prevWeek}
+          onClick={goPrev}
         >
           <HugeiconsIcon
             icon={ArrowLeft01Icon}
@@ -220,12 +300,12 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
                       className="size-3"
                       strokeWidth={2}
                     />
-                    Periodes
+                    Périodes
                   </button>
                   <span className="text-xs text-muted-foreground tabular-nums">
                     {calendarRange?.from && calendarRange?.to
                       ? formatRange(calendarRange.from, calendarRange.to)
-                      : "Selectionne 2 dates"}
+                      : "Sélectionne 2 dates"}
                   </span>
                 </div>
                 <Separator />
@@ -296,7 +376,7 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
                     className="size-3.5"
                     strokeWidth={2}
                   />
-                  Personnalise...
+                  Personnalisé...
                 </button>
               </div>
             )}
@@ -307,7 +387,7 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
           variant="outline"
           size="icon-sm"
           className="-ml-px rounded-l-none"
-          onClick={nextWeek}
+          onClick={goNext}
         >
           <HugeiconsIcon
             icon={ArrowRight01Icon}
@@ -318,12 +398,12 @@ export function PeriodPicker({ value, onChange }: PeriodPickerProps) {
       </div>
 
       <Button
-        variant={isThisWeek ? "outline" : "default"}
+        variant={isCurrentPeriod ? "outline" : "default"}
         size="sm"
         className="h-8 text-xs"
         onClick={goToday}
       >
-        Aujourd'hui
+        {todayLabel}
       </Button>
     </div>
   )

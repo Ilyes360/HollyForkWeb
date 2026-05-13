@@ -32,17 +32,72 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { useAdminStore } from "@/stores/admin-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { useDashboardMapData } from "@/hooks/use-dashboard"
+import { useEstablishments } from "@/hooks/use-establishments"
 import type { Establishment } from "@/stores/admin-types"
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 
-// Map KPIs per establishment (mock data for the map sidebar)
+// Map KPIs per establishment (mock data for dev mode)
 const mapKpis: Record<string, { revenue: number; covers: number; occupancy: number; rating: number }> = {
   "est-1": { revenue: 127500, covers: 1890, occupancy: 74, rating: 4.6 },
   "est-2": { revenue: 98200, covers: 1120, occupancy: 58, rating: 4.1 },
 }
 
 const defaultKpis = { revenue: 0, covers: 0, occupancy: 0, rating: 0 }
+
+/**
+ * Converts API map data + restaurant details to Establishment-compatible format.
+ * Merges coordinates from /dashboard/map/ with details from /restaurants/.
+ */
+function apiToEstablishments(
+  apiRestaurants: Array<{ restaurantId: number; name: string; lat: number; lng: number; city: string }>,
+  restaurantDetails: Array<Record<string, unknown>>,
+): Establishment[] {
+  const detailsById = Object.fromEntries(
+    restaurantDetails.map((r) => [
+      r.restaurantId as number,
+      r,
+    ]),
+  ) as Record<number, Record<string, unknown>>
+
+  return apiRestaurants.map((r) => {
+    const detail = detailsById[r.restaurantId]
+    const address = (detail?.address as string) ?? ""
+    const postalCode = (detail?.postalCode as string) ?? ""
+    const phone = (detail?.phoneNumber as string) ?? ""
+    const fullAddress = [address, postalCode, r.city].filter(Boolean).join(", ")
+
+    return {
+      id: String(r.restaurantId),
+      name: r.name,
+      address: {
+        fullAddress,
+        city: r.city,
+        postalCode,
+        country: "France",
+        longitude: r.lng,
+        latitude: r.lat,
+        mapboxId: "",
+      },
+      phone,
+      email: "",
+      siret: "",
+      tvaNumber: "",
+      legalForm: "",
+      totalCapacity: 0,
+      pipelineTemplateId: "",
+      openingDays: [],
+      services: [],
+      storageZones: [],
+      isActive: true,
+      legalInfo: { licenseType: "", licenseNumber: "", insurance: "", erpCapacity: 0, notes: "" },
+      createdAt: "",
+      updatedAt: "",
+    }
+  })
+}
 
 const MAP_STYLE = "mapbox://styles/mapbox/standard"
 
@@ -183,8 +238,21 @@ function formatRevenue(n: number) {
 
 export default function MapCard() {
   const resolvedTheme = useResolvedTheme()
-  const establishments = useAdminStore((s) => s.establishments)
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const storeEstablishments = useAdminStore((s) => s.establishments)
   const setCurrentEstablishment = useAdminStore((s) => s.setCurrentEstablishment)
+  const { data: mapData } = useDashboardMapData()
+  const { data: restaurantDetails } = useEstablishments()
+
+  // In user mode: use API data converted to Establishment format
+  // In dev mode: use admin store data
+  const establishments = useMemo(() => {
+    if (!isDevMode && mapData?.restaurants?.length) {
+      return apiToEstablishments(mapData.restaurants, restaurantDetails as Array<Record<string, unknown>>)
+    }
+    return storeEstablishments
+  }, [isDevMode, mapData, restaurantDetails, storeEstablishments])
+
   // Only show establishments that have an address (needed for map)
   const restaurants = useMemo(
     () => establishments.filter((e) => e.address),

@@ -58,14 +58,18 @@ export function NewReservationDialog({
   onSubmit,
   defaultDate,
 }: NewReservationDialogProps) {
+  const now = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
+  const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       clientName: "",
       clientPhone: "",
       clientEmail: "",
-      date: defaultDate,
-      time: "",
+      date: defaultDate || todayStr,
+      time: nowTime,
       covers: 2,
       canal: "telephone",
       tableNumber: "",

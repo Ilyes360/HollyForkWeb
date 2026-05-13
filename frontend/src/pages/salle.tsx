@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react"
 import { motion, type Variants } from "motion/react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { FloorPlan, FloorElement, ZoneShape } from "@/components/salle/types"
+import type { FloorPlan, FloorElement, ZoneShape, TableShape } from "@/components/salle/types"
 import { findRoomForPoint, pointInPolygon } from "@/components/salle/utils"
 import { ConsultationView } from "@/components/salle/consultation-view"
 import { PlanCardView } from "@/components/salle/plan-card-view"
@@ -11,6 +11,10 @@ import { useSalleStore } from "@/components/salle/store"
 import { useFloorPlanStore } from "@/stores/floor-plan-store"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { apiPost } from "@/api/client"
+import { toast } from "sonner"
 
 const container: Variants = {
   hidden: {},
@@ -25,6 +29,69 @@ const fadeUp: Variants = {
     filter: "blur(0px)",
     transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
   },
+}
+
+/**
+ * Sync plan elements (zones + tables) to the backend API.
+ * Creates salles and tables via POST. Best-effort — errors are toasted.
+ */
+async function syncPlanToApi(
+  elements: FloorElement[],
+  restaurantId: number,
+  editingRoomId: string | null,
+) {
+  const zones = elements.filter((el): el is ZoneShape => el.kind === "zone")
+  const tables = elements.filter((el): el is TableShape => el.kind === "table")
+
+  if (zones.length === 0 && tables.length === 0) return
+
+  try {
+    for (const zone of zones) {
+      // Calculate capacity from tables in this zone
+      const zoneTables = tables.filter((t) => {
+        // Simple: check if table center is within zone bounding box
+        const pts = zone.points
+        if (!pts || pts.length < 4) return false
+        const xs: number[] = []
+        const ys: number[] = []
+        for (let i = 0; i < pts.length; i += 2) {
+          xs.push(pts[i])
+          ys.push(pts[i + 1])
+        }
+        const minX = Math.min(...xs) + zone.x
+        const maxX = Math.max(...xs) + zone.x
+        const minY = Math.min(...ys) + zone.y
+        const maxY = Math.max(...ys) + zone.y
+        const cx = t.x + t.width / 2
+        const cy = t.y + t.height / 2
+        return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY
+      })
+      const capacity = zoneTables.reduce((sum, t) => sum + t.seats, 0)
+
+      // Create salle
+      const salle = await apiPost<{ id: number }>("salles/", {
+        name: zone.name,
+        restaurantId,
+        capacity: capacity || 0,
+        floor: 0,
+      })
+
+      // Create tables for this salle
+      for (const table of zoneTables) {
+        await apiPost("tables/", {
+          numero: table.number,
+          capacity: table.seats,
+          positionX: Math.round(table.x),
+          positionY: Math.round(table.y),
+          salleId: salle.id,
+        })
+      }
+    }
+
+    toast.success("Plan synchronisé avec le serveur")
+  } catch {
+    toast.error("Erreur lors de la synchronisation du plan")
+  }
 }
 
 /**
@@ -87,6 +154,8 @@ export default function SallePage() {
   const [activeTab, setActiveTab] = useState("plan")
   const { isEditing, startEditing, stopEditing } = useSalleEdition()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
+  const { restaurantId } = useActiveRestaurant()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const editingRoomIdRef = useRef<string | null>(null)
   const fullPlanRef = useRef<FloorPlan>(plan)
 
@@ -156,6 +225,11 @@ export default function SallePage() {
       // Complete getting-started task if plan has at least one table
       if (finalElements.some((el) => el.kind === "table")) {
         completeTask("floor-plan")
+      }
+
+      // Sync to API in user mode
+      if (!isDevMode && restaurantId) {
+        syncPlanToApi(editedPlan.elements, restaurantId, rid)
       }
     }
 
