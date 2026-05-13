@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FrenchAddressInput, type FrenchAddressResult } from "@/components/ui/french-address-input"
 import {
   Form,
   FormControl,
@@ -124,7 +125,15 @@ export function CreateRestaurantDialog({
                   <FormItem className="col-span-2">
                     <FormLabel>Adresse</FormLabel>
                     <FormControl>
-                      <Input placeholder="12 rue des Rosiers" {...field} />
+                      <FrenchAddressInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        onSelect={(result: FrenchAddressResult) => {
+                          form.setValue("postalCode", result.postalCode)
+                          form.setValue("city", result.city)
+                        }}
+                        placeholder="12 rue des Rosiers"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

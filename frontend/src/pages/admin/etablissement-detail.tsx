@@ -18,7 +18,9 @@ import {
 import type { IconSvgElement } from "@hugeicons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { FrenchAddressInput, type FrenchAddressResult } from "@/components/ui/french-address-input"
 import {
   Collapsible,
   CollapsibleContent,
@@ -202,7 +204,17 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem className="col-span-2">
                       <FormLabel>Adresse</FormLabel>
-                      <FormControl><Input {...field} placeholder="12 rue des Rosiers" /></FormControl>
+                      <FormControl>
+                        <FrenchAddressInput
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onSelect={(result: FrenchAddressResult) => {
+                            form.setValue("postalCode", result.postalCode)
+                            form.setValue("city", result.city)
+                          }}
+                          placeholder="12 rue des Rosiers"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
