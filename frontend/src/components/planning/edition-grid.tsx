@@ -87,7 +87,7 @@ export function EditionGrid({
             className="h-full"
           >
             <div
-              className="grid h-full min-w-[900px] overflow-hidden rounded-xl border"
+              className="grid h-full min-h-[calc(100vh-14rem)] min-w-[900px] overflow-hidden rounded-xl border"
               style={{
                 gridTemplateColumns: "repeat(7, 1fr)",
                 gridTemplateRows: "auto 1fr 1fr auto",

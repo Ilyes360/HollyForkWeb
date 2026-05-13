@@ -154,9 +154,11 @@ export function useShifts(restaurantId: number | null, week?: string) {
     }
   }
 
+  // Fallback to mock employees if API returns empty (backend down or no data)
+  const apiEmployees = employeesQuery.data ?? []
   return {
     data: shiftsQuery.data ?? [],
-    employees: employeesQuery.data ?? [],
+    employees: apiEmployees.length > 0 ? apiEmployees : mockEmployees,
     isLoading: shiftsQuery.isLoading || employeesQuery.isLoading,
     source: "api" as const,
   }

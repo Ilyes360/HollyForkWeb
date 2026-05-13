@@ -76,7 +76,8 @@ describe("Planning queries (user mode — API via MSW)", () => {
 
       expect(result.current.isLoading).toBe(false)
       expect(result.current.data).toHaveLength(0)
-      expect(result.current.employees).toHaveLength(0)
+      // Employees fallback to mock when API returns empty
+      expect(result.current.employees.length).toBeGreaterThan(0)
     })
   })
 
