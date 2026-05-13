@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
@@ -83,7 +83,7 @@ export default function PlanningPage() {
   const completeTask = useGettingStartedStore((s) => s.completeTask)
 
   // Keep a ref of shifts before editing for diff
-  const [shiftsBeforeEdit, setShiftsBeforeEdit] = useState<Shift[]>([])
+  const shiftsBeforeEditRef = useRef<Shift[]>([])
 
   // Sync API data → local state
   useEffect(() => {
@@ -101,15 +101,18 @@ export default function PlanningPage() {
 
       // In user mode: diff and sync to API
       if (!isDevMode && restaurantId) {
-        const oldIds = new Set(shiftsBeforeEdit.map((s) => s.id))
+        const oldShifts = shiftsBeforeEditRef.current
+        const oldIds = new Set(oldShifts.map((s) => s.id))
         const newIds = new Set(newShifts.map((s) => s.id))
 
         // Shifts to delete: in old but not in new
-        const toDelete = shiftsBeforeEdit.filter((s) => !newIds.has(s.id))
+        const toDelete = oldShifts.filter((s) => !newIds.has(s.id))
         // Shifts to create: in new but not in old (or new ids that are temp)
         const toCreate = newShifts.filter(
           (s) => !oldIds.has(s.id) || s.id.startsWith("shift-new-") || s.id.startsWith("temp-")
         )
+
+        console.log("[Planning sync]", { oldCount: oldShifts.length, newCount: newShifts.length, toCreate: toCreate.length, toDelete: toDelete.length })
 
         let errors = 0
 
@@ -148,11 +151,11 @@ export default function PlanningPage() {
         }
       }
     },
-    [isDevMode, restaurantId, shiftsBeforeEdit, weekStart, createShift, deleteShift, queryClient, completeTask]
+    [isDevMode, restaurantId, weekStart, createShift, deleteShift, queryClient, completeTask]
   )
 
   const handleOpenEditor = useCallback(() => {
-    setShiftsBeforeEdit([...shifts]) // snapshot before edit
+    shiftsBeforeEditRef.current = [...shifts] // snapshot before edit
     startEditing({
       employees,
       initialShifts: shifts,
