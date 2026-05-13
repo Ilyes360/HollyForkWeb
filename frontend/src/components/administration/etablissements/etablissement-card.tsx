@@ -42,9 +42,7 @@ export function EtablissementCard({
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant={establishment.isActive ? "success" : "outline"}>
-            {establishment.isActive ? "Actif" : "Inactif"}
-          </Badge>
+          {/* Badge actif/inactif masqué — pas de champ isActive dans l'API */}
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -56,18 +54,15 @@ export function EtablissementCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
               <DropdownMenuItem
-                onSelect={() => navigate(`/admin/etablissements/${(establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId)}`)}
+                onClick={() => navigate(`/admin/etablissements/${(establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId)}`)}
               >
                 <HugeiconsIcon icon={ViewIcon} strokeWidth={2} className="size-4" />
                 Modifier
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onToggleActive((establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId))}>
-                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
-                {establishment.isActive ? "Désactiver" : "Activer"}
-              </DropdownMenuItem>
+              {/* Toggle actif/inactif masqué — pas de champ isActive dans l'API */}
               <DropdownMenuItem
                 className="text-destructive"
-                onSelect={() => onDelete((establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId))}
+                onClick={() => onDelete((establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId))}
               >
                 <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
                 Supprimer

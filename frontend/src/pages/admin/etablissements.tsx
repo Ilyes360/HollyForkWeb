@@ -1,20 +1,24 @@
 import { useState, useCallback, useContext, useEffect } from "react"
 import { useNavigate } from "react-router"
-import { useAdminStore } from "@/stores/admin-store"
 import { useEstablishments } from "@/hooks/use-establishments"
 import { useEmployees } from "@/hooks/use-employees"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { useAdminStore } from "@/stores/admin-store"
+import { apiDelete } from "@/api/client"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { AdminLayoutContext } from "./index"
 import { EtablissementList } from "@/components/administration/etablissements/etablissement-list"
-import { AddEtablissementDialog } from "@/components/administration/etablissements/add-etablissement-dialog"
-import type { AddEtablissementFormValues } from "@/components/administration/etablissements/add-etablissement-dialog"
 import { DeleteEtablissementDialog } from "@/components/administration/etablissements/delete-etablissement-dialog"
+import { CreateRestaurantDialog } from "@/components/layout/sidebar/create-restaurant-dialog"
 
 export default function EtablissementsPage() {
   const navigate = useNavigate()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const queryClient = useQueryClient()
   const { data: establishments } = useEstablishments()
   const { data: employees } = useEmployees()
   const addEstablishment = useAdminStore((s) => s.addEstablishment)
-  const updateEstablishment = useAdminStore((s) => s.updateEstablishment)
   const removeEstablishment = useAdminStore((s) => s.removeEstablishment)
 
   const { setOnAdd } = useContext(AdminLayoutContext)
@@ -29,50 +33,18 @@ export default function EtablissementsPage() {
     return () => setOnAdd(null)
   }, [setOnAdd, openAddDialog])
 
-  const handleAdd = useCallback(
-    (data: AddEtablissementFormValues) => {
-      const newEst = {
-        id: `est-${Date.now()}`,
-        name: data.name,
-        address: data.location,
-        phone: data.phone,
-        email: data.email,
-        siret: "",
-        tvaNumber: "",
-        legalForm: "",
-        totalCapacity: 0,
-        openingDays: [] as string[],
-        services: [],
-        storageZones: [],
-        isActive: true,
-        legalInfo: {
-          licenseType: "",
-          licenseNumber: "",
-          insurance: "",
-          erpCapacity: 0,
-          notes: "",
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      addEstablishment(newEst as any)
-      navigate(`/admin/etablissements/${newEst.id}`)
-    },
-    [addEstablishment, navigate]
-  )
-
   const handleToggleActive = useCallback(
-    (id: string) => {
-      const est = establishments.find((e: { id: string; isActive?: boolean }) => e.id === id)
-      if (est) updateEstablishment(id, { isActive: !(est as { isActive: boolean }).isActive })
+    (_id: string) => {
+      // Backend doesn't have isActive field — no-op
     },
-    [establishments, updateEstablishment]
+    []
   )
 
   const handleDelete = useCallback(
     (id: string) => {
-      const est = establishments.find((e: { id: string; name: string }) => e.id === id)
+      const est = establishments.find((e: Record<string, unknown>) =>
+        String(e.id ?? e.restaurantId) === id
+      )
       if (est) {
         setDeleteTarget({ id, name: (est as { name: string }).name })
         setDeleteDialogOpen(true)
@@ -82,11 +54,21 @@ export default function EtablissementsPage() {
   )
 
   const handleConfirmDelete = useCallback(() => {
-    if (deleteTarget) {
+    if (!deleteTarget) return
+
+    if (isDevMode) {
       removeEstablishment(deleteTarget.id)
-      setDeleteTarget(null)
+    } else {
+      apiDelete(`restaurants/${deleteTarget.id}/`)
+        .then(() => {
+          toast.success("Restaurant supprimé")
+          queryClient.invalidateQueries({ queryKey: ["establishments"] })
+          queryClient.invalidateQueries({ queryKey: ["restaurants"] })
+        })
+        .catch(() => toast.error("Erreur lors de la suppression"))
     }
-  }, [deleteTarget, removeEstablishment])
+    setDeleteTarget(null)
+  }, [deleteTarget, isDevMode, removeEstablishment, queryClient])
 
   return (
     <div className="space-y-4">
@@ -97,10 +79,9 @@ export default function EtablissementsPage() {
         onDelete={handleDelete}
       />
 
-      <AddEtablissementDialog
+      <CreateRestaurantDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
-        onSubmit={handleAdd}
       />
 
       <DeleteEtablissementDialog
