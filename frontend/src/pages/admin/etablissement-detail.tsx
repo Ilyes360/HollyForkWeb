@@ -232,9 +232,7 @@ export default function EtablissementDetailPage() {
 
       <motion.div variants={fadeUp} className="flex items-center gap-3">
         <h1 className="font-display text-lg font-semibold tracking-tight">{establishment.name}</h1>
-        <Badge variant={(establishment as Record<string, unknown>).isActive ? "success" : "outline"}>
-          {(establishment as Record<string, unknown>).isActive ? "Actif" : "Inactif"}
-        </Badge>
+        {/* Badge actif/inactif masqué — pas de champ isActive dans l'API */}
       </motion.div>
 
       <Form {...form}>
@@ -245,6 +243,7 @@ export default function EtablissementDetailPage() {
             </CollapsibleSection>
           </motion.div>
 
+          {/* TODO: sections masquées — pas de champs correspondants dans l'API backend
           <motion.div variants={fadeUp}>
             <CollapsibleSection title="Configuration opérationnelle" icon={Settings01Icon} defaultOpen>
               <EtablissementOperationsSection form={form} />
@@ -262,20 +261,13 @@ export default function EtablissementDetailPage() {
               <EtablissementLegalSection form={form} />
             </CollapsibleSection>
           </motion.div>
+          */}
 
           <motion.div variants={fadeUp} className="flex items-center gap-2 pt-4 border-t">
             <Button type="submit" disabled={!form.formState.isDirty} className="flex-1">
               Enregistrer
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleToggleActive}
-              title={(establishment as Record<string, unknown>).isActive ? "Désactiver" : "Activer"}
-            >
-              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
-            </Button>
+            {/* TODO: toggle actif/inactif — pas de champ isActive dans l'API backend */}
             <Button
               type="button"
               variant="destructive"
