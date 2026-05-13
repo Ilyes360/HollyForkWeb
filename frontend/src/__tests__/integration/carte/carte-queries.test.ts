@@ -34,8 +34,8 @@ describe("Carte queries (user mode — API via MSW)", () => {
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(3)
     const first = result.current.data[0] as Record<string, unknown>
-    expect(first.nom).toBe("Salade de tomates fraîches")
-    expect(first.categorieId).toBe(1)
+    expect(first.name).toBe("Salade de tomates fraîches")
+    expect((first.categorie as Record<string, unknown>).id).toBe(1)
   })
 
   it("fetches categories from API", async () => {
@@ -47,7 +47,7 @@ describe("Carte queries (user mode — API via MSW)", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(3)
-    expect(result.current.data[0].nom).toBe("Entrées")
+    expect(result.current.data[0].name).toBe("Entrées")
     expect(result.current.data[0].displayOrder).toBe(1)
   })
 
@@ -60,8 +60,8 @@ describe("Carte queries (user mode — API via MSW)", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(3)
-    expect(result.current.data[0].nom).toBe("Tomates")
-    expect(result.current.data[0].prixUnitaire).toBe(3.8)
+    expect(result.current.data[0].name).toBe("Tomates")
+    expect(result.current.data[0].unitPrice).toBe("3.80")
   })
 })
 

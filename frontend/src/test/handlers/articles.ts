@@ -33,8 +33,14 @@ export const articleHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update article
+  // Update article (PUT)
   http.put(`${API}/articles/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+
+  // Partial update article (PATCH)
+  http.patch(`${API}/articles/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),
@@ -60,6 +66,17 @@ export const articleHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
+  // Update category
+  http.put(`${API}/categories/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+
+  // Delete category
+  http.delete(`${API}/categories/:id/`, () => {
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   // Ingredients list
   http.get(`${API}/ingredients/`, () => {
     return HttpResponse.json({
@@ -74,6 +91,17 @@ export const articleHandlers = [
   http.post(`${API}/ingredients/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
+  }),
+
+  // Update ingredient
+  http.put(`${API}/ingredients/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+
+  // Delete ingredient
+  http.delete(`${API}/ingredients/:id/`, () => {
+    return new HttpResponse(null, { status: 204 })
   }),
 
   // Article-ingredients list

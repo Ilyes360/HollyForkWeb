@@ -1,6 +1,9 @@
 import { useState, useCallback, useMemo } from "react"
 import { motion } from "motion/react"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 import { useInventoryStore } from "@/stores/inventory-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useArticles } from "@/hooks/use-articles"
 import { useStocks } from "@/hooks/use-stocks"
 import { useSuppliers } from "@/hooks/use-suppliers"
@@ -8,6 +11,7 @@ import { useOrders } from "@/hooks/use-orders"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { apiPost, apiPatch, apiDelete } from "@/api/client"
 import { getTotalMonthlySpend } from "@/components/commandes/utils"
 import { getSupplierProducts } from "@/components/commandes/utils"
 import type { OrderItem, SupplierFull } from "@/components/commandes/types"
@@ -64,13 +68,19 @@ const TODAY = toLocalDateString(new Date())
 export default function CommandesPage() {
   usePageTitle("Commandes")
   const { restaurantId } = useActiveRestaurant()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const queryClient = useQueryClient()
   const { data: recipes } = useArticles()
   const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
   const { data: orders } = useOrders(restaurantId)
   const {
-    addOrder, markOrderDelivered, cancelOrder,
-    addSupplier, updateSupplier, deleteSupplier,
+    addOrder: addOrderStore,
+    markOrderDelivered: markOrderDeliveredStore,
+    cancelOrder: cancelOrderStore,
+    addSupplier: addSupplierStore,
+    updateSupplier: updateSupplierStore,
+    deleteSupplier: deleteSupplierStore,
   } = useInventoryStore()
 
   const { productPortionSummaries } = usePortionCalculator(recipes, products, suppliers)
@@ -128,17 +138,37 @@ export default function CommandesPage() {
   )
 
   const handleConfirmReceive = useCallback(
-    (orderId: string, receivedQuantities: Record<string, number>) => {
-      markOrderDelivered(orderId, receivedQuantities)
+    async (orderId: string, receivedQuantities: Record<string, number>) => {
+      if (!isDevMode) {
+        try {
+          await apiPatch(`suppliers/orders/${orderId}/`, { status: "DELIVERED" })
+          toast.success("Commande marquée comme livrée")
+          queryClient.invalidateQueries({ queryKey: ["orders"] })
+        } catch {
+          toast.error("Erreur lors de la mise à jour")
+        }
+      } else {
+        markOrderDeliveredStore(orderId, receivedQuantities)
+      }
     },
-    [markOrderDelivered]
+    [isDevMode, markOrderDeliveredStore, queryClient]
   )
 
   const handleCancel = useCallback(
-    (orderId: string) => {
-      cancelOrder(orderId)
+    async (orderId: string) => {
+      if (!isDevMode) {
+        try {
+          await apiPatch(`suppliers/orders/${orderId}/`, { status: "CANCELLED" })
+          toast.success("Commande annulée")
+          queryClient.invalidateQueries({ queryKey: ["orders"] })
+        } catch {
+          toast.error("Erreur lors de l'annulation")
+        }
+      } else {
+        cancelOrderStore(orderId)
+      }
     },
-    [cancelOrder]
+    [isDevMode, cancelOrderStore, queryClient]
   )
 
   const handleSupplierClick = useCallback((supplierId: string) => {
@@ -162,14 +192,29 @@ export default function CommandesPage() {
   }, [])
 
   const handleSupplierSubmit = useCallback(
-    (data: Omit<SupplierFull, "id">) => {
-      if (editingSupplier) {
-        updateSupplier(editingSupplier.id, data)
+    async (data: Omit<SupplierFull, "id">) => {
+      if (!isDevMode) {
+        try {
+          if (editingSupplier) {
+            await apiPatch(`suppliers/${editingSupplier.id}/`, data)
+            toast.success("Fournisseur modifié")
+          } else {
+            await apiPost("suppliers/", data)
+            toast.success("Fournisseur ajouté")
+          }
+          queryClient.invalidateQueries({ queryKey: ["suppliers"] })
+        } catch {
+          toast.error("Erreur lors de l'enregistrement")
+        }
       } else {
-        addSupplier({ id: `sup-${Date.now()}`, ...data })
+        if (editingSupplier) {
+          updateSupplierStore(editingSupplier.id, data)
+        } else {
+          addSupplierStore({ id: `sup-${Date.now()}`, ...data })
+        }
       }
     },
-    [editingSupplier, addSupplier, updateSupplier]
+    [isDevMode, editingSupplier, addSupplierStore, updateSupplierStore, queryClient]
   )
 
   const handleDeleteSupplier = useCallback((supplierId: string) => {
@@ -177,35 +222,61 @@ export default function CommandesPage() {
     setDeleteConfirmOpen(true)
   }, [])
 
-  const handleConfirmDelete = useCallback(() => {
+  const handleConfirmDelete = useCallback(async () => {
     if (deletingSupplierId) {
-      deleteSupplier(deletingSupplierId)
+      if (!isDevMode) {
+        try {
+          await apiDelete(`suppliers/${deletingSupplierId}/`)
+          toast.success("Fournisseur supprimé")
+          queryClient.invalidateQueries({ queryKey: ["suppliers"] })
+        } catch {
+          toast.error("Erreur lors de la suppression")
+        }
+      } else {
+        deleteSupplierStore(deletingSupplierId)
+      }
       setSupplierSheetOpen(false)
       setDeleteConfirmOpen(false)
       setDeletingSupplierId(null)
     }
-  }, [deletingSupplierId, deleteSupplier])
+  }, [isDevMode, deletingSupplierId, deleteSupplierStore, queryClient])
 
   const handleSubmitOrder = useCallback(
-    (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
+    async (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
       const totalAmount = data.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
         0
       )
       const supplier = suppliers.find((s) => s.id === data.supplierId)
-      const newOrder = {
-        id: `ord-${Date.now()}`,
-        supplierId: data.supplierId,
-        items: data.items,
-        date: TODAY,
-        status: "pending" as const,
-        totalAmount,
-        expectedDelivery: daysFromNow(supplier?.averageDeliveryDays ?? 3),
-        notes: data.notes,
+
+      if (!isDevMode) {
+        try {
+          await apiPost("suppliers/orders/", {
+            supplierId: data.supplierId,
+            items: data.items,
+            notes: data.notes,
+            totalAmount,
+          })
+          toast.success("Commande créée")
+          queryClient.invalidateQueries({ queryKey: ["orders"] })
+        } catch {
+          toast.error("Erreur lors de la création de la commande")
+        }
+      } else {
+        const newOrder = {
+          id: `ord-${Date.now()}`,
+          supplierId: data.supplierId,
+          items: data.items,
+          date: TODAY,
+          status: "pending" as const,
+          totalAmount,
+          expectedDelivery: daysFromNow(supplier?.averageDeliveryDays ?? 3),
+          notes: data.notes,
+        }
+        addOrderStore(newOrder)
       }
-      addOrder(newOrder)
     },
-    [suppliers, addOrder]
+    [suppliers, isDevMode, addOrderStore, queryClient]
   )
 
   // Resolved entities

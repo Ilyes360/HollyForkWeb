@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query"
-import { apiGet, getAccessToken } from "@/api/client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { PaginatedResponse } from "@/api/types"
 
-type ApiCategory = {
+export type ApiCategory = {
   id: number
-  nom: string
+  name: string
   displayOrder: number
   description: string
 }
@@ -37,4 +37,39 @@ export function useCategories() {
   }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
+}
+
+/**
+ * Create category mutation.
+ */
+export function useCreateCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiPost<ApiCategory>("categories/", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
+  })
+}
+
+/**
+ * Update category mutation.
+ */
+export function useUpdateCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      apiPut<ApiCategory>(`categories/${id}/`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
+  })
+}
+
+/**
+ * Delete category mutation.
+ */
+export function useDeleteCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiDelete(`categories/${id}/`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
+  })
 }

@@ -1,16 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { MOCK_RECIPES } from "@/components/carte/data"
 import type { PaginatedResponse } from "@/api/types"
 
-type ApiArticle = {
+export type ApiArticle = {
   id: number
-  nom: string
-  prix: number
-  description: string
-  categorieId: number
-  disponible: boolean
+  name: string
+  categorie: { id: number; name: string; displayOrder: number; description: string }
+  price: string
+  description: string | null
+  available: boolean
 }
 
 const keys = {
@@ -52,12 +52,30 @@ export function useArticles() {
 }
 
 /**
+ * Fetch single article by id.
+ */
+export function useArticle(id: number | null) {
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const hasToken = !!getAccessToken()
+
+  return useQuery({
+    queryKey: keys.article(id!),
+    queryFn: async () => {
+      return apiGet<ApiArticle>(`articles/${id}/`)
+    },
+    enabled: !isDevMode && hasToken && id != null,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
  * Create article mutation.
+ * Sends: { name, categorie_id (via snakifyKeys from categorieId), price, description }
  */
 export function useCreateArticle() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
+    mutationFn: (data: { name: string; categorieId: number; price: string; description?: string | null }) =>
       apiPost<ApiArticle>("articles/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
   })
@@ -65,12 +83,13 @@ export function useCreateArticle() {
 
 /**
  * Update article mutation.
+ * Sends: { name, categorie_id, price, description, ingredients_update }
  */
 export function useUpdateArticle() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiArticle>(`articles/${id}/`, data),
+      apiPatch<ApiArticle>(`articles/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
   })
 }

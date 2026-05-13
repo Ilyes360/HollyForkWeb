@@ -5,46 +5,46 @@
 export const mockArticles = [
   {
     id: 1,
-    nom: "Salade de tomates fraîches",
-    prix: 12,
+    name: "Salade de tomates fraîches",
+    categorie: { id: 1, name: "Entrées", display_order: 1, description: "Entrées froides et chaudes" },
+    price: "12.00",
     description: "Entrée phare de l'été",
-    categorie_id: 1,
-    disponible: true,
+    available: true,
   },
   {
     id: 2,
-    nom: "Filet de bœuf sauce au poivre",
-    prix: 34,
+    name: "Filet de bœuf sauce au poivre",
+    categorie: { id: 2, name: "Plats", display_order: 2, description: "Plats principaux" },
+    price: "34.00",
     description: "Plat signature",
-    categorie_id: 2,
-    disponible: true,
+    available: true,
   },
   {
     id: 3,
-    nom: "Gâteau au chocolat fondant",
-    prix: 10,
+    name: "Gâteau au chocolat fondant",
+    categorie: { id: 3, name: "Desserts", display_order: 3, description: "Desserts et pâtisseries" },
+    price: "10.00",
     description: "Dessert maison",
-    categorie_id: 3,
-    disponible: true,
+    available: true,
   },
 ]
 
 export const mockCategories = [
   {
     id: 1,
-    nom: "Entrées",
+    name: "Entrées",
     display_order: 1,
     description: "Entrées froides et chaudes",
   },
   {
     id: 2,
-    nom: "Plats",
+    name: "Plats",
     display_order: 2,
     description: "Plats principaux",
   },
   {
     id: 3,
-    nom: "Desserts",
+    name: "Desserts",
     display_order: 3,
     description: "Desserts et pâtisseries",
   },
@@ -53,21 +53,21 @@ export const mockCategories = [
 export const mockIngredients = [
   {
     id: 1,
-    nom: "Tomates",
-    unite: "kg",
-    prix_unitaire: 3.8,
+    name: "Tomates",
+    unit: "kg",
+    unit_price: "3.80",
   },
   {
     id: 2,
-    nom: "Filet de bœuf",
-    unite: "kg",
-    prix_unitaire: 42.5,
+    name: "Filet de bœuf",
+    unit: "kg",
+    unit_price: "42.50",
   },
   {
     id: 3,
-    nom: "Chocolat noir 70%",
-    unite: "kg",
-    prix_unitaire: 18.0,
+    name: "Chocolat noir 70%",
+    unit: "kg",
+    unit_price: "18.00",
   },
 ]
 

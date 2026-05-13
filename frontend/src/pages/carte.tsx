@@ -1,10 +1,13 @@
 import { useState, useCallback, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router"
 import { motion } from "motion/react"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 import type { Recipe, RecipeCategory } from "@/components/carte/types"
 import { useRecipeStore } from "@/stores/recipe-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { useArticles } from "@/hooks/use-articles"
+import { useArticles, useDeleteArticle } from "@/hooks/use-articles"
 import { useStocks } from "@/hooks/use-stocks"
 import { useSuppliers } from "@/hooks/use-suppliers"
 import { useOrders } from "@/hooks/use-orders"
@@ -46,6 +49,8 @@ export default function CartePage() {
   usePageTitle("Ma carte")
   const navigate = useNavigate()
   const opView = useCarteOperational()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const queryClient = useQueryClient()
 
   // Escape key to unlock
   useEffect(() => {
@@ -60,9 +65,11 @@ export default function CartePage() {
 
   const { restaurantId } = useActiveRestaurant()
   const { data: recipes } = useArticles()
-  const deleteRecipe = useRecipeStore((s) => s.deleteRecipe)
+  const deleteRecipeStore = useRecipeStore((s) => s.deleteRecipe)
   const duplicateRecipe = useRecipeStore((s) => s.duplicateRecipe)
   const toggleActive = useRecipeStore((s) => s.toggleActive)
+
+  const deleteArticleMutation = useDeleteArticle()
 
   const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
@@ -155,13 +162,17 @@ export default function CartePage() {
 
   const handleDuplicate = useCallback(
     (recipe: Recipe) => {
+      if (!isDevMode) {
+        toast.info("Duplication locale uniquement")
+      }
       duplicateRecipe(recipe.id)
     },
-    [duplicateRecipe]
+    [duplicateRecipe, isDevMode]
   )
 
   const handleToggleActive = useCallback(
     (recipe: Recipe) => {
+      // Backend `available` is read-only computed — keep as local-only
       toggleActive(recipe.id)
     },
     [toggleActive]
@@ -169,13 +180,25 @@ export default function CartePage() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      deleteRecipe(id)
+      if (!isDevMode) {
+        deleteArticleMutation.mutate(Number(id), {
+          onSuccess: () => {
+            toast.success("Article supprimé")
+            queryClient.invalidateQueries({ queryKey: ["articles"] })
+          },
+          onError: () => {
+            toast.error("Erreur lors de la suppression")
+          },
+        })
+      } else {
+        deleteRecipeStore(id)
+      }
       if (selectedRecipeId === id) {
         setDetailOpen(false)
         setSelectedRecipeId(null)
       }
     },
-    [deleteRecipe, selectedRecipeId]
+    [isDevMode, deleteArticleMutation, deleteRecipeStore, selectedRecipeId, queryClient]
   )
 
   const handleAlertClick = useCallback(() => {

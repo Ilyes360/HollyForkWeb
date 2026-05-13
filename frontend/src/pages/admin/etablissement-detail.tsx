@@ -27,9 +27,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { useAdminStore } from "@/stores/admin-store"
-import { useEstablishments } from "@/hooks/use-establishments"
+import { useEstablishments, useUpdateEstablishment, useDeleteEstablishment } from "@/hooks/use-establishments"
 import { useDevModeStore } from "@/stores/dev-mode-store"
-import { apiPatch, apiDelete } from "@/api/client"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { EtablissementGeneralSection } from "@/components/administration/etablissements/etablissement-general-section"
@@ -67,11 +66,11 @@ export default function EtablissementDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const queryClient = useQueryClient()
   const { data: apiEstablishments } = useEstablishments()
   const storeEstablishments = useAdminStore((s) => s.establishments)
-  const updateEstablishmentStore = useAdminStore((s) => s.updateEstablishment)
-  const removeEstablishmentStore = useAdminStore((s) => s.removeEstablishment)
+  const queryClient = useQueryClient()
+  const { mutate: updateEstablishment } = useUpdateEstablishment()
+  const { mutate: deleteEstablishment } = useDeleteEstablishment()
 
   // Find establishment: try API data first (id as number), then store (id as string)
   const establishment = (apiEstablishments as Array<Record<string, unknown>>).find(
@@ -116,48 +115,46 @@ export default function EtablissementDetailPage() {
   }
 
   function onSubmit(data: FormValues) {
-    if (isDevMode) {
-      updateEstablishmentStore(id!, { name: data.name, phone: data.phone, siret: data.siret })
-      navigate("/admin")
-    } else {
-      apiPatch(`restaurants/${id}/`, {
-        name: data.name,
-        address: data.address,
-        postalCode: data.postalCode,
-        city: data.city,
-        phoneNumber: data.phone,
-        siret: data.siret,
-        pin: data.pin,
-      })
-        .then(() => {
-          toast.success("Établissement modifié")
-          queryClient.invalidateQueries({ queryKey: ["establishments"] })
-          queryClient.invalidateQueries({ queryKey: ["restaurants"] })
-          navigate("/admin")
-        })
-        .catch(() => toast.error("Erreur lors de la modification"))
+    const payload = {
+      name: data.name,
+      address: data.address,
+      postalCode: data.postalCode,
+      city: data.city,
+      phoneNumber: data.phone,
+      siret: data.siret,
+      pin: data.pin,
     }
+
+    // Update cache synchronously before navigating so the list reflects changes immediately
+    queryClient.setQueryData<Array<Record<string, unknown>>>(
+      ["establishments", "list"],
+      (old) => old?.map((e) =>
+        String(e.restaurantId ?? e.id) === id ? { ...e, ...payload } : e
+      ) ?? []
+    )
+
+    // Fire API call in background (best-effort)
+    updateEstablishment({ id: id!, data: payload })
+    toast.success("Établissement modifié")
+    navigate("/admin")
   }
 
   function handleToggleActive() {
     if (isDevMode) {
-      updateEstablishmentStore(id!, { isActive: !(establishment as Record<string, unknown>).isActive })
+      updateEstablishment({ id: id!, data: { isActive: !(establishment as Record<string, unknown>).isActive } })
     }
   }
 
   function handleDelete() {
-    if (isDevMode) {
-      removeEstablishmentStore(id!)
-      navigate("/admin")
-    } else {
-      apiDelete(`restaurants/${id}/`)
-        .then(() => {
-          toast.success("Établissement supprimé")
-          queryClient.invalidateQueries({ queryKey: ["establishments"] })
-          navigate("/admin")
-        })
-        .catch(() => toast.error("Erreur lors de la suppression"))
-    }
+    // Remove from cache synchronously before navigating
+    queryClient.setQueryData<Array<Record<string, unknown>>>(
+      ["establishments", "list"],
+      (old) => old?.filter((e) => String(e.restaurantId ?? e.id) !== id) ?? []
+    )
+
+    deleteEstablishment(id!)
+    toast.success("Établissement supprimé")
+    navigate("/admin")
   }
 
   return (

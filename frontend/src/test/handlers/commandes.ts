@@ -4,7 +4,42 @@ import { mockCommandes, mockSuppliers } from "../mocks/commandes"
 const API = "*/api"
 
 export const commandeHandlers = [
-  // Commandes list
+  // Supplier orders list (new correct endpoint)
+  http.get(`${API}/suppliers/orders/`, () => {
+    return HttpResponse.json({
+      count: mockCommandes.length,
+      next: null,
+      previous: null,
+      results: mockCommandes,
+    })
+  }),
+
+  // Supplier order detail
+  http.get(`${API}/suppliers/orders/:id/`, ({ params }) => {
+    const id = Number(params.id)
+    const commande = mockCommandes.find((c) => c.id === id)
+    if (!commande) return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    return HttpResponse.json(commande)
+  }),
+
+  // Create supplier order
+  http.post(`${API}/suppliers/orders/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: 100, ...body }, { status: 201 })
+  }),
+
+  // Update supplier order (PATCH)
+  http.patch(`${API}/suppliers/orders/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+
+  // Delete supplier order
+  http.delete(`${API}/suppliers/orders/:id/`, () => {
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  // Legacy commandes endpoints (kept for backward compat)
   http.get(`${API}/commandes/`, () => {
     return HttpResponse.json({
       count: mockCommandes.length,
@@ -14,7 +49,6 @@ export const commandeHandlers = [
     })
   }),
 
-  // Commande detail
   http.get(`${API}/commandes/:id/`, ({ params }) => {
     const id = Number(params.id)
     const commande = mockCommandes.find((c) => c.id === id)
@@ -22,19 +56,16 @@ export const commandeHandlers = [
     return HttpResponse.json(commande)
   }),
 
-  // Create commande
   http.post(`${API}/commandes/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update commande
   http.put(`${API}/commandes/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),
 
-  // Delete commande
   http.delete(`${API}/commandes/:id/`, () => {
     return new HttpResponse(null, { status: 204 })
   }),

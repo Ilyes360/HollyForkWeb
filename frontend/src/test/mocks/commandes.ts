@@ -1,46 +1,55 @@
 /**
- * Commande & supplier fixtures in snake_case — matching real backend responses.
+ * Supplier order & supplier fixtures in snake_case — matching real backend responses.
  */
 
 export const mockCommandes = [
   {
     id: 1,
-    fournisseur_id: 1,
-    restaurant_id: 1,
-    date_commande: "2026-05-04",
-    date_livraison_prevue: "2026-05-05",
-    statut: "pending",
-    lignes: [
-      { article_id: 1, quantite: 10, prix_unitaire: 42.5 },
-      { article_id: 2, quantite: 8, prix_unitaire: 12.5 },
-    ],
+    fournisseur: { id: 1, name: "Boucherie Moderne" },
+    restaurant: { restaurant_id: 1, name: "Holly Fork — Marais" },
+    order_number: "CMD-2026-001",
+    order_date: "2026-05-04",
+    expected_delivery_date: "2026-05-05",
+    status: "SENT",
+    total_amount: "525.00",
+    notes: null,
   },
   {
     id: 2,
-    fournisseur_id: 2,
-    restaurant_id: 1,
-    date_commande: "2026-05-03",
-    date_livraison_prevue: "2026-05-05",
-    statut: "delivered",
-    lignes: [
-      { article_id: 3, quantite: 5, prix_unitaire: 28.0 },
-    ],
+    fournisseur: { id: 2, name: "Océan Frais" },
+    restaurant: { restaurant_id: 1, name: "Holly Fork — Marais" },
+    order_number: "CMD-2026-002",
+    order_date: "2026-05-03",
+    expected_delivery_date: "2026-05-05",
+    status: "DELIVERED",
+    total_amount: "140.00",
+    notes: null,
   },
 ]
 
 export const mockSuppliers = [
   {
     id: 1,
-    nom: "Boucherie Moderne",
-    telephone: "01 42 36 78 90",
+    name: "Boucherie Moderne",
+    contact_name: "Jean Dupont",
     email: "contact@boucherie-moderne.fr",
-    jours_livraison: ["lundi", "mercredi", "vendredi"],
+    telephone: "01 42 36 78 90",
+    address: "12 rue des Bouchers",
+    city: "Paris",
+    postal_code: "75004",
+    notes: null,
+    is_active: true,
   },
   {
     id: 2,
-    nom: "Océan Frais",
-    telephone: "01 43 55 12 34",
+    name: "Océan Frais",
+    contact_name: "Marie Martin",
     email: "commandes@ocean-frais.fr",
-    jours_livraison: ["mardi", "jeudi"],
+    telephone: "01 43 55 12 34",
+    address: "5 quai de la Pêche",
+    city: "Paris",
+    postal_code: "75012",
+    notes: null,
+    is_active: true,
   },
 ]

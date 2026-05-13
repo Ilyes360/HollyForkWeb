@@ -14,6 +14,19 @@ export const stockHandlers = [
     })
   }),
 
+  // Stock alerts
+  http.get(`${API}/stocks/alerts/`, () => {
+    const alerts = mockStocks.filter(
+      (s) => parseFloat(s.quantity_in_stock) <= parseFloat(s.alert_threshold)
+    )
+    return HttpResponse.json({
+      count: alerts.length,
+      next: null,
+      previous: null,
+      results: alerts,
+    })
+  }),
+
   // Create stock
   http.post(`${API}/stocks/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
@@ -24,6 +37,18 @@ export const stockHandlers = [
   http.put(`${API}/stocks/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+
+  // Adjust stock
+  http.post(`${API}/stocks/:id/adjust/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const stock = mockStocks.find((s) => s.id === Number(params.id))
+    return HttpResponse.json({ ...stock, ...body, id: Number(params.id) })
+  }),
+
+  // Delete stock
+  http.delete(`${API}/stocks/:id/`, () => {
+    return new HttpResponse(null, { status: 204 })
   }),
 
   // Reapprovisionnements list

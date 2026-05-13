@@ -32,9 +32,10 @@ describe("Stock queries (user mode — API via MSW)", () => {
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(3)
     const first = result.current.data[0] as Record<string, unknown>
-    expect(first.ingredientNom).toBe("Tomates")
-    expect(first.zoneStockage).toBe("reserve_legumes")
-    expect(first.restaurantId).toBe(1)
+    const ingredient = (first.ingredient as Record<string, unknown>)
+    expect(ingredient.name).toBe("Tomates")
+    expect(first.quantityInStock).toBe("12.00")
+    expect((first.restaurant as Record<string, unknown>).restaurantId).toBe(1)
   })
 })
 

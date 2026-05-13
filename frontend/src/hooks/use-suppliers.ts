@@ -1,15 +1,20 @@
-import { useQuery } from "@tanstack/react-query"
-import { apiGet, getAccessToken } from "@/api/client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useInventoryStore } from "@/stores/inventory-store"
 import type { PaginatedResponse } from "@/api/types"
 
-type ApiSupplier = {
+export type ApiSupplier = {
   id: number
-  nom: string
-  telephone: string
-  email: string
-  joursLivraison: string[]
+  name: string
+  contactName: string | null
+  email: string | null
+  telephone: string | null
+  address: string | null
+  city: string | null
+  postalCode: string | null
+  notes: string | null
+  isActive: boolean
 }
 
 const keys = {
@@ -48,4 +53,39 @@ export function useSuppliers() {
     isLoading: query.isLoading,
     source: "api" as const,
   }
+}
+
+/**
+ * Create supplier mutation.
+ */
+export function useCreateSupplier() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiPost<ApiSupplier>("suppliers/", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
+  })
+}
+
+/**
+ * Update supplier mutation.
+ */
+export function useUpdateSupplier() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      apiPut<ApiSupplier>(`suppliers/${id}/`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
+  })
+}
+
+/**
+ * Delete supplier mutation.
+ */
+export function useDeleteSupplier() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiDelete(`suppliers/${id}/`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
+  })
 }

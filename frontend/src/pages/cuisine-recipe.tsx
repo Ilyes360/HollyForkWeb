@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeft02Icon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -40,6 +41,9 @@ import {
 import { IngredientCombobox } from "@/components/carte/ingredient-combobox"
 import { PRODUCT_ICONS } from "@/components/stock/product-icons"
 import { useRecipeStore } from "@/stores/recipe-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { useIngredients } from "@/hooks/use-ingredients"
+import { apiPost, apiPatch } from "@/api/client"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const schema = z.object({
@@ -79,7 +83,26 @@ export default function CuisineRecipePage() {
   usePageTitle("Cuisine")
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const products = MOCK_PRODUCTS
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+
+  // In user mode, use API ingredients for the picker; in dev mode, use MOCK_PRODUCTS
+  const { data: apiIngredients } = useIngredients()
+  const products = isDevMode
+    ? MOCK_PRODUCTS
+    : apiIngredients.length > 0
+      ? apiIngredients.map((ing) => ({
+          id: String(ing.id),
+          name: ing.name,
+          unit: ing.unit,
+          unitPrice: Number(ing.unitPrice),
+          // Provide minimal fields needed by the ingredient combobox
+          category: "" as string,
+          supplierId: "",
+          quantity: 0,
+          minStock: 0,
+          storageZone: "",
+        }))
+      : MOCK_PRODUCTS
 
   const recipes = useRecipeStore((s) => s.recipes)
   const addRecipe = useRecipeStore((s) => s.addRecipe)
@@ -174,7 +197,32 @@ export default function CuisineRecipePage() {
   const foodCostPct = getFoodCostPercent(materialCost, watchedPrice || 0)
   const margin = getGrossMargin(watchedPrice || 0, materialCost)
 
-  function handleSubmit(data: FormValues) {
+  async function handleSubmit(data: FormValues) {
+    if (!isDevMode) {
+      try {
+        const apiPayload = {
+          name: data.name,
+          categorieId: 1, // Default category — would need a category picker mapping
+          price: String(data.sellingPrice),
+          description: data.notes || null,
+        }
+
+        if (isEditing && editRecipe) {
+          await apiPatch(`articles/${id}/`, apiPayload)
+          toast.success("Article modifié")
+        } else {
+          await apiPost("articles/", apiPayload)
+          toast.success("Article créé")
+        }
+        navigate("/cuisine")
+        return
+      } catch {
+        toast.error("Erreur lors de l'enregistrement")
+        return
+      }
+    }
+
+    // Dev mode: use Zustand store
     const recipeData = {
       name: data.name,
       icon: icon || undefined,

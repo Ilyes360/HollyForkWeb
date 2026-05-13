@@ -3,9 +3,12 @@ import { useNavigate } from "react-router"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ClipboardIcon } from "@hugeicons/core-free-icons"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import type { Product } from "@/components/stock/types"
 import { useInventoryStore } from "@/stores/inventory-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useArticles } from "@/hooks/use-articles"
 import { useStocks } from "@/hooks/use-stocks"
 import { useSuppliers } from "@/hooks/use-suppliers"
@@ -13,6 +16,7 @@ import { useOrders } from "@/hooks/use-orders"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { apiDelete, apiPost } from "@/api/client"
 import {
   getProductStatus,
   getZoneHealth,
@@ -64,6 +68,8 @@ function daysFromNow(n: number): string {
 export default function StocksPage() {
   usePageTitle("Mon stock")
   const navigate = useNavigate()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const queryClient = useQueryClient()
 
   // ── Data (API hooks + store fallbacks) ──
   const { restaurantId } = useActiveRestaurant()
@@ -73,8 +79,8 @@ export default function StocksPage() {
   const storageZones = useInventoryStore((s) => s.storageZones)
   const categories = useInventoryStore((s) => s.categories)
   const updateProduct = useInventoryStore((s) => s.updateProduct)
-  const deleteProduct = useInventoryStore((s) => s.deleteProduct)
-  const addOrder = useInventoryStore((s) => s.addOrder)
+  const deleteProductStore = useInventoryStore((s) => s.deleteProduct)
+  const addOrderStore = useInventoryStore((s) => s.addOrder)
   const { data: recipes } = useArticles()
 
   // ── Portions ──
@@ -207,35 +213,61 @@ export default function StocksPage() {
   }, [])
 
   const handleSubmitOrder = useCallback(
-    (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
+    async (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
       const totalAmount = data.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice, 0
       )
       const supplier = suppliers.find((s) => s.id === data.supplierId)
-      const newOrder = {
-        id: `ord-${Date.now()}`,
-        supplierId: data.supplierId,
-        items: data.items,
-        date: toLocalDateString(new Date()),
-        status: "pending" as const,
-        totalAmount,
-        expectedDelivery: daysFromNow(supplier?.averageDeliveryDays ?? 3),
-        notes: data.notes,
+
+      if (!isDevMode) {
+        try {
+          await apiPost("suppliers/orders/", {
+            supplierId: data.supplierId,
+            items: data.items,
+            notes: data.notes,
+            totalAmount,
+          })
+          toast.success("Commande créée")
+          queryClient.invalidateQueries({ queryKey: ["orders"] })
+        } catch {
+          toast.error("Erreur lors de la création de la commande")
+        }
+      } else {
+        const newOrder = {
+          id: `ord-${Date.now()}`,
+          supplierId: data.supplierId,
+          items: data.items,
+          date: toLocalDateString(new Date()),
+          status: "pending" as const,
+          totalAmount,
+          expectedDelivery: daysFromNow(supplier?.averageDeliveryDays ?? 3),
+          notes: data.notes,
+        }
+        addOrderStore(newOrder)
       }
-      addOrder(newOrder)
     },
-    [suppliers, addOrder]
+    [suppliers, isDevMode, addOrderStore, queryClient]
   )
 
   const handleDelete = useCallback(
-    (id: string) => {
-      deleteProduct(id)
+    async (id: string) => {
+      if (!isDevMode) {
+        try {
+          await apiDelete(`stocks/${id}/`)
+          toast.success("Produit supprimé")
+          queryClient.invalidateQueries({ queryKey: ["stocks"] })
+        } catch {
+          toast.error("Erreur lors de la suppression")
+        }
+      } else {
+        deleteProductStore(id)
+      }
       if (selectedProduct?.id === id) {
         setDetailOpen(false)
         setSelectedProduct(null)
       }
     },
-    [deleteProduct, selectedProduct]
+    [isDevMode, deleteProductStore, selectedProduct, queryClient]
   )
 
   const handleOpenSupplierSheet = useCallback((supplierId: string) => {
@@ -258,6 +290,7 @@ export default function StocksPage() {
   }, [])
 
   const handleSaveInventory = useCallback(() => {
+    // Inventory mode uses local store — stocks/{id}/adjust/ requires ingredient context
     inventoryValues.forEach((value, productId) => {
       const product = products.find((p) => p.id === productId)
       if (product && product.quantity !== value) {

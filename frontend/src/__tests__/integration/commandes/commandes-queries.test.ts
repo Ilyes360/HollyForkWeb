@@ -33,9 +33,9 @@ describe("Commandes queries (user mode — API via MSW)", () => {
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
     const first = result.current.data[0] as Record<string, unknown>
-    expect(first.fournisseurId).toBe(1)
-    expect(first.restaurantId).toBe(1)
-    expect(first.dateLivraisonPrevue).toBe("2026-05-05")
+    expect((first.fournisseur as Record<string, unknown>).id).toBe(1)
+    expect((first.restaurant as Record<string, unknown>).restaurantId).toBe(1)
+    expect(first.expectedDeliveryDate).toBe("2026-05-05")
   })
 
   it("fetches suppliers from API", async () => {
@@ -49,8 +49,8 @@ describe("Commandes queries (user mode — API via MSW)", () => {
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
     const first = result.current.data[0] as Record<string, unknown>
-    expect(first.nom).toBe("Boucherie Moderne")
-    expect(first.joursLivraison).toEqual(["lundi", "mercredi", "vendredi"])
+    expect(first.name).toBe("Boucherie Moderne")
+    expect(first.isActive).toBe(true)
   })
 })
 
