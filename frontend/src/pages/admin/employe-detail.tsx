@@ -1,5 +1,5 @@
 import { Link, useParams, useNavigate } from "react-router"
-import { useForm, useWatch } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "motion/react"
@@ -8,16 +8,12 @@ import type { IconSvgElement } from "@hugeicons/react"
 import {
   ArrowLeft02Icon,
   ArrowDown01Icon,
-  Cancel01Icon,
   Delete02Icon,
   UserIcon,
   Briefcase01Icon,
-  SecurityLockIcon,
 } from "@hugeicons/core-free-icons"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import {
   Collapsible,
@@ -31,60 +27,26 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { useAdminStore } from "@/stores/admin-store"
+import { useEmployees, useEmployeeTypes } from "@/hooks/use-employees"
 import { useDevModeStore } from "@/stores/dev-mode-store"
+import { useAdminStore } from "@/stores/admin-store"
 import { apiPost, apiPatch, apiDelete } from "@/api/client"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import {
-  POSITION_LABELS,
-  CONTRACT_LABELS,
-  ACCOUNT_STATUS_CONFIG,
-} from "@/components/administration/types"
-import type { PositionType, ContractType } from "@/components/administration/types"
-import { getInitials } from "@/components/administration/utils"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { getInitials } from "@/components/administration/utils"
 
-const schema = z
-  .object({
-    firstName: z.string().min(2, "Prénom requis"),
-    lastName: z.string().min(2, "Nom requis"),
-    email: z.string().email("Email invalide"),
-    phone: z.string().min(10, "Téléphone requis"),
-    position: z.string().min(1, "Poste requis"),
-    establishmentId: z.string().min(1, "Établissement requis"),
-    contractType: z.string().min(1, "Type de contrat requis"),
-    weeklyHours: z.coerce.number().min(1).max(48),
-    hourlyRate: z.coerce.number().min(0.01),
-    hireDate: z.string().min(1, "Date d'embauche requise"),
-    endDate: z.string().optional(),
-    roleId: z.string().min(1, "Rôle requis"),
-    loginEmail: z.string().email("Email de connexion invalide"),
-    accountStatus: z.enum(["active", "disabled"]),
-  })
-  .superRefine((data, ctx) => {
-    if (["cdd", "stage", "apprenti"].includes(data.contractType) && !data.endDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Date de fin requise pour ce type de contrat",
-        path: ["endDate"],
-      })
-    }
-  })
+// Only fields that exist in the backend API
+const schema = z.object({
+  firstName: z.string().min(1, "Prénom requis"),
+  lastName: z.string().min(1, "Nom requis"),
+  phoneNumber: z.string().optional(),
+  typeEmployeId: z.string().min(1, "Type d'employé requis"),
+  salary: z.string().optional(),
+  hireDate: z.string().optional(),
+})
 
 type FormValues = z.infer<typeof schema>
-
-const POSITION_DEPARTMENTS: Record<string, string> = {
-  chef_de_rang: "salle",
-  serveur: "salle",
-  chef_cuisinier: "cuisine",
-  second_de_cuisine: "cuisine",
-  commis: "cuisine",
-  barman: "bar",
-  plongeur: "plonge",
-  responsable_salle: "salle",
-  gerant: "administration",
-}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12, filter: "blur(4px)" },
@@ -99,65 +61,52 @@ const fadeUp = {
 const AVATAR_COLORS = [
   "bg-blue-500", "bg-pink-500", "bg-orange-500", "bg-emerald-500",
   "bg-purple-500", "bg-rose-500", "bg-amber-500", "bg-teal-500",
-  "bg-indigo-500", "bg-violet-500",
 ]
 
 export default function EmployeDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const employees = useAdminStore((s) => s.employees)
-  const establishments = useAdminStore((s) => s.establishments)
-  const roles = useAdminStore((s) => s.roles)
-  const addEmployee = useAdminStore((s) => s.addEmployee)
-  const updateEmployee = useAdminStore((s) => s.updateEmployee)
-  const removeEmployee = useAdminStore((s) => s.removeEmployee)
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const queryClient = useQueryClient()
 
+  const { data: allEmployees } = useEmployees()
+  const { data: employeeTypes } = useEmployeeTypes()
+  const addEmployeeStore = useAdminStore((s) => s.addEmployee)
+  const removeEmployeeStore = useAdminStore((s) => s.removeEmployee)
+
   const isNew = !id
-  const employee = isNew ? null : employees.find((e) => e.id === id)
+  // Find employee from API data or store
+  const employee = !isNew
+    ? (allEmployees as Array<Record<string, unknown>>).find(
+        (e) => String(e.id) === id
+      )
+    : null
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: employee
       ? {
-          firstName: employee.firstName,
-          lastName: employee.lastName,
-          email: employee.email,
-          phone: employee.phone,
-          position: employee.position,
-          establishmentId: employee.establishmentId,
-          contractType: employee.contractType,
-          weeklyHours: employee.weeklyHours,
-          hourlyRate: employee.hourlyRate,
-          hireDate: employee.hireDate,
-          endDate: employee.endDate ?? "",
-          roleId: employee.roleId,
-          loginEmail: employee.loginEmail,
-          accountStatus: employee.accountStatus,
+          firstName: String(employee.firstName ?? ""),
+          lastName: String(employee.lastName ?? ""),
+          phoneNumber: String(employee.phoneNumber ?? employee.phone ?? ""),
+          typeEmployeId: String(
+            (employee.typeEmploye as Record<string, unknown>)?.id ??
+            employee.typeEmployeId ?? ""
+          ),
+          salary: String(employee.salary ?? "0.00"),
+          hireDate: String(employee.hireDate ?? ""),
         }
       : {
           firstName: "",
           lastName: "",
-          email: "",
-          phone: "",
-          position: "",
-          establishmentId: establishments[0]?.id ?? "",
-          contractType: "cdi",
-          weeklyHours: 35,
-          hourlyRate: 11.65,
+          phoneNumber: "",
+          typeEmployeId: "",
+          salary: "0.00",
           hireDate: new Date().toISOString().split("T")[0],
-          endDate: "",
-          roleId: "",
-          loginEmail: "",
-          accountStatus: "active" as const,
         },
   })
-
-  const contractType = useWatch({ control: form.control, name: "contractType" })
-  const showEndDate = ["cdd", "stage", "apprenti"].includes(contractType ?? "")
 
   if (!isNew && !employee) {
     return (
@@ -170,74 +119,43 @@ export default function EmployeDetailPage() {
     )
   }
 
-  const statusConfig = employee ? ACCOUNT_STATUS_CONFIG[employee.accountStatus] : null
-
   function onSubmit(data: FormValues) {
+    const apiData = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phoneNumber: data.phoneNumber || undefined,
+      typeEmployeId: Number(data.typeEmployeId),
+      salary: data.salary || "0.00",
+      hireDate: data.hireDate || undefined,
+    }
+
     if (isDevMode) {
-      // Dev mode: local store
       if (isNew) {
-        const now = new Date().toISOString()
-        const newId = `emp-${Date.now()}`
-        addEmployee({
-          id: newId,
+        addEmployeeStore({
+          id: `emp-${Date.now()}`,
           firstName: data.firstName,
           lastName: data.lastName,
-          email: data.email,
-          phone: data.phone,
+          phone: data.phoneNumber ?? "",
+          email: "",
           dateOfBirth: "",
           address: "",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          position: data.position as any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          department: (POSITION_DEPARTMENTS[data.position] ?? "salle") as any,
-          establishmentId: data.establishmentId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          contractType: data.contractType as any,
-          hireDate: data.hireDate,
-          endDate: data.endDate || undefined,
-          weeklyHours: data.weeklyHours,
-          hourlyRate: data.hourlyRate,
-          roleId: data.roleId,
-          loginEmail: data.loginEmail,
-          accountStatus: data.accountStatus,
+          position: "serveur" as never,
+          department: "salle" as never,
+          establishmentId: "",
+          contractType: "cdi" as never,
+          hireDate: data.hireDate ?? "",
+          weeklyHours: 35,
+          hourlyRate: 11.65,
+          roleId: "",
+          loginEmail: "",
+          accountStatus: "active",
           avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-          createdAt: now,
-          updatedAt: now,
-        })
-      } else {
-        updateEmployee(id!, {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          phone: data.phone,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          position: data.position as any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          department: (POSITION_DEPARTMENTS[data.position] ?? "salle") as any,
-          establishmentId: data.establishmentId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          contractType: data.contractType as any,
-          weeklyHours: data.weeklyHours,
-          hourlyRate: data.hourlyRate,
-          hireDate: data.hireDate,
-          endDate: data.endDate || undefined,
-          roleId: data.roleId,
-          loginEmail: data.loginEmail,
-          accountStatus: data.accountStatus,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
       }
       navigate("/admin/employes")
     } else {
-      // User mode: API call
-      const apiData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phone,
-        salary: String(data.hourlyRate * data.weeklyHours * 4.33),
-        hireDate: data.hireDate,
-        typeEmployeId: 8, // TODO: map position to type_employe_id
-      }
-
       const promise = isNew
         ? apiPost("employes/", apiData)
         : apiPatch(`employes/${id}/`, apiData)
@@ -252,18 +170,9 @@ export default function EmployeDetailPage() {
     }
   }
 
-  function handleToggleStatus() {
-    if (isDevMode) {
-      updateEmployee(id!, {
-        accountStatus: employee!.accountStatus === "active" ? "disabled" : "active",
-      })
-    }
-    // Backend doesn't have account status — local only
-  }
-
   function handleDelete() {
     if (isDevMode) {
-      removeEmployee(id!)
+      removeEmployeeStore(id!)
       navigate("/admin/employes")
     } else {
       apiDelete(`employes/${id}/`)
@@ -275,6 +184,11 @@ export default function EmployeDetailPage() {
         .catch(() => toast.error("Erreur lors de la suppression"))
     }
   }
+
+  // Get type name for header
+  const typeName = employee
+    ? String((employee.typeEmploye as Record<string, unknown>)?.typeName ?? employee.position ?? "")
+    : ""
 
   return (
     <motion.div
@@ -297,21 +211,16 @@ export default function EmployeDetailPage() {
         {employee ? (
           <>
             <div
-              className={`flex size-10 items-center justify-center rounded-full text-sm font-medium text-white ${employee.avatarColor}`}
+              className={`flex size-10 items-center justify-center rounded-full text-sm font-medium text-white ${(employee.avatarColor as string) ?? "bg-gray-400"}`}
             >
-              {getInitials(employee.firstName, employee.lastName)}
+              {getInitials(String(employee.firstName), String(employee.lastName))}
             </div>
             <div>
               <h1 className="font-display text-lg font-semibold tracking-tight">
-                {employee.firstName} {employee.lastName}
+                {String(employee.firstName)} {String(employee.lastName)}
               </h1>
-              <p className="text-sm text-muted-foreground">{POSITION_LABELS[employee.position]}</p>
+              <p className="text-sm text-muted-foreground">{typeName}</p>
             </div>
-            {statusConfig && (
-              <Badge variant={statusConfig.variant} className="ml-auto">
-                {statusConfig.label}
-              </Badge>
-            )}
           </>
         ) : (
           <h1 className="font-display text-lg font-semibold tracking-tight">Nouvel employé</h1>
@@ -347,25 +256,14 @@ export default function EmployeDetailPage() {
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
+              <div className="mt-3">
                 <FormField
                   control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl><Input type="email" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
+                  name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Téléphone</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
+                      <FormControl><Input {...field} placeholder="+33 6 12 34 56 78" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -374,27 +272,33 @@ export default function EmployeDetailPage() {
             </CollapsibleSection>
           </motion.div>
 
-          {/* Contrat */}
+          {/* Poste & Contrat */}
           <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Contrat" icon={Briefcase01Icon} defaultOpen>
+            <CollapsibleSection title="Poste & contrat" icon={Briefcase01Icon} defaultOpen>
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="position"
+                  name="typeEmployeId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Poste</FormLabel>
+                      <FormLabel>Type d'employé</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue>
-                              {field.value ? POSITION_LABELS[field.value as PositionType] : "Sélectionner"}
+                              {field.value
+                                ? (employeeTypes as Array<Record<string, unknown>>).find(
+                                    (t) => String(t.id) === field.value
+                                  )?.nom as string ?? field.value
+                                : "Sélectionner"}
                             </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {(Object.keys(POSITION_LABELS) as PositionType[]).map((key) => (
-                            <SelectItem key={key} value={key}>{POSITION_LABELS[key]}</SelectItem>
+                          {(employeeTypes as Array<Record<string, unknown>>).map((t) => (
+                            <SelectItem key={String(t.id)} value={String(t.id)}>
+                              {String(t.nom ?? t.typeName ?? t.id)}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -404,78 +308,17 @@ export default function EmployeDetailPage() {
                 />
                 <FormField
                   control={form.control}
-                  name="establishmentId"
+                  name="salary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Établissement</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue>
-                              {field.value ? establishments.find((e) => e.id === field.value)?.name : "Sélectionner"}
-                            </SelectValue>
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {establishments.map((e) => (
-                            <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Salaire (€/mois)</FormLabel>
+                      <FormControl><Input type="number" step="0.01" min="0" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <FormField
-                  control={form.control}
-                  name="contractType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type de contrat</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue>
-                              {CONTRACT_LABELS[field.value as ContractType] ?? "Sélectionner"}
-                            </SelectValue>
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {(Object.keys(CONTRACT_LABELS) as ContractType[]).map((key) => (
-                            <SelectItem key={key} value={key}>{CONTRACT_LABELS[key]}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="weeklyHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Heures/sem</FormLabel>
-                      <FormControl><Input type="number" min={1} max={48} {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <FormField
-                  control={form.control}
-                  name="hourlyRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Taux horaire (€/h)</FormLabel>
-                      <FormControl><Input type="number" min={0.01} step="0.01" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="mt-3">
                 <FormField
                   control={form.control}
                   name="hireDate"
@@ -488,90 +331,16 @@ export default function EmployeDetailPage() {
                   )}
                 />
               </div>
-              {showEndDate && (
-                <div className="mt-3">
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date de fin</FormLabel>
-                        <FormControl><Input type="date" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
             </CollapsibleSection>
           </motion.div>
 
-          {/* Accès */}
-          <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Accès" icon={SecurityLockIcon} defaultOpen>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="roleId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rôle</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue>
-                              {field.value ? roles.find((r) => r.id === field.value)?.label : "Sélectionner"}
-                            </SelectValue>
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {roles.map((r) => (
-                            <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="loginEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email de connexion</FormLabel>
-                      <FormControl><Input type="email" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="mt-3">
-                <FormField
-                  control={form.control}
-                  name="accountStatus"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                      <div>
-                        <FormLabel className="!text-sm !text-foreground">Compte actif</FormLabel>
-                        <p className="text-xs text-muted-foreground">
-                          L'employé pourra se connecter à l'application.
-                        </p>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value === "active"}
-                          onCheckedChange={(checked) =>
-                            field.onChange(checked ? "active" : "disabled")
-                          }
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CollapsibleSection>
-          </motion.div>
+          {/* TODO: sections commentées — pas de champs correspondants dans l'API backend
+          - Établissement (assignment via /api/restaurant-employes/)
+          - Type de contrat (CDI/CDD/etc.)
+          - Heures/semaine, taux horaire
+          - Rôle & permissions
+          - Email de connexion, statut compte
+          */}
 
           {/* Footer */}
           <motion.div variants={fadeUp} className="flex items-center gap-2 pt-4 border-t">
@@ -579,26 +348,15 @@ export default function EmployeDetailPage() {
               {isNew ? "Créer" : "Enregistrer"}
             </Button>
             {!isNew && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleToggleStatus}
-                  title={employee?.accountStatus === "active" ? "Désactiver" : "Activer"}
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  onClick={handleDelete}
-                  title="Supprimer"
-                >
-                  <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
-                </Button>
-              </>
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                onClick={handleDelete}
+                title="Supprimer"
+              >
+                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
+              </Button>
             )}
           </motion.div>
         </form>
