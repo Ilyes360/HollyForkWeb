@@ -25,6 +25,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { useAdminStore } from "@/stores/admin-store"
+import { useEstablishments } from "@/hooks/use-establishments"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { apiPatch, apiDelete } from "@/api/client"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { EtablissementGeneralSection } from "@/components/administration/etablissements/etablissement-general-section"
 import { EtablissementOperationsSection } from "@/components/administration/etablissements/etablissement-operations-section"
 import { EtablissementZonesSection } from "@/components/administration/etablissements/etablissement-zones-section"
@@ -94,11 +99,18 @@ export default function EtablissementDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const establishments = useAdminStore((s) => s.establishments)
-  const updateEstablishment = useAdminStore((s) => s.updateEstablishment)
-  const removeEstablishment = useAdminStore((s) => s.removeEstablishment)
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const queryClient = useQueryClient()
+  const { data: apiEstablishments } = useEstablishments()
+  const storeEstablishments = useAdminStore((s) => s.establishments)
+  const updateEstablishmentStore = useAdminStore((s) => s.updateEstablishment)
+  const removeEstablishmentStore = useAdminStore((s) => s.removeEstablishment)
 
-  const establishment = establishments.find((e) => e.id === id)
+  // Find establishment: try API data first (id as number), then store (id as string)
+  const establishment = (apiEstablishments as Array<Record<string, unknown>>).find(
+    (e) => String(e.id ?? e.restaurantId) === id
+  ) as Record<string, unknown> | undefined
+    ?? storeEstablishments.find((e) => e.id === id)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const form = useForm<FormValues>({
@@ -106,22 +118,22 @@ export default function EtablissementDetailPage() {
     resolver: zodResolver(schema) as any,
     defaultValues: establishment
       ? {
-          name: establishment.name,
-          location: establishment.address,
-          phone: establishment.phone,
-          email: establishment.email,
-          siret: establishment.siret,
-          tvaNumber: establishment.tvaNumber,
-          legalForm: establishment.legalForm,
-          capacity: establishment.totalCapacity,
-          services: establishment.services,
-          openingDays: establishment.openingDays,
-          storageZones: establishment.storageZones,
-          licenseType: establishment.legalInfo.licenseType,
-          licenseNumber: establishment.legalInfo.licenseNumber,
-          insurance: establishment.legalInfo.insurance,
-          erpCapacity: establishment.legalInfo.erpCapacity,
-          legalNotes: establishment.legalInfo.notes,
+          name: (establishment as Record<string, unknown>).name as string ?? "",
+          location: (establishment as Record<string, unknown>).address ?? { fullAddress: "", city: "", postalCode: "", country: "", longitude: 0, latitude: 0, mapboxId: "" },
+          phone: ((establishment as Record<string, unknown>).phone ?? (establishment as Record<string, unknown>).phoneNumber ?? "") as string,
+          email: ((establishment as Record<string, unknown>).email ?? "") as string,
+          siret: ((establishment as Record<string, unknown>).siret ?? "") as string,
+          tvaNumber: ((establishment as Record<string, unknown>).tvaNumber ?? "") as string,
+          legalForm: ((establishment as Record<string, unknown>).legalForm ?? "") as string,
+          capacity: ((establishment as Record<string, unknown>).totalCapacity ?? (establishment as Record<string, unknown>).capacity ?? 0) as number,
+          services: ((establishment as Record<string, unknown>).services ?? []) as FormValues["services"],
+          openingDays: ((establishment as Record<string, unknown>).openingDays ?? []) as string[],
+          storageZones: ((establishment as Record<string, unknown>).storageZones ?? []) as FormValues["storageZones"],
+          licenseType: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.licenseType as string ?? "",
+          licenseNumber: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.licenseNumber as string ?? "",
+          insurance: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.insurance as string ?? "",
+          erpCapacity: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.erpCapacity as number ?? 0,
+          legalNotes: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.notes as string ?? "",
         }
       : undefined,
   })
@@ -138,38 +150,67 @@ export default function EtablissementDetailPage() {
   }
 
   function onSubmit(data: FormValues) {
-    updateEstablishment(id!, {
-      name: data.name,
-      address: data.location,
-      phone: data.phone,
-      email: data.email,
-      siret: data.siret,
-      tvaNumber: data.tvaNumber,
-      legalForm: data.legalForm,
-      totalCapacity: data.capacity,
-      services: data.services,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      openingDays: data.openingDays as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      storageZones: data.storageZones as any,
-      legalInfo: {
-        licenseType: data.licenseType,
-        licenseNumber: data.licenseNumber,
-        insurance: data.insurance,
-        erpCapacity: data.erpCapacity,
-        notes: data.legalNotes,
-      },
-    })
-    navigate("/admin")
+    if (isDevMode) {
+      updateEstablishmentStore(id!, {
+        name: data.name,
+        address: data.location,
+        phone: data.phone,
+        email: data.email,
+        siret: data.siret,
+        tvaNumber: data.tvaNumber,
+        legalForm: data.legalForm,
+        totalCapacity: data.capacity,
+        services: data.services,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        openingDays: data.openingDays as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        storageZones: data.storageZones as any,
+        legalInfo: {
+          licenseType: data.licenseType,
+          licenseNumber: data.licenseNumber,
+          insurance: data.insurance,
+          erpCapacity: data.erpCapacity,
+          notes: data.legalNotes,
+        },
+      })
+      navigate("/admin")
+    } else {
+      apiPatch(`restaurants/${id}/`, {
+        name: data.name,
+        address: typeof data.location === "string" ? data.location : data.location?.fullAddress,
+        postalCode: typeof data.location === "object" ? data.location?.postalCode : "",
+        city: typeof data.location === "object" ? data.location?.city : "",
+        phoneNumber: data.phone,
+        siret: data.siret,
+      })
+        .then(() => {
+          toast.success("Établissement modifié")
+          queryClient.invalidateQueries({ queryKey: ["establishments"] })
+          navigate("/admin")
+        })
+        .catch(() => toast.error("Erreur lors de la modification"))
+    }
   }
 
   function handleToggleActive() {
-    updateEstablishment(id!, { isActive: !establishment!.isActive })
+    if (isDevMode) {
+      updateEstablishmentStore(id!, { isActive: !(establishment as Record<string, unknown>).isActive })
+    }
   }
 
   function handleDelete() {
-    removeEstablishment(id!)
-    navigate("/admin")
+    if (isDevMode) {
+      removeEstablishmentStore(id!)
+      navigate("/admin")
+    } else {
+      apiDelete(`restaurants/${id}/`)
+        .then(() => {
+          toast.success("Établissement supprimé")
+          queryClient.invalidateQueries({ queryKey: ["establishments"] })
+          navigate("/admin")
+        })
+        .catch(() => toast.error("Erreur lors de la suppression"))
+    }
   }
 
   return (
@@ -191,8 +232,8 @@ export default function EtablissementDetailPage() {
 
       <motion.div variants={fadeUp} className="flex items-center gap-3">
         <h1 className="font-display text-lg font-semibold tracking-tight">{establishment.name}</h1>
-        <Badge variant={establishment.isActive ? "success" : "outline"}>
-          {establishment.isActive ? "Actif" : "Inactif"}
+        <Badge variant={(establishment as Record<string, unknown>).isActive ? "success" : "outline"}>
+          {(establishment as Record<string, unknown>).isActive ? "Actif" : "Inactif"}
         </Badge>
       </motion.div>
 
@@ -231,7 +272,7 @@ export default function EtablissementDetailPage() {
               variant="outline"
               size="icon"
               onClick={handleToggleActive}
-              title={establishment.isActive ? "Désactiver" : "Activer"}
+              title={(establishment as Record<string, unknown>).isActive ? "Désactiver" : "Activer"}
             >
               <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
             </Button>
