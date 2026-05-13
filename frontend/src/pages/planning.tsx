@@ -93,43 +93,45 @@ export default function PlanningPage() {
     }
   }, [apiShifts])
 
-  const handleSave = useCallback(
-    (newShifts: Shift[]) => {
-      hasLocalEdits.current = true
-      setShifts(newShifts)
-      if (newShifts.length > 0) {
-        completeTask("first-service")
-      }
+  // Use a ref so the save function always has fresh values
+  const saveRef = useRef<(newShifts: Shift[]) => void>(() => {})
+  saveRef.current = (newShifts: Shift[]) => {
+    hasLocalEdits.current = true
+    setShifts(newShifts)
+    if (newShifts.length > 0) {
+      completeTask("first-service")
+    }
 
-      // Try API sync in background (best-effort, don't block UI)
-      if (!isDevMode && restaurantId) {
-        const oldShifts = shiftsBeforeEditRef.current
-        const oldIds = new Set(oldShifts.map((s) => s.id))
-        const newIds = new Set(newShifts.map((s) => s.id))
-        const toDelete = oldShifts.filter((s) => !newIds.has(s.id))
-        const toCreate = newShifts.filter(
-          (s) => !oldIds.has(s.id) || s.id.startsWith("shift-new-") || s.id.startsWith("temp-")
-        )
+    // Try API sync in background (best-effort, don't block UI)
+    if (!isDevMode && restaurantId) {
+      const oldShifts = shiftsBeforeEditRef.current
+      const oldIds = new Set(oldShifts.map((s) => s.id))
+      const newIds = new Set(newShifts.map((s) => s.id))
+      const toDelete = oldShifts.filter((s) => !newIds.has(s.id))
+      const toCreate = newShifts.filter(
+        (s) => !oldIds.has(s.id) || s.id.startsWith("shift-new-") || s.id.startsWith("temp-")
+      )
 
-        // Fire-and-forget API calls
-        for (const shift of toDelete) {
-          const numId = Number(shift.id)
-          if (!isNaN(numId) && numId > 0) {
-            deleteShift.mutate(numId)
-          }
-        }
-        for (const shift of toCreate) {
-          createShift.mutate(shiftToApiPayload(shift, weekStart, restaurantId))
+      for (const shift of toDelete) {
+        const numId = Number(shift.id)
+        if (!isNaN(numId) && numId > 0) {
+          deleteShift.mutate(numId)
         }
       }
+      for (const shift of toCreate) {
+        createShift.mutate(shiftToApiPayload(shift, weekStart, restaurantId))
+      }
+    }
 
-      toast.success("Planning enregistré")
-    },
-    [isDevMode, restaurantId, weekStart, createShift, deleteShift, completeTask]
-  )
+    toast.success("Planning enregistré")
+  }
+
+  const handleSave = useCallback((newShifts: Shift[]) => {
+    saveRef.current(newShifts)
+  }, [])
 
   const handleOpenEditor = useCallback(() => {
-    shiftsBeforeEditRef.current = [...shifts] // snapshot before edit
+    shiftsBeforeEditRef.current = [...shifts]
     startEditing({
       employees,
       initialShifts: shifts,
