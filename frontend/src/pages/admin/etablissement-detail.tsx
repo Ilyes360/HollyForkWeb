@@ -37,50 +37,15 @@ import { EtablissementLegalSection } from "@/components/administration/etablisse
 import { DeleteEtablissementDialog } from "@/components/administration/etablissements/delete-etablissement-dialog"
 import { usePageTitle } from "@/hooks/use-page-title"
 
+// Only fields that exist in the backend API
 const schema = z.object({
-  name: z.string().min(2, "Le nom est requis"),
-  location: z
-    .object({
-      fullAddress: z.string(),
-      city: z.string(),
-      postalCode: z.string(),
-      country: z.string(),
-      longitude: z.number(),
-      latitude: z.number(),
-      mapboxId: z.string(),
-    })
-    .nullable(),
-  phone: z.string(),
-  email: z.string().email("Email invalide").or(z.literal("")),
+  name: z.string().min(1, "Le nom est requis"),
+  address: z.string().optional(),
+  postalCode: z.string().optional(),
+  city: z.string().optional(),
+  phone: z.string().optional(),
   siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres").or(z.literal("")),
-  tvaNumber: z.string(),
-  legalForm: z.string(),
-  capacity: z.coerce.number().min(1, "Minimum 1 couvert"),
-  services: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().min(1, "Nom requis"),
-        startTime: z.string().min(1),
-        endTime: z.string().min(1),
-      })
-    )
-    .min(1, "Au moins un service requis"),
-  openingDays: z.array(z.string()).min(1, "Au moins un jour requis"),
-  storageZones: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      slug: z.string(),
-      type: z.string(),
-      targetTemperature: z.coerce.number().optional(),
-    })
-  ),
-  licenseType: z.string(),
-  licenseNumber: z.string(),
-  insurance: z.string(),
-  erpCapacity: z.coerce.number().min(0),
-  legalNotes: z.string(),
+  pin: z.string().max(6).optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -118,24 +83,23 @@ export default function EtablissementDetailPage() {
     resolver: zodResolver(schema) as any,
     defaultValues: establishment
       ? {
-          name: (establishment as Record<string, unknown>).name as string ?? "",
-          location: (establishment as Record<string, unknown>).address ?? { fullAddress: "", city: "", postalCode: "", country: "", longitude: 0, latitude: 0, mapboxId: "" },
-          phone: ((establishment as Record<string, unknown>).phone ?? (establishment as Record<string, unknown>).phoneNumber ?? "") as string,
-          email: ((establishment as Record<string, unknown>).email ?? "") as string,
-          siret: ((establishment as Record<string, unknown>).siret ?? "") as string,
-          tvaNumber: ((establishment as Record<string, unknown>).tvaNumber ?? "") as string,
-          legalForm: ((establishment as Record<string, unknown>).legalForm ?? "") as string,
-          capacity: ((establishment as Record<string, unknown>).totalCapacity ?? (establishment as Record<string, unknown>).capacity ?? 0) as number,
-          services: ((establishment as Record<string, unknown>).services ?? []) as FormValues["services"],
-          openingDays: ((establishment as Record<string, unknown>).openingDays ?? []) as string[],
-          storageZones: ((establishment as Record<string, unknown>).storageZones ?? []) as FormValues["storageZones"],
-          licenseType: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.licenseType as string ?? "",
-          licenseNumber: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.licenseNumber as string ?? "",
-          insurance: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.insurance as string ?? "",
-          erpCapacity: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.erpCapacity as number ?? 0,
-          legalNotes: ((establishment as Record<string, unknown>).legalInfo as Record<string, unknown>)?.notes as string ?? "",
+          name: String((establishment as Record<string, unknown>).name ?? ""),
+          address: String((establishment as Record<string, unknown>).address ?? ""),
+          postalCode: String((establishment as Record<string, unknown>).postalCode ?? ""),
+          city: String((establishment as Record<string, unknown>).city ?? ""),
+          phone: String((establishment as Record<string, unknown>).phone ?? (establishment as Record<string, unknown>).phoneNumber ?? ""),
+          siret: String((establishment as Record<string, unknown>).siret ?? ""),
+          pin: String((establishment as Record<string, unknown>).pin ?? ""),
         }
-      : undefined,
+      : {
+          name: "",
+          address: "",
+          postalCode: "",
+          city: "",
+          phone: "",
+          siret: "",
+          pin: "",
+        },
   })
 
   if (!establishment) {
@@ -151,41 +115,22 @@ export default function EtablissementDetailPage() {
 
   function onSubmit(data: FormValues) {
     if (isDevMode) {
-      updateEstablishmentStore(id!, {
-        name: data.name,
-        address: data.location,
-        phone: data.phone,
-        email: data.email,
-        siret: data.siret,
-        tvaNumber: data.tvaNumber,
-        legalForm: data.legalForm,
-        totalCapacity: data.capacity,
-        services: data.services,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        openingDays: data.openingDays as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        storageZones: data.storageZones as any,
-        legalInfo: {
-          licenseType: data.licenseType,
-          licenseNumber: data.licenseNumber,
-          insurance: data.insurance,
-          erpCapacity: data.erpCapacity,
-          notes: data.legalNotes,
-        },
-      })
+      updateEstablishmentStore(id!, { name: data.name, phone: data.phone, siret: data.siret })
       navigate("/admin")
     } else {
       apiPatch(`restaurants/${id}/`, {
         name: data.name,
-        address: typeof data.location === "string" ? data.location : data.location?.fullAddress,
-        postalCode: typeof data.location === "object" ? data.location?.postalCode : "",
-        city: typeof data.location === "object" ? data.location?.city : "",
+        address: data.address,
+        postalCode: data.postalCode,
+        city: data.city,
         phoneNumber: data.phone,
         siret: data.siret,
+        pin: data.pin,
       })
         .then(() => {
           toast.success("Établissement modifié")
           queryClient.invalidateQueries({ queryKey: ["establishments"] })
+          queryClient.invalidateQueries({ queryKey: ["restaurants"] })
           navigate("/admin")
         })
         .catch(() => toast.error("Erreur lors de la modification"))
@@ -239,7 +184,85 @@ export default function EtablissementDetailPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <motion.div variants={fadeUp}>
             <CollapsibleSection title="Informations générales" icon={Building06Icon} defaultOpen>
-              <EtablissementGeneralSection form={form} />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Nom</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Adresse</FormLabel>
+                      <FormControl><Input {...field} placeholder="12 rue des Rosiers" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="postalCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Code postal</FormLabel>
+                      <FormControl><Input {...field} placeholder="75004" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ville</FormLabel>
+                      <FormControl><Input {...field} placeholder="Paris" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Téléphone</FormLabel>
+                      <FormControl><Input {...field} placeholder="+33 1 42 72 00 00" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="siret"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SIRET</FormLabel>
+                      <FormControl><Input {...field} maxLength={14} placeholder="12345678901234" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Code PIN</FormLabel>
+                      <FormControl><Input {...field} maxLength={6} placeholder="000000" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CollapsibleSection>
           </motion.div>
 
