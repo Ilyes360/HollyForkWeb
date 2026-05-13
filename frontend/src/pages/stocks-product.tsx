@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router"
-import { useForm, useWatch } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "motion/react"
@@ -8,8 +8,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
 import {
   Form,
   FormField,
@@ -27,23 +25,23 @@ import {
 } from "@/components/ui/select"
 import { UNIT_LABELS } from "@/components/stock/types"
 import type { ProductUnit } from "@/components/stock/types"
-import { getIconsForCategory, PRODUCT_ICONS } from "@/components/stock/product-icons"
 import { useInventoryStore } from "@/stores/inventory-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { apiPost, apiPatch } from "@/api/client"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { usePageTitle } from "@/hooks/use-page-title"
 
+// Only fields that exist in the backend API
+// Ingredient: name, unit, unit_price
+// Stock: restaurant_id, ingredient_id, quantity_in_stock, alert_threshold
 const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
-  icon: z.string(),
-  supplierId: z.string().min(1, "Le fournisseur est requis"),
-  category: z.string().min(1, "La catégorie est requise"),
   quantity: z.coerce.number().min(0, "Min. 0"),
-  unit: z.enum(["kg", "L", "btl", "unites", "pieces"]),
+  unit: z.string().min(1, "L'unité est requise"),
   minStock: z.coerce.number().min(0, "Min. 0"),
-  maxStock: z.coerce.number().min(1, "Min. 1"),
   unitPrice: z.coerce.number().min(0.01, "Min. 0,01 €"),
-  storageZone: z.string().min(1, "La zone est requise"),
-  expirationDate: z.string().min(1, "La date est requise"),
-  notes: z.string(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -63,22 +61,15 @@ const container = {
   show: { transition: { staggerChildren: 0.06 } },
 }
 
-function toLocalDateString(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
-}
-
-const TODAY = toLocalDateString(new Date())
-
 export default function StocksProductPage() {
   usePageTitle("Stocks")
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const { restaurantId } = useActiveRestaurant()
+  const queryClient = useQueryClient()
 
-  const { products, suppliers, categories, storageZones, addProduct, updateProduct } =
-    useInventoryStore()
+  const { products, addProduct, updateProduct } = useInventoryStore()
 
   const editProduct = id ? products.find((p) => p.id === id) ?? null : null
   const isEditing = !!editProduct
@@ -87,17 +78,10 @@ export default function StocksProductPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      icon: "",
-      supplierId: "",
-      category: "epicerie",
       quantity: 0,
       unit: "kg",
       minStock: 0,
-      maxStock: 10,
       unitPrice: 1,
-      storageZone: "reserve_seche",
-      expirationDate: "",
-      notes: "",
     },
   })
 
@@ -105,64 +89,78 @@ export default function StocksProductPage() {
     if (editProduct) {
       form.reset({
         name: editProduct.name,
-        icon: editProduct.icon ?? "",
-        supplierId: editProduct.supplierId,
-        category: editProduct.category,
         quantity: editProduct.quantity,
         unit: editProduct.unit,
         minStock: editProduct.minStock,
-        maxStock: editProduct.maxStock,
         unitPrice: editProduct.unitPrice,
-        storageZone: editProduct.storageZone,
-        expirationDate: editProduct.expirationDate,
-        notes: editProduct.notes,
       })
     }
   }, [editProduct, form])
 
-  const watchedCategory = useWatch({ control: form.control, name: "category" })
-  const availableIcons = watchedCategory
-    ? getIconsForCategory(watchedCategory)
-    : PRODUCT_ICONS
-
-  function handleSubmit(data: FormValues) {
-    if (isEditing && editProduct) {
-      updateProduct(editProduct.id, {
-        name: data.name,
-        icon: data.icon || undefined,
-        supplierId: data.supplierId,
-        category: data.category,
-        quantity: data.quantity,
-        unit: data.unit,
-        minStock: data.minStock,
-        maxStock: data.maxStock,
-        unitPrice: data.unitPrice,
-        storageZone: data.storageZone,
-        expirationDate: data.expirationDate,
-        notes: data.notes,
-      })
+  async function handleSubmit(data: FormValues) {
+    if (isDevMode) {
+      // Dev mode: local store
+      if (isEditing && editProduct) {
+        updateProduct(editProduct.id, {
+          name: data.name,
+          quantity: data.quantity,
+          unit: data.unit,
+          minStock: data.minStock,
+          unitPrice: data.unitPrice,
+        })
+      } else {
+        addProduct({
+          id: `p-${Date.now()}`,
+          name: data.name,
+          quantity: data.quantity,
+          unit: data.unit,
+          minStock: data.minStock,
+          maxStock: 100,
+          unitPrice: data.unitPrice,
+          supplierId: "",
+          category: "epicerie",
+          rotation: 0,
+          lastOrderDate: new Date().toISOString().split("T")[0],
+          expirationDate: "",
+          storageZone: "reserve_seche",
+          notes: "",
+          orderHistory: [],
+        })
+      }
+      navigate("/stocks")
     } else {
-      addProduct({
-        id: `p-${Date.now()}`,
-        name: data.name,
-        icon: data.icon || undefined,
-        supplierId: data.supplierId,
-        category: data.category,
-        quantity: data.quantity,
-        unit: data.unit,
-        minStock: data.minStock,
-        maxStock: data.maxStock,
-        unitPrice: data.unitPrice,
-        rotation: 0,
-        lastOrderDate: TODAY,
-        expirationDate: data.expirationDate,
-        storageZone: data.storageZone,
-        notes: data.notes,
-        orderHistory: [],
-      })
+      // User mode: API calls
+      try {
+        if (isEditing) {
+          // PATCH the stock
+          await apiPatch(`stocks/${id}/`, {
+            quantityInStock: String(data.quantity),
+            alertThreshold: String(data.minStock),
+          })
+          toast.success("Produit modifié")
+        } else {
+          // 1. Create ingredient
+          const ingredient = await apiPost<{ id: number }>("ingredients/", {
+            name: data.name,
+            unit: data.unit,
+            unitPrice: String(data.unitPrice),
+          })
+          // 2. Create stock entry
+          await apiPost("stocks/", {
+            restaurantId: restaurantId!,
+            ingredientId: ingredient.id,
+            quantityInStock: String(data.quantity),
+            alertThreshold: String(data.minStock),
+          })
+          toast.success("Produit créé")
+        }
+        queryClient.invalidateQueries({ queryKey: ["stocks"] })
+        queryClient.invalidateQueries({ queryKey: ["ingredients"] })
+        navigate("/stocks")
+      } catch {
+        toast.error("Erreur lors de l'enregistrement")
+      }
     }
-
-    navigate("/stocks")
   }
 
   return (
@@ -212,96 +210,6 @@ export default function StocksProductPage() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="icon"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Icône</FormLabel>
-                  <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
-                    {availableIcons.map((entry) => (
-                      <button
-                        key={entry.key}
-                        type="button"
-                        title={entry.label}
-                        className={[
-                          "flex size-9 items-center justify-center rounded-lg border transition-colors",
-                          field.value === entry.key
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
-                        ].join(" ")}
-                        onClick={() =>
-                          field.onChange(field.value === entry.key ? "" : entry.key)
-                        }
-                      >
-                        <HugeiconsIcon icon={entry.icon} className="size-4" strokeWidth={2} />
-                      </button>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="supplierId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fournisseur</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Sélectionner">
-                            {field.value
-                              ? suppliers.find((s) => s.id === field.value)?.name
-                              : "Sélectionner"}
-                          </SelectValue>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {suppliers.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Catégorie</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {categories.find((c) => c.id === field.value)?.label ?? "Sélectionner"}
-                          </SelectValue>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <Separator />
-
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -326,7 +234,7 @@ export default function StocksProductPage() {
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue>
-                            {UNIT_LABELS[field.value as ProductUnit]}
+                            {UNIT_LABELS[field.value as ProductUnit] ?? field.value}
                           </SelectValue>
                         </SelectTrigger>
                       </FormControl>
@@ -350,7 +258,7 @@ export default function StocksProductPage() {
                 name="minStock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stock minimum</FormLabel>
+                    <FormLabel>Stock minimum (seuil d'alerte)</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} {...field} />
                     </FormControl>
@@ -358,22 +266,6 @@ export default function StocksProductPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="maxStock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stock maximum</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="unitPrice"
@@ -387,67 +279,17 @@ export default function StocksProductPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="storageZone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zone de stockage</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {storageZones.find((z) => z.id === field.value)?.label ?? "Sélectionner"}
-                          </SelectValue>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {storageZones.map((z) => (
-                          <SelectItem key={z.id} value={z.id}>
-                            {z.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="expirationDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date d'expiration</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Separator />
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Notes, remarques..."
-                      className="min-h-[60px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* TODO: champs commentés — pas de correspondance backend
+            - Icône (cosmétique front-only)
+            - Fournisseur (lien stock↔fournisseur n'existe pas dans l'API Stock)
+            - Catégorie (pas de champ catégorie sur Stock/Ingredient)
+            - Stock maximum (pas dans l'API)
+            - Zone de stockage (pas dans l'API)
+            - Date d'expiration (pas dans l'API)
+            - Notes (pas dans l'API Stock)
+            */}
 
             <div className="grid grid-cols-2 gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => navigate("/stocks")}>

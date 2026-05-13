@@ -114,27 +114,12 @@ export function useCreateEstablishment() {
 export function useUpdateEstablishment() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const updateEstablishment = useAdminStore((s) => s.updateEstablishment)
-  const qc = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: number | string; data: Record<string, unknown> }) =>
       apiPut<ApiRestaurant>(`restaurants/${id}/`, data),
-    onMutate: async ({ id, data }) => {
-      await qc.cancelQueries({ queryKey: keys.list() })
-      const previous = qc.getQueryData<ApiRestaurant[]>(keys.list())
-      qc.setQueryData<ApiRestaurant[]>(keys.list(), (old) =>
-        old?.map((e) =>
-          String(e.restaurantId) === String(id) ? { ...e, ...data } as ApiRestaurant : e
-        ) ?? []
-      )
-      return { previous }
-    },
-    onError: (_err, _vars, context) => {
-      // Keep optimistic update but restore if we had previous data
-      // Actually keep the optimistic state — user wants it to "work" on the frontend
-      void context
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    // No invalidateQueries — the cache is updated synchronously before navigate,
+    // and we don't want a refetch to overwrite the optimistic state.
   })
 
   if (isDevMode) {
@@ -155,22 +140,11 @@ export function useUpdateEstablishment() {
 export function useDeleteEstablishment() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const deleteEstablishment = useAdminStore((s) => s.deleteEstablishment)
-  const qc = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: (id: number | string) => apiDelete(`restaurants/${id}/`),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: keys.list() })
-      const previous = qc.getQueryData<ApiRestaurant[]>(keys.list())
-      qc.setQueryData<ApiRestaurant[]>(keys.list(), (old) =>
-        old?.filter((e) => String(e.restaurantId) !== String(id)) ?? []
-      )
-      return { previous }
-    },
-    onError: (_err, _vars, context) => {
-      void context
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    // No invalidateQueries — the cache is updated synchronously before navigate,
+    // and we don't want a refetch to overwrite the optimistic removal.
   })
 
   if (isDevMode) {
