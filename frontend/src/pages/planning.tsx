@@ -84,16 +84,18 @@ export default function PlanningPage() {
 
   // Keep a ref of shifts before editing for diff
   const shiftsBeforeEditRef = useRef<Shift[]>([])
+  const hasLocalEdits = useRef(false)
 
-  // Sync API data → local state
+  // Sync API data → local state (only if no local edits pending)
   useEffect(() => {
-    if (apiShifts.length > 0) {
+    if (apiShifts.length > 0 && !hasLocalEdits.current) {
       setShifts(apiShifts as Shift[])
     }
   }, [apiShifts])
 
   const handleSave = useCallback(
     (newShifts: Shift[]) => {
+      hasLocalEdits.current = true
       setShifts(newShifts)
       if (newShifts.length > 0) {
         completeTask("first-service")
