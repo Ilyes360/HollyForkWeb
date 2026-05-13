@@ -6,6 +6,11 @@ export function getEmployeeCount(employees: Employee[], establishmentId: string)
 
 export function formatAddress(establishment: Establishment): string {
   if (!establishment.address) return "—"
+  // API returns address as a string, store returns it as an object
+  if (typeof establishment.address === "string") {
+    const est = establishment as unknown as Record<string, unknown>
+    return [est.address, est.postalCode, est.city].filter(Boolean).join(", ") || "—"
+  }
   const { city, postalCode } = establishment.address
   if (city && postalCode) return `${postalCode} ${city}`
   return establishment.address.fullAddress || "—"

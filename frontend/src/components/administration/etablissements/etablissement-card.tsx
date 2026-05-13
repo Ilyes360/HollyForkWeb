@@ -84,14 +84,14 @@ export function EtablissementCard({
           </div>
           <div>
             <span className="text-muted-foreground">Capacité</span>
-            <p className="font-medium">{establishment.totalCapacity} couverts</p>
+            <p className="font-medium">{establishment.totalCapacity ?? 0} couverts</p>
           </div>
           <div>
             <span className="text-muted-foreground">Employés</span>
             <p className="font-medium">{employeeCount}</p>
           </div>
         </div>
-        {establishment.services.length > 0 && (
+        {establishment.services?.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {establishment.services.map((service) => (
               <Badge key={service.id} variant="secondary" className="text-xs">
