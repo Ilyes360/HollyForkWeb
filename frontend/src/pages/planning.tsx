@@ -112,8 +112,6 @@ export default function PlanningPage() {
           (s) => !oldIds.has(s.id) || s.id.startsWith("shift-new-") || s.id.startsWith("temp-")
         )
 
-        console.log("[Planning sync]", { oldCount: oldShifts.length, newCount: newShifts.length, toCreate: toCreate.length, toDelete: toDelete.length })
-
         let errors = 0
 
         // Delete removed shifts (only if they have a numeric API id)

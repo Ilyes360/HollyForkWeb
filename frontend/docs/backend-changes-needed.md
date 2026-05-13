@@ -63,6 +63,36 @@ class RestaurantViewSet(ModelViewSet):
 
 ## 4. Restaurant : ajouter des champs manquants (optionnel)
 
+---
+
+## 5. Planning shifts : POST crash avec `KeyError: 'start_date'` (BUG)
+
+**Fichier** : `apps/planning/views.py` (ou le ViewSet shifts)
+
+**Symptôme** : `POST /api/planning/shifts/` avec body `{"employe_id":1,"restaurant_id":10,"start_date":"...","end_date":"..."}` retourne 500 avec `KeyError: 'start_date'`.
+
+**Cause** : la vue accède directement à `request.data['start_date']` au lieu d'utiliser le serializer validé (`serializer.validated_data`).
+
+**Fix** :
+```python
+# Avant (bugué)
+def create(self, request):
+    start = request.data['start_date']  # ← KeyError si le champ est dans validated_data
+
+# Après
+def create(self, request):
+    serializer = self.get_serializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    self.perform_create(serializer)
+    return Response(serializer.data, status=201)
+```
+
+**Impact** : impossible de créer des shifts depuis le front. Le drag & drop dans l'éditeur de planning ne persiste pas.
+
+---
+
+## 6. Restaurant : champs supplémentaires (optionnel)
+
 Les champs suivants n'existent pas dans l'API mais sont utiles côté front :
 - `is_active` (boolean) — statut ouvert/fermé
 - `capacity` (integer) — nombre de couverts total
