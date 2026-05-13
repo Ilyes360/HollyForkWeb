@@ -50,7 +50,6 @@ const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
   category: z.enum(["entree", "plat", "dessert", "boisson"]),
   sellingPrice: z.coerce.number().min(0.01, "Min. 0,01 €"),
-  portions: z.coerce.number().min(1, "Min. 1"),
   notes: z.string(),
 })
 
@@ -301,34 +300,9 @@ export default function CuisineRecipePage() {
               )}
             />
 
-            {/* Icône */}
-            <div>
-              <span className="text-sm font-medium">Icône</span>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {availableIcons.map((entry) => (
-                  <button
-                    key={entry.key}
-                    type="button"
-                    title={entry.label}
-                    className={[
-                      "flex size-9 items-center justify-center rounded-lg border transition-colors",
-                      icon === entry.key
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
-                    ].join(" ")}
-                    onClick={() => setIcon(icon === entry.key ? "" : entry.key)}
-                  >
-                    <HugeiconsIcon
-                      icon={entry.icon}
-                      className="size-4"
-                      strokeWidth={2}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* TODO: Icône — pas de champ backend */}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="category"
@@ -370,19 +344,7 @@ export default function CuisineRecipePage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="portions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Portions</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* TODO: Portions — pas de champ backend */}
             </div>
 
             <Separator />
@@ -472,29 +434,7 @@ export default function CuisineRecipePage() {
 
             <Separator />
 
-            {/* Allergènes */}
-            <div className="space-y-2">
-              <h2 className="text-sm font-medium">Allergènes</h2>
-              <div className="flex flex-wrap gap-1.5">
-                {ALLERGEN_OPTIONS.map((allergen) => (
-                  <button
-                    key={allergen}
-                    type="button"
-                    className={[
-                      "rounded-md border px-2 py-1 text-xs transition-colors",
-                      allergens.includes(allergen)
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
-                    ].join(" ")}
-                    onClick={() => toggleAllergen(allergen)}
-                  >
-                    {allergen}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
+            {/* TODO: Allergènes — pas de champ backend */}
 
             <FormField
               control={form.control}
