@@ -27,12 +27,12 @@ export function EtablissementCard({
   onDelete,
 }: EtablissementCardProps) {
   const navigate = useNavigate()
-  const employeeCount = getEmployeeCount(employees, establishment.id)
+  const employeeCount = getEmployeeCount(employees, (establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId))
 
   return (
     <Card
       className="cursor-pointer transition-colors hover:bg-muted/50"
-      onClick={() => navigate(`/admin/etablissements/${establishment.id}`)}
+      onClick={() => navigate(`/admin/etablissements/${(establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId)}`)}
     >
       <CardHeader className="flex-row items-start justify-between gap-2">
         <div className="min-w-0 space-y-1">
@@ -56,18 +56,18 @@ export function EtablissementCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
               <DropdownMenuItem
-                onSelect={() => navigate(`/admin/etablissements/${establishment.id}`)}
+                onSelect={() => navigate(`/admin/etablissements/${(establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId)}`)}
               >
                 <HugeiconsIcon icon={ViewIcon} strokeWidth={2} className="size-4" />
                 Modifier
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onToggleActive(establishment.id)}>
+              <DropdownMenuItem onSelect={() => onToggleActive((establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId))}>
                 <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
                 {establishment.isActive ? "Désactiver" : "Activer"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
-                onSelect={() => onDelete(establishment.id)}
+                onSelect={() => onDelete((establishment.id ?? (establishment as unknown as { restaurantId: number }).restaurantId))}
               >
                 <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
                 Supprimer
