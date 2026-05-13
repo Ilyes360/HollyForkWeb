@@ -77,7 +77,12 @@ export default function PlanningPage() {
     isLoading,
   } = useShifts(restaurantId)
 
-  const [shifts, setShifts] = useState<Shift[]>([])
+  const [shifts, setShiftsState] = useState<Shift[]>([])
+  const shiftsRef = useRef<Shift[]>([]) // survit aux re-renders
+  const setShifts = useCallback((s: Shift[]) => {
+    shiftsRef.current = s
+    setShiftsState(s)
+  }, [])
   const { isEditing, startEditing, stopEditing } = usePlanningEdition()
   const { weekStart, direction, prev, next, today } = useWeekNavigation()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
@@ -91,7 +96,14 @@ export default function PlanningPage() {
     if (apiShifts.length > 0 && !hasLocalEdits.current) {
       setShifts(apiShifts as Shift[])
     }
-  }, [apiShifts])
+  }, [apiShifts, setShifts])
+
+  // Restore shifts from ref after editor closes (component may re-render)
+  useEffect(() => {
+    if (!isEditing && shiftsRef.current.length > 0 && shifts.length === 0) {
+      setShiftsState(shiftsRef.current)
+    }
+  }, [isEditing, shifts.length])
 
   // Use a ref so the save function always has fresh values
   const saveRef = useRef<(newShifts: Shift[]) => void>(() => {})
