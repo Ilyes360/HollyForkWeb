@@ -73,7 +73,10 @@ export default function StocksPage() {
 
   // ── Data (API hooks + store fallbacks) ──
   const { restaurantId } = useActiveRestaurant()
-  const { data: products } = useStocks(restaurantId)
+  const { data: apiProducts } = useStocks(restaurantId)
+  const storeProducts = useInventoryStore((s) => s.products)
+  // Merge: store products (includes local additions) take priority, API fills the rest
+  const products = storeProducts.length > 0 ? storeProducts : apiProducts
   const { data: suppliers } = useSuppliers()
   const { data: orders } = useOrders(restaurantId)
   const storageZones = useInventoryStore((s) => s.storageZones)
