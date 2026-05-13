@@ -48,10 +48,17 @@ export default function EtablissementsPage() {
 
   const handleConfirmDelete = useCallback(() => {
     if (!deleteTarget) return
+
+    // Update cache synchronously so the list re-renders immediately
+    queryClient.setQueryData<Array<Record<string, unknown>>>(
+      ["establishments", "list"],
+      (old) => old?.filter((e) => String(e.restaurantId ?? e.id) !== deleteTarget.id) ?? []
+    )
+
     deleteEstablishment(deleteTarget.id)
     toast.success("Restaurant supprimé")
     setDeleteTarget(null)
-  }, [deleteTarget, deleteEstablishment])
+  }, [deleteTarget, deleteEstablishment, queryClient])
 
   return (
     <div className="space-y-4">
