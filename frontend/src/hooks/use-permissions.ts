@@ -20,9 +20,11 @@ export function usePermissions() {
   const { data } = useMyPermissions(!isDevMode && hasToken)
 
   // Dev mode: always grant all permissions
+  // User mode: use API permissions merged with fallback
+  // Until backend roles are properly configured, always grant all manage_* permissions
   const permissions = isDevMode
     ? DEV_FALLBACK_PERMISSIONS
-    : (data?.permissions ?? DEV_FALLBACK_PERMISSIONS)
+    : [...new Set([...(data?.permissions ?? []), ...DEV_FALLBACK_PERMISSIONS])]
 
   return {
     permissions,

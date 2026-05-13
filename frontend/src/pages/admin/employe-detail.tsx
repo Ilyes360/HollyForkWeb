@@ -32,6 +32,10 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { useAdminStore } from "@/stores/admin-store"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import { apiPost, apiPatch, apiDelete } from "@/api/client"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import {
   POSITION_LABELS,
   CONTRACT_LABELS,
@@ -108,6 +112,8 @@ export default function EmployeDetailPage() {
   const addEmployee = useAdminStore((s) => s.addEmployee)
   const updateEmployee = useAdminStore((s) => s.updateEmployee)
   const removeEmployee = useAdminStore((s) => s.removeEmployee)
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
+  const queryClient = useQueryClient()
 
   const isNew = !id
   const employee = isNew ? null : employees.find((e) => e.id === id)
@@ -167,69 +173,107 @@ export default function EmployeDetailPage() {
   const statusConfig = employee ? ACCOUNT_STATUS_CONFIG[employee.accountStatus] : null
 
   function onSubmit(data: FormValues) {
-    if (isNew) {
-      const now = new Date().toISOString()
-      const newId = `emp-${Date.now()}`
-      addEmployee({
-        id: newId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        dateOfBirth: "",
-        address: "",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        position: data.position as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        department: (POSITION_DEPARTMENTS[data.position] ?? "salle") as any,
-        establishmentId: data.establishmentId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        contractType: data.contractType as any,
-        hireDate: data.hireDate,
-        endDate: data.endDate || undefined,
-        weeklyHours: data.weeklyHours,
-        hourlyRate: data.hourlyRate,
-        roleId: data.roleId,
-        loginEmail: data.loginEmail,
-        accountStatus: data.accountStatus,
-        avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-        createdAt: now,
-        updatedAt: now,
-      })
+    if (isDevMode) {
+      // Dev mode: local store
+      if (isNew) {
+        const now = new Date().toISOString()
+        const newId = `emp-${Date.now()}`
+        addEmployee({
+          id: newId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          dateOfBirth: "",
+          address: "",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          position: data.position as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          department: (POSITION_DEPARTMENTS[data.position] ?? "salle") as any,
+          establishmentId: data.establishmentId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          contractType: data.contractType as any,
+          hireDate: data.hireDate,
+          endDate: data.endDate || undefined,
+          weeklyHours: data.weeklyHours,
+          hourlyRate: data.hourlyRate,
+          roleId: data.roleId,
+          loginEmail: data.loginEmail,
+          accountStatus: data.accountStatus,
+          avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+          createdAt: now,
+          updatedAt: now,
+        })
+      } else {
+        updateEmployee(id!, {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          position: data.position as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          department: (POSITION_DEPARTMENTS[data.position] ?? "salle") as any,
+          establishmentId: data.establishmentId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          contractType: data.contractType as any,
+          weeklyHours: data.weeklyHours,
+          hourlyRate: data.hourlyRate,
+          hireDate: data.hireDate,
+          endDate: data.endDate || undefined,
+          roleId: data.roleId,
+          loginEmail: data.loginEmail,
+          accountStatus: data.accountStatus,
+        })
+      }
+      navigate("/admin/employes")
     } else {
-      updateEmployee(id!, {
+      // User mode: API call
+      const apiData = {
         firstName: data.firstName,
         lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        position: data.position as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        department: (POSITION_DEPARTMENTS[data.position] ?? "salle") as any,
-        establishmentId: data.establishmentId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        contractType: data.contractType as any,
-        weeklyHours: data.weeklyHours,
-        hourlyRate: data.hourlyRate,
+        phoneNumber: data.phone,
+        salary: String(data.hourlyRate * data.weeklyHours * 4.33),
         hireDate: data.hireDate,
-        endDate: data.endDate || undefined,
-        roleId: data.roleId,
-        loginEmail: data.loginEmail,
-        accountStatus: data.accountStatus,
-      })
+        typeEmployeId: 8, // TODO: map position to type_employe_id
+      }
+
+      const promise = isNew
+        ? apiPost("employes/", apiData)
+        : apiPatch(`employes/${id}/`, apiData)
+
+      promise
+        .then(() => {
+          toast.success(isNew ? "Employé créé" : "Employé modifié")
+          queryClient.invalidateQueries({ queryKey: ["employees"] })
+          navigate("/admin/employes")
+        })
+        .catch(() => toast.error("Erreur lors de l'enregistrement"))
     }
-    navigate("/admin/employes")
   }
 
   function handleToggleStatus() {
-    updateEmployee(id!, {
-      accountStatus: employee!.accountStatus === "active" ? "disabled" : "active",
-    })
+    if (isDevMode) {
+      updateEmployee(id!, {
+        accountStatus: employee!.accountStatus === "active" ? "disabled" : "active",
+      })
+    }
+    // Backend doesn't have account status — local only
   }
 
   function handleDelete() {
-    removeEmployee(id!)
-    navigate("/admin/employes")
+    if (isDevMode) {
+      removeEmployee(id!)
+      navigate("/admin/employes")
+    } else {
+      apiDelete(`employes/${id}/`)
+        .then(() => {
+          toast.success("Employé supprimé")
+          queryClient.invalidateQueries({ queryKey: ["employees"] })
+          navigate("/admin/employes")
+        })
+        .catch(() => toast.error("Erreur lors de la suppression"))
+    }
   }
 
   return (
