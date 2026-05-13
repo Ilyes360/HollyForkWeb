@@ -78,8 +78,10 @@ export function CreateRestaurantDialog({
       form.reset()
       onOpenChange(false)
     },
-    onError: () => {
-      toast.error("Erreur lors de la création du restaurant")
+    onError: (err: unknown) => {
+      const apiErr = err as { body?: { siret?: string[]; name?: string[]; detail?: string } } | undefined
+      const detail = apiErr?.body?.siret?.[0] ?? apiErr?.body?.name?.[0] ?? apiErr?.body?.detail ?? "Erreur lors de la création du restaurant"
+      toast.error(detail)
     },
   })
 
