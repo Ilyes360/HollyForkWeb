@@ -19,15 +19,15 @@ class IngredientSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         return Ingredient.objects.create(
-            nom=validated_data['name'],
-            unite=validated_data['unit'],
-            prix_unitaire=validated_data['unit_price'],
+            nom=validated_data['nom'],
+            unite=validated_data['unite'],
+            prix_unitaire=validated_data['prix_unitaire'],
         )
 
     def update(self, instance, validated_data):
-        instance.nom = validated_data.get('name', instance.nom)
-        instance.unite = validated_data.get('unit', instance.unite)
-        instance.prix_unitaire = validated_data.get('unit_price', instance.prix_unitaire)
+        instance.nom = validated_data.get('nom', instance.nom)
+        instance.unite = validated_data.get('unite', instance.unite)
+        instance.prix_unitaire = validated_data.get('prix_unitaire', instance.prix_unitaire)
         instance.save()
         return instance
 
@@ -64,14 +64,14 @@ class StockSerializer(serializers.HyperlinkedModelSerializer):
         return Stock.objects.create(
             restaurant=validated_data['restaurant'],
             ingredient=validated_data['ingredient'],
-            quantite_en_stock=validated_data['quantity_in_stock'],
-            seuil_alerte=validated_data.get('alert_threshold'),
+            quantite_en_stock=validated_data['quantite_en_stock'],
+            seuil_alerte=validated_data.get('seuil_alerte'),
         )
 
     def update(self, instance, validated_data):
-        instance.quantite_en_stock = validated_data.get('quantity_in_stock', instance.quantite_en_stock)
-        if 'alert_threshold' in validated_data:
-            instance.seuil_alerte = validated_data['alert_threshold']
+        instance.quantite_en_stock = validated_data.get('quantite_en_stock', instance.quantite_en_stock)
+        if 'seuil_alerte' in validated_data:
+            instance.seuil_alerte = validated_data['seuil_alerte']
         if 'restaurant' in validated_data:
             instance.restaurant = validated_data['restaurant']
         if 'ingredient' in validated_data:
@@ -113,7 +113,7 @@ class ReapprovisionnementSerializer(serializers.HyperlinkedModelSerializer):
         return Reapprovisionnement.objects.create(
             restaurant=validated_data['restaurant'],
             ingredient=validated_data['ingredient'],
-            quantite_ajoutee=validated_data['quantity_added'],
-            prix_achat=validated_data.get('purchase_price'),
+            quantite_ajoutee=validated_data['quantite_ajoutee'],
+            prix_achat=validated_data.get('prix_achat'),
         )
 

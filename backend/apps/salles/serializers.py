@@ -27,31 +27,28 @@ class SalleSerializer(serializers.HyperlinkedModelSerializer):
 
     def validate(self, data):
         restaurant = data.get('restaurant')
-        name = data.get('name')
-        if restaurant and name:
-            if Salle.objects.filter(restaurant=restaurant, nom_salle=name).exists() and not self.instance:
+        nom_salle = data.get('nom_salle')
+        if restaurant and nom_salle:
+            if Salle.objects.filter(restaurant=restaurant, nom_salle=nom_salle).exists() and not self.instance:
                 raise serializers.ValidationError({
-                    "non_field_errors": [f"Une salle nommée '{name}' existe déjà dans ce restaurant."]
+                    "non_field_errors": [f"Une salle nommée '{nom_salle}' existe déjà dans ce restaurant."]
                 })
         return data
 
     def create(self, validated_data):
         return Salle.objects.create(
-            nom_salle=validated_data.get('name') or validated_data.get('nom_salle'),
-            restaurant=validated_data.get('restaurant'),
-            capacite=validated_data.get('capacity') or validated_data.get('capacite'),
-            etage=validated_data.get('floor') or validated_data.get('etage'),
+            nom_salle=validated_data['nom_salle'],
+            restaurant=validated_data['restaurant'],
+            capacite=validated_data['capacite'],
+            etage=validated_data.get('etage'),
             description=validated_data.get('description'),
         )
 
     def update(self, instance, validated_data):
-        if 'name' in validated_data or 'nom_salle' in validated_data:
-            instance.nom_salle = (validated_data.get('name') or validated_data.get('nom_salle') or instance.nom_salle)
-        cap = validated_data.get('capacity', validated_data.get('capacite'))
-        if cap is not None:
-            instance.capacite = cap
-        if 'floor' in validated_data or 'etage' in validated_data:
-            instance.etage = validated_data.get('floor', validated_data.get('etage'))
+        instance.nom_salle = validated_data.get('nom_salle', instance.nom_salle)
+        instance.capacite = validated_data.get('capacite', instance.capacite)
+        if 'etage' in validated_data:
+            instance.etage = validated_data['etage']
         if 'description' in validated_data:
             instance.description = validated_data['description']
         if 'restaurant' in validated_data:

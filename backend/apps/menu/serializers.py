@@ -86,7 +86,7 @@ class CategorieArticleSerializer(serializers.HyperlinkedModelSerializer):
         return value
     
     def validate(self, data):
-        name = data.get('name', '')
+        name = data.get('nom', '')
         if self.instance is None:
             categories_existantes = CategorieArticle.objects.filter(
                 nom__icontains=name
@@ -105,14 +105,14 @@ class CategorieArticleSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         return CategorieArticle.objects.create(
-            nom=validated_data['name'],
-            ordre_affichage=validated_data.get('display_order', 0),
+            nom=validated_data['nom'],
+            ordre_affichage=validated_data.get('ordre_affichage', 0),
             description=validated_data.get('description'),
         )
 
     def update(self, instance, validated_data):
-        instance.nom = validated_data.get('name', instance.nom)
-        instance.ordre_affichage = validated_data.get('display_order', instance.ordre_affichage)
+        instance.nom = validated_data.get('nom', instance.nom)
+        instance.ordre_affichage = validated_data.get('ordre_affichage', instance.ordre_affichage)
         instance.description = validated_data.get('description', instance.description)
         instance.save()
         return instance
@@ -143,16 +143,16 @@ class ArticleSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         return Article.objects.create(
-            nom=validated_data['name'],
-            prix=validated_data['price'],
+            nom=validated_data['nom'],
+            prix=validated_data['prix'],
             description=validated_data.get('description'),
             restaurant=validated_data['restaurant'],
-            categorie=validated_data['categorie'],
+            categorie=validated_data.get('categorie'),
         )
 
     def update(self, instance, validated_data):
-        instance.nom = validated_data.get('name', instance.nom)
-        instance.prix = validated_data.get('price', instance.prix)
+        instance.nom = validated_data.get('nom', instance.nom)
+        instance.prix = validated_data.get('prix', instance.prix)
         instance.description = validated_data.get('description', instance.description)
         if 'restaurant' in validated_data:
             instance.restaurant = validated_data['restaurant']
@@ -184,11 +184,11 @@ class ArticleIngredientSerializer(serializers.HyperlinkedModelSerializer):
         return ArticleIngredient.objects.create(
             article=validated_data['article'],
             ingredient=validated_data['ingredient'],
-            quantite_necessaire=validated_data['required_quantity'],
+            quantite_necessaire=validated_data['quantite_necessaire'],
         )
 
     def update(self, instance, validated_data):
-        instance.quantite_necessaire = validated_data.get('required_quantity', instance.quantite_necessaire)
+        instance.quantite_necessaire = validated_data.get('quantite_necessaire', instance.quantite_necessaire)
         if 'article' in validated_data:
             instance.article = validated_data['article']
         if 'ingredient' in validated_data:
@@ -230,8 +230,8 @@ class ArticleDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients_update', None)
-        instance.nom = validated_data.get('name', instance.nom)
-        instance.prix = validated_data.get('price', instance.prix)
+        instance.nom = validated_data.get('nom', instance.nom)
+        instance.prix = validated_data.get('prix', instance.prix)
         instance.description = validated_data.get('description', instance.description)
         if 'restaurant' in validated_data:
             instance.restaurant = validated_data['restaurant']
@@ -252,8 +252,8 @@ class ArticleDetailSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients_update', [])
         article = Article.objects.create(
-            nom=validated_data['name'],
-            prix=validated_data['price'],
+            nom=validated_data['nom'],
+            prix=validated_data['prix'],
             description=validated_data.get('description'),
             restaurant=validated_data['restaurant'],
             categorie=validated_data.get('categorie'),

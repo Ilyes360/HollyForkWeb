@@ -3,9 +3,10 @@ import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
-import { useShifts } from "@/hooks/use-planning"
+import { useShifts, useCreateShift, useUpdateShift, useDeleteShift } from "@/hooks/use-planning"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import type { Shift } from "@/components/planning/types"
+import { useDevModeStore } from "@/stores/dev-mode-store"
+import type { Shift, DayOfWeek } from "@/components/planning/types"
 import { ConsultationView } from "@/components/planning/consultation-view"
 import { EditionOverlay } from "@/components/planning/edition-overlay"
 import { usePlanningEdition } from "@/components/planning/planning-context"
@@ -29,45 +30,147 @@ const fadeUp = {
   },
 }
 
+// ── Helpers to convert front Shift → API payload ──
+
+const DAY_OFFSET: Record<DayOfWeek, number> = {
+  lundi: 0, mardi: 1, mercredi: 2, jeudi: 3, vendredi: 4, samedi: 5, dimanche: 6,
+}
+
+function toISODate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+function shiftToApiDates(shift: Shift, weekMonday: Date) {
+  const date = new Date(weekMonday)
+  date.setDate(weekMonday.getDate() + DAY_OFFSET[shift.day])
+  const dateStr = toISODate(date)
+  return {
+    startDate: `${dateStr}T${shift.startTime}:00`,
+    endDate: `${dateStr}T${shift.endTime}:00`,
+    shiftType: shift.service === "midi" ? "MORNING" : "EVENING",
+  }
+}
+
+function isApiId(id: string): boolean {
+  return /^\d+$/.test(id)
+}
+
 // Persist shifts across editor open/close (survives re-renders)
-let persistedShifts: Shift[] | null = null
+// Keyed by restaurantId to avoid data leaks between restaurants/sessions
+let persistedShifts: { restaurantId: number; shifts: Shift[] } | null = null
 
 export default function PlanningPage() {
   usePageTitle("Planning")
   const { restaurantId } = useActiveRestaurant()
+  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const {
     data: apiShifts,
     employees,
     isLoading,
   } = useShifts(restaurantId)
 
-  const [shifts, setShiftsState] = useState<Shift[]>(persistedShifts ?? [])
+  const { mutate: createShift } = useCreateShift()
+  const { mutate: updateShift } = useUpdateShift()
+  const { mutate: deleteShift } = useDeleteShift()
+
+  // Restore persisted shifts only if same restaurant
+  const cachedShifts = persistedShifts?.restaurantId === restaurantId ? persistedShifts.shifts : null
+  const [shifts, setShiftsState] = useState<Shift[]>(cachedShifts ?? [])
   const setShifts = useCallback((s: Shift[]) => {
-    persistedShifts = s
+    if (restaurantId) {
+      persistedShifts = { restaurantId, shifts: s }
+    }
     setShiftsState(s)
-  }, [])
+  }, [restaurantId])
 
   const { isEditing, startEditing, stopEditing } = usePlanningEdition()
   const { weekStart, direction, prev, next, today } = useWeekNavigation()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
-  const initializedFromApi = useRef(false)
+  const prevRestaurantId = useRef(restaurantId)
 
-  // Sync API data → local state (once, on first load)
+  // Sync API data → local state when API loads or restaurant changes
   useEffect(() => {
-    if (apiShifts.length > 0 && !initializedFromApi.current && !persistedShifts?.length) {
-      initializedFromApi.current = true
+    const restaurantChanged = prevRestaurantId.current !== restaurantId
+    prevRestaurantId.current = restaurantId
+
+    if (restaurantChanged) {
+      // Restaurant changed — clear cache and reset
+      persistedShifts = null
+      setShiftsState([])
+    }
+
+    if (apiShifts.length > 0) {
       setShifts(apiShifts as Shift[])
     }
-  }, [apiShifts, setShifts])
+  }, [apiShifts, restaurantId, setShifts])
+
+  // Keep a ref to the shifts before editing, to diff on save
+  const shiftsBeforeEdit = useRef<Shift[]>([])
 
   // Stable save handler via ref
   const saveHandler = useRef<(newShifts: Shift[]) => void>(() => {})
   saveHandler.current = (newShifts: Shift[]) => {
+    const oldShifts = shiftsBeforeEdit.current
+
+    // 1. Local-first: update UI immediately
     setShifts(newShifts)
     if (newShifts.length > 0) {
       completeTask("first-service")
     }
     toast.success("Planning enregistré")
+
+    // 2. Sync to API in background (best-effort, skip in dev mode)
+    if (isDevMode || !restaurantId) return
+
+    const weekMonday = weekStart
+    const oldIds = new Set(oldShifts.map((s) => s.id))
+    const newIds = new Set(newShifts.map((s) => s.id))
+
+    // Deleted shifts (were in old, not in new, and have an API id)
+    for (const old of oldShifts) {
+      if (!newIds.has(old.id) && isApiId(old.id)) {
+        deleteShift(Number(old.id))
+      }
+    }
+
+    // Added shifts (in new, not in old — always have UUID ids)
+    for (const shift of newShifts) {
+      if (!oldIds.has(shift.id) && isApiId(shift.employeeId)) {
+        const dates = shiftToApiDates(shift, weekMonday)
+        createShift({
+          employeId: Number(shift.employeeId),
+          restaurantId,
+          ...dates,
+        })
+      }
+    }
+
+    // Updated shifts (same id, different content, and have an API id)
+    for (const shift of newShifts) {
+      if (!isApiId(shift.id) || !isApiId(shift.employeeId)) continue
+      const old = oldShifts.find((s) => s.id === shift.id)
+      if (!old) continue
+      if (
+        old.startTime !== shift.startTime ||
+        old.endTime !== shift.endTime ||
+        old.day !== shift.day ||
+        old.service !== shift.service ||
+        old.employeeId !== shift.employeeId
+      ) {
+        const dates = shiftToApiDates(shift, weekMonday)
+        updateShift({
+          id: Number(shift.id),
+          data: {
+            employeId: Number(shift.employeeId),
+            restaurantId,
+            ...dates,
+          },
+        })
+      }
+    }
   }
 
   const handleSave = useCallback((newShifts: Shift[]) => {
@@ -75,6 +178,7 @@ export default function PlanningPage() {
   }, [])
 
   const handleOpenEditor = useCallback(() => {
+    shiftsBeforeEdit.current = shifts
     startEditing({
       employees,
       initialShifts: shifts,

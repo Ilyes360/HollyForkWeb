@@ -29,28 +29,27 @@ class RestaurantSerializer(serializers.HyperlinkedModelSerializer):
         }
 
     def create(self, validated_data):
-        model_data = {
-            'nom_restaurant': validated_data.get('name') or validated_data.get('nom_restaurant'),
-            'adresse_restaurant': validated_data.get('address') or validated_data.get('adresse_restaurant'),
-            'code_postal': validated_data.get('postal_code') or validated_data.get('code_postal'),
-            'ville': validated_data.get('city') or validated_data.get('ville'),
-            'numero_telephone': validated_data.get('phone_number') or validated_data.get('numero_telephone'),
-            'numero_siret': validated_data.get('siret') or validated_data.get('numero_siret'),
-            'code_naf': validated_data.get('naf_code') or validated_data.get('code_naf') or '',
-            'pin_restaurant': validated_data.get('pin') or validated_data.get('pin_restaurant'),
-            'logo_url': validated_data.get('logo_url'),
-        }
-        return Restaurant.objects.create(**model_data)
+        return Restaurant.objects.create(
+            nom_restaurant=validated_data['nom_restaurant'],
+            adresse_restaurant=validated_data['adresse_restaurant'],
+            code_postal=validated_data['code_postal'],
+            ville=validated_data['ville'],
+            numero_telephone=validated_data['numero_telephone'],
+            numero_siret=validated_data['numero_siret'],
+            code_naf=validated_data.get('code_naf') or '',
+            pin_restaurant=validated_data['pin_restaurant'],
+            logo_url=validated_data.get('logo_url'),
+        )
 
     def update(self, instance, validated_data):
-        instance.nom_restaurant = validated_data.get('name', instance.nom_restaurant)
-        instance.adresse_restaurant = validated_data.get('address', instance.adresse_restaurant)
-        instance.code_postal = validated_data.get('postal_code', instance.code_postal)
-        instance.ville = validated_data.get('city', instance.ville)
-        instance.numero_telephone = validated_data.get('phone_number', instance.numero_telephone)
-        instance.numero_siret = validated_data.get('siret', instance.numero_siret)
-        instance.code_naf = validated_data.get('naf_code', instance.code_naf)
-        instance.pin_restaurant = validated_data.get('pin', instance.pin_restaurant)
+        instance.nom_restaurant = validated_data.get('nom_restaurant', instance.nom_restaurant)
+        instance.adresse_restaurant = validated_data.get('adresse_restaurant', instance.adresse_restaurant)
+        instance.code_postal = validated_data.get('code_postal', instance.code_postal)
+        instance.ville = validated_data.get('ville', instance.ville)
+        instance.numero_telephone = validated_data.get('numero_telephone', instance.numero_telephone)
+        instance.numero_siret = validated_data.get('numero_siret', instance.numero_siret)
+        instance.code_naf = validated_data.get('code_naf', instance.code_naf)
+        instance.pin_restaurant = validated_data.get('pin_restaurant', instance.pin_restaurant)
         instance.logo_url = validated_data.get('logo_url', instance.logo_url)
         instance.save()
         return instance

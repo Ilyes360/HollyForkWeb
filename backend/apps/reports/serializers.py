@@ -35,19 +35,19 @@ class ReportSerializer(serializers.ModelSerializer):
         from apps.reports.models import Report
         return Report.objects.create(
             restaurant=validated_data['restaurant'],
-            type_report=validated_data['report_type'],
-            periode_debut=validated_data['period_start'],
-            periode_fin=validated_data['period_end'],
-            fichier=validated_data.get('file'),
+            type_report=validated_data['type_report'],
+            periode_debut=validated_data['periode_debut'],
+            periode_fin=validated_data['periode_fin'],
+            fichier=validated_data.get('fichier'),
             created_by=validated_data.get('created_by'),
         )
 
     def update(self, instance, validated_data):
-        instance.type_report = validated_data.get('report_type', instance.type_report)
-        instance.periode_debut = validated_data.get('period_start', instance.periode_debut)
-        instance.periode_fin = validated_data.get('period_end', instance.periode_fin)
-        if 'file' in validated_data:
-            instance.fichier = validated_data['file']
+        instance.type_report = validated_data.get('type_report', instance.type_report)
+        instance.periode_debut = validated_data.get('periode_debut', instance.periode_debut)
+        instance.periode_fin = validated_data.get('periode_fin', instance.periode_fin)
+        if 'fichier' in validated_data:
+            instance.fichier = validated_data['fichier']
         if 'restaurant' in validated_data:
             instance.restaurant = validated_data['restaurant']
         instance.save()

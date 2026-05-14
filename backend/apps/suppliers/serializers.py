@@ -55,38 +55,34 @@ class CommandeFournisseurSerializer(serializers.ModelSerializer):
         self.fields['fournisseur_id'].queryset = Fournisseur.objects.all()
 
     def create(self, validated_data):
-        order_date = validated_data.get('order_date')
-        if order_date is None:
-            validated_data = {**validated_data, 'order_date': timezone.now().date()}
-        order_number = validated_data.get('order_number') or validated_data.get('numero_commande') or ''
         return CommandeFournisseur.objects.create(
             fournisseur=validated_data['fournisseur'],
             restaurant=validated_data['restaurant'],
-            numero_commande=order_number,
-            date_commande=validated_data.get('order_date') or validated_data.get('date_commande') or timezone.now().date(),
-            date_livraison_prevue=validated_data.get('expected_delivery_date') or validated_data.get('date_livraison_prevue'),
-            statut=validated_data.get('status') or validated_data.get('statut', 'DRAFT'),
-            montant_total=validated_data.get('total_amount') or validated_data.get('montant_total') or 0,
+            numero_commande=validated_data.get('numero_commande', ''),
+            date_commande=validated_data.get('date_commande') or timezone.now().date(),
+            date_livraison_prevue=validated_data.get('date_livraison_prevue'),
+            statut=validated_data.get('statut', 'DRAFT'),
+            montant_total=validated_data.get('montant_total') or 0,
             notes=validated_data.get('notes', ''),
         )
 
     def validate(self, attrs):
-        order_number = attrs.get('order_number') or attrs.get('numero_commande') or ''
+        order_number = attrs.get('numero_commande', '')
         if order_number and CommandeFournisseur.objects.filter(numero_commande=order_number).exclude(pk=self.instance.pk if self.instance else None).exists():
             raise serializers.ValidationError({"order_number": "Une commande avec ce numéro existe déjà."})
         return attrs
 
     def update(self, instance, validated_data):
-        if 'order_number' in validated_data or 'numero_commande' in validated_data:
-            instance.numero_commande = validated_data.get('order_number') or validated_data.get('numero_commande') or instance.numero_commande
-        if 'order_date' in validated_data or 'date_commande' in validated_data:
-            instance.date_commande = validated_data.get('order_date') or validated_data.get('date_commande')
-        if 'expected_delivery_date' in validated_data or 'date_livraison_prevue' in validated_data:
-            instance.date_livraison_prevue = validated_data.get('expected_delivery_date') or validated_data.get('date_livraison_prevue')
-        if 'status' in validated_data or 'statut' in validated_data:
-            instance.statut = validated_data.get('status') or validated_data.get('statut')
-        if 'total_amount' in validated_data or 'montant_total' in validated_data:
-            instance.montant_total = validated_data.get('total_amount') or validated_data.get('montant_total')
+        if 'numero_commande' in validated_data:
+            instance.numero_commande = validated_data['numero_commande']
+        if 'date_commande' in validated_data:
+            instance.date_commande = validated_data['date_commande']
+        if 'date_livraison_prevue' in validated_data:
+            instance.date_livraison_prevue = validated_data['date_livraison_prevue']
+        if 'statut' in validated_data:
+            instance.statut = validated_data['statut']
+        if 'montant_total' in validated_data:
+            instance.montant_total = validated_data['montant_total']
         if 'notes' in validated_data:
             instance.notes = validated_data['notes']
         if 'fournisseur' in validated_data:

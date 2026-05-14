@@ -36,7 +36,7 @@ class PaiementSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         facture = attrs.get('facture')
-        amount = attrs.get('amount', attrs.get('montant'))
+        amount = attrs.get('montant')
         if facture is None or amount is None:
             return attrs
         amount = Decimal(str(amount))
@@ -54,11 +54,10 @@ class PaiementSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        montant = validated_data.get('amount', validated_data.get('montant'))
         return Paiement.objects.create(
             facture=validated_data['facture'],
             methode_paiement=validated_data['methode_paiement'],
-            montant=montant,
+            montant=validated_data['montant'],
         )
 
 
@@ -131,20 +130,20 @@ class FactureSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Facture.objects.create(
-            numero=validated_data['number'],
+            numero=validated_data['numero'],
             date=validated_data['date'],
             restaurant=validated_data['restaurant'],
             commande=validated_data['commande'],
-            etat=validated_data.get('state', 'en_attente'),
+            etat=validated_data.get('etat', 'en_attente'),
         )
 
     def update(self, instance, validated_data):
-        if 'number' in validated_data:
-            instance.numero = validated_data['number']
+        if 'numero' in validated_data:
+            instance.numero = validated_data['numero']
         if 'date' in validated_data:
             instance.date = validated_data['date']
-        if 'state' in validated_data:
-            instance.etat = validated_data['state']
+        if 'etat' in validated_data:
+            instance.etat = validated_data['etat']
         if 'restaurant' in validated_data:
             instance.restaurant = validated_data['restaurant']
         if 'commande' in validated_data:
