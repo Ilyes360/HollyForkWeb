@@ -90,11 +90,8 @@ export default function EmployeDetailPage() {
       ? {
           firstName: String(employee.firstName ?? ""),
           lastName: String(employee.lastName ?? ""),
-          phoneNumber: String(employee.phoneNumber ?? employee.phone ?? ""),
-          typeEmployeId: String(
-            (employee.typeEmploye as Record<string, unknown>)?.id ??
-            employee.typeEmployeId ?? ""
-          ),
+          phoneNumber: String(employee.phone ?? employee.phoneNumber ?? ""),
+          typeEmployeId: String(employee.roleId ?? employee.typeEmployeId ?? ""),
           salary: String(employee.salary ?? "0.00"),
           hireDate: String(employee.hireDate ?? ""),
         }
@@ -187,7 +184,7 @@ export default function EmployeDetailPage() {
 
   // Get type name for header
   const typeName = employee
-    ? String((employee.typeEmploye as Record<string, unknown>)?.typeName ?? employee.position ?? "")
+    ? String(employee.position ?? "")
     : ""
 
   return (
@@ -289,7 +286,7 @@ export default function EmployeDetailPage() {
                               {field.value
                                 ? (employeeTypes as Array<Record<string, unknown>>).find(
                                     (t) => String(t.id) === field.value
-                                  )?.nom as string ?? field.value
+                                  )?.typeName as string ?? field.value
                                 : "Sélectionner"}
                             </SelectValue>
                           </SelectTrigger>
@@ -297,7 +294,7 @@ export default function EmployeDetailPage() {
                         <SelectContent>
                           {(employeeTypes as Array<Record<string, unknown>>).map((t) => (
                             <SelectItem key={String(t.id)} value={String(t.id)}>
-                              {String(t.nom ?? t.typeName ?? t.id)}
+                              {String(t.typeName ?? t.id)}
                             </SelectItem>
                           ))}
                         </SelectContent>

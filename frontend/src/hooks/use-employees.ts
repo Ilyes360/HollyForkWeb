@@ -1,23 +1,58 @@
+import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { apiPost, apiPut, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useAdminStore } from "@/stores/admin-store"
-import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
+import type { Employee } from "@/stores/admin-types"
 
-type ApiEmploye = {
+// API response (flat, after camelizeKeys from snake_case)
+export type ApiEmploye = {
   id: number
-  nom: string
-  prenom: string
-  email: string
-  telephone: string
+  userId: number | null
+  lastName: string
+  firstName: string
   typeEmployeId: number
-  pinCode: string
+  typeEmployeName: string
+  salary: string
+  hireDate: string
+  phoneNumber: string | null
 }
 
-type ApiTypeEmploye = {
+export type ApiTypeEmploye = {
   id: number
-  nom: string
+  typeName: string
   description: string
+}
+
+const AVATAR_COLORS = [
+  "#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4",
+  "#3b82f6", "#8b5cf6", "#ec4899",
+]
+
+function apiEmployeToEmployee(e: ApiEmploye): Employee {
+  return {
+    id: String(e.id),
+    firstName: e.firstName ?? "",
+    lastName: e.lastName ?? "",
+    email: "",
+    phone: e.phoneNumber ?? "",
+    dateOfBirth: "",
+    address: "",
+    position: "serveur",
+    department: "salle",
+    establishmentId: "",
+    contractType: "cdi",
+    hireDate: e.hireDate ?? "",
+    weeklyHours: 35,
+    hourlyRate: parseFloat(e.salary) / 151.67 || 0, // approximate from monthly salary
+    roleId: String(e.typeEmployeId),
+    loginEmail: "",
+    accountStatus: "active",
+    avatarColor: AVATAR_COLORS[e.id % AVATAR_COLORS.length],
+    createdAt: "",
+    updatedAt: "",
+  }
 }
 
 const keys = {
@@ -27,10 +62,6 @@ const keys = {
   types: () => ["employee-types"] as const,
 }
 
-/**
- * List all employees.
- * Dev mode: reads from admin store. User mode: fetches from API.
- */
 export function useEmployees() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const storeData = useAdminStore((s) => s.employees)
@@ -38,44 +69,35 @@ export function useEmployees() {
 
   const query = useQuery({
     queryKey: keys.list(),
-    queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiEmploye>>("employes/")
-      return res.results
-    },
+    queryFn: () => fetchAllPages<ApiEmploye>("employes/", {}),
     enabled: !isDevMode && hasToken,
     staleTime: 2 * 60 * 1000,
   })
 
+  const employees = useMemo(
+    () => (query.data ?? []).map(apiEmployeToEmployee),
+    [query.data],
+  )
+
   if (isDevMode) {
-    return {
-      data: storeData,
-      isLoading: false,
-      isError: false,
-      source: "mock" as const,
-    }
+    return { data: storeData, isLoading: false, isError: false, source: "mock" as const }
   }
 
   return {
-    data: query.data ?? [],
+    data: employees,
     isLoading: query.isLoading,
     isError: query.isError,
     source: "api" as const,
   }
 }
 
-/**
- * Fetch employee types (positions).
- */
 export function useEmployeeTypes() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.types(),
-    queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiTypeEmploye>>("type-employes/")
-      return res.results
-    },
+    queryFn: () => fetchAllPages<ApiTypeEmploye>("type-employes/", {}),
     enabled: !isDevMode && hasToken,
     staleTime: 10 * 60 * 1000,
   })
@@ -87,9 +109,6 @@ export function useEmployeeTypes() {
   return { data: query.data ?? [], isLoading: query.isLoading }
 }
 
-/**
- * Create employee mutation.
- */
 export function useCreateEmployee() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const addEmployee = useAdminStore((s) => s.addEmployee)
@@ -111,9 +130,6 @@ export function useCreateEmployee() {
   return { mutate: mutation.mutate, isPending: mutation.isPending }
 }
 
-/**
- * Update employee mutation.
- */
 export function useUpdateEmployee() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const updateEmployee = useAdminStore((s) => s.updateEmployee)
@@ -121,7 +137,7 @@ export function useUpdateEmployee() {
 
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiEmploye>(`employes/${id}/`, data),
+      apiPatch<ApiEmploye>(`employes/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 
@@ -136,12 +152,9 @@ export function useUpdateEmployee() {
   return { mutate: mutation.mutate, isPending: mutation.isPending }
 }
 
-/**
- * Delete employee mutation.
- */
 export function useDeleteEmployee() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const deleteEmployee = useAdminStore((s) => s.deleteEmployee)
+  const removeEmployee = useAdminStore((s) => s.removeEmployee)
   const qc = useQueryClient()
 
   const mutation = useMutation({
@@ -151,7 +164,7 @@ export function useDeleteEmployee() {
 
   if (isDevMode) {
     return {
-      mutate: (id: string) => deleteEmployee(id),
+      mutate: (id: string) => removeEmployee(id),
       isPending: false,
     }
   }
