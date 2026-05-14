@@ -62,22 +62,13 @@ export default function ReservationsPage() {
   usePageTitle("Réservations")
   const { restaurantId } = useActiveRestaurant()
   const { data: apiReservations } = useReservations(restaurantId)
-  const [reservations, setReservations] = useState<Reservation[]>([])
-
   const isDevMode = useDevModeStore((s) => s.isDevMode)
 
-  useEffect(() => {
-    if (apiReservations && apiReservations.length > 0) {
-      if (isDevMode) {
-        // Dev mode: data is already Reservation[]
-        setReservations(apiReservations as Reservation[])
-      } else {
-        // User mode: map API shape to Reservation
-        setReservations(
-          (apiReservations as Record<string, unknown>[]).map(mapApiReservation)
-        )
-      }
-    }
+  // API is the single source of truth — map API data to frontend type
+  const baseReservations = useMemo(() => {
+    if (!apiReservations || apiReservations.length === 0) return []
+    if (isDevMode) return apiReservations as Reservation[]
+    return (apiReservations as Record<string, unknown>[]).map(mapApiReservation)
   }, [apiReservations, isDevMode])
   const [service, setService] = useState<ServiceType>("midi")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
@@ -88,6 +79,12 @@ export default function ReservationsPage() {
   const completeTask = useGettingStartedStore((s) => s.completeTask)
 
   const currentDateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`
+
+  // Merge API data with local-only overrides (status, notes, duration)
+  const reservations = useMemo(
+    () => baseReservations.map((r) => ({ ...r, ...localOverrides[r.id] })),
+    [baseReservations, localOverrides]
+  )
 
   const serviceReservations = useMemo(
     () => reservations.filter((r) => r.date === currentDateStr && r.service === service),
@@ -111,27 +108,18 @@ export default function ReservationsPage() {
     setDetailOpen(true)
   }, [])
 
+  // Local-only overrides for fields not in API (status, notes, duration)
+  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Reservation>>>({})
+
   const handleStatusChange = useCallback((id: string, newStatus: ReservationStatus) => {
-    // Update local state immediately (optimistic)
-    setReservations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-    )
-    // Note: backend doesn't have a status field — local only
+    setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], status: newStatus } }))
   }, [])
 
   const handleNotesChange = useCallback((id: string, notes: string) => {
-    setReservations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, notes } : r))
-    )
-    // Note: backend doesn't have a notes field — local only
+    setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], notes } }))
   }, [])
 
   const handleReschedule = useCallback((id: string, newTime: string) => {
-    // Update local state immediately (optimistic)
-    setReservations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, time: newTime } : r))
-    )
-    // Persist to API in user mode
     if (!isDevMode) {
       const resa = reservations.find((r) => r.id === id)
       if (resa) {
@@ -145,10 +133,7 @@ export default function ReservationsPage() {
   }, [isDevMode, reservations, updateReservation])
 
   const handleDurationChange = useCallback((id: string, newDurationMinutes: number) => {
-    setReservations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, estimatedDurationMinutes: newDurationMinutes } : r))
-    )
-    // Note: backend doesn't have a duration field — local only
+    setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], estimatedDurationMinutes: newDurationMinutes } }))
   }, [])
 
   const handleNewFromPanel = useCallback(
@@ -195,25 +180,8 @@ export default function ReservationsPage() {
           },
         )
       } else {
-        // Dev mode: local state
-        const deducedService: ServiceType =
-          parseInt(data.time.split(":")[0], 10) < 16 ? "midi" : "soir"
-        const newReservation: Reservation = {
-          id: `r-${Date.now()}`,
-          clientName: data.clientName,
-          clientPhone: data.clientPhone,
-          clientEmail: data.clientEmail || undefined,
-          date: data.date,
-          time: data.time,
-          service: deducedService,
-          covers: data.covers,
-          tableNumber: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
-          canal: data.canal as Reservation["canal"],
-          status: "confirmee",
-          notes: data.notes,
-          createdAt: new Date().toISOString(),
-        }
-        setReservations((prev) => [...prev, newReservation])
+        // Dev mode: no API — toast only
+        toast.success("Réservation créée (dev mode)")
         completeTask("first-reservation")
       }
     },

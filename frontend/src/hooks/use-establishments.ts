@@ -4,7 +4,6 @@ import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useAdminStore } from "@/stores/admin-store"
 import type { PaginatedResponse } from "@/api/types"
 
-// API types (snake_case transformed to camelCase by apiGet/apiPost)
 type ApiRestaurant = {
   restaurantId: number
   name: string
@@ -24,10 +23,6 @@ const keys = {
   detail: (id: number) => [...keys.all, "detail", id] as const,
 }
 
-/**
- * List all establishments.
- * Dev mode: reads from admin store. User mode: fetches from API.
- */
 export function useEstablishments() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const storeData = useAdminStore((s) => s.establishments)
@@ -44,12 +39,7 @@ export function useEstablishments() {
   })
 
   if (isDevMode) {
-    return {
-      data: storeData,
-      isLoading: false,
-      isError: false,
-      source: "mock" as const,
-    }
+    return { data: storeData, isLoading: false, isError: false, source: "mock" as const }
   }
 
   return {
@@ -60,9 +50,6 @@ export function useEstablishments() {
   }
 }
 
-/**
- * Fetch a single establishment detail.
- */
 export function useEstablishment(id: number | null) {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const storeData = useAdminStore((s) =>
@@ -83,9 +70,6 @@ export function useEstablishment(id: number | null) {
   return { data: query.data ?? null, isLoading: query.isLoading, source: "api" as const }
 }
 
-/**
- * Create establishment mutation.
- */
 export function useCreateEstablishment() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const addEstablishment = useAdminStore((s) => s.addEstablishment)
@@ -107,19 +91,15 @@ export function useCreateEstablishment() {
   return { mutate: mutation.mutate, isPending: mutation.isPending }
 }
 
-/**
- * Update establishment mutation.
- * Optimistic: updates the query cache immediately, then tries API.
- */
 export function useUpdateEstablishment() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const updateEstablishment = useAdminStore((s) => s.updateEstablishment)
+  const qc = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: number | string; data: Record<string, unknown> }) =>
       apiPut<ApiRestaurant>(`restaurants/${id}/`, data),
-    // No invalidateQueries — the cache is updated synchronously before navigate,
-    // and we don't want a refetch to overwrite the optimistic state.
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 
   if (isDevMode) {
@@ -133,18 +113,14 @@ export function useUpdateEstablishment() {
   return { mutate: mutation.mutate, isPending: mutation.isPending }
 }
 
-/**
- * Delete establishment mutation.
- * Optimistic: removes from query cache immediately, then tries API.
- */
 export function useDeleteEstablishment() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const deleteEstablishment = useAdminStore((s) => s.deleteEstablishment)
+  const qc = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: (id: number | string) => apiDelete(`restaurants/${id}/`),
-    // No invalidateQueries — the cache is updated synchronously before navigate,
-    // and we don't want a refetch to overwrite the optimistic removal.
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 
   if (isDevMode) {

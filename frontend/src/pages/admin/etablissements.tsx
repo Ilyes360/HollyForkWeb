@@ -1,7 +1,6 @@
 import { useState, useCallback, useContext, useEffect } from "react"
 import { useEstablishments, useDeleteEstablishment } from "@/hooks/use-establishments"
 import { useEmployees } from "@/hooks/use-employees"
-import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { AdminLayoutContext } from "./index"
 import { EtablissementList } from "@/components/administration/etablissements/etablissement-list"
@@ -9,7 +8,6 @@ import { DeleteEtablissementDialog } from "@/components/administration/etablisse
 import { CreateRestaurantDialog } from "@/components/layout/sidebar/create-restaurant-dialog"
 
 export default function EtablissementsPage() {
-  const queryClient = useQueryClient()
   const { data: establishments } = useEstablishments()
   const { data: employees } = useEmployees()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()
@@ -48,17 +46,10 @@ export default function EtablissementsPage() {
 
   const handleConfirmDelete = useCallback(() => {
     if (!deleteTarget) return
-
-    // Update cache synchronously so the list re-renders immediately
-    queryClient.setQueryData<Array<Record<string, unknown>>>(
-      ["establishments", "list"],
-      (old) => old?.filter((e) => String(e.restaurantId ?? e.id) !== deleteTarget.id) ?? []
-    )
-
     deleteEstablishment(deleteTarget.id)
     toast.success("Restaurant supprimé")
     setDeleteTarget(null)
-  }, [deleteTarget, deleteEstablishment, queryClient])
+  }, [deleteTarget, deleteEstablishment])
 
   return (
     <div className="space-y-4">

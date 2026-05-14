@@ -29,7 +29,6 @@ import {
 import { useAdminStore } from "@/stores/admin-store"
 import { useEstablishments, useUpdateEstablishment, useDeleteEstablishment } from "@/hooks/use-establishments"
 import { useDevModeStore } from "@/stores/dev-mode-store"
-import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { EtablissementGeneralSection } from "@/components/administration/etablissements/etablissement-general-section"
 import { EtablissementOperationsSection } from "@/components/administration/etablissements/etablissement-operations-section"
@@ -68,7 +67,6 @@ export default function EtablissementDetailPage() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const { data: apiEstablishments } = useEstablishments()
   const storeEstablishments = useAdminStore((s) => s.establishments)
-  const queryClient = useQueryClient()
   const { mutate: updateEstablishment } = useUpdateEstablishment()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()
 
@@ -115,26 +113,18 @@ export default function EtablissementDetailPage() {
   }
 
   function onSubmit(data: FormValues) {
-    const payload = {
-      name: data.name,
-      address: data.address,
-      postalCode: data.postalCode,
-      city: data.city,
-      phoneNumber: data.phone,
-      siret: data.siret,
-      pin: data.pin,
-    }
-
-    // Update cache synchronously before navigating so the list reflects changes immediately
-    queryClient.setQueryData<Array<Record<string, unknown>>>(
-      ["establishments", "list"],
-      (old) => old?.map((e) =>
-        String(e.restaurantId ?? e.id) === id ? { ...e, ...payload } : e
-      ) ?? []
-    )
-
-    // Fire API call in background (best-effort)
-    updateEstablishment({ id: id!, data: payload })
+    updateEstablishment({
+      id: id!,
+      data: {
+        name: data.name,
+        address: data.address,
+        postalCode: data.postalCode,
+        city: data.city,
+        phoneNumber: data.phone,
+        siret: data.siret,
+        pin: data.pin,
+      },
+    })
     toast.success("Établissement modifié")
     navigate("/admin")
   }
@@ -146,12 +136,6 @@ export default function EtablissementDetailPage() {
   }
 
   function handleDelete() {
-    // Remove from cache synchronously before navigating
-    queryClient.setQueryData<Array<Record<string, unknown>>>(
-      ["establishments", "list"],
-      (old) => old?.filter((e) => String(e.restaurantId ?? e.id) !== id) ?? []
-    )
-
     deleteEstablishment(id!)
     toast.success("Établissement supprimé")
     navigate("/admin")
