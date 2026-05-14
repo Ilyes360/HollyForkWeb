@@ -70,9 +70,9 @@ export default function EtablissementDetailPage() {
   const { mutate: updateEstablishment } = useUpdateEstablishment()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()
 
-  // Find establishment: try API data first (id as number), then store (id as string)
+  // Find establishment by restaurantId (API) or id (store mock)
   const establishment = (apiEstablishments as Array<Record<string, unknown>>).find(
-    (e) => String(e.id ?? e.restaurantId) === id
+    (e) => String(e.restaurantId ?? e.id) === id
   ) as Record<string, unknown> | undefined
     ?? storeEstablishments.find((e) => e.id === id)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -127,12 +127,6 @@ export default function EtablissementDetailPage() {
     })
     toast.success("Établissement modifié")
     navigate("/admin")
-  }
-
-  function handleToggleActive() {
-    if (isDevMode) {
-      updateEstablishment({ id: id!, data: { isActive: !(establishment as Record<string, unknown>).isActive } })
-    }
   }
 
   function handleDelete() {

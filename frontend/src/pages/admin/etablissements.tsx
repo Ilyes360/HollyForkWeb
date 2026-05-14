@@ -34,7 +34,7 @@ export default function EtablissementsPage() {
   const handleDelete = useCallback(
     (id: string) => {
       const est = establishments.find((e: Record<string, unknown>) =>
-        String(e.id ?? e.restaurantId) === id
+        String(e.restaurantId ?? e.id) === id
       )
       if (est) {
         setDeleteTarget({ id, name: (est as { name: string }).name })

@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useAdminStore } from "@/stores/admin-store"
-import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
 
-type ApiRestaurant = {
+// API response shape (flat, after camelizeKeys)
+export type ApiRestaurant = {
   restaurantId: number
   name: string
   address: string
@@ -30,10 +31,7 @@ export function useEstablishments() {
 
   const query = useQuery({
     queryKey: keys.list(),
-    queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiRestaurant>>("restaurants/")
-      return res.results
-    },
+    queryFn: () => fetchAllPages<ApiRestaurant>("restaurants/", {}),
     enabled: !isDevMode && hasToken,
     staleTime: 5 * 60 * 1000,
   })
@@ -78,7 +76,10 @@ export function useCreateEstablishment() {
   const mutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
       apiPost<ApiRestaurant>("restaurants/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.all })
+      qc.invalidateQueries({ queryKey: ["restaurants"] })
+    },
   })
 
   if (isDevMode) {
@@ -99,7 +100,10 @@ export function useUpdateEstablishment() {
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: number | string; data: Record<string, unknown> }) =>
       apiPut<ApiRestaurant>(`restaurants/${id}/`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.all })
+      qc.invalidateQueries({ queryKey: ["restaurants"] })
+    },
   })
 
   if (isDevMode) {
@@ -115,17 +119,20 @@ export function useUpdateEstablishment() {
 
 export function useDeleteEstablishment() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const deleteEstablishment = useAdminStore((s) => s.deleteEstablishment)
+  const removeEstablishment = useAdminStore((s) => s.removeEstablishment)
   const qc = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: (id: number | string) => apiDelete(`restaurants/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.all })
+      qc.invalidateQueries({ queryKey: ["restaurants"] })
+    },
   })
 
   if (isDevMode) {
     return {
-      mutate: (id: string) => deleteEstablishment(id),
+      mutate: (id: string) => removeEstablishment(id),
       isPending: false,
     }
   }
