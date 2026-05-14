@@ -50,7 +50,7 @@ function shiftToApiDates(shift: Shift, weekMonday: Date) {
   return {
     startDate: `${dateStr}T${shift.startTime}:00`,
     endDate: `${dateStr}T${shift.endTime}:00`,
-    shiftType: shift.service === "midi" ? "MORNING" : "EVENING",
+    typeShift: shift.service === "midi" ? "MORNING" : "EVENING",
   }
 }
 
@@ -62,15 +62,29 @@ function isApiId(id: string): boolean {
 // Keyed by restaurantId to avoid data leaks between restaurants/sessions
 let persistedShifts: { restaurantId: number; shifts: Shift[] } | null = null
 
+function toISOWeek(date: Date): string {
+  // ISO week: "2026-W20"
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`
+}
+
 export default function PlanningPage() {
   usePageTitle("Planning")
   const { restaurantId } = useActiveRestaurant()
   const isDevMode = useDevModeStore((s) => s.isDevMode)
+
+  const { isEditing, startEditing, stopEditing } = usePlanningEdition()
+  const { weekStart, direction, prev, next, today } = useWeekNavigation()
+  const isoWeek = toISOWeek(weekStart)
+
   const {
     data: apiShifts,
     employees,
     isLoading,
-  } = useShifts(restaurantId)
+  } = useShifts(restaurantId, isoWeek)
 
   const { mutate: createShift } = useCreateShift()
   const { mutate: updateShift } = useUpdateShift()
@@ -85,9 +99,6 @@ export default function PlanningPage() {
     }
     setShiftsState(s)
   }, [restaurantId])
-
-  const { isEditing, startEditing, stopEditing } = usePlanningEdition()
-  const { weekStart, direction, prev, next, today } = useWeekNavigation()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
   const prevRestaurantId = useRef(restaurantId)
 

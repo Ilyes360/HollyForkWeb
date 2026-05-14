@@ -5,33 +5,33 @@ import { initialShifts, employees as mockEmployees } from "@/components/planning
 import type { Shift, Employee, DayOfWeek, ServiceType } from "@/components/planning/types"
 import type { PaginatedResponse } from "@/api/types"
 
-// ── API types (after camelizeKeys) ──
+// ── API types (flat, after camelizeKeys from snake_case response) ──
 
 type ApiShift = {
   id: number
-  employe: {
-    id: number
-    firstName: string
-    lastName: string
-    typeEmploye: { id: number; typeName: string }
-  }
-  restaurant: { restaurantId: number; name: string }
-  startDate: string // "2026-04-14T10:00:00+02:00"
+  employeId: number
+  restaurantId: number
+  startDate: string // "2026-04-14T16:00:00+02:00"
   endDate: string
-  shiftType: string // "MORNING" | "AFTERNOON" | "EVENING"
+  typeShift: string // "MORNING" | "AFTERNOON" | "EVENING"
   notes: string | null
 }
 
 type ApiRestaurantEmploye = {
   id: number
-  employe: {
-    id: number
-    firstName: string
-    lastName: string
-    typeEmploye: { id: number; typeName: string }
-    salary: string
-    hireDate: string
-  }
+  restaurantId: number
+  employeId: number
+}
+
+type ApiEmploye = {
+  id: number
+  lastName: string
+  firstName: string
+  typeEmployeId: number
+  typeEmployeName: string
+  salary: string
+  hireDate: string
+  phoneNumber: string | null
 }
 
 // ── Mappers ──
@@ -54,7 +54,7 @@ function mapApiShiftToFront(api: ApiShift): Shift {
 
   return {
     id: String(api.id),
-    employeeId: String(api.employe.id),
+    employeeId: String(api.employeId),
     day,
     service,
     startTime,
@@ -67,6 +67,7 @@ const DEPARTMENT_MAP: Record<string, Employee["department"]> = {
   "Chef Cuisinier": "cuisine",
   "Second de cuisine": "cuisine",
   "Commis": "cuisine",
+  "Cuisinier": "cuisine",
   "Serveur": "salle",
   "Chef de rang": "salle",
   "Manager Salle": "salle",
@@ -81,12 +82,12 @@ const COLORS = [
   "bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-lime-500",
 ]
 
-function mapApiEmployeeToFront(api: ApiRestaurantEmploye, index: number): Employee {
-  const typeName = api.employe.typeEmploye?.typeName ?? ""
+function mapEmployeToFront(emp: ApiEmploye, index: number): Employee {
+  const typeName = emp.typeEmployeName ?? ""
   return {
-    id: String(api.employe.id),
-    firstName: api.employe.firstName || "Employé",
-    lastName: api.employe.lastName || "",
+    id: String(emp.id),
+    firstName: emp.firstName || "Employé",
+    lastName: emp.lastName || "",
     role: typeName,
     department: DEPARTMENT_MAP[typeName] ?? "salle",
     contractHours: 35,
@@ -108,41 +109,58 @@ const keys = {
 
 /**
  * Fetch shifts + employees for a restaurant.
- * Dev mode: returns mock data. User mode: fetches from API and maps to front types.
+ *
+ * Employees are fetched in 2 steps:
+ *   1. GET /api/restaurant-employes/?restaurant=X  → list of {employe_id} for this restaurant
+ *   2. GET /api/employes/?page_size=200            → all employees with names/types
+ *   3. Cross-reference to build the employee list for this restaurant
  */
 export function useShifts(restaurantId: number | null, week?: string) {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
+  // Shifts use restaurant_id + week (ISO format "2026-W20") as filter params
   const shiftsQuery = useQuery({
     queryKey: keys.shifts(restaurantId ?? 0, week),
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiShift>>("planning/shifts/", {
+      const params: Record<string, string | number> = {
         restaurantId: restaurantId!,
-      })
+        pageSize: 200,
+      }
+      if (week) params.week = week
+      const res = await apiGet<PaginatedResponse<ApiShift>>("planning/shifts/", params)
       return res.results.map(mapApiShiftToFront)
     },
     enabled: !isDevMode && hasToken && !!restaurantId,
     staleTime: 60 * 1000,
   })
 
-  const employeesQuery = useQuery({
-    queryKey: keys.employees(restaurantId ?? 0),
+  // Step 1: get employe_ids linked to this restaurant
+  // Filter param is "restaurant" (per swagger filterset_fields)
+  const linksQuery = useQuery({
+    queryKey: [...keys.employees(restaurantId ?? 0), "links"],
     queryFn: async () => {
       const res = await apiGet<PaginatedResponse<ApiRestaurantEmploye>>("restaurant-employes/", {
-        restaurantId: restaurantId!,
+        restaurant: restaurantId!,
+        pageSize: 100,
       })
-      // Deduplicate by employe.id (API might return duplicates)
-      const seen = new Set<number>()
-      const unique = res.results.filter((r) => {
-        if (seen.has(r.employe.id)) return false
-        seen.add(r.employe.id)
-        return true
-      })
-      return unique.map(mapApiEmployeeToFront)
+      return res.results.map((r) => r.employeId)
     },
     enabled: !isDevMode && hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
+  })
+
+  // Step 2: get all employees (shared across pages, cached)
+  const allEmployeesQuery = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: async () => {
+      const res = await apiGet<PaginatedResponse<ApiEmploye>>("employes/", {
+        pageSize: 200,
+      })
+      return res.results
+    },
+    enabled: !isDevMode && hasToken,
+    staleTime: 10 * 60 * 1000,
   })
 
   if (isDevMode) {
@@ -154,16 +172,24 @@ export function useShifts(restaurantId: number | null, week?: string) {
     }
   }
 
+  // Step 3: cross-reference to build employee list for this restaurant
+  const employeeIds = new Set(linksQuery.data ?? [])
+  const allEmps = allEmployeesQuery.data ?? []
+  const restaurantEmployees = allEmps
+    .filter((e) => employeeIds.has(e.id))
+    .map(mapEmployeToFront)
+
   return {
     data: shiftsQuery.data ?? [],
-    employees: employeesQuery.data ?? [],
-    isLoading: shiftsQuery.isLoading || employeesQuery.isLoading,
+    employees: restaurantEmployees,
+    isLoading: shiftsQuery.isLoading || linksQuery.isLoading || allEmployeesQuery.isLoading,
     source: "api" as const,
   }
 }
 
 /**
  * Create shift mutation.
+ * API expects: { employe_id, restaurant_id, start_date, end_date, type_shift, notes }
  */
 export function useCreateShift() {
   const qc = useQueryClient()
@@ -173,7 +199,7 @@ export function useCreateShift() {
       restaurantId: number
       startDate: string
       endDate: string
-      shiftType?: string
+      typeShift?: string
       notes?: string
     }) => apiPost<ApiShift>("planning/shifts/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
