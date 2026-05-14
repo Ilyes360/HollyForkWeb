@@ -105,59 +105,62 @@ const keys = {
     [...keys.all, "employees", restaurantId] as const,
 }
 
+// ── Pagination helper (backend ignores page_size, always returns 20) ──
+
+async function fetchAllPages<T>(
+  url: string,
+  params: Record<string, string | number>,
+): Promise<T[]> {
+  const all: T[] = []
+  let page = 1
+  let hasNext = true
+  while (hasNext) {
+    const res = await apiGet<PaginatedResponse<T>>(url, { ...params, page })
+    all.push(...res.results)
+    hasNext = !!res.next
+    page++
+    if (page > 50) break // safety
+  }
+  return all
+}
+
 // ── Hooks ──
 
-/**
- * Fetch shifts + employees for a restaurant.
- *
- * Employees are fetched in 2 steps:
- *   1. GET /api/restaurant-employes/?restaurant=X  → list of {employe_id} for this restaurant
- *   2. GET /api/employes/?page_size=200            → all employees with names/types
- *   3. Cross-reference to build the employee list for this restaurant
- */
 export function useShifts(restaurantId: number | null, week?: string) {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
-  // Shifts use restaurant_id + week (ISO format "2026-W20") as filter params
   const shiftsQuery = useQuery({
     queryKey: keys.shifts(restaurantId ?? 0, week),
     queryFn: async () => {
       const params: Record<string, string | number> = {
         restaurantId: restaurantId!,
-        pageSize: 200,
       }
       if (week) params.week = week
-      const res = await apiGet<PaginatedResponse<ApiShift>>("planning/shifts/", params)
-      return res.results.map(mapApiShiftToFront)
+      const all = await fetchAllPages<ApiShift>("planning/shifts/", params)
+      return all.map(mapApiShiftToFront)
     },
     enabled: !isDevMode && hasToken && !!restaurantId,
     staleTime: 60 * 1000,
   })
 
-  // Step 1: get employe_ids linked to this restaurant
-  // Filter param is "restaurant" (per swagger filterset_fields)
   const linksQuery = useQuery({
     queryKey: [...keys.employees(restaurantId ?? 0), "links"],
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiRestaurantEmploye>>("restaurant-employes/", {
+      const all = await fetchAllPages<ApiRestaurantEmploye>("restaurant-employes/", {
         restaurant: restaurantId!,
-        pageSize: 100,
       })
-      return res.results.map((r) => r.employeId)
+      return all.map((r) => r.employeId)
     },
     enabled: !isDevMode && hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
 
-  // Step 2: get all employees (shared across pages, cached)
   const allEmployeesQuery = useQuery({
     queryKey: ["employees", "all"],
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiEmploye>>("employes/", {
-        pageSize: 200,
-      })
-      return res.results
+      const all = await fetchAllPages<ApiEmploye>("employes/", {})
+      return all
     },
     enabled: !isDevMode && hasToken,
     staleTime: 10 * 60 * 1000,
