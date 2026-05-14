@@ -70,6 +70,16 @@ export default function ReservationsPage() {
     if (isDevMode) return apiReservations as Reservation[]
     return (apiReservations as Record<string, unknown>[]).map(mapApiReservation)
   }, [apiReservations, isDevMode])
+
+  // Local-only overrides for fields not in API (status, notes, duration)
+  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Reservation>>>({})
+
+  // Merge API data with local-only overrides
+  const reservations = useMemo(
+    () => baseReservations.map((r) => ({ ...r, ...localOverrides[r.id] })),
+    [baseReservations, localOverrides]
+  )
+
   const [service, setService] = useState<ServiceType>("midi")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -79,12 +89,6 @@ export default function ReservationsPage() {
   const completeTask = useGettingStartedStore((s) => s.completeTask)
 
   const currentDateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`
-
-  // Merge API data with local-only overrides (status, notes, duration)
-  const reservations = useMemo(
-    () => baseReservations.map((r) => ({ ...r, ...localOverrides[r.id] })),
-    [baseReservations, localOverrides]
-  )
 
   const serviceReservations = useMemo(
     () => reservations.filter((r) => r.date === currentDateStr && r.service === service),
@@ -107,9 +111,6 @@ export default function ReservationsPage() {
     setSelectedReservation(r)
     setDetailOpen(true)
   }, [])
-
-  // Local-only overrides for fields not in API (status, notes, duration)
-  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Reservation>>>({})
 
   const handleStatusChange = useCallback((id: string, newStatus: ReservationStatus) => {
     setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], status: newStatus } }))
