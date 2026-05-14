@@ -194,12 +194,21 @@ export default function CommandesPage() {
   const handleSupplierSubmit = useCallback(
     async (data: Omit<SupplierFull, "id">) => {
       if (!isDevMode) {
+        // Map frontend SupplierFull fields to API fields
+        const apiPayload = {
+          name: data.name,
+          telephone: data.phone,
+          email: data.email,
+          address: data.address,
+          notes: data.notes,
+          isActive: true,
+        }
         try {
           if (editingSupplier) {
-            await apiPatch(`suppliers/${editingSupplier.id}/`, data)
+            await apiPatch(`suppliers/${editingSupplier.id}/`, apiPayload)
             toast.success("Fournisseur modifié")
           } else {
-            await apiPost("suppliers/", data)
+            await apiPost("suppliers/", apiPayload)
             toast.success("Fournisseur ajouté")
           }
           queryClient.invalidateQueries({ queryKey: ["suppliers"] })
