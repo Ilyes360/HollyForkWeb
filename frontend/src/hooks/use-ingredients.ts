@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
-import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
 
 export type ApiIngredient = {
   id: number
@@ -24,10 +24,7 @@ export function useIngredients() {
 
   const query = useQuery({
     queryKey: keys.ingredients(),
-    queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiIngredient>>("ingredients/")
-      return res.results
-    },
+    queryFn: () => fetchAllPages<ApiIngredient>("ingredients/", {}),
     enabled: !isDevMode && hasToken,
     staleTime: 5 * 60 * 1000,
   })

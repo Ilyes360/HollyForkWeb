@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useInventoryStore } from "@/stores/inventory-store"
-import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
 
 export type ApiSupplier = {
   id: number
@@ -32,10 +32,7 @@ export function useSuppliers() {
 
   const query = useQuery({
     queryKey: keys.suppliers(),
-    queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiSupplier>>("suppliers/")
-      return res.results
-    },
+    queryFn: () => fetchAllPages<ApiSupplier>("suppliers/", {}),
     enabled: !isDevMode && hasToken,
     staleTime: 5 * 60 * 1000,
   })

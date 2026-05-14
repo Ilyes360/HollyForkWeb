@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { initialShifts, employees as mockEmployees } from "@/components/planning/data"
 import type { Shift, Employee, DayOfWeek, ServiceType } from "@/components/planning/types"
-import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
 
 // ── API types (flat, after camelizeKeys from snake_case response) ──
 
@@ -103,25 +103,6 @@ const keys = {
     [...keys.all, "shifts", restaurantId, week] as const,
   employees: (restaurantId: number) =>
     [...keys.all, "employees", restaurantId] as const,
-}
-
-// ── Pagination helper (backend ignores page_size, always returns 20) ──
-
-async function fetchAllPages<T>(
-  url: string,
-  params: Record<string, string | number>,
-): Promise<T[]> {
-  const all: T[] = []
-  let page = 1
-  let hasNext = true
-  while (hasNext) {
-    const res = await apiGet<PaginatedResponse<T>>(url, { ...params, page })
-    all.push(...res.results)
-    hasNext = !!res.next
-    page++
-    if (page > 50) break // safety
-  }
-  return all
 }
 
 // ── Hooks ──

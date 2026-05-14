@@ -71,12 +71,9 @@ export default function StocksPage() {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const queryClient = useQueryClient()
 
-  // ── Data (API hooks + store fallbacks) ──
+  // ── Data (API is source of truth) ──
   const { restaurantId } = useActiveRestaurant()
-  const { data: apiProducts } = useStocks(restaurantId)
-  const storeProducts = useInventoryStore((s) => s.products)
-  // Merge: store products (includes local additions) take priority, API fills the rest
-  const products = storeProducts.length > 0 ? storeProducts : apiProducts
+  const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
   const { data: orders } = useOrders(restaurantId)
   const storageZones = useInventoryStore((s) => s.storageZones)

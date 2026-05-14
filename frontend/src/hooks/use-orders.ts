@@ -1,64 +1,51 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPatch, getAccessToken } from "@/api/client"
+import { apiPost, apiPatch, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useInventoryStore } from "@/stores/inventory-store"
-import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
 
+// Flat API response (after camelizeKeys)
 export type ApiSupplierOrder = {
   id: number
-  fournisseur: { id: number; name: string }
-  restaurant: { restaurantId: number; name: string }
+  fournisseurId: number
+  fournisseurName: string
+  restaurantId: number
   orderNumber: string
   orderDate: string
   expectedDeliveryDate: string | null
   status: string // "DRAFT"|"SENT"|"CONFIRMED"|"DELIVERED"|"CANCELLED"
   totalAmount: string
   notes: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 const keys = {
   orders: (restaurantId?: number) => ["orders", restaurantId] as const,
 }
 
-/**
- * Fetch supplier orders for a restaurant.
- * Dev mode: returns from inventory store. User mode: fetches from API.
- */
 export function useOrders(restaurantId: number | null) {
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
   const storeOrders = useInventoryStore((s) => s.orders)
 
+  // Swagger filter param is "restaurant" (not restaurant_id)
   const query = useQuery({
     queryKey: keys.orders(restaurantId ?? undefined),
-    queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiSupplierOrder>>("suppliers/orders/", {
-        restaurantId: restaurantId!,
-      })
-      return res.results
-    },
+    queryFn: () => fetchAllPages<ApiSupplierOrder>("suppliers/orders/", {
+      restaurant: restaurantId!,
+    }),
     enabled: !isDevMode && hasToken && !!restaurantId,
     staleTime: 30 * 1000,
   })
 
   if (isDevMode) {
-    return {
-      data: storeOrders,
-      isLoading: false,
-      source: "mock" as const,
-    }
+    return { data: storeOrders, isLoading: false, source: "mock" as const }
   }
 
-  return {
-    data: query.data ?? [],
-    isLoading: query.isLoading,
-    source: "api" as const,
-  }
+  return { data: query.data ?? [], isLoading: query.isLoading, source: "api" as const }
 }
 
-/**
- * Create supplier order mutation.
- */
 export function useCreateOrder() {
   const qc = useQueryClient()
   return useMutation({
@@ -68,9 +55,6 @@ export function useCreateOrder() {
   })
 }
 
-/**
- * Update supplier order mutation (e.g. change status).
- */
 export function useUpdateOrder() {
   const qc = useQueryClient()
   return useMutation({
