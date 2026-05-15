@@ -31,8 +31,6 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { useAdminStore } from "@/stores/admin-store"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useDashboardMapData } from "@/hooks/use-dashboard"
 import { useEstablishments } from "@/hooks/use-establishments"
 import type { Establishment } from "@/stores/admin-types"
@@ -238,20 +236,16 @@ function formatRevenue(n: number) {
 
 export default function MapCard() {
   const resolvedTheme = useResolvedTheme()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const storeEstablishments = useAdminStore((s) => s.establishments)
-  const setCurrentEstablishment = useAdminStore((s) => s.setCurrentEstablishment)
   const { data: mapData } = useDashboardMapData()
   const { data: restaurantDetails } = useEstablishments()
 
-  // In user mode: use API data converted to Establishment format
-  // In dev mode: use admin store data
+  // Use API data converted to Establishment format
   const establishments = useMemo(() => {
-    if (!isDevMode && mapData?.restaurants?.length) {
+    if (mapData?.restaurants?.length) {
       return apiToEstablishments(mapData.restaurants, restaurantDetails as unknown as Array<Record<string, unknown>>)
     }
-    return storeEstablishments
-  }, [isDevMode, mapData, restaurantDetails, storeEstablishments])
+    return restaurantDetails
+  }, [mapData, restaurantDetails])
 
   // Only show establishments that have an address (needed for map)
   const restaurants = useMemo(
@@ -287,9 +281,6 @@ export default function MapCard() {
 
   const handleMarkerClick = (index: number) => {
     setActiveIndex(index)
-    // Sync global establishment selection
-    const r = restaurants[index]
-    if (r) setCurrentEstablishment(r.id)
   }
 
   const handleExpand = () => {

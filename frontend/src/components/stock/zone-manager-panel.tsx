@@ -25,8 +25,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { useInventoryStore } from "@/stores/inventory-store"
-import type { StorageZoneConfig, CategoryConfig } from "@/stores/inventory-store"
+import type { StorageZoneConfig, CategoryConfig } from "./types"
+import { DEFAULT_STORAGE_ZONES, DEFAULT_CATEGORIES } from "./types"
 
 const ZONE_ICON_MAP: Record<string, typeof ThermometerColdIcon> = {
   chambre_froide_a: ThermometerColdIcon,
@@ -55,11 +55,19 @@ interface ZoneManagerPanelProps {
 type DeleteTarget = { type: "zone"; item: StorageZoneConfig } | { type: "category"; item: CategoryConfig }
 
 export function ZoneManagerPanel({ open, onOpenChange }: ZoneManagerPanelProps) {
-  const {
-    storageZones, categories, products,
-    addStorageZone, updateStorageZone, deleteStorageZone,
-    addCategory, updateCategory, deleteCategory,
-  } = useInventoryStore()
+  // Local-only config — no backend API for zones/categories management yet
+  const [storageZones, setStorageZones] = useState<StorageZoneConfig[]>(DEFAULT_STORAGE_ZONES)
+  const [categories, setCategories] = useState<CategoryConfig[]>(DEFAULT_CATEGORIES)
+  const products: { storageZone: string; category: string }[] = [] // No products in panel context
+
+  const addStorageZone = (zone: StorageZoneConfig) => setStorageZones((prev) => [...prev, zone])
+  const updateStorageZone = (id: string, updates: Partial<StorageZoneConfig>) =>
+    setStorageZones((prev) => prev.map((z) => (z.id === id ? { ...z, ...updates } : z)))
+  const deleteStorageZone = (id: string) => setStorageZones((prev) => prev.filter((z) => z.id !== id))
+  const addCategory = (cat: CategoryConfig) => setCategories((prev) => [...prev, cat])
+  const updateCategory = (id: string, updates: Partial<CategoryConfig>) =>
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)))
+  const deleteCategory = (id: string) => setCategories((prev) => prev.filter((c) => c.id !== id))
 
   const [tab, setTab] = useState<"zones" | "categories">("zones")
   const [editingId, setEditingId] = useState<string | null>(null)

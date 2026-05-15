@@ -27,7 +27,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { MOCK_PRODUCTS } from "@/components/stock/data"
 import { UNIT_LABELS } from "@/components/stock/types"
 import { formatCurrency } from "@/components/stock/utils"
 import type { RecipeCategory, RecipeIngredient } from "@/components/carte/types"
@@ -40,8 +39,7 @@ import {
 } from "@/components/carte/utils"
 import { IngredientCombobox } from "@/components/carte/ingredient-combobox"
 import { PRODUCT_ICONS } from "@/components/stock/product-icons"
-import { useRecipeStore } from "@/stores/recipe-store"
-import { useDevModeStore } from "@/stores/dev-mode-store"
+import { useArticles } from "@/hooks/use-articles"
 import { useIngredients } from "@/hooks/use-ingredients"
 import { apiPost, apiPatch } from "@/api/client"
 import { usePageTitle } from "@/hooks/use-page-title"
@@ -83,37 +81,27 @@ export default function CuisineRecipePage() {
   usePageTitle("Cuisine")
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
 
-  // In user mode, use API ingredients for the picker; in dev mode, use MOCK_PRODUCTS
+  // Use API ingredients for the picker
   const { data: apiIngredients } = useIngredients()
-  const products = isDevMode
-    ? MOCK_PRODUCTS
-    : apiIngredients.length > 0
-      ? apiIngredients.map((ing) => ({
-          id: String(ing.id),
-          name: ing.name,
-          unit: ing.unit,
-          unitPrice: Number(ing.unitPrice),
-          // Provide minimal fields needed by the ingredient combobox
-          category: "" as string,
-          supplierId: "",
-          quantity: 0,
-          minStock: 0,
-          storageZone: "",
-        }))
-      : MOCK_PRODUCTS
+  const products = apiIngredients.map((ing) => ({
+    id: String(ing.id),
+    name: ing.name,
+    unit: ing.unit,
+    unitPrice: Number(ing.unitPrice),
+    category: "" as string,
+    supplierId: "",
+    quantity: 0,
+    minStock: 0,
+    storageZone: "",
+  }))
 
-  const recipes = useRecipeStore((s) => s.recipes)
-  const addRecipe = useRecipeStore((s) => s.addRecipe)
-  const updateRecipe = useRecipeStore((s) => s.updateRecipe)
+  const { data: recipes } = useArticles()
 
   const editRecipe = id ? (recipes.find((r) => r.id === id) ?? null) : null
   const isEditing = !!editRecipe
 
   const [ingredients, setIngredients] = useState<IngredientLine[]>([])
-  const [allergens, setAllergens] = useState<string[]>([])
-  const [icon, setIcon] = useState<string>("")
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,8 +127,6 @@ export default function CuisineRecipePage() {
         portions: editRecipe.portions,
         notes: editRecipe.notes,
       })
-      setAllergens(editRecipe.allergens)
-      setIcon(editRecipe.icon ?? "")
       setIngredients(
         editRecipe.ingredients.map((ing) => {
           const product = products.find((p) => p.id === ing.productId)
@@ -179,14 +165,7 @@ export default function CuisineRecipePage() {
     )
   }
 
-  const toggleAllergen = (allergen: string) => {
-    setAllergens((prev) =>
-      prev.includes(allergen)
-        ? prev.filter((a) => a !== allergen)
-        : [...prev, allergen]
-    )
-  }
-  void toggleAllergen // will be used when allergen UI is added
+  // TODO: allergen UI — not available via backend API yet
 
   const recipeIngredients: RecipeIngredient[] = ingredients.map((i) => ({
     productId: i.productId,
@@ -200,50 +179,25 @@ export default function CuisineRecipePage() {
   const margin = getGrossMargin(watchedPrice || 0, materialCost)
 
   async function handleSubmit(data: FormValues) {
-    if (!isDevMode) {
-      try {
-        const apiPayload = {
-          name: data.name,
-          categorieId: 1, // Default category — would need a category picker mapping
-          price: String(data.sellingPrice),
-          description: data.notes || null,
-        }
-
-        if (isEditing && editRecipe) {
-          await apiPatch(`articles/${id}/`, apiPayload)
-          toast.success("Article modifié")
-        } else {
-          await apiPost("articles/", apiPayload)
-          toast.success("Article créé")
-        }
-        navigate("/cuisine")
-        return
-      } catch {
-        toast.error("Erreur lors de l'enregistrement")
-        return
+    try {
+      const apiPayload = {
+        name: data.name,
+        categorieId: 1, // Default category — would need a category picker mapping
+        price: String(data.sellingPrice),
+        description: data.notes || null,
       }
-    }
 
-    // Dev mode: use Zustand store
-    const recipeData = {
-      name: data.name,
-      icon: icon || undefined,
-      category: data.category,
-      sellingPrice: data.sellingPrice,
-      portions: data.portions ?? 1,
-      ingredients: recipeIngredients,
-      allergens,
-      isActive: editRecipe ? editRecipe.isActive : true,
-      notes: data.notes,
+      if (isEditing && editRecipe) {
+        await apiPatch(`articles/${id}/`, apiPayload)
+        toast.success("Article modifié")
+      } else {
+        await apiPost("articles/", apiPayload)
+        toast.success("Article créé")
+      }
+      navigate("/cuisine")
+    } catch {
+      toast.error("Erreur lors de l'enregistrement")
     }
-
-    if (isEditing && editRecipe) {
-      updateRecipe(editRecipe.id, recipeData)
-    } else {
-      addRecipe(recipeData)
-    }
-
-    navigate("/cuisine")
   }
 
   return (

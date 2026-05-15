@@ -1,15 +1,14 @@
 import type { Reservation } from "./types"
-import { useAdminStore } from "@/stores/admin-store"
+import { useEstablishments } from "@/hooks/use-establishments"
 
 interface ReservationsKpisProps {
   reservations: Reservation[]
 }
 
 export function ReservationsKpis({ reservations }: ReservationsKpisProps) {
-  const totalCapacity = useAdminStore((s) => {
-    const est = s.establishments.find((e) => e.id === s.currentEstablishmentId)
-    return est?.totalCapacity ?? 48
-  })
+  // Use API establishments or fallback to default capacity
+  const { data: establishments } = useEstablishments()
+  const totalCapacity = establishments[0]?.totalCapacity || 48
   const active = reservations.filter((r) => r.status !== "annulee")
   const totalResas = active.length
   const totalCovers = active.reduce((sum, r) => sum + r.covers, 0)

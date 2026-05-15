@@ -10,7 +10,6 @@ import {
 } from "react"
 import type { Shift, Employee, DayOfWeek, ServiceType, ServiceConfig, DropServiceType } from "./types"
 import { serviceConfig as defaultServiceConfig } from "./data"
-import { useAdminStore } from "@/stores/admin-store"
 import { planningReducer, type PlanningState, type PlanningAction } from "./reducer"
 
 type DragEndHandler = (event: unknown) => void
@@ -57,7 +56,7 @@ export function PlanningEditionProvider({ children }: { children: ReactNode }) {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [state, dispatch] = useReducer(planningReducer, defaultState)
   const [serviceConfig, setServiceConfig] = useState<ServiceConfig>(
-    () => useAdminStore.getState().getPlanningServiceConfig()
+    () => defaultServiceConfig
   )
   const onSaveRef = useRef<((shifts: Shift[]) => void) | null>(null)
   const onCloseRef = useRef<(() => void) | null>(null)

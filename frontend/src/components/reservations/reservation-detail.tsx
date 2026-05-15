@@ -16,7 +16,7 @@ import type { Reservation, ReservationStatus } from "./types"
 import { STATUS_CONFIG, CANAL_LABELS } from "./types"
 import { RESTAURANT_TABLES } from "./data"
 import { PipelineStepper } from "./pipeline-stepper"
-import { useAdminStore } from "@/stores/admin-store"
+import { getTemplateById } from "./pipeline-templates"
 
 interface ReservationDetailProps {
   reservation: Reservation | null
@@ -49,7 +49,7 @@ export function ReservationDetail({
   onNotesChange,
 }: ReservationDetailProps) {
   const [notes, setNotes] = useState("")
-  const pipelineStages = useAdminStore((s) => s.getPipelineStages())
+  const pipelineStages = getTemplateById("brasserie")?.stages ?? []
 
   useEffect(() => {
     if (reservation) {

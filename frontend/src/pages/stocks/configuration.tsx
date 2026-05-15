@@ -30,9 +30,9 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form"
-import { useInventoryStore } from "@/stores/inventory-store"
 import { usePageTitle } from "@/hooks/use-page-title"
-import type { StorageZoneConfig, CategoryConfig } from "@/stores/inventory-store"
+import type { StorageZoneConfig, CategoryConfig } from "@/components/stock/types"
+import { DEFAULT_STORAGE_ZONES, DEFAULT_CATEGORIES } from "@/components/stock/types"
 
 // ── Schemas ──
 
@@ -71,12 +71,15 @@ function ZoneDialog({
   open,
   onOpenChange,
   zone,
+  onAdd,
+  onUpdate,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   zone: StorageZoneConfig | null
+  onAdd: (zone: StorageZoneConfig) => void
+  onUpdate: (id: string, updates: Partial<StorageZoneConfig>) => void
 }) {
-  const { addStorageZone, updateStorageZone } = useInventoryStore()
   const form = useForm<ZoneFormValues>({
     resolver: zodResolver(zoneSchema),
     values: zone
@@ -86,7 +89,7 @@ function ZoneDialog({
 
   function handleSubmit(data: ZoneFormValues) {
     if (zone) {
-      updateStorageZone(zone.id, data)
+      onUpdate(zone.id, data)
     } else {
       const id = data.label
         .toLowerCase()
@@ -94,7 +97,7 @@ function ZoneDialog({
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/\s+/g, "_")
         .replace(/[^a-z0-9_]/g, "")
-      addStorageZone({ id, label: data.label, description: data.description || undefined })
+      onAdd({ id, label: data.label, description: data.description || undefined })
     }
     form.reset()
     onOpenChange(false)
@@ -158,12 +161,15 @@ function CategoryDialog({
   open,
   onOpenChange,
   category,
+  onAdd,
+  onUpdate,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   category: CategoryConfig | null
+  onAdd: (cat: CategoryConfig) => void
+  onUpdate: (id: string, updates: Partial<CategoryConfig>) => void
 }) {
-  const { addCategory, updateCategory } = useInventoryStore()
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     values: category ? { label: category.label } : { label: "" },
@@ -171,7 +177,7 @@ function CategoryDialog({
 
   function handleSubmit(data: CategoryFormValues) {
     if (category) {
-      updateCategory(category.id, data)
+      onUpdate(category.id, data)
     } else {
       const id = data.label
         .toLowerCase()
@@ -179,7 +185,7 @@ function CategoryDialog({
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/\s+/g, "_")
         .replace(/[^a-z0-9_]/g, "")
-      addCategory({ id, label: data.label })
+      onAdd({ id, label: data.label })
     }
     form.reset()
     onOpenChange(false)
@@ -273,13 +279,19 @@ function DeleteConfirmDialog({
 
 export default function StocksConfigurationPage() {
   usePageTitle("Configuration")
-  const {
-    storageZones,
-    categories,
-    products,
-    deleteStorageZone,
-    deleteCategory,
-  } = useInventoryStore()
+  // Local-only config — no backend API for zones/categories management yet
+  const [storageZones, setStorageZones] = useState<StorageZoneConfig[]>(DEFAULT_STORAGE_ZONES)
+  const [categories, setCategories] = useState<CategoryConfig[]>(DEFAULT_CATEGORIES)
+  const products: { storageZone: string; category: string }[] = []
+
+  const addStorageZone = (zone: StorageZoneConfig) => setStorageZones((prev) => [...prev, zone])
+  const updateStorageZone = (id: string, updates: Partial<StorageZoneConfig>) =>
+    setStorageZones((prev) => prev.map((z) => (z.id === id ? { ...z, ...updates } : z)))
+  const deleteStorageZone = (id: string) => setStorageZones((prev) => prev.filter((z) => z.id !== id))
+  const addCategory = (cat: CategoryConfig) => setCategories((prev) => [...prev, cat])
+  const updateCategory = (id: string, updates: Partial<CategoryConfig>) =>
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)))
+  const deleteCategory = (id: string) => setCategories((prev) => prev.filter((c) => c.id !== id))
 
   // Zone state
   const [zoneDialogOpen, setZoneDialogOpen] = useState(false)
@@ -457,11 +469,15 @@ export default function StocksConfigurationPage() {
         open={zoneDialogOpen}
         onOpenChange={setZoneDialogOpen}
         zone={editingZone}
+        onAdd={addStorageZone}
+        onUpdate={updateStorageZone}
       />
       <CategoryDialog
         open={catDialogOpen}
         onOpenChange={setCatDialogOpen}
         category={editingCat}
+        onAdd={addCategory}
+        onUpdate={updateCategory}
       />
       {deleteZoneTarget && (
         <DeleteConfirmDialog

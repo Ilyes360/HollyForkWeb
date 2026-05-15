@@ -1,4 +1,3 @@
-import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -25,8 +24,6 @@ import {
 } from "@/components/ui/select"
 import { UNIT_LABELS } from "@/components/stock/types"
 import type { ProductUnit } from "@/components/stock/types"
-import { useInventoryStore } from "@/stores/inventory-store"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { apiPost, apiPatch } from "@/api/client"
 import { useQueryClient } from "@tanstack/react-query"
@@ -65,14 +62,10 @@ export default function StocksProductPage() {
   usePageTitle("Stocks")
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const { restaurantId } = useActiveRestaurant()
   const queryClient = useQueryClient()
 
-  const { products, addProduct, updateProduct } = useInventoryStore()
-
-  const editProduct = id ? products.find((p) => p.id === id) ?? null : null
-  const isEditing = !!editProduct
+  const isEditing = !!id
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,107 +79,32 @@ export default function StocksProductPage() {
     },
   })
 
-  useEffect(() => {
-    if (editProduct) {
-      form.reset({
-        name: editProduct.name,
-        quantity: editProduct.quantity,
-        unit: editProduct.unit,
-        minStock: editProduct.minStock,
-        unitPrice: editProduct.unitPrice,
-      })
-    }
-  }, [editProduct, form])
-
   async function handleSubmit(data: FormValues) {
-    if (isDevMode) {
-      // Dev mode: local store
-      if (isEditing && editProduct) {
-        updateProduct(editProduct.id, {
-          name: data.name,
-          quantity: data.quantity,
-          unit: data.unit as ProductUnit,
-          minStock: data.minStock,
-          unitPrice: data.unitPrice,
+    try {
+      if (isEditing) {
+        await apiPatch(`stocks/${id}/`, {
+          quantityInStock: String(data.quantity),
+          alertThreshold: String(data.minStock),
         })
       } else {
-        addProduct({
-          id: `p-${Date.now()}`,
+        const ingredient = await apiPost<{ id: number }>("ingredients/", {
           name: data.name,
-          quantity: data.quantity,
           unit: data.unit as ProductUnit,
-          minStock: data.minStock,
-          maxStock: 100,
-          unitPrice: data.unitPrice,
-          supplierId: "",
-          category: "epicerie",
-          rotation: 0,
-          lastOrderDate: new Date().toISOString().split("T")[0],
-          expirationDate: "",
-          storageZone: "reserve_seche",
-          notes: "",
-          orderHistory: [],
+          unitPrice: String(data.unitPrice),
+        })
+        await apiPost("stocks/", {
+          restaurantId: restaurantId!,
+          ingredientId: ingredient.id,
+          quantityInStock: String(data.quantity),
+          alertThreshold: String(data.minStock),
         })
       }
-      navigate("/stocks")
-    } else {
-      // User mode: save locally + try API in background
-      if (isEditing && editProduct) {
-        updateProduct(editProduct.id, {
-          name: data.name,
-          quantity: data.quantity,
-          unit: data.unit as ProductUnit,
-          minStock: data.minStock,
-          unitPrice: data.unitPrice,
-        })
-      } else {
-        addProduct({
-          id: `p-${Date.now()}`,
-          name: data.name,
-          quantity: data.quantity,
-          unit: data.unit as ProductUnit,
-          minStock: data.minStock,
-          maxStock: 100,
-          unitPrice: data.unitPrice,
-          supplierId: "",
-          category: "epicerie",
-          rotation: 0,
-          lastOrderDate: new Date().toISOString().split("T")[0],
-          expirationDate: "",
-          storageZone: "reserve_seche",
-          notes: "",
-          orderHistory: [],
-        })
-      }
-
-      // Try API best-effort (backend may not support yet)
-      try {
-        if (isEditing) {
-          await apiPatch(`stocks/${id}/`, {
-            quantityInStock: String(data.quantity),
-            alertThreshold: String(data.minStock),
-          })
-        } else {
-          const ingredient = await apiPost<{ id: number }>("ingredients/", {
-            name: data.name,
-            unit: data.unit as ProductUnit,
-            unitPrice: String(data.unitPrice),
-          })
-          await apiPost("stocks/", {
-            restaurantId: restaurantId!,
-            ingredientId: ingredient.id,
-            quantityInStock: String(data.quantity),
-            alertThreshold: String(data.minStock),
-          })
-        }
-        queryClient.invalidateQueries({ queryKey: ["stocks"] })
-        queryClient.invalidateQueries({ queryKey: ["ingredients"] })
-      } catch {
-        // API failed silently — local save is the fallback
-      }
-
+      queryClient.invalidateQueries({ queryKey: ["stocks"] })
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] })
       toast.success(isEditing ? "Produit modifié" : "Produit créé")
       navigate("/stocks")
+    } catch {
+      toast.error("Erreur lors de l'enregistrement")
     }
   }
 

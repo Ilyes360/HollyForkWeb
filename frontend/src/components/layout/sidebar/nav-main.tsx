@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { IconSvgElement } from "@hugeicons/react"
 import { usePermissions } from "@/hooks/use-permissions"
-import { useInventoryStore } from "@/stores/inventory-store"
+import { useOrders } from "@/hooks/use-orders"
 import { useReservations } from "@/hooks/use-reservations"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import {
@@ -113,10 +113,9 @@ export const navItems: NavGroup[] = [
 export function NavMain() {
   const { pathname } = useLocation()
   const { can } = usePermissions()
-  const pendingCount = useInventoryStore(
-    (s) => s.orders.filter((o) => o.status === "pending").length
-  )
   const { restaurantId } = useActiveRestaurant()
+  const { data: orders } = useOrders(restaurantId)
+  const pendingCount = orders.filter((o) => o.status === "pending").length
   const { data: reservations } = useReservations(restaurantId)
   const resaCount = reservations.length
 

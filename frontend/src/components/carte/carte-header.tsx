@@ -3,7 +3,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { PAGE_META } from "@/lib/copy/pages"
 import { useCarteOperational } from "./operational-view-context"
-import { useRecipeStore } from "@/stores/recipe-store"
+import { useArticles } from "@/hooks/use-articles"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn as _cn } from "@/lib/utils"
 
@@ -13,7 +13,7 @@ interface CarteHeaderProps {
 
 export function CarteHeader({ onAddRecipe }: CarteHeaderProps) {
   const { isEditing, startEditing } = useCarteOperational()
-  const recipes = useRecipeStore((s) => s.recipes)
+  const { data: recipes } = useArticles()
   const isMobile = useIsMobile()
 
   return (

@@ -12,7 +12,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import type { Product, ProductPortionSummary } from "./types"
-import type { StorageZoneConfig } from "@/stores/inventory-store"
+import type { StorageZoneConfig } from "./types"
 import {
   getProductStatus,
   getZoneHealth,

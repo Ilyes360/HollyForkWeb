@@ -1,15 +1,19 @@
 import { useState, useCallback } from "react"
-import { useInventoryStore } from "@/stores/inventory-store"
-import { useRecipeStore } from "@/stores/recipe-store"
+import { useArticles } from "@/hooks/use-articles"
+import { useStocks } from "@/hooks/use-stocks"
+import { useSuppliers } from "@/hooks/use-suppliers"
+import { useOrders } from "@/hooks/use-orders"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { OperationalProductPanel } from "./operational-product-panel"
 import { ProductDetailModal } from "@/components/stock/product-detail-modal"
 
 export function CarteProductSidebar() {
-  const products = useInventoryStore((s) => s.products)
-  const suppliers = useInventoryStore((s) => s.suppliers)
-  const orders = useInventoryStore((s) => s.orders)
-  const recipes = useRecipeStore((s) => s.recipes)
+  const { restaurantId } = useActiveRestaurant()
+  const { data: products } = useStocks(restaurantId)
+  const { data: suppliers } = useSuppliers()
+  const { data: orders } = useOrders(restaurantId)
+  const { data: recipes } = useArticles()
 
   const { productPortionSummaries } = usePortionCalculator(recipes, products, suppliers)
 

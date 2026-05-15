@@ -25,7 +25,7 @@ import {
   getZoneLabel,
 } from "@/components/stock/utils"
 import { getProductIcon } from "@/components/stock/product-icons"
-import { useInventoryStore } from "@/stores/inventory-store"
+import { DEFAULT_CATEGORIES, DEFAULT_STORAGE_ZONES } from "./types"
 import { SupplierPopover } from "@/components/shared/supplier-popover"
 import { ProductFlowGraph } from "./product-flow-graph"
 import { FullscreenModal } from "@/components/shared/fullscreen-modal"
@@ -76,7 +76,8 @@ export function ProductDetailModal({
 }: ProductDetailModalProps) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const navigate = useNavigate()
-  const { categories, storageZones } = useInventoryStore()
+  const categories = DEFAULT_CATEGORIES
+  const storageZones = DEFAULT_STORAGE_ZONES
 
   if (!product) return null
 

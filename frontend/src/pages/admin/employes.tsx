@@ -1,28 +1,23 @@
 import { useState, useMemo, useCallback, useContext, useEffect } from "react"
 import { useNavigate } from "react-router"
-import { useAdminStore } from "@/stores/admin-store"
 import { useEstablishments } from "@/hooks/use-establishments"
 import { useEmployees, useDeleteEmployee } from "@/hooks/use-employees"
 import { useRoles } from "@/hooks/use-roles"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { AdminLayoutContext } from "./index"
 import { EmployesFilters } from "@/components/administration/employes/employes-filters"
 import { EmployesTable } from "@/components/administration/employes/employes-table"
 import { EmployeeSheet } from "@/components/administration/employes/employee-sheet"
 import type { Employee } from "@/components/administration/types"
-import { apiDelete } from "@/api/client"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 export default function EmployesPage() {
   const navigate = useNavigate()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const queryClient = useQueryClient()
   const { data: establishments } = useEstablishments()
   const { data: employees } = useEmployees()
   const { data: roles } = useRoles()
-  const removeEmployeeStore = useAdminStore((s) => s.removeEmployee)
-  void useDeleteEmployee()
+  const deleteEmployeeMutation = useDeleteEmployee()
 
   const { setOnAdd } = useContext(AdminLayoutContext)
 
@@ -67,38 +62,28 @@ export default function EmployesPage() {
   }, [setOnAdd, handleAdd])
 
   const handleToggleStatus = useCallback(
-    (id: string) => {
-      if (isDevMode) {
-        const emp = employees.find((e: Employee) => e.id === id)
-        if (emp) {
-          useAdminStore.getState().updateEmployee(id, {
-            accountStatus: emp.accountStatus === "active" ? "disabled" : "active",
-          })
-        }
-      }
-      // Backend doesn't have an account status field — local only for now
+    (_id: string) => {
+      // Backend doesn't have an account status field — not available
+      toast.info("Le statut du compte n'est pas géré par l'API")
     },
-    [employees, isDevMode]
+    []
   )
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (isDevMode) {
-        removeEmployeeStore(id)
-      } else {
-        apiDelete(`employes/${id}/`)
-          .then(() => {
-            toast.success("Employé supprimé")
-            queryClient.invalidateQueries({ queryKey: ["employees"] })
-          })
-          .catch(() => toast.error("Erreur lors de la suppression"))
-      }
+      deleteEmployeeMutation.mutate(Number(id), {
+        onSuccess: () => {
+          toast.success("Employé supprimé")
+          queryClient.invalidateQueries({ queryKey: ["employees"] })
+        },
+        onError: () => toast.error("Erreur lors de la suppression"),
+      })
       if (selectedEmployee?.id === id) {
         setSheetOpen(false)
         setSelectedEmployee(null)
       }
     },
-    [isDevMode, removeEmployeeStore, selectedEmployee, queryClient]
+    [deleteEmployeeMutation, selectedEmployee, queryClient]
   )
 
   return (

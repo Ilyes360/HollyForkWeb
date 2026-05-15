@@ -7,8 +7,7 @@ import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import type { Product } from "@/components/stock/types"
-import { useInventoryStore } from "@/stores/inventory-store"
-import { useDevModeStore } from "@/stores/dev-mode-store"
+import { DEFAULT_STORAGE_ZONES, DEFAULT_CATEGORIES } from "@/components/stock/types"
 import { useArticles } from "@/hooks/use-articles"
 import { useStocks } from "@/hooks/use-stocks"
 import { useSuppliers } from "@/hooks/use-suppliers"
@@ -52,23 +51,9 @@ const fadeUp = {
   },
 }
 
-function toLocalDateString(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
-}
-
-function daysFromNow(n: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + n)
-  return toLocalDateString(d)
-}
-
 export default function StocksPage() {
   usePageTitle("Mon stock")
   const navigate = useNavigate()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const queryClient = useQueryClient()
 
   // ── Data (API is source of truth) ──
@@ -76,11 +61,8 @@ export default function StocksPage() {
   const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
   const { data: orders } = useOrders(restaurantId)
-  const storageZones = useInventoryStore((s) => s.storageZones)
-  const categories = useInventoryStore((s) => s.categories)
-  const updateProduct = useInventoryStore((s) => s.updateProduct)
-  const deleteProductStore = useInventoryStore((s) => s.deleteProduct)
-  const addOrderStore = useInventoryStore((s) => s.addOrder)
+  const storageZones = DEFAULT_STORAGE_ZONES
+  const categories = DEFAULT_CATEGORIES
   const { data: recipes } = useArticles()
 
   // ── Portions ──
@@ -218,57 +200,38 @@ export default function StocksPage() {
       const totalAmount = data.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice, 0
       )
-      const supplier = suppliers.find((s) => s.id === data.supplierId)
 
-      if (!isDevMode) {
-        try {
-          await apiPost("suppliers/orders/", {
-            supplierId: data.supplierId,
-            items: data.items,
-            notes: data.notes,
-            totalAmount,
-          })
-          toast.success("Commande créée")
-          queryClient.invalidateQueries({ queryKey: ["orders"] })
-        } catch {
-          toast.error("Erreur lors de la création de la commande")
-        }
-      } else {
-        const newOrder = {
-          id: `ord-${Date.now()}`,
+      try {
+        await apiPost("suppliers/orders/", {
           supplierId: data.supplierId,
           items: data.items,
-          date: toLocalDateString(new Date()),
-          status: "pending" as const,
-          totalAmount,
-          expectedDelivery: daysFromNow(supplier?.averageDeliveryDays ?? 3),
           notes: data.notes,
-        }
-        addOrderStore(newOrder)
+          totalAmount,
+        })
+        toast.success("Commande créée")
+        queryClient.invalidateQueries({ queryKey: ["orders"] })
+      } catch {
+        toast.error("Erreur lors de la création de la commande")
       }
     },
-    [suppliers, isDevMode, addOrderStore, queryClient]
+    [queryClient]
   )
 
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!isDevMode) {
-        try {
-          await apiDelete(`stocks/${id}/`)
-          toast.success("Produit supprimé")
-          queryClient.invalidateQueries({ queryKey: ["stocks"] })
-        } catch {
-          toast.error("Erreur lors de la suppression")
-        }
-      } else {
-        deleteProductStore(id)
+      try {
+        await apiDelete(`stocks/${id}/`)
+        toast.success("Produit supprimé")
+        queryClient.invalidateQueries({ queryKey: ["stocks"] })
+      } catch {
+        toast.error("Erreur lors de la suppression")
       }
       if (selectedProduct?.id === id) {
         setDetailOpen(false)
         setSelectedProduct(null)
       }
     },
-    [isDevMode, deleteProductStore, selectedProduct, queryClient]
+    [selectedProduct, queryClient]
   )
 
   const handleOpenSupplierSheet = useCallback((supplierId: string) => {
@@ -290,17 +253,38 @@ export default function StocksPage() {
     })
   }, [])
 
-  const handleSaveInventory = useCallback(() => {
-    // Inventory mode uses local store — stocks/{id}/adjust/ requires ingredient context
-    inventoryValues.forEach((value, productId) => {
-      const product = products.find((p) => p.id === productId)
-      if (product && product.quantity !== value) {
-        updateProduct(productId, { quantity: value })
+  const handleSaveInventory = useCallback(async () => {
+    // Inventory mode — adjust stock quantities via API
+    const adjustments = Array.from(inventoryValues.entries())
+      .map(([productId, value]) => {
+        const product = products.find((p) => p.id === productId)
+        if (product && product.quantity !== value) {
+          return { id: productId, quantity: value }
+        }
+        return null
+      })
+      .filter(Boolean)
+
+    for (const adj of adjustments) {
+      if (!adj) continue
+      try {
+        await apiPost(`stocks/${adj.id}/adjust/`, {
+          quantity: adj.quantity,
+          adjustmentType: "inventory",
+          reason: "Inventaire manuel",
+        })
+      } catch {
+        // Best-effort — continue with other adjustments
       }
-    })
+    }
+
+    if (adjustments.length > 0) {
+      queryClient.invalidateQueries({ queryKey: ["stocks"] })
+      toast.success("Inventaire enregistré")
+    }
     setInventoryMode(false)
     setInventoryValues(new Map())
-  }, [inventoryValues, products, updateProduct])
+  }, [inventoryValues, products, queryClient])
 
   const handleCancelInventory = useCallback(() => {
     setInventoryMode(false)
@@ -451,6 +435,8 @@ export default function StocksPage() {
         onOpenChange={setOrderDialogOpen}
         onSubmit={handleSubmitOrder}
         preSelectedProductId={preSelectedProductId}
+        allSuppliers={suppliers}
+        allProducts={products}
       />
 
       <ZoneManagerPanel

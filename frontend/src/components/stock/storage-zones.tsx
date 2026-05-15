@@ -9,7 +9,7 @@ import {
 import { Card } from "@/components/ui/card"
 import type { Product } from "./types"
 import { getProductStatus } from "./utils"
-import { useInventoryStore } from "@/stores/inventory-store"
+import { DEFAULT_STORAGE_ZONES } from "./types"
 
 const ZONE_ICON_MAP: Record<string, typeof ThermometerColdIcon> = {
   chambre_froide_a: ThermometerColdIcon,
@@ -28,7 +28,7 @@ interface StorageZonesProps {
 }
 
 export function StorageZones({ products, activeZone, onZoneChange }: StorageZonesProps) {
-  const { storageZones } = useInventoryStore()
+  const storageZones = DEFAULT_STORAGE_ZONES
 
   const zoneStats = useMemo(() => {
     return storageZones.map((zone) => {

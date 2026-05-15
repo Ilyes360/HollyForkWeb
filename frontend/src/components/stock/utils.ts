@@ -1,5 +1,5 @@
 import type { Product, ProductStatus, ProductPortionSummary, PortionEquivalent, Supplier, UrgencyCategory } from "./types"
-import type { StorageZoneConfig, CategoryConfig } from "@/stores/inventory-store"
+import type { StorageZoneConfig, CategoryConfig } from "./types"
 
 export function getProductStatus(product: Product): ProductStatus {
   if (product.quantity === 0) return "rupture"

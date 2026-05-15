@@ -28,8 +28,6 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { useEmployees, useEmployeeTypes } from "@/hooks/use-employees"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { useAdminStore } from "@/stores/admin-store"
 import { apiPost, apiPatch, apiDelete } from "@/api/client"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -58,22 +56,14 @@ const fadeUp = {
   },
 }
 
-const AVATAR_COLORS = [
-  "bg-blue-500", "bg-pink-500", "bg-orange-500", "bg-emerald-500",
-  "bg-purple-500", "bg-rose-500", "bg-amber-500", "bg-teal-500",
-]
-
 export default function EmployeDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const queryClient = useQueryClient()
 
   const { data: allEmployees } = useEmployees()
   const { data: employeeTypes } = useEmployeeTypes()
-  const addEmployeeStore = useAdminStore((s) => s.addEmployee)
-  const removeEmployeeStore = useAdminStore((s) => s.removeEmployee)
 
   const isNew = !id
   // Find employee from API data or store
@@ -126,60 +116,27 @@ export default function EmployeDetailPage() {
       hireDate: data.hireDate || undefined,
     }
 
-    if (isDevMode) {
-      if (isNew) {
-        addEmployeeStore({
-          id: `emp-${Date.now()}`,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phoneNumber ?? "",
-          email: "",
-          dateOfBirth: "",
-          address: "",
-          position: "serveur" as never,
-          department: "salle" as never,
-          establishmentId: "",
-          contractType: "cdi" as never,
-          hireDate: data.hireDate ?? "",
-          weeklyHours: 35,
-          hourlyRate: 11.65,
-          roleId: "",
-          loginEmail: "",
-          accountStatus: "active",
-          avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-      }
-      navigate("/admin/employes")
-    } else {
-      const promise = isNew
-        ? apiPost("employes/", apiData)
-        : apiPatch(`employes/${id}/`, apiData)
+    const promise = isNew
+      ? apiPost("employes/", apiData)
+      : apiPatch(`employes/${id}/`, apiData)
 
-      promise
-        .then(() => {
-          toast.success(isNew ? "Employé créé" : "Employé modifié")
-          queryClient.invalidateQueries({ queryKey: ["employees"] })
-          navigate("/admin/employes")
-        })
-        .catch(() => toast.error("Erreur lors de l'enregistrement"))
-    }
+    promise
+      .then(() => {
+        toast.success(isNew ? "Employé créé" : "Employé modifié")
+        queryClient.invalidateQueries({ queryKey: ["employees"] })
+        navigate("/admin/employes")
+      })
+      .catch(() => toast.error("Erreur lors de l'enregistrement"))
   }
 
   function handleDelete() {
-    if (isDevMode) {
-      removeEmployeeStore(id!)
-      navigate("/admin/employes")
-    } else {
-      apiDelete(`employes/${id}/`)
-        .then(() => {
-          toast.success("Employé supprimé")
-          queryClient.invalidateQueries({ queryKey: ["employees"] })
-          navigate("/admin/employes")
-        })
-        .catch(() => toast.error("Erreur lors de la suppression"))
-    }
+    apiDelete(`employes/${id}/`)
+      .then(() => {
+        toast.success("Employé supprimé")
+        queryClient.invalidateQueries({ queryKey: ["employees"] })
+        navigate("/admin/employes")
+      })
+      .catch(() => toast.error("Erreur lors de la suppression"))
   }
 
   // Get type name for header

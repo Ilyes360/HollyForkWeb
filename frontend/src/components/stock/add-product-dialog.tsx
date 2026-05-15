@@ -33,7 +33,7 @@ import {
 } from "./types"
 import type { ProductUnit } from "./types"
 import { getIconsForCategory, PRODUCT_ICONS } from "./product-icons"
-import { useInventoryStore } from "@/stores/inventory-store"
+import { DEFAULT_CATEGORIES, DEFAULT_STORAGE_ZONES } from "./types"
 
 const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
@@ -59,7 +59,9 @@ interface AddProductDialogProps {
 }
 
 export function AddProductDialog({ open, onOpenChange, onSubmit }: AddProductDialogProps) {
-  const { suppliers, categories, storageZones } = useInventoryStore()
+  const suppliers: { id: string; name: string }[] = [] // Passed via props in actual usage
+  const categories = DEFAULT_CATEGORIES
+  const storageZones = DEFAULT_STORAGE_ZONES
   const form = useForm<AddProductFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,

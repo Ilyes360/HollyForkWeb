@@ -1,3 +1,17 @@
+// ── Config types (previously in inventory-store) ──
+
+export interface StorageZoneConfig {
+  id: string
+  label: string
+  icon?: string
+  description?: string
+}
+
+export interface CategoryConfig {
+  id: string
+  label: string
+}
+
 export type ProductStatus = "rupture" | "stock_faible" | "stock_ok" | "surstock"
 export type ProductCategory = string
 export type StorageZone = string
@@ -69,6 +83,16 @@ export const ZONE_LABELS: Record<string, string> = {
   reserve_seche: "Réserve sèche",
   cave: "Cave",
 }
+
+// ── Default config (seed data, previously computed in inventory-store) ──
+
+export const DEFAULT_STORAGE_ZONES: StorageZoneConfig[] = Object.entries(ZONE_LABELS).map(
+  ([id, label]) => ({ id, label })
+)
+
+export const DEFAULT_CATEGORIES: CategoryConfig[] = Object.entries(CATEGORY_LABELS).map(
+  ([id, label]) => ({ id, label })
+)
 
 export const STATUS_FILTER_OPTIONS = [
   { value: "tous", label: "Tous" },

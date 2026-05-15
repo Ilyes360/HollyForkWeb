@@ -24,8 +24,6 @@ import type { Product } from "@/components/stock/types"
 import { STATUS_CONFIG, UNIT_LABELS } from "@/components/stock/types"
 import { getProductStatus, formatCurrency } from "@/components/stock/utils"
 import type { SupplierFull, OrderItem } from "./types"
-import { useInventoryStore } from "@/stores/inventory-store"
-
 interface OrderDialogProps {
   supplier: SupplierFull | null
   products: Product[]
@@ -33,6 +31,8 @@ interface OrderDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (data: { supplierId: string; items: OrderItem[]; notes: string }) => void
   preSelectedProductId?: string
+  allSuppliers?: SupplierFull[]
+  allProducts?: Product[]
 }
 
 interface SelectedItem {
@@ -49,8 +49,9 @@ export function OrderDialog({
   onOpenChange,
   onSubmit,
   preSelectedProductId,
+  allSuppliers = [],
+  allProducts = [],
 }: OrderDialogProps) {
-  const { suppliers: allSuppliers, products: allProducts } = useInventoryStore()
 
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null)
   const [items, setItems] = useState<SelectedItem[]>([])

@@ -18,7 +18,6 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { FrenchAddressInput, type FrenchAddressResult } from "@/components/ui/french-address-input"
 import { cn } from "@/lib/utils"
 import { useEstablishment, useUpdateEstablishment, useDeleteEstablishment } from "@/hooks/use-establishments"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { toast } from "sonner"
 import { DeleteEtablissementDialog } from "@/components/administration/etablissements/delete-etablissement-dialog"
 import { usePageTitle } from "@/hooks/use-page-title"
@@ -63,7 +62,6 @@ export default function EtablissementDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  void useDevModeStore((s) => s.isDevMode)
   const { data: establishment, raw: rawRestaurant, isLoading } = useEstablishment(id ? Number(id) : null)
   const { mutate: updateEstablishment, isPending: isUpdating } = useUpdateEstablishment()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()

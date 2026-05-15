@@ -5,7 +5,7 @@ import { Sun02Icon, Moon02Icon, Add01Icon } from "@hugeicons/core-free-icons"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { RESTAURANT_TABLES } from "../data"
-import { useAdminStore } from "@/stores/admin-store"
+import { getTemplateById } from "../pipeline-templates"
 import { useCurrentTime } from "@/hooks/use-current-time"
 import { useGanttLayout } from "./use-gantt-layout"
 import { useGanttDensity } from "./use-gantt-density"
@@ -58,7 +58,7 @@ export function GanttTimeline({
   selectedReservationId,
 }: GanttTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const pipelineStages = useAdminStore((s) => s.getPipelineStages())
+  const pipelineStages = getTemplateById("brasserie")?.stages ?? []
   const now = useCurrentTime(60_000)
 
   const { density: baseDensity, override, setOverride } = useGanttDensity(containerRef, RESTAURANT_TABLES.length)

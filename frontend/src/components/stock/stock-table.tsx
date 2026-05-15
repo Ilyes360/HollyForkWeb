@@ -54,7 +54,7 @@ import {
   formatPortionEquivalents,
 } from "@/components/stock/utils"
 import { getProductIcon } from "@/components/stock/product-icons"
-import { useInventoryStore } from "@/stores/inventory-store"
+import { DEFAULT_CATEGORIES, DEFAULT_STORAGE_ZONES } from "./types"
 import { getStockStatusInsight, getStockEmptyState } from "@/lib/copy/stock"
 import { EmptyState } from "@/components/shared/empty-state"
 import { StockProductCard } from "./stock-product-card"
@@ -107,7 +107,8 @@ export function StockTable({
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("toutes")
   const [viewMode, setViewMode] = useState<ViewMode>("list")
-  const { categories, storageZones } = useInventoryStore()
+  const categories = DEFAULT_CATEGORIES
+  const storageZones = DEFAULT_STORAGE_ZONES
 
   const categoryFilterOptions = [
     { value: "toutes", label: "Toutes catégories" },

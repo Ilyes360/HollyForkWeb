@@ -4,8 +4,6 @@ import { motion } from "motion/react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Recipe, RecipeCategory } from "@/components/carte/types"
-import { useRecipeStore } from "@/stores/recipe-store"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { useArticles, useDeleteArticle } from "@/hooks/use-articles"
 import { useStocks } from "@/hooks/use-stocks"
@@ -49,7 +47,6 @@ export default function CartePage() {
   usePageTitle("Ma carte")
   const navigate = useNavigate()
   const opView = useCarteOperational()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const queryClient = useQueryClient()
 
   // Escape key to unlock
@@ -65,9 +62,6 @@ export default function CartePage() {
 
   const { restaurantId } = useActiveRestaurant()
   const { data: recipes } = useArticles()
-  const deleteRecipeStore = useRecipeStore((s) => s.deleteRecipe)
-  const duplicateRecipe = useRecipeStore((s) => s.duplicateRecipe)
-  const toggleActive = useRecipeStore((s) => s.toggleActive)
 
   const deleteArticleMutation = useDeleteArticle()
 
@@ -161,44 +155,37 @@ export default function CartePage() {
   )
 
   const handleDuplicate = useCallback(
-    (recipe: Recipe) => {
-      if (!isDevMode) {
-        toast.info("Duplication locale uniquement")
-      }
-      duplicateRecipe(recipe.id)
+    (_recipe: Recipe) => {
+      toast.info("Duplication non disponible via l'API")
     },
-    [duplicateRecipe, isDevMode]
+    []
   )
 
   const handleToggleActive = useCallback(
-    (recipe: Recipe) => {
-      // Backend `available` is read-only computed — keep as local-only
-      toggleActive(recipe.id)
+    (_recipe: Recipe) => {
+      // Backend `available` is read-only computed — not toggleable
+      toast.info("Le statut actif est calculé automatiquement par le backend")
     },
-    [toggleActive]
+    []
   )
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (!isDevMode) {
-        deleteArticleMutation.mutate(Number(id), {
-          onSuccess: () => {
-            toast.success("Article supprimé")
-            queryClient.invalidateQueries({ queryKey: ["articles"] })
-          },
-          onError: () => {
-            toast.error("Erreur lors de la suppression")
-          },
-        })
-      } else {
-        deleteRecipeStore(id)
-      }
+      deleteArticleMutation.mutate(Number(id), {
+        onSuccess: () => {
+          toast.success("Article supprimé")
+          queryClient.invalidateQueries({ queryKey: ["articles"] })
+        },
+        onError: () => {
+          toast.error("Erreur lors de la suppression")
+        },
+      })
       if (selectedRecipeId === id) {
         setDetailOpen(false)
         setSelectedRecipeId(null)
       }
     },
-    [isDevMode, deleteArticleMutation, deleteRecipeStore, selectedRecipeId, queryClient]
+    [deleteArticleMutation, selectedRecipeId, queryClient]
   )
 
   const handleAlertClick = useCallback(() => {

@@ -17,8 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { useAuthStore } from "@/stores/auth-store"
-import { useAdminStore } from "@/stores/admin-store"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import {
   useProfile,
@@ -37,10 +35,8 @@ const accountSchema = z.object({
 type AccountValues = z.infer<typeof accountSchema>
 
 export function GeneralForm() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
-  const setGroupName = useAdminStore((s) => s.setGroupName)
   const { restaurantId } = useActiveRestaurant()
 
   const { data: profile } = useProfile()
@@ -75,48 +71,33 @@ export function GeneralForm() {
   }, [profile, restaurantSettings, user])
 
   async function onSubmit(data: AccountValues) {
-    if (!isDevMode) {
-      try {
-        // Update profile (first_name, last_name, email)
-        await updateProfile.mutateAsync({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-        })
+    try {
+      // Update profile (first_name, last_name, email)
+      await updateProfile.mutateAsync({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+      })
 
-        // Update restaurant name via PATCH /api/settings/restaurant/?restaurant_id=X
-        if (restaurantId && data.restaurantName !== restaurantSettings?.name) {
-          await updateRestaurant.mutateAsync({ name: data.restaurantName })
-        }
-
-        // Update local stores
-        if (user) {
-          setUser({
-            ...user,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            restaurantName: data.restaurantName,
-          })
-        }
-        setGroupName(data.restaurantName)
-        toast.success("Profil mis à jour")
-        form.reset(data)
-      } catch {
-        toast.error("Erreur lors de la mise à jour")
+      // Update restaurant name via PATCH /api/settings/restaurant/?restaurant_id=X
+      if (restaurantId && data.restaurantName !== restaurantSettings?.name) {
+        await updateRestaurant.mutateAsync({ name: data.restaurantName })
       }
-    } else {
+
+      // Update local auth store
       if (user) {
         setUser({
           ...user,
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.email,
+          restaurantName: data.restaurantName,
         })
       }
-      setGroupName(data.restaurantName)
-      toast.success("Profil mis à jour (local)")
+      toast.success("Profil mis à jour")
       form.reset(data)
+    } catch {
+      toast.error("Erreur lors de la mise à jour")
     }
   }
 
