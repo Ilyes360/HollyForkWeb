@@ -67,9 +67,8 @@ export default function ReservationsPage() {
   // API is the single source of truth — map API data to frontend type
   const baseReservations = useMemo(() => {
     if (!apiReservations || apiReservations.length === 0) return []
-    if (isDevMode) return apiReservations as Reservation[]
     return (apiReservations as Record<string, unknown>[]).map(mapApiReservation)
-  }, [apiReservations, isDevMode])
+  }, [apiReservations])
 
   // Local-only overrides for fields not in API (status, notes, duration)
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Reservation>>>({})

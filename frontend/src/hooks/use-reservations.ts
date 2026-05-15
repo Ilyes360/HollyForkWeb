@@ -1,7 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { MOCK_RESERVATIONS, RESTAURANT_TABLES } from "@/components/reservations/data"
 import type { PaginatedResponse } from "@/api/types"
 
 type ApiReservation = {
@@ -45,10 +43,8 @@ const keys = {
 
 /**
  * Fetch reservations for a restaurant/date.
- * Dev mode: returns mock data. User mode: fetches from API.
  */
 export function useReservations(restaurantId: number | null, date?: string) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -60,22 +56,13 @@ export function useReservations(restaurantId: number | null, date?: string) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000, // 30s — reservations change often
   })
-
-  if (isDevMode) {
-    return {
-      data: MOCK_RESERVATIONS,
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
 
   return {
     data: query.data ?? [],
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 
@@ -118,7 +105,6 @@ export function useDeleteReservation() {
  * Fetch salles for a restaurant.
  */
 export function useSalles(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -129,13 +115,9 @@ export function useSalles(restaurantId: number | null) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: [], isLoading: false }
-  }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
 }
@@ -144,7 +126,6 @@ export function useSalles(restaurantId: number | null) {
  * Fetch tables for a salle.
  */
 export function useTables(salleId?: number) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -155,13 +136,9 @@ export function useTables(salleId?: number) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!salleId,
+    enabled: hasToken && !!salleId,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: RESTAURANT_TABLES, isLoading: false }
-  }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
 }

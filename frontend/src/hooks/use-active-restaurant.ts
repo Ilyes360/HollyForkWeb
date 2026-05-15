@@ -1,7 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { useAuthStore } from "@/stores/auth-store"
-import { useDevModeStore, DEV_MOCK_RESTAURANTS } from "@/stores/dev-mode-store"
 import { useRestaurants } from "@/api/restaurants/queries"
 
 /**
@@ -24,16 +23,15 @@ export const useActiveRestaurantStore = create<ActiveRestaurantStore>()(
 
 /**
  * Hook combining the selected restaurant ID with auth context.
- * In dev mode, uses mock restaurants. In user mode, fetches from API.
+ * Fetches restaurants from API.
  */
 export function useActiveRestaurant() {
   const user = useAuthStore((s) => s.user)
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const { data: restaurants, isLoading } = useRestaurants(!isDevMode && !!user)
+  const { data: restaurants, isLoading } = useRestaurants(!!user)
   const selectedId = useActiveRestaurantStore((s) => s.selectedId)
   const setSelectedId = useActiveRestaurantStore((s) => s.setSelectedId)
 
-  const list = isDevMode ? DEV_MOCK_RESTAURANTS : (restaurants ?? [])
+  const list = restaurants ?? []
 
   const selectedIsValid =
     selectedId !== null && list.some((r) => r.restaurantId === selectedId)
@@ -52,7 +50,7 @@ export function useActiveRestaurant() {
   return {
     restaurantId: effectiveId,
     restaurants: list,
-    isLoading: isDevMode ? false : isLoading,
+    isLoading,
     setRestaurantId: setSelectedId,
   }
 }

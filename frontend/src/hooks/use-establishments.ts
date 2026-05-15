@@ -1,8 +1,6 @@
 import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { useAdminStore } from "@/stores/admin-store"
 import { fetchAllPages } from "@/api/pagination"
 import type { Establishment } from "@/stores/admin-types"
 
@@ -62,14 +60,12 @@ const keys = {
 }
 
 export function useEstablishments() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const storeData = useAdminStore((s) => s.establishments)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.list(),
     queryFn: () => fetchAllPages<ApiRestaurant>("restaurants/", {}),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -78,28 +74,18 @@ export function useEstablishments() {
     [query.data],
   )
 
-  if (isDevMode) {
-    return { data: storeData, isLoading: false, isError: false, source: "mock" as const }
-  }
-
   return {
     data: establishments,
     isLoading: query.isLoading,
     isError: query.isError,
-    source: "api" as const,
   }
 }
 
 export function useEstablishment(id: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const storeData = useAdminStore((s) =>
-    s.establishments.find((e) => e.id === String(id)),
-  )
-
   const query = useQuery({
     queryKey: keys.detail(id!),
     queryFn: () => apiGet<ApiRestaurant>(`restaurants/${id}/`),
-    enabled: !isDevMode && !!id,
+    enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -108,24 +94,17 @@ export function useEstablishment(id: number | null) {
     [query.data],
   )
 
-  if (isDevMode) {
-    return { data: storeData ?? null, raw: null as ApiRestaurant | null, isLoading: false, source: "mock" as const }
-  }
-
   return {
     data: mapped,
     raw: query.data ?? null,
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 
 export function useCreateEstablishment() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const addEstablishment = useAdminStore((s) => s.addEstablishment)
   const qc = useQueryClient()
 
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
       apiPost<ApiRestaurant>("restaurants/", data),
     onSuccess: () => {
@@ -133,23 +112,12 @@ export function useCreateEstablishment() {
       qc.invalidateQueries({ queryKey: ["restaurants"] })
     },
   })
-
-  if (isDevMode) {
-    return {
-      mutate: (data: Record<string, unknown>) => addEstablishment(data as never),
-      isPending: false,
-    }
-  }
-
-  return { mutate: mutation.mutate, isPending: mutation.isPending }
 }
 
 export function useUpdateEstablishment() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const updateEstablishment = useAdminStore((s) => s.updateEstablishment)
   const qc = useQueryClient()
 
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: ({ id, data }: { id: number | string; data: Record<string, unknown> }) =>
       apiPatch<ApiRestaurant>(`restaurants/${id}/`, data),
     onSuccess: () => {
@@ -157,40 +125,16 @@ export function useUpdateEstablishment() {
       qc.invalidateQueries({ queryKey: ["restaurants"] })
     },
   })
-
-  if (isDevMode) {
-    return {
-      mutate: (vars: { id: string; data: Record<string, unknown> }, _opts?: any) =>
-        updateEstablishment(vars.id, vars.data as never),
-      isPending: false,
-    }
-  }
-
-  return { mutate: mutation.mutate as any, isPending: mutation.isPending }
 }
 
 export function useDeleteEstablishment() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const removeEstablishment = useAdminStore((s) => s.removeEstablishment)
   const qc = useQueryClient()
 
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: (id: number | string) => apiDelete(`restaurants/${id}/`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.all })
       qc.invalidateQueries({ queryKey: ["restaurants"] })
     },
   })
-
-  if (isDevMode) {
-    return {
-      mutate: (id: string, opts?: { onSuccess?: () => void; onError?: () => void }) => {
-        removeEstablishment(id)
-        opts?.onSuccess?.()
-      },
-      isPending: false,
-    }
-  }
-
-  return { mutate: mutation.mutate, isPending: mutation.isPending }
 }

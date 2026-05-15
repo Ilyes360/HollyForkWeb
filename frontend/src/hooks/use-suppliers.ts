@@ -1,8 +1,6 @@
 import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { useInventoryStore } from "@/stores/inventory-store"
 import { fetchAllPages } from "@/api/pagination"
 import type { SupplierFull } from "@/components/commandes/types"
 
@@ -39,17 +37,14 @@ const keys = {
 
 /**
  * Fetch suppliers list.
- * Dev mode: returns from inventory store. User mode: fetches from API.
  */
 export function useSuppliers() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
-  const storeSuppliers = useInventoryStore((s) => s.suppliers)
 
   const query = useQuery({
     queryKey: keys.suppliers(),
     queryFn: () => fetchAllPages<ApiSupplier>("suppliers/", {}),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -58,18 +53,9 @@ export function useSuppliers() {
     [query.data],
   )
 
-  if (isDevMode) {
-    return {
-      data: storeSuppliers,
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
-
   return {
     data: suppliers,
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 

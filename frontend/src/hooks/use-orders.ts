@@ -1,8 +1,6 @@
 import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiPost, apiPatch, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { useInventoryStore } from "@/stores/inventory-store"
 import { fetchAllPages } from "@/api/pagination"
 import type { Order, OrderStatus } from "@/components/commandes/types"
 
@@ -48,9 +46,7 @@ const keys = {
 }
 
 export function useOrders(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
-  const storeOrders = useInventoryStore((s) => s.orders)
 
   // Swagger filter param is "restaurant" (not restaurant_id)
   const query = useQuery({
@@ -58,7 +54,7 @@ export function useOrders(restaurantId: number | null) {
     queryFn: () => fetchAllPages<ApiSupplierOrder>("suppliers/orders/", {
       restaurant: restaurantId!,
     }),
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
   })
 
@@ -67,11 +63,7 @@ export function useOrders(restaurantId: number | null) {
     [query.data],
   )
 
-  if (isDevMode) {
-    return { data: storeOrders, isLoading: false, source: "mock" as const }
-  }
-
-  return { data: orders, isLoading: query.isLoading, source: "api" as const }
+  return { data: orders, isLoading: query.isLoading }
 }
 
 export function useCreateOrder() {

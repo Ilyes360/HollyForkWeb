@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { PaginatedResponse } from "@/api/types"
 
 export type ApiCategory = {
@@ -16,10 +15,8 @@ const keys = {
 
 /**
  * Fetch categories list.
- * Dev mode: returns empty array. User mode: fetches from API.
  */
 export function useCategories() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -28,13 +25,9 @@ export function useCategories() {
       const res = await apiGet<PaginatedResponse<ApiCategory>>("categories/")
       return res.results
     },
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: [] as ApiCategory[], isLoading: false }
-  }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
 }

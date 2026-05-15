@@ -1,7 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { initialShifts, employees as mockEmployees } from "@/components/planning/data"
 import type { Shift, Employee, DayOfWeek, ServiceType } from "@/components/planning/types"
 import { fetchAllPages } from "@/api/pagination"
 
@@ -86,7 +84,7 @@ function mapEmployeToFront(emp: ApiEmploye, index: number): Employee {
   const typeName = emp.typeEmployeName ?? ""
   return {
     id: String(emp.id),
-    firstName: emp.firstName || "Employé",
+    firstName: emp.firstName || "Employe",
     lastName: emp.lastName || "",
     role: typeName,
     department: DEPARTMENT_MAP[typeName] ?? "salle",
@@ -108,7 +106,6 @@ const keys = {
 // ── Hooks ──
 
 export function useShifts(restaurantId: number | null, week?: string) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const shiftsQuery = useQuery({
@@ -121,7 +118,7 @@ export function useShifts(restaurantId: number | null, week?: string) {
       const all = await fetchAllPages<ApiShift>("planning/shifts/", params)
       return all.map(mapApiShiftToFront)
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 60 * 1000,
   })
 
@@ -133,7 +130,7 @@ export function useShifts(restaurantId: number | null, week?: string) {
       })
       return all.map((r) => r.employeId)
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -143,20 +140,11 @@ export function useShifts(restaurantId: number | null, week?: string) {
       const all = await fetchAllPages<ApiEmploye>("employes/", {})
       return all
     },
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 10 * 60 * 1000,
   })
 
-  if (isDevMode) {
-    return {
-      data: initialShifts,
-      employees: mockEmployees,
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
-
-  // Step 3: cross-reference to build employee list for this restaurant
+  // Cross-reference to build employee list for this restaurant
   const employeeIds = new Set(linksQuery.data ?? [])
   const allEmps = allEmployeesQuery.data ?? []
   const restaurantEmployees = allEmps
@@ -167,7 +155,6 @@ export function useShifts(restaurantId: number | null, week?: string) {
     data: shiftsQuery.data ?? [],
     employees: restaurantEmployees,
     isLoading: shiftsQuery.isLoading || linksQuery.isLoading || allEmployeesQuery.isLoading,
-    source: "api" as const,
   }
 }
 

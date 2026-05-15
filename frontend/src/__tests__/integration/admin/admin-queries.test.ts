@@ -6,7 +6,6 @@ import { useEmployees, useEmployeeTypes } from "@/hooks/use-employees"
 import { useRoles } from "@/hooks/use-roles"
 import { useEstablishments } from "@/hooks/use-establishments"
 import { setTokens } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -18,10 +17,9 @@ function createWrapper() {
     createElement(QueryClientProvider, { client: queryClient }, children)
 }
 
-describe("Admin queries (user mode — API via MSW)", () => {
+describe("Admin queries (API via MSW)", () => {
   beforeEach(() => {
     localStorage.clear()
-    useDevModeStore.setState({ isDevMode: false })
     setTokens("test-token", "test-refresh")
   })
 
@@ -33,7 +31,6 @@ describe("Admin queries (user mode — API via MSW)", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      expect(result.current.source).toBe("api")
       expect(result.current.data).toHaveLength(3)
       // Hook maps ApiEmploye → Employee (id is string, firstName/lastName from API)
       const first = result.current.data[0]
@@ -64,7 +61,6 @@ describe("Admin queries (user mode — API via MSW)", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      expect(result.current.source).toBe("api")
       expect(result.current.data).toHaveLength(2)
     })
   })
@@ -77,54 +73,9 @@ describe("Admin queries (user mode — API via MSW)", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      expect(result.current.source).toBe("api")
       expect(result.current.data).toHaveLength(4)
       const gerant = result.current.data[0] as Record<string, unknown>
       expect(gerant.name).toBe("gerant")
-    })
-  })
-})
-
-describe("Admin queries (dev mode — mock store)", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    useDevModeStore.setState({ isDevMode: true })
-  })
-
-  describe("useEmployees", () => {
-    it("returns mock data from store", () => {
-      const { result } = renderHook(() => useEmployees(), {
-        wrapper: createWrapper(),
-      })
-
-      expect(result.current.source).toBe("mock")
-      expect(result.current.isLoading).toBe(false)
-      // Store has mock employees from admin-mock-data.ts
-      expect(result.current.data.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe("useEstablishments", () => {
-    it("returns mock data from store", () => {
-      const { result } = renderHook(() => useEstablishments(), {
-        wrapper: createWrapper(),
-      })
-
-      expect(result.current.source).toBe("mock")
-      expect(result.current.isLoading).toBe(false)
-      expect(result.current.data.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe("useRoles", () => {
-    it("returns mock data from store", () => {
-      const { result } = renderHook(() => useRoles(), {
-        wrapper: createWrapper(),
-      })
-
-      expect(result.current.source).toBe("mock")
-      expect(result.current.isLoading).toBe(false)
-      expect(result.current.data.length).toBeGreaterThan(0)
     })
   })
 })

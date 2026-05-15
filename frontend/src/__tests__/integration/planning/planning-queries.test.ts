@@ -4,7 +4,6 @@ import { renderHook, waitFor } from "@testing-library/react"
 import { createElement } from "react"
 import { useShifts, useCreateShift, useDeleteShift } from "@/hooks/use-planning"
 import { setTokens } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -14,10 +13,9 @@ function createWrapper() {
     createElement(QueryClientProvider, { client: queryClient }, children)
 }
 
-describe("Planning queries (user mode — API via MSW)", () => {
+describe("Planning queries (API via MSW)", () => {
   beforeEach(() => {
     localStorage.clear()
-    useDevModeStore.setState({ isDevMode: false })
     setTokens("test-token", "test-refresh")
   })
 
@@ -30,7 +28,6 @@ describe("Planning queries (user mode — API via MSW)", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      expect(result.current.source).toBe("api")
       expect(result.current.data).toHaveLength(3)
 
       // Verify mapping: API shift -> front Shift
@@ -105,27 +102,6 @@ describe("Planning queries (user mode — API via MSW)", () => {
       result.current.mutate(1)
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    })
-  })
-})
-
-describe("Planning queries (dev mode — mock data)", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    useDevModeStore.setState({ isDevMode: true })
-  })
-
-  describe("useShifts", () => {
-    it("returns mock shifts from planning/data.ts", () => {
-      const { result } = renderHook(
-        () => useShifts(1),
-        { wrapper: createWrapper() },
-      )
-
-      expect(result.current.source).toBe("mock")
-      expect(result.current.isLoading).toBe(false)
-      expect(result.current.data.length).toBe(53)
-      expect(result.current.employees.length).toBe(10)
     })
   })
 })

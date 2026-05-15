@@ -5,7 +5,6 @@ import { createElement } from "react"
 import { useOrders } from "@/hooks/use-orders"
 import { useSuppliers } from "@/hooks/use-suppliers"
 import { setTokens } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -15,10 +14,9 @@ function createWrapper() {
     createElement(QueryClientProvider, { client: queryClient }, children)
 }
 
-describe("Commandes queries (user mode — API via MSW)", () => {
+describe("Commandes queries (API via MSW)", () => {
   beforeEach(() => {
     localStorage.clear()
-    useDevModeStore.setState({ isDevMode: false })
     setTokens("test-token", "test-refresh")
   })
 
@@ -30,7 +28,6 @@ describe("Commandes queries (user mode — API via MSW)", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
     // Hook maps ApiSupplierOrder → Order (id is string, supplierId, date, status, etc.)
     const first = result.current.data[0]
@@ -48,38 +45,10 @@ describe("Commandes queries (user mode — API via MSW)", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
     // Hook maps ApiSupplier → SupplierFull (id is string, name, phone, etc.)
     const first = result.current.data[0]
     expect(first.name).toBe("Boucherie Moderne")
     expect(first.phone).toBe("01 42 36 78 90")
-  })
-})
-
-describe("Commandes queries (dev mode)", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    useDevModeStore.setState({ isDevMode: true })
-  })
-
-  it("returns orders from inventory store", () => {
-    const { result } = renderHook(
-      () => useOrders(1),
-      { wrapper: createWrapper() },
-    )
-
-    expect(result.current.source).toBe("mock")
-    expect(result.current.data.length).toBeGreaterThan(0)
-  })
-
-  it("returns suppliers from inventory store", () => {
-    const { result } = renderHook(
-      () => useSuppliers(),
-      { wrapper: createWrapper() },
-    )
-
-    expect(result.current.source).toBe("mock")
-    expect(result.current.data.length).toBeGreaterThan(0)
   })
 })

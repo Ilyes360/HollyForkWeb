@@ -1,8 +1,6 @@
 import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPut, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { MOCK_PRODUCTS } from "@/components/stock/data"
 import type { PaginatedResponse } from "@/api/types"
 import type { Product } from "@/components/stock/types"
 import { fetchAllPages } from "@/api/pagination"
@@ -50,13 +48,12 @@ const keys = {
 }
 
 export function useStocks(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.stocks(restaurantId ?? undefined),
     queryFn: () => fetchAllPages<ApiStock>("stocks/", { restaurantId: restaurantId! }),
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
   })
 
@@ -65,11 +62,7 @@ export function useStocks(restaurantId: number | null) {
     [query.data],
   )
 
-  if (isDevMode) {
-    return { data: MOCK_PRODUCTS, isLoading: false, source: "mock" as const }
-  }
-
-  return { data: products, isLoading: query.isLoading, source: "api" as const }
+  return { data: products, isLoading: query.isLoading }
 }
 
 export function useUpdateStock() {
@@ -91,7 +84,6 @@ export function useAdjustStock() {
 }
 
 export function useStockAlerts(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   return useQuery({
@@ -102,7 +94,7 @@ export function useStockAlerts(restaurantId: number | null) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
   })
 }

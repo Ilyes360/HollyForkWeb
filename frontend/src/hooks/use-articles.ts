@@ -1,8 +1,6 @@
 import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { MOCK_RECIPES } from "@/components/carte/data"
 import { fetchAllPages } from "@/api/pagination"
 import type { Recipe, RecipeCategory } from "@/components/carte/types"
 
@@ -72,16 +70,14 @@ const keys = {
 
 /**
  * Fetch articles list.
- * Dev mode: returns MOCK_RECIPES. User mode: fetches from API.
  */
 export function useArticles() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.articles(),
     queryFn: () => fetchAllPages<ApiArticle>("articles/", {}),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -90,18 +86,9 @@ export function useArticles() {
     [query.data],
   )
 
-  if (isDevMode) {
-    return {
-      data: MOCK_RECIPES,
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
-
   return {
     data: recipes,
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 
@@ -109,7 +96,6 @@ export function useArticles() {
  * Fetch single article by id.
  */
 export function useArticle(id: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   return useQuery({
@@ -117,7 +103,7 @@ export function useArticle(id: number | null) {
     queryFn: async () => {
       return apiGet<ApiArticle>(`articles/${id}/`)
     },
-    enabled: !isDevMode && hasToken && id != null,
+    enabled: hasToken && id != null,
     staleTime: 5 * 60 * 1000,
   })
 }

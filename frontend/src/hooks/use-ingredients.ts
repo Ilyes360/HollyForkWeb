@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { fetchAllPages } from "@/api/pagination"
 
 export type ApiIngredient = {
@@ -16,22 +15,16 @@ const keys = {
 
 /**
  * Fetch ingredients list.
- * Dev mode: returns empty array. User mode: fetches from API.
  */
 export function useIngredients() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.ingredients(),
     queryFn: () => fetchAllPages<ApiIngredient>("ingredients/", {}),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: [] as ApiIngredient[], isLoading: false }
-  }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
 }

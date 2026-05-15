@@ -6,7 +6,6 @@ import { useArticles } from "@/hooks/use-articles"
 import { useCategories } from "@/hooks/use-categories"
 import { useIngredients } from "@/hooks/use-ingredients"
 import { setTokens } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -16,10 +15,9 @@ function createWrapper() {
     createElement(QueryClientProvider, { client: queryClient }, children)
 }
 
-describe("Carte queries (user mode — API via MSW)", () => {
+describe("Carte queries (API via MSW)", () => {
   beforeEach(() => {
     localStorage.clear()
-    useDevModeStore.setState({ isDevMode: false })
     setTokens("test-token", "test-refresh")
   })
 
@@ -31,7 +29,6 @@ describe("Carte queries (user mode — API via MSW)", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(3)
     // Hook maps ApiArticle → Recipe (id is string, name, category, sellingPrice)
     const first = result.current.data[0]
@@ -64,40 +61,5 @@ describe("Carte queries (user mode — API via MSW)", () => {
     expect(result.current.data).toHaveLength(3)
     expect(result.current.data[0].name).toBe("Tomates")
     expect(result.current.data[0].unitPrice).toBe("3.80")
-  })
-})
-
-describe("Carte queries (dev mode)", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    useDevModeStore.setState({ isDevMode: true })
-  })
-
-  it("returns mock recipes", () => {
-    const { result } = renderHook(
-      () => useArticles(),
-      { wrapper: createWrapper() },
-    )
-
-    expect(result.current.source).toBe("mock")
-    expect(result.current.data.length).toBeGreaterThan(0)
-  })
-
-  it("returns empty categories in dev mode", () => {
-    const { result } = renderHook(
-      () => useCategories(),
-      { wrapper: createWrapper() },
-    )
-
-    expect(result.current.data).toHaveLength(0)
-  })
-
-  it("returns empty ingredients in dev mode", () => {
-    const { result } = renderHook(
-      () => useIngredients(),
-      { wrapper: createWrapper() },
-    )
-
-    expect(result.current.data).toHaveLength(0)
   })
 })

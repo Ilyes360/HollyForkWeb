@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { PaginatedResponse } from "@/api/types"
 
 type ApiInvoice = {
@@ -24,10 +23,8 @@ const keys = {
 
 /**
  * Fetch invoices for a restaurant.
- * Dev mode: returns empty array. User mode: fetches from API.
  */
 export function useInvoices(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -38,22 +35,13 @@ export function useInvoices(restaurantId: number | null) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
   })
-
-  if (isDevMode) {
-    return {
-      data: [] as ApiInvoice[],
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
 
   return {
     data: query.data ?? [],
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 

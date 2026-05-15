@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { PaginatedResponse } from "@/api/types"
 
 type ApiOrderLine = {
@@ -19,10 +18,8 @@ const keys = {
 
 /**
  * Fetch order lines for a given order.
- * Dev mode: returns empty array. User mode: fetches from API.
  */
 export function useOrderLines(commandeId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -33,22 +30,13 @@ export function useOrderLines(commandeId: number | null) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!commandeId,
+    enabled: hasToken && !!commandeId,
     staleTime: 30 * 1000,
   })
-
-  if (isDevMode) {
-    return {
-      data: [] as ApiOrderLine[],
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
 
   return {
     data: query.data ?? [],
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 

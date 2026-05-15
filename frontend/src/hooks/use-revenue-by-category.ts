@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { apiGet, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { PaginatedResponse } from "@/api/types"
 
 type ApiLigneCommande = {
@@ -30,23 +29,20 @@ type RevenueByCategory = {
   changePct: number
 }
 
-const MOCK_REVENUE: RevenueByCategory = {
-  categories: [
-    { label: "Plats", value: 1520 },
-    { label: "Boissons", value: 890 },
-    { label: "Entrées", value: 760 },
-    { label: "Desserts", value: 610 },
-  ],
-  tendance: [
-    { day: "Lun", ca: 480 },
-    { day: "Mar", ca: 520 },
-    { day: "Mer", ca: 490 },
-    { day: "Jeu", ca: 610 },
-    { day: "Ven", ca: 780 },
-    { day: "Sam", ca: 900 },
-  ],
-  total: 3780,
-  changePct: 8,
+const DEFAULT_TENDANCE = [
+  { day: "Lun", ca: 0 },
+  { day: "Mar", ca: 0 },
+  { day: "Mer", ca: 0 },
+  { day: "Jeu", ca: 0 },
+  { day: "Ven", ca: 0 },
+  { day: "Sam", ca: 0 },
+]
+
+const EMPTY_REVENUE: RevenueByCategory = {
+  categories: [],
+  tendance: DEFAULT_TENDANCE,
+  total: 0,
+  changePct: 0,
 }
 
 async function fetchAllPages<T>(url: string, params?: Record<string, string | number | boolean>): Promise<T[]> {
@@ -67,10 +63,8 @@ async function fetchAllPages<T>(url: string, params?: Record<string, string | nu
 
 /**
  * Calculates revenue by category from order lines.
- * Dev mode: returns mock data. User mode: aggregates from API.
  */
 export function useRevenueByCategory(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -98,18 +92,14 @@ export function useRevenueByCategory(restaurantId: number | null) {
 
       return {
         categories,
-        tendance: MOCK_REVENUE.tendance, // No daily breakdown endpoint
+        tendance: DEFAULT_TENDANCE, // No daily breakdown endpoint
         total,
         changePct: 0, // No comparison endpoint
       }
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
 
-  if (isDevMode) {
-    return { data: MOCK_REVENUE, isLoading: false }
-  }
-
-  return { data: query.data ?? MOCK_REVENUE, isLoading: query.isLoading }
+  return { data: query.data ?? EMPTY_REVENUE, isLoading: query.isLoading }
 }

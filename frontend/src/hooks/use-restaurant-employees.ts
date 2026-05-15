@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiDelete, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { PaginatedResponse } from "@/api/types"
 
 type ApiRestaurantEmployee = {
@@ -18,10 +17,8 @@ const keys = {
 
 /**
  * Fetch restaurant-employee assignments.
- * Dev mode: returns empty array. User mode: fetches from API.
  */
 export function useRestaurantEmployees(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -35,22 +32,13 @@ export function useRestaurantEmployees(restaurantId: number | null) {
       )
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 2 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return {
-      data: [] as ApiRestaurantEmployee[],
-      isLoading: false,
-      source: "mock" as const,
-    }
-  }
 
   return {
     data: query.data ?? [],
     isLoading: query.isLoading,
-    source: "api" as const,
   }
 }
 

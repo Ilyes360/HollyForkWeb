@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPatch, apiPost, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { fetchAllPages } from "@/api/pagination"
 import type { PaginatedResponse } from "@/api/types"
 
@@ -90,19 +89,14 @@ const keys = {
 // ── Profile ──
 
 export function useProfile() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.profile(),
     queryFn: () => apiGet<ApiProfile>("auth/profile/"),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: null, isLoading: false }
-  }
 
   return { data: query.data ?? null, isLoading: query.isLoading }
 }
@@ -121,7 +115,6 @@ export function useUpdateProfile() {
 // ── Restaurant settings ──
 
 export function useRestaurantSettings(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -130,13 +123,9 @@ export function useRestaurantSettings(restaurantId: number | null) {
       apiGet<ApiRestaurantSettings>("settings/restaurant/", {
         restaurantId: restaurantId!,
       }),
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: null, isLoading: false }
-  }
 
   return { data: query.data ?? null, isLoading: query.isLoading }
 }
@@ -158,7 +147,6 @@ export function useUpdateRestaurantSettings(restaurantId: number | null) {
 // ── Notification settings ──
 
 export function useNotificationSettings(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -170,13 +158,9 @@ export function useNotificationSettings(restaurantId: number | null) {
       )
       return res.results[0] ?? null
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: null, isLoading: false }
-  }
 
   return { data: query.data ?? null, isLoading: query.isLoading }
 }
@@ -213,7 +197,6 @@ export function useUpsertNotificationSettings(restaurantId: number | null) {
 // ── Billing settings ──
 
 export function useBillingSettings(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -225,13 +208,9 @@ export function useBillingSettings(restaurantId: number | null) {
       )
       return res.results[0] ?? null
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 5 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: null, isLoading: false }
-  }
 
   return { data: query.data ?? null, isLoading: query.isLoading }
 }
@@ -239,19 +218,14 @@ export function useBillingSettings(restaurantId: number | null) {
 // ── Payment methods ──
 
 export function usePaymentMethods() {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
     queryKey: keys.paymentMethods(),
     queryFn: () => fetchAllPages<ApiMethodePaiement>("billing/methodes-paiement/", {}),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 10 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: [], isLoading: false }
-  }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
 }
@@ -259,7 +233,6 @@ export function usePaymentMethods() {
 // ── Notes ──
 
 export function useNotes(restaurantId: number | null) {
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
@@ -270,13 +243,9 @@ export function useNotes(restaurantId: number | null) {
       })
       return res.results
     },
-    enabled: !isDevMode && hasToken && !!restaurantId,
+    enabled: hasToken && !!restaurantId,
     staleTime: 60 * 1000,
   })
-
-  if (isDevMode) {
-    return { data: [], isLoading: false }
-  }
 
   return { data: query.data ?? [], isLoading: query.isLoading }
 }
