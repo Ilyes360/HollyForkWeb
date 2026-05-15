@@ -4,7 +4,13 @@ import { LiveSidePanel } from "@/components/reservations/live-side-panel"
 import { GanttTimeline } from "@/components/reservations/gantt"
 import { motion, AnimatePresence } from "motion/react"
 import { useDayNavigation } from "@/hooks/use-day-navigation"
-import { useReservations, useCreateReservation, useUpdateReservation, useDeleteReservation, useSalles } from "@/hooks/use-reservations"
+import {
+  useReservations,
+  useCreateReservation,
+  useUpdateReservation,
+  useDeleteReservation,
+  useSalles,
+} from "@/hooks/use-reservations"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { toast } from "sonner"
 
@@ -34,7 +40,11 @@ function mapApiReservation(api: Record<string, unknown>): Reservation {
     createdAt: dt,
   }
 }
-import type { Reservation, ReservationStatus, ServiceType } from "@/components/reservations/types"
+import type {
+  Reservation,
+  ReservationStatus,
+  ServiceType,
+} from "@/components/reservations/types"
 import { ReservationsHeader } from "@/components/reservations/reservations-header"
 import { ReservationsTable } from "@/components/reservations/reservations-table"
 import { ReservationDetail } from "@/components/reservations/reservation-detail"
@@ -68,7 +78,9 @@ export default function ReservationsPage() {
   }, [apiReservations])
 
   // Local-only overrides for fields not in API (status, notes, duration)
-  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Reservation>>>({})
+  const [localOverrides, setLocalOverrides] = useState<
+    Record<string, Partial<Reservation>>
+  >({})
 
   // Merge API data with local-only overrides
   const reservations = useMemo(
@@ -77,7 +89,8 @@ export default function ReservationsPage() {
   )
 
   const [service, setService] = useState<ServiceType>("midi")
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
+  const [selectedReservation, setSelectedReservation] =
+    useState<Reservation | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ReservationViewMode>("table")
@@ -87,7 +100,10 @@ export default function ReservationsPage() {
   const currentDateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`
 
   const serviceReservations = useMemo(
-    () => reservations.filter((r) => r.date === currentDateStr && r.service === service),
+    () =>
+      reservations.filter(
+        (r) => r.date === currentDateStr && r.service === service
+      ),
     [reservations, currentDateStr, service]
   )
 
@@ -95,7 +111,8 @@ export default function ReservationsPage() {
   const updateReservation = useUpdateReservation()
   void useDeleteReservation()
   const { data: salles } = useSalles(restaurantId)
-  const defaultSalleId = salles.length > 0 ? (salles[0] as { id: number }).id : null
+  const defaultSalleId =
+    salles.length > 0 ? (salles[0] as { id: number }).id : null
 
   // Keep selected reservation in sync with latest data
   const currentSelected = useMemo(() => {
@@ -108,35 +125,47 @@ export default function ReservationsPage() {
     setDetailOpen(true)
   }, [])
 
-  const handleStatusChange = useCallback((id: string, newStatus: ReservationStatus) => {
-    setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], status: newStatus } }))
-  }, [])
+  const handleStatusChange = useCallback(
+    (id: string, newStatus: ReservationStatus) => {
+      setLocalOverrides((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], status: newStatus },
+      }))
+    },
+    []
+  )
 
   const handleNotesChange = useCallback((id: string, notes: string) => {
     setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], notes } }))
   }, [])
 
-  const handleReschedule = useCallback((id: string, newTime: string) => {
-    const resa = reservations.find((r) => r.id === id)
-    if (resa) {
-      const datetime = `${resa.date}T${newTime}:00`
-      updateReservation.mutate({
-        id: Number(id),
-        data: { datetime } as Record<string, unknown>,
-      })
-    }
-  }, [reservations, updateReservation])
+  const handleReschedule = useCallback(
+    (id: string, newTime: string) => {
+      const resa = reservations.find((r) => r.id === id)
+      if (resa) {
+        const datetime = `${resa.date}T${newTime}:00`
+        updateReservation.mutate({
+          id: Number(id),
+          data: { datetime } as Record<string, unknown>,
+        })
+      }
+    },
+    [reservations, updateReservation]
+  )
 
-  const handleDurationChange = useCallback((id: string, newDurationMinutes: number) => {
-    setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], estimatedDurationMinutes: newDurationMinutes } }))
-  }, [])
-
-  const handleNewFromPanel = useCallback(
-    (_prefill: { tableNumber: number; time: string }) => {
-      setNewDialogOpen(true)
+  const handleDurationChange = useCallback(
+    (id: string, newDurationMinutes: number) => {
+      setLocalOverrides((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], estimatedDurationMinutes: newDurationMinutes },
+      }))
     },
     []
   )
+
+  const handleNewFromPanel = useCallback(() => {
+    setNewDialogOpen(true)
+  }, [])
 
   const handleNewReservation = useCallback(
     (data: {
@@ -171,7 +200,7 @@ export default function ReservationsPage() {
             completeTask("first-reservation")
           },
           onError: () => toast.error("Erreur lors de la création"),
-        },
+        }
       )
     },
     [restaurantId, createReservation, defaultSalleId, completeTask]
@@ -204,8 +233,15 @@ export default function ReservationsPage() {
       if (e.matches) setViewMode("table")
     }
     handleChange(mql)
-    mql.addEventListener("change", handleChange as (e: MediaQueryListEvent) => void)
-    return () => mql.removeEventListener("change", handleChange as (e: MediaQueryListEvent) => void)
+    mql.addEventListener(
+      "change",
+      handleChange as (e: MediaQueryListEvent) => void
+    )
+    return () =>
+      mql.removeEventListener(
+        "change",
+        handleChange as (e: MediaQueryListEvent) => void
+      )
   }, [])
 
   return (
