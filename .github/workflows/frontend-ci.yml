@@ -8,14 +8,19 @@ on:
     branches: [main]
     paths: ["frontend/**"]
 
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: frontend
 
 jobs:
-  check:
-    name: Typecheck & Tests
+  quality:
+    name: Quality checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -39,9 +44,19 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
-
-      - name: Tests
-        run: pnpm test
+        timeout-minutes: 5
 
       - name: Lint
         run: pnpm lint
+        timeout-minutes: 5
+
+      - name: Tests
+        run: pnpm test
+        timeout-minutes: 5
+
+      - name: Build
+        run: pnpm build
+        timeout-minutes: 5
+
+      - name: Security audit
+        run: pnpm audit --audit-level=high || true
