@@ -1,14 +1,18 @@
+import { lazy, Suspense } from "react"
 import { createBrowserRouter } from "react-router"
 
 import AuthGuard from "@/guards/auth-guard"
 import GuestGuard from "@/guards/guest-guard"
 import RootLayout from "@/layouts/root-layout"
 import PublicLayout from "@/layouts/public-layout"
+import { PageSkeleton } from "@/components/shared/page-skeleton"
+import { RouteErrorBoundary } from "@/components/shared/route-error-boundary"
 
-import DashboardPage from "@/pages/dashboard"
-import ReservationsPage from "@/pages/reservations"
-import SallePage from "@/pages/salle"
-import PlanningPage from "@/pages/planning"
+// Lazy-loaded routes (heavy dependencies: Konva, Recharts, Mapbox GL)
+const DashboardPage = lazy(() => import("@/pages/dashboard"))
+const ReservationsPage = lazy(() => import("@/pages/reservations"))
+const SallePage = lazy(() => import("@/pages/salle"))
+const PlanningPage = lazy(() => import("@/pages/planning"))
 import CartePage from "@/pages/carte"
 import CuisineRecipePage from "@/pages/cuisine-recipe"
 import StocksPage from "@/pages/stocks"
@@ -36,14 +40,15 @@ export const router = createBrowserRouter([
   // Protected routes (require authentication)
   {
     element: <AuthGuard />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         element: <RootLayout />,
         children: [
-          { index: true, element: <DashboardPage /> },
-          { path: "reservations", element: <ReservationsPage /> },
-          { path: "salle", element: <SallePage /> },
-          { path: "planning", element: <PlanningPage /> },
+          { index: true, element: <Suspense fallback={<PageSkeleton />}><DashboardPage /></Suspense>, errorElement: <RouteErrorBoundary /> },
+          { path: "reservations", element: <Suspense fallback={<PageSkeleton />}><ReservationsPage /></Suspense>, errorElement: <RouteErrorBoundary /> },
+          { path: "salle", element: <Suspense fallback={<PageSkeleton />}><SallePage /></Suspense>, errorElement: <RouteErrorBoundary /> },
+          { path: "planning", element: <Suspense fallback={<PageSkeleton />}><PlanningPage /></Suspense>, errorElement: <RouteErrorBoundary /> },
           { path: "cuisine", element: <CartePage /> },
           { path: "cuisine/nouvelle", element: <CuisineRecipePage /> },
           { path: "cuisine/:id/modifier", element: <CuisineRecipePage /> },
