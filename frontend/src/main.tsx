@@ -10,6 +10,9 @@ import { ensureCsrfCookie } from "@/api/client"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DevModeToggle } from "@/components/dev-mode-toggle"
 import { router } from "@/router"
+import { initSentry } from "@/lib/sentry"
+
+initSentry()
 
 async function startApp() {
   // Start MSW worker in dev mode when dev mode is enabled

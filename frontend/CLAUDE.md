@@ -974,11 +974,15 @@ server: {
 
 ### 19.1 Situation actuelle
 
-Aucun outil de monitoring frontend en place. Pour un SaaS B2B en production, c'est un trou à combler.
+Sentry est installé (`@sentry/react`). Actif uniquement quand `VITE_SENTRY_DSN` est configuré et en mode production (`import.meta.env.PROD`). Sans la variable d'environnement, Sentry est un no-op complet.
+
+- **Initialisation** : `src/lib/sentry.ts` — appelé dans `src/main.tsx` avant le rendu.
+- **Capture d'erreurs** : `RouteErrorBoundary` (§12.4) appelle `captureException(error)`.
+- **Config** : `tracesSampleRate: 0.1`, erreurs non-actionnables ignorées (`ResizeObserver loop`, `Network request failed`, `Load failed`).
 
 ### 19.2 Cible minimum
 
-- **Error tracking** : Sentry (ou équivalent) pour capturer les erreurs JS non gérées + les erreurs API 5xx. **À installer avant le premier client payant.** Quand Sentry sera en place, ajouter `Sentry.captureException(error)` dans le `RouteErrorBoundary` (§12.4).
+- **Error tracking** : Sentry — installé, actif quand `VITE_SENTRY_DSN` est configuré. Source maps upload (plugin Vite Sentry) à ajouter séparément si besoin.
 - **Analytics basique** : pas nécessaire tant que le produit est en phase de lancement. À ajouter quand il y aura des utilisateurs réels à observer.
 - **Feature flags** : pas nécessaire tant que l'équipe est petite (1-3 devs) et que le déploiement est continu. À reconsidérer si un besoin de rollback progressif ou de A/B test émerge.
 
