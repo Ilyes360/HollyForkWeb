@@ -1,8 +1,10 @@
+import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useAdminStore } from "@/stores/admin-store"
 import { fetchAllPages } from "@/api/pagination"
+import type { Establishment } from "@/stores/admin-types"
 
 // API response shape (flat, after camelizeKeys)
 export type ApiRestaurant = {
@@ -16,6 +18,41 @@ export type ApiRestaurant = {
   nafCode: string | null
   pin: string
   logoUrl: string | null
+}
+
+function apiRestaurantToEstablishment(r: ApiRestaurant): Establishment {
+  return {
+    id: String(r.restaurantId),
+    name: r.name,
+    address: {
+      fullAddress: [r.address, r.postalCode, r.city].filter(Boolean).join(", "),
+      city: r.city ?? "",
+      postalCode: r.postalCode ?? "",
+      country: "France",
+      longitude: 0,
+      latitude: 0,
+      mapboxId: "",
+    },
+    phone: r.phoneNumber ?? "",
+    email: "",
+    siret: r.siret ?? "",
+    tvaNumber: "",
+    legalForm: "",
+    totalCapacity: 0,
+    openingDays: [],
+    services: [],
+    storageZones: [],
+    isActive: true,
+    legalInfo: {
+      licenseType: "",
+      licenseNumber: "",
+      insurance: "",
+      erpCapacity: 0,
+      notes: "",
+    },
+    createdAt: "",
+    updatedAt: "",
+  }
 }
 
 const keys = {
@@ -36,12 +73,17 @@ export function useEstablishments() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const establishments = useMemo(
+    () => (query.data ?? []).map(apiRestaurantToEstablishment),
+    [query.data],
+  )
+
   if (isDevMode) {
     return { data: storeData, isLoading: false, isError: false, source: "mock" as const }
   }
 
   return {
-    data: query.data ?? [],
+    data: establishments,
     isLoading: query.isLoading,
     isError: query.isError,
     source: "api" as const,
@@ -61,11 +103,21 @@ export function useEstablishment(id: number | null) {
     staleTime: 5 * 60 * 1000,
   })
 
+  const mapped = useMemo(
+    () => (query.data ? apiRestaurantToEstablishment(query.data) : null),
+    [query.data],
+  )
+
   if (isDevMode) {
-    return { data: storeData ?? null, isLoading: false, source: "mock" as const }
+    return { data: storeData ?? null, raw: null as ApiRestaurant | null, isLoading: false, source: "mock" as const }
   }
 
-  return { data: query.data ?? null, isLoading: query.isLoading, source: "api" as const }
+  return {
+    data: mapped,
+    raw: query.data ?? null,
+    isLoading: query.isLoading,
+    source: "api" as const,
+  }
 }
 
 export function useCreateEstablishment() {
@@ -99,7 +151,7 @@ export function useUpdateEstablishment() {
 
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: number | string; data: Record<string, unknown> }) =>
-      apiPut<ApiRestaurant>(`restaurants/${id}/`, data),
+      apiPatch<ApiRestaurant>(`restaurants/${id}/`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.all })
       qc.invalidateQueries({ queryKey: ["restaurants"] })
@@ -108,13 +160,13 @@ export function useUpdateEstablishment() {
 
   if (isDevMode) {
     return {
-      mutate: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-        updateEstablishment(id, data as never),
+      mutate: (vars: { id: string; data: Record<string, unknown> }, _opts?: any) =>
+        updateEstablishment(vars.id, vars.data as never),
       isPending: false,
     }
   }
 
-  return { mutate: mutation.mutate, isPending: mutation.isPending }
+  return { mutate: mutation.mutate as any, isPending: mutation.isPending }
 }
 
 export function useDeleteEstablishment() {
@@ -132,7 +184,10 @@ export function useDeleteEstablishment() {
 
   if (isDevMode) {
     return {
-      mutate: (id: string) => removeEstablishment(id),
+      mutate: (id: string, opts?: { onSuccess?: () => void; onError?: () => void }) => {
+        removeEstablishment(id)
+        opts?.onSuccess?.()
+      },
       isPending: false,
     }
   }

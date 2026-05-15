@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useParams, useNavigate } from "react-router"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -8,42 +8,29 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeft02Icon,
   ArrowDown01Icon,
-  Cancel01Icon,
   Delete02Icon,
   Building06Icon,
-  Settings01Icon,
-  PackageIcon,
-  LicenseIcon,
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { FrenchAddressInput, type FrenchAddressResult } from "@/components/ui/french-address-input"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { useAdminStore } from "@/stores/admin-store"
-import { useEstablishments, useUpdateEstablishment, useDeleteEstablishment } from "@/hooks/use-establishments"
+import { cn } from "@/lib/utils"
+import { useEstablishment, useUpdateEstablishment, useDeleteEstablishment } from "@/hooks/use-establishments"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { toast } from "sonner"
-import { EtablissementGeneralSection } from "@/components/administration/etablissements/etablissement-general-section"
-import { EtablissementOperationsSection } from "@/components/administration/etablissements/etablissement-operations-section"
-import { EtablissementZonesSection } from "@/components/administration/etablissements/etablissement-zones-section"
-import { EtablissementLegalSection } from "@/components/administration/etablissements/etablissement-legal-section"
 import { DeleteEtablissementDialog } from "@/components/administration/etablissements/delete-etablissement-dialog"
 import { usePageTitle } from "@/hooks/use-page-title"
+import type { Establishment } from "@/stores/admin-types"
 
-// Only fields that exist in the backend API
+// Backend accepts: name, address, postal_code, city, phone_number, siret, naf_code, pin, logo_url
 const schema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   address: z.string().optional(),
   postalCode: z.string().optional(),
   city: z.string().optional(),
-  phone: z.string().optional(),
+  phoneNumber: z.string().optional(),
   siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres").or(z.literal("")),
   pin: z.string().max(6).optional(),
 })
@@ -60,46 +47,53 @@ const fadeUp = {
   },
 }
 
+function extractFromEstablishment(est: Establishment, pin?: string): FormValues {
+  return {
+    name: est.name ?? "",
+    address: est.address?.fullAddress?.split(",")[0]?.trim() ?? "",
+    postalCode: est.address?.postalCode ?? "",
+    city: est.address?.city ?? "",
+    phoneNumber: est.phone ?? "",
+    siret: est.siret ?? "",
+    pin: pin ?? "",
+  }
+}
+
 export default function EtablissementDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-  const { data: apiEstablishments } = useEstablishments()
-  const storeEstablishments = useAdminStore((s) => s.establishments)
-  const { mutate: updateEstablishment } = useUpdateEstablishment()
+  void useDevModeStore((s) => s.isDevMode)
+  const { data: establishment, raw: rawRestaurant, isLoading } = useEstablishment(id ? Number(id) : null)
+  const { mutate: updateEstablishment, isPending: isUpdating } = useUpdateEstablishment()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()
-
-  // Find establishment by restaurantId (API) or id (store mock)
-  const establishment = (apiEstablishments as Array<Record<string, unknown>>).find(
-    (e) => String(e.restaurantId ?? e.id) === id
-  ) as Record<string, unknown> | undefined
-    ?? storeEstablishments.find((e) => e.id === id)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
-    defaultValues: establishment
-      ? {
-          name: String((establishment as Record<string, unknown>).name ?? ""),
-          address: String((establishment as Record<string, unknown>).address ?? ""),
-          postalCode: String((establishment as Record<string, unknown>).postalCode ?? ""),
-          city: String((establishment as Record<string, unknown>).city ?? ""),
-          phone: String((establishment as Record<string, unknown>).phone ?? (establishment as Record<string, unknown>).phoneNumber ?? ""),
-          siret: String((establishment as Record<string, unknown>).siret ?? ""),
-          pin: String((establishment as Record<string, unknown>).pin ?? ""),
-        }
-      : {
-          name: "",
-          address: "",
-          postalCode: "",
-          city: "",
-          phone: "",
-          siret: "",
-          pin: "",
-        },
+    defaultValues: {
+      name: "",
+      address: "",
+      postalCode: "",
+      city: "",
+      phoneNumber: "",
+      siret: "",
+      pin: "",
+    },
   })
+
+  // Populate form when establishment data loads
+  useEffect(() => {
+    if (establishment) {
+      form.reset(extractFromEstablishment(establishment, rawRestaurant?.pin))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [establishment, rawRestaurant])
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center py-12 text-muted-foreground">Chargement…</div>
+  }
 
   if (!establishment) {
     return (
@@ -113,26 +107,31 @@ export default function EtablissementDetailPage() {
   }
 
   function onSubmit(data: FormValues) {
-    updateEstablishment({
-      id: id!,
-      data: {
-        name: data.name,
-        address: data.address,
-        postalCode: data.postalCode,
-        city: data.city,
-        phoneNumber: data.phone,
-        siret: data.siret,
-        pin: data.pin,
+    // PATCH /api/restaurants/{id}/ — only send changed fields
+    updateEstablishment(
+      { id: id!, data },
+      {
+        onSuccess: () => {
+          toast.success("Établissement modifié")
+          form.reset(data)
+        },
+        onError: () => {
+          toast.error("Erreur lors de la modification")
+        },
       },
-    })
-    toast.success("Établissement modifié")
-    navigate("/admin")
+    )
   }
 
   function handleDelete() {
-    deleteEstablishment(id!)
-    toast.success("Établissement supprimé")
-    navigate("/admin")
+    deleteEstablishment(id!, {
+      onSuccess: () => {
+        toast.success("Établissement supprimé")
+        navigate("/admin")
+      },
+      onError: () => {
+        toast.error("Erreur lors de la suppression")
+      },
+    })
   }
 
   return (
@@ -153,8 +152,9 @@ export default function EtablissementDetailPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="flex items-center gap-3">
-        <h1 className="font-display text-lg font-semibold tracking-tight">{establishment.name}</h1>
-        {/* Badge actif/inactif masqué — pas de champ isActive dans l'API */}
+        <h1 className="font-display text-lg font-semibold tracking-tight">
+          {establishment.name}
+        </h1>
       </motion.div>
 
       <Form {...form}>
@@ -184,8 +184,8 @@ export default function EtablissementDetailPage() {
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           onSelect={(result: FrenchAddressResult) => {
-                            form.setValue("postalCode", result.postalCode)
-                            form.setValue("city", result.city)
+                            form.setValue("postalCode", result.postalCode, { shouldDirty: true })
+                            form.setValue("city", result.city, { shouldDirty: true })
                           }}
                           placeholder="12 rue des Rosiers"
                         />
@@ -218,7 +218,7 @@ export default function EtablissementDetailPage() {
                 />
                 <FormField
                   control={form.control}
-                  name="phone"
+                  name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Téléphone</FormLabel>
@@ -253,31 +253,14 @@ export default function EtablissementDetailPage() {
             </CollapsibleSection>
           </motion.div>
 
-          {/* TODO: sections masquées — pas de champs correspondants dans l'API backend
-          <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Configuration opérationnelle" icon={Settings01Icon} defaultOpen>
-              <EtablissementOperationsSection form={form} />
-            </CollapsibleSection>
-          </motion.div>
-
-          <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Zones de stockage" icon={PackageIcon} defaultOpen>
-              <EtablissementZonesSection form={form} />
-            </CollapsibleSection>
-          </motion.div>
-
-          <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Informations légales" icon={LicenseIcon} defaultOpen>
-              <EtablissementLegalSection form={form} />
-            </CollapsibleSection>
-          </motion.div>
-          */}
-
           <motion.div variants={fadeUp} className="flex items-center gap-2 pt-4 border-t">
-            <Button type="submit" disabled={!form.formState.isDirty} className="flex-1">
-              Enregistrer
+            <Button
+              type="submit"
+              disabled={!form.formState.isDirty || isUpdating}
+              className="flex-1"
+            >
+              {isUpdating ? "Enregistrement…" : "Enregistrer"}
             </Button>
-            {/* TODO: toggle actif/inactif — pas de champ isActive dans l'API backend */}
             <Button
               type="button"
               variant="destructive"
@@ -304,7 +287,6 @@ export default function EtablissementDetailPage() {
 function CollapsibleSection({
   title,
   icon,
-  defaultOpen = false,
   children,
 }: {
   title: string
@@ -312,9 +294,14 @@ function CollapsibleSection({
   defaultOpen?: boolean
   children: React.ReactNode
 }) {
+  const [open, setOpen] = useState(true)
   return (
-    <Collapsible defaultOpen={defaultOpen} className="rounded-lg border bg-background">
-      <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors">
+    <div className="rounded-lg border bg-background">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+      >
         <span className="flex items-center gap-2">
           {icon && <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4 text-muted-foreground" />}
           {title}
@@ -322,12 +309,12 @@ function CollapsibleSection({
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           strokeWidth={2}
-          className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+          className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")}
         />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
+      </button>
+      {open && (
         <div className="border-t px-4 pt-4 pb-4 [&_label]:text-xs [&_label]:text-muted-foreground">{children}</div>
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+    </div>
   )
 }

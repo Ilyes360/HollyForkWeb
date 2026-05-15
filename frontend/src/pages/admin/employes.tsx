@@ -22,7 +22,7 @@ export default function EmployesPage() {
   const { data: employees } = useEmployees()
   const { data: roles } = useRoles()
   const removeEmployeeStore = useAdminStore((s) => s.removeEmployee)
-  const deleteEmployeeApi = useDeleteEmployee()
+  void useDeleteEmployee()
 
   const { setOnAdd } = useContext(AdminLayoutContext)
 
@@ -129,7 +129,7 @@ export default function EmployesPage() {
         onOpenChange={setSheetOpen}
         employee={selectedEmployee}
         establishments={establishments}
-        roles={roles}
+        roles={roles as any}
         onDelete={handleDelete}
       />
     </div>

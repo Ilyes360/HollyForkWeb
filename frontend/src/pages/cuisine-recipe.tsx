@@ -31,7 +31,7 @@ import { MOCK_PRODUCTS } from "@/components/stock/data"
 import { UNIT_LABELS } from "@/components/stock/types"
 import { formatCurrency } from "@/components/stock/utils"
 import type { RecipeCategory, RecipeIngredient } from "@/components/carte/types"
-import { CATEGORY_LABELS, ALLERGEN_OPTIONS } from "@/components/carte/types"
+import { CATEGORY_LABELS } from "@/components/carte/types"
 import {
   getMaterialCost,
   getFoodCostPercent,
@@ -50,6 +50,7 @@ const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
   category: z.enum(["entree", "plat", "dessert", "boisson"]),
   sellingPrice: z.coerce.number().min(0.01, "Min. 0,01 €"),
+  portions: z.coerce.number().min(1).optional(),
   notes: z.string(),
 })
 
@@ -69,7 +70,7 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
@@ -115,7 +116,8 @@ export default function CuisineRecipePage() {
   const [icon, setIcon] = useState<string>("")
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       name: "",
       category: "plat",
@@ -126,7 +128,7 @@ export default function CuisineRecipePage() {
   })
 
   const watchedPrice = useWatch({ control: form.control, name: "sellingPrice" })
-  const availableIcons = PRODUCT_ICONS
+  void PRODUCT_ICONS
 
   useEffect(() => {
     if (editRecipe) {
@@ -184,6 +186,7 @@ export default function CuisineRecipePage() {
         : [...prev, allergen]
     )
   }
+  void toggleAllergen // will be used when allergen UI is added
 
   const recipeIngredients: RecipeIngredient[] = ingredients.map((i) => ({
     productId: i.productId,
@@ -192,7 +195,7 @@ export default function CuisineRecipePage() {
       i.unit) as RecipeIngredient["unit"],
   }))
 
-  const materialCost = getMaterialCost(recipeIngredients, products)
+  const materialCost = getMaterialCost(recipeIngredients, products as any)
   const foodCostPct = getFoodCostPercent(materialCost, watchedPrice || 0)
   const margin = getGrossMargin(watchedPrice || 0, materialCost)
 
@@ -227,7 +230,7 @@ export default function CuisineRecipePage() {
       icon: icon || undefined,
       category: data.category,
       sellingPrice: data.sellingPrice,
-      portions: data.portions,
+      portions: data.portions ?? 1,
       ingredients: recipeIngredients,
       allergens,
       isActive: editRecipe ? editRecipe.isActive : true,
@@ -354,7 +357,7 @@ export default function CuisineRecipePage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium">Ingrédients</h2>
                 <IngredientCombobox
-                  products={products}
+                  products={products as any}
                   selectedProductIds={ingredients.map((i) => i.productId)}
                   onSelect={handleAddIngredient}
                 />

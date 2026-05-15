@@ -1,3 +1,3 @@
-export function useResolvedTheme(): "light" {
+export function useResolvedTheme(): "light" | "dark" {
   return "light"
 }

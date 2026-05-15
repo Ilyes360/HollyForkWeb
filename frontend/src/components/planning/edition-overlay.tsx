@@ -10,7 +10,7 @@ interface EditionOverlayProps {
 }
 
 export function EditionOverlay({ initialShifts }: EditionOverlayProps) {
-  const { state, dispatch, employees, onSaveRef, onCloseRef } =
+  const { state, dispatch, employees, onSaveRef: _onSaveRef, onCloseRef } =
     usePlanningEdition()
 
   const { weekStart, direction, prev, next, today } = useWeekNavigation()

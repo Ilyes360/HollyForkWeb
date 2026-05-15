@@ -1,31 +1,47 @@
 /**
  * Article, category & ingredient fixtures in snake_case — matching real backend responses.
+ * camelizeKeys converts these to the ApiArticle type fields.
  */
 
 export const mockArticles = [
   {
     id: 1,
     name: "Salade de tomates fraîches",
-    categorie: { id: 1, name: "Entrées", display_order: 1, description: "Entrées froides et chaudes" },
+    restaurant_id: null,
+    categorie_id: 1,
+    categorie_name: "Entrées",
     price: "12.00",
     description: "Entrée phare de l'été",
     available: true,
+    ingredients: [],
+    allergens: [],
+    diet_types: [],
   },
   {
     id: 2,
-    name: "Filet de bœuf sauce au poivre",
-    categorie: { id: 2, name: "Plats", display_order: 2, description: "Plats principaux" },
+    name: "Filet de boeuf sauce au poivre",
+    restaurant_id: null,
+    categorie_id: 2,
+    categorie_name: "Plats",
     price: "34.00",
     description: "Plat signature",
     available: true,
+    ingredients: [],
+    allergens: [],
+    diet_types: [],
   },
   {
     id: 3,
     name: "Gâteau au chocolat fondant",
-    categorie: { id: 3, name: "Desserts", display_order: 3, description: "Desserts et pâtisseries" },
+    restaurant_id: null,
+    categorie_id: 3,
+    categorie_name: "Desserts",
     price: "10.00",
     description: "Dessert maison",
     available: true,
+    ingredients: [],
+    allergens: [],
+    diet_types: [],
   },
 ]
 
@@ -59,7 +75,7 @@ export const mockIngredients = [
   },
   {
     id: 2,
-    name: "Filet de bœuf",
+    name: "Filet de boeuf",
     unit: "kg",
     unit_price: "42.50",
   },

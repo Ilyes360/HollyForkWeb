@@ -11,11 +11,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { usePageTitle } from "@/hooks/use-page-title"
 
-type ApiRole = {
-  name: string
-  value: string
-  hierarchyLevel: number
-}
+// ApiRole type removed — not used directly
 
 type ApiHierarchy = {
   hierarchy: Array<{
@@ -97,7 +93,7 @@ export default function RolesPage() {
   })
 
   if (isDevMode) {
-    return <RolesOverview roles={roles} employees={employees} />
+    return <RolesOverview roles={roles as any} employees={employees} />
   }
 
   const sortedRoles = hierarchy?.hierarchy

@@ -21,7 +21,7 @@ describe("Stock queries (user mode — API via MSW)", () => {
     setTokens("test-token", "test-refresh")
   })
 
-  it("fetches stocks with camelized keys", async () => {
+  it("fetches stocks and maps to Product type", async () => {
     const { result } = renderHook(
       () => useStocks(1),
       { wrapper: createWrapper() },
@@ -31,11 +31,11 @@ describe("Stock queries (user mode — API via MSW)", () => {
 
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(3)
-    const first = result.current.data[0] as Record<string, unknown>
-    const ingredient = (first.ingredient as Record<string, unknown>)
-    expect(ingredient.name).toBe("Tomates")
-    expect(first.quantityInStock).toBe("12.00")
-    expect((first.restaurant as Record<string, unknown>).restaurantId).toBe(1)
+    // Hook maps ApiStock → Product (flat object)
+    const first = result.current.data[0]
+    expect(first.name).toBe("Tomates")
+    expect(first.quantity).toBe(12)
+    expect(first.unit).toBe("kg")
   })
 })
 

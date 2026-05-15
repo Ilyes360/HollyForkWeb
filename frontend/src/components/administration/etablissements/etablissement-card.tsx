@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { MoreHorizontalIcon, Delete02Icon, ViewIcon, Cancel01Icon } from "@hugeicons/core-free-icons"
+import { MoreHorizontalIcon, Delete02Icon, ViewIcon } from "@hugeicons/core-free-icons"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,14 +16,14 @@ import { formatAddress, formatServiceTime, getEmployeeCount } from "../utils"
 interface EtablissementCardProps {
   establishment: Establishment
   employees: Employee[]
-  onToggleActive: (id: string) => void
+  onToggleActive?: (id: string) => void
   onDelete: (id: string) => void
 }
 
 export function EtablissementCard({
   establishment,
   employees,
-  onToggleActive,
+  onToggleActive: _onToggleActive,
   onDelete,
 }: EtablissementCardProps) {
   const navigate = useNavigate()

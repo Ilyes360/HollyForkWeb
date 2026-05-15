@@ -61,7 +61,8 @@ interface AddProductDialogProps {
 export function AddProductDialog({ open, onOpenChange, onSubmit }: AddProductDialogProps) {
   const { suppliers, categories, storageZones } = useInventoryStore()
   const form = useForm<AddProductFormValues>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       name: "",
       icon: "",
@@ -79,7 +80,7 @@ export function AddProductDialog({ open, onOpenChange, onSubmit }: AddProductDia
   })
 
   const watchedCategory = useWatch({ control: form.control, name: "category" })
-  const watchedIcon = useWatch({ control: form.control, name: "icon" })
+  void useWatch({ control: form.control, name: "icon" })
   const availableIcons = watchedCategory
     ? getIconsForCategory(watchedCategory)
     : PRODUCT_ICONS

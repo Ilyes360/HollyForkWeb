@@ -95,7 +95,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
     if (data.restaurantName.trim()) {
       completeTask("restaurant-profile")
     }
-    if (data.salleTemplate && data.salleTemplate !== "") {
+    if (data.salleTemplate) {
       completeTask("floor-plan")
     }
     if (data.teamMembers.some((m) => m.firstName.trim())) {

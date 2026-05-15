@@ -5,7 +5,7 @@ import { useSalleStore } from "./store"
 import { snapToGrid } from "./utils"
 import { computeSnapGuides } from "./snap-guides"
 import { useCanvasColors } from "./theme"
-import { MIN_TABLE_SIZE } from "./constants"
+// MIN_TABLE_SIZE import removed - not used in this file
 import type Konva from "konva"
 
 interface TableShapeProps {

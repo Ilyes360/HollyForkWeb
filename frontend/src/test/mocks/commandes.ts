@@ -1,29 +1,36 @@
 /**
  * Supplier order & supplier fixtures in snake_case — matching real backend responses.
+ * camelizeKeys converts these to ApiSupplierOrder and ApiSupplier types.
  */
 
 export const mockCommandes = [
   {
     id: 1,
-    fournisseur: { id: 1, name: "Boucherie Moderne" },
-    restaurant: { restaurant_id: 1, name: "Holly Fork — Marais" },
+    fournisseur_id: 1,
+    fournisseur_name: "Boucherie Moderne",
+    restaurant_id: 1,
     order_number: "CMD-2026-001",
     order_date: "2026-05-04",
     expected_delivery_date: "2026-05-05",
     status: "SENT",
     total_amount: "525.00",
     notes: null,
+    created_at: "2026-05-01T10:00:00Z",
+    updated_at: "2026-05-01T10:00:00Z",
   },
   {
     id: 2,
-    fournisseur: { id: 2, name: "Océan Frais" },
-    restaurant: { restaurant_id: 1, name: "Holly Fork — Marais" },
+    fournisseur_id: 2,
+    fournisseur_name: "Océan Frais",
+    restaurant_id: 1,
     order_number: "CMD-2026-002",
     order_date: "2026-05-03",
     expected_delivery_date: "2026-05-05",
     status: "DELIVERED",
     total_amount: "140.00",
     notes: null,
+    created_at: "2026-05-01T10:00:00Z",
+    updated_at: "2026-05-01T10:00:00Z",
   },
 ]
 

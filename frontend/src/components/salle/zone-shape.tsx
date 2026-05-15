@@ -9,7 +9,7 @@ interface ZoneShapeProps {
 
 export const ZoneShape = memo(
   function ZoneShape({ element }: ZoneShapeProps) {
-    const colors = useCanvasColors()
+    void useCanvasColors() // ensure hook is called but result unused
 
     // Calculate centroid of polygon
     const pts = element.points

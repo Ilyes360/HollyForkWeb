@@ -1,8 +1,10 @@
+import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiPost, apiPatch, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useInventoryStore } from "@/stores/inventory-store"
 import { fetchAllPages } from "@/api/pagination"
+import type { Order, OrderStatus } from "@/components/commandes/types"
 
 // Flat API response (after camelizeKeys)
 export type ApiSupplierOrder = {
@@ -18,6 +20,27 @@ export type ApiSupplierOrder = {
   notes: string | null
   createdAt: string
   updatedAt: string
+}
+
+const STATUS_MAP: Record<string, OrderStatus> = {
+  DRAFT: "pending",
+  SENT: "pending",
+  CONFIRMED: "pending",
+  DELIVERED: "delivered",
+  CANCELLED: "cancelled",
+}
+
+function apiOrderToOrder(o: ApiSupplierOrder): Order {
+  return {
+    id: String(o.id),
+    supplierId: String(o.fournisseurId),
+    items: [],
+    date: o.orderDate,
+    status: STATUS_MAP[o.status] ?? "pending",
+    totalAmount: parseFloat(o.totalAmount) || 0,
+    expectedDelivery: o.expectedDeliveryDate ?? "",
+    notes: o.notes ?? "",
+  }
 }
 
 const keys = {
@@ -39,11 +62,16 @@ export function useOrders(restaurantId: number | null) {
     staleTime: 30 * 1000,
   })
 
+  const orders = useMemo(
+    () => (query.data ?? []).map(apiOrderToOrder),
+    [query.data],
+  )
+
   if (isDevMode) {
     return { data: storeOrders, isLoading: false, source: "mock" as const }
   }
 
-  return { data: query.data ?? [], isLoading: query.isLoading, source: "api" as const }
+  return { data: orders, isLoading: query.isLoading, source: "api" as const }
 }
 
 export function useCreateOrder() {

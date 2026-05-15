@@ -5,7 +5,6 @@ import {
   ArrowDown01Icon,
   Store04Icon,
   Tick02Icon,
-  GridViewIcon,
   Add01Icon,
 } from "@hugeicons/core-free-icons"
 
@@ -123,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             {restaurant.name}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {restaurant.city}
+                            {restaurant.address}
                           </span>
                         </div>
                       </DropdownMenuItem>

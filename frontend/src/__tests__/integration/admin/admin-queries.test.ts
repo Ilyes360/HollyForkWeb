@@ -26,7 +26,7 @@ describe("Admin queries (user mode — API via MSW)", () => {
   })
 
   describe("useEmployees", () => {
-    it("fetches employees from API with camelized keys", async () => {
+    it("fetches employees from API and maps to Employee type", async () => {
       const { result } = renderHook(() => useEmployees(), {
         wrapper: createWrapper(),
       })
@@ -35,10 +35,11 @@ describe("Admin queries (user mode — API via MSW)", () => {
 
       expect(result.current.source).toBe("api")
       expect(result.current.data).toHaveLength(3)
-      // Verify camelization: type_employe_id → typeEmployeId
-      const first = result.current.data[0] as Record<string, unknown>
-      expect(first.typeEmployeId).toBe(1)
-      expect(first.prenom).toBe("Lucas")
+      // Hook maps ApiEmploye → Employee (id is string, firstName/lastName from API)
+      const first = result.current.data[0]
+      expect(first.id).toBe("1")
+      expect(first.firstName).toBe("Lucas")
+      expect(first.lastName).toBe("Martin")
     })
   })
 
@@ -51,7 +52,7 @@ describe("Admin queries (user mode — API via MSW)", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
       expect(result.current.data).toHaveLength(5)
-      expect(result.current.data[0].nom).toBe("Chef de rang")
+      expect(result.current.data[0].typeName).toBe("Chef de rang")
     })
   })
 

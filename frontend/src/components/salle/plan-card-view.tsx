@@ -15,7 +15,7 @@ const stagger: Variants = {
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const } },
 }
 
 interface RoomData {
@@ -115,7 +115,7 @@ export function PlanCardView({ plan, onEdit, onDelete }: PlanCardViewProps) {
               Hors zone · {unassignedTables.length} table{unassignedTables.length > 1 ? "s" : ""}
             </p>
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4">
-              {unassignedTables.map((table, i) => (
+              {unassignedTables.map((table, _i) => (
                 <div key={table.id} className="flex items-center gap-2 rounded-md bg-muted/60 px-2 py-1.5">
                   <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{table.label}</span>
                   <span className="text-[11px] text-muted-foreground">{table.seats}p</span>

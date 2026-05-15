@@ -65,9 +65,9 @@ export function EmployeeCard({ employee, weeklyHours }: EmployeeCardProps) {
           <ProgressPrimitive.Label className="text-muted-foreground">
             {weeklyHours}h / {employee.contractHours}h
           </ProgressPrimitive.Label>
-          <ProgressPrimitive.Value className={cn("font-medium tabular-nums", getHoursTextColor(ratio))}>
+          <span className={cn("font-medium tabular-nums", getHoursTextColor(ratio))}>
             {pct} %
-          </ProgressPrimitive.Value>
+          </span>
         </div>
         <ProgressPrimitive.Track className="relative flex h-1.5 w-full items-center overflow-x-hidden rounded-full bg-muted">
           <ProgressPrimitive.Indicator

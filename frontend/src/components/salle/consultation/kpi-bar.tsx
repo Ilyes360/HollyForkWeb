@@ -11,6 +11,7 @@ export const KpiBar = memo(function KpiBar({ tables }: KpiBarProps) {
     const total = tables.length
     const totalSeats = tables.reduce((s, t) => s + t.seats, 0)
     const occupied = tables.filter((t) => t.status === "occupied").length
+    void occupied
     const occupiedSeats = tables
       .filter((t) => t.status === "occupied")
       .reduce((s, t) => s + t.seats, 0)

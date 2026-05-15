@@ -83,7 +83,7 @@ export function EditionGrid({
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const }}
             className="h-full"
           >
             <div

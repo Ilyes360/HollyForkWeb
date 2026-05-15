@@ -27,7 +27,7 @@ const fadeUp: Variants = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
@@ -38,7 +38,7 @@ const fadeUp: Variants = {
 async function syncPlanToApi(
   elements: FloorElement[],
   restaurantId: number,
-  editingRoomId: string | null,
+  _editingRoomId: string | null,
 ) {
   const zones = elements.filter((el): el is ZoneShape => el.kind === "zone")
   const tables = elements.filter((el): el is TableShape => el.kind === "table")

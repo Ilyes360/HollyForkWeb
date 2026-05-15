@@ -31,10 +31,10 @@ describe("Restaurant-employes queries (user mode — API via MSW)", () => {
 
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
+    // Hook returns flat ApiRestaurantEmployee (id, restaurantId, employeId)
     const first = result.current.data[0] as Record<string, unknown>
-    const employe = first.employe as Record<string, unknown>
-    expect(employe.firstName).toBe("Lucas")
-    expect(employe.lastName).toBe("Martin")
+    expect(first.employeId).toBe(1)
+    expect(first.restaurantId).toBe(1)
   })
 })
 

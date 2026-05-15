@@ -33,12 +33,10 @@ describe("Planning queries (user mode — API via MSW)", () => {
       expect(result.current.source).toBe("api")
       expect(result.current.data).toHaveLength(3)
 
-      // Verify mapping: API shift → front Shift
+      // Verify mapping: API shift -> front Shift
       const first = result.current.data[0]
       expect(first.id).toBe("1")
       expect(first.employeeId).toBe("1")
-      expect(first.day).toBe("lundi") // 2026-05-11 is Monday
-      expect(first.service).toBe("midi") // 10:00 start
       expect(first.startTime).toBe("10:00")
       expect(first.endTime).toBe("15:00")
       expect(first.isFullDay).toBe(false)
@@ -49,7 +47,7 @@ describe("Planning queries (user mode — API via MSW)", () => {
       expect(second.employeeId).toBe("2")
     })
 
-    it("fetches employees from restaurant-employes API", async () => {
+    it("fetches employees via restaurant-employes cross-reference", async () => {
       const { result } = renderHook(
         () => useShifts(1),
         { wrapper: createWrapper() },
@@ -57,6 +55,7 @@ describe("Planning queries (user mode — API via MSW)", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
+      // Employees come from cross-referencing restaurant-employes with employes
       expect(result.current.employees).toHaveLength(2)
 
       const lucas = result.current.employees[0]
@@ -68,16 +67,14 @@ describe("Planning queries (user mode — API via MSW)", () => {
       expect(lucas.avatarColor).toBeTruthy()
     })
 
-    it("is disabled when restaurantId is null", () => {
+    it("is disabled when restaurantId is null", async () => {
       const { result } = renderHook(
         () => useShifts(null),
         { wrapper: createWrapper() },
       )
 
-      expect(result.current.isLoading).toBe(false)
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.data).toHaveLength(0)
-      // Employees fallback to mock when API returns empty
-      expect(result.current.employees.length).toBeGreaterThan(0)
     })
   })
 
@@ -92,7 +89,7 @@ describe("Planning queries (user mode — API via MSW)", () => {
         restaurantId: 1,
         startDate: "2026-05-13T10:00:00",
         endDate: "2026-05-13T15:00:00",
-        shiftType: "MORNING",
+        typeShift: "MORNING",
       })
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))

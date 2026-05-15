@@ -1,8 +1,10 @@
+import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPut, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { MOCK_PRODUCTS } from "@/components/stock/data"
 import type { PaginatedResponse } from "@/api/types"
+import type { Product } from "@/components/stock/types"
 import { fetchAllPages } from "@/api/pagination"
 
 // API response shape (flat, after camelizeKeys)
@@ -11,9 +13,35 @@ export type ApiStock = {
   restaurantId: number
   ingredientId: number
   ingredientName: string
+  ingredientUnit: string
+  ingredientUnitPrice: string
   quantityInStock: string
   alertThreshold: string
   weightedAverageCost: string
+}
+
+function apiStockToProduct(s: ApiStock): Product {
+  const quantity = parseFloat(s.quantityInStock) || 0
+  const minStock = parseFloat(s.alertThreshold) || 0
+  const unitPrice = parseFloat(s.ingredientUnitPrice) || parseFloat(s.weightedAverageCost) || 0
+  return {
+    id: String(s.id),
+    name: s.ingredientName,
+    icon: "naturalfood",
+    quantity,
+    unit: (s.ingredientUnit || "kg") as Product["unit"],
+    minStock,
+    maxStock: minStock * 3 || 100,
+    unitPrice,
+    supplierId: "",
+    category: "epicerie",
+    rotation: 0,
+    lastOrderDate: "",
+    expirationDate: "",
+    storageZone: "reserve_seche",
+    notes: "",
+    orderHistory: [],
+  }
 }
 
 const keys = {
@@ -32,11 +60,16 @@ export function useStocks(restaurantId: number | null) {
     staleTime: 30 * 1000,
   })
 
+  const products = useMemo(
+    () => (query.data ?? []).map(apiStockToProduct),
+    [query.data],
+  )
+
   if (isDevMode) {
     return { data: MOCK_PRODUCTS, isLoading: false, source: "mock" as const }
   }
 
-  return { data: query.data ?? [], isLoading: query.isLoading, source: "api" as const }
+  return { data: products, isLoading: query.isLoading, source: "api" as const }
 }
 
 export function useUpdateStock() {

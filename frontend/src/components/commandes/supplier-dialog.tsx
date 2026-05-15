@@ -112,7 +112,7 @@ export function SupplierDialog({
 
           <div className="space-y-2">
             <Label>Catégorie</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} onValueChange={(v) => setCategory(v ?? "")}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

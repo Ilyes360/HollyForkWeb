@@ -22,7 +22,7 @@ describe("Commandes queries (user mode — API via MSW)", () => {
     setTokens("test-token", "test-refresh")
   })
 
-  it("fetches orders with camelized keys", async () => {
+  it("fetches orders and maps to Order type", async () => {
     const { result } = renderHook(
       () => useOrders(1),
       { wrapper: createWrapper() },
@@ -32,13 +32,15 @@ describe("Commandes queries (user mode — API via MSW)", () => {
 
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
-    const first = result.current.data[0] as Record<string, unknown>
-    expect((first.fournisseur as Record<string, unknown>).id).toBe(1)
-    expect((first.restaurant as Record<string, unknown>).restaurantId).toBe(1)
-    expect(first.expectedDeliveryDate).toBe("2026-05-05")
+    // Hook maps ApiSupplierOrder → Order (id is string, supplierId, date, status, etc.)
+    const first = result.current.data[0]
+    expect(first.id).toBe("1")
+    expect(first.supplierId).toBe("1")
+    expect(first.expectedDelivery).toBe("2026-05-05")
+    expect(first.status).toBe("pending") // "SENT" → "pending"
   })
 
-  it("fetches suppliers from API", async () => {
+  it("fetches suppliers and maps to SupplierFull type", async () => {
     const { result } = renderHook(
       () => useSuppliers(),
       { wrapper: createWrapper() },
@@ -48,9 +50,10 @@ describe("Commandes queries (user mode — API via MSW)", () => {
 
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(2)
-    const first = result.current.data[0] as Record<string, unknown>
+    // Hook maps ApiSupplier → SupplierFull (id is string, name, phone, etc.)
+    const first = result.current.data[0]
     expect(first.name).toBe("Boucherie Moderne")
-    expect(first.isActive).toBe(true)
+    expect(first.phone).toBe("01 42 36 78 90")
   })
 })
 

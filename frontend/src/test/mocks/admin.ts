@@ -1,43 +1,50 @@
 /**
  * Admin fixtures in snake_case — matching real backend responses.
+ * camelizeKeys converts these to the ApiEmploye type fields.
  */
 
 export const mockEmployees = [
   {
     id: 1,
-    nom: "Martin",
-    prenom: "Lucas",
-    email: "lucas.martin@hollyfork.fr",
-    telephone: "+33 6 12 34 56 78",
+    last_name: "Martin",
+    first_name: "Lucas",
     type_employe_id: 1,
-    pin_code: "1234",
+    type_employe_name: "Chef de rang",
+    salary: "2200.00",
+    hire_date: "2022-09-01",
+    phone_number: "+33 6 12 34 56 78",
+    user_id: null,
   },
   {
     id: 2,
-    nom: "Dubois",
-    prenom: "Emma",
-    email: "emma.dubois@hollyfork.fr",
-    telephone: "+33 6 23 45 67 89",
+    last_name: "Dubois",
+    first_name: "Emma",
     type_employe_id: 2,
-    pin_code: "5678",
+    type_employe_name: "Serveur",
+    salary: "1900.00",
+    hire_date: "2023-01-15",
+    phone_number: "+33 6 23 45 67 89",
+    user_id: null,
   },
   {
     id: 3,
-    nom: "Bernard",
-    prenom: "Hugo",
-    email: "hugo.bernard@hollyfork.fr",
-    telephone: "+33 6 34 56 78 90",
+    last_name: "Bernard",
+    first_name: "Hugo",
     type_employe_id: 3,
-    pin_code: "9012",
+    type_employe_name: "Chef cuisinier",
+    salary: "2800.00",
+    hire_date: "2020-06-01",
+    phone_number: "+33 6 34 56 78 90",
+    user_id: null,
   },
 ]
 
 export const mockTypeEmployes = [
-  { id: 1, nom: "Chef de rang", description: "Responsable d'un rang de tables" },
-  { id: 2, nom: "Serveur", description: "Service en salle" },
-  { id: 3, nom: "Chef cuisinier", description: "Responsable de la cuisine" },
-  { id: 4, nom: "Commis", description: "Aide en cuisine" },
-  { id: 5, nom: "Barman", description: "Responsable du bar" },
+  { id: 1, type_name: "Chef de rang", description: "Responsable d'un rang de tables" },
+  { id: 2, type_name: "Serveur", description: "Service en salle" },
+  { id: 3, type_name: "Chef cuisinier", description: "Responsable de la cuisine" },
+  { id: 4, type_name: "Commis", description: "Aide en cuisine" },
+  { id: 5, type_name: "Barman", description: "Responsable du bar" },
 ]
 
 export const mockRoles = [

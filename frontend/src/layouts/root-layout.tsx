@@ -136,7 +136,7 @@ function LayoutInner() {
 
   if (planning.isEditing) {
     return (
-      <DragDropProvider onDragEnd={planning.handleDragEnd as (event: { operation: Record<string, unknown> }) => void}>
+      <DragDropProvider onDragEnd={planning.handleDragEnd as any}>
         {layout}
       </DragDropProvider>
     )

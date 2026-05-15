@@ -11,14 +11,6 @@ function toSnakeCase(str: string): string {
   return str.replace(/[A-Z]/g, (char) => `_${char.toLowerCase()}`)
 }
 
-type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue }
-
 function transformKeys(
   data: unknown,
   transformer: (key: string) => string,

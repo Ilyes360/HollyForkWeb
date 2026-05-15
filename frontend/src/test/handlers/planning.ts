@@ -28,7 +28,7 @@ export const planningHandlers = [
   http.post(`${API}/planning/shifts/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json(
-      { id: 100, ...mockShifts[0], ...body },
+      { ...mockShifts[0], ...body, id: 100 },
       { status: 201 },
     )
   }),

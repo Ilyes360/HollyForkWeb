@@ -87,7 +87,7 @@ export function GanttTimeline({
     1
   )
 
-  const { zoom, setZoom, scrollContainerRef, handleWheel, scrollToNow } = useGanttZoom(
+  const { zoom, setZoom: _setZoom, scrollContainerRef, handleWheel, scrollToNow } = useGanttZoom(
     layout.timeRange,
     now
   )

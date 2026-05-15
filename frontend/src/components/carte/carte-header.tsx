@@ -5,7 +5,7 @@ import { PAGE_META } from "@/lib/copy/pages"
 import { useCarteOperational } from "./operational-view-context"
 import { useRecipeStore } from "@/stores/recipe-store"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
+import { cn as _cn } from "@/lib/utils"
 
 interface CarteHeaderProps {
   onAddRecipe: () => void

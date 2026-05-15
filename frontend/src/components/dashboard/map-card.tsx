@@ -192,7 +192,7 @@ function AnimatedNumber({
   useEffect(() => {
     const controls = animate(mv, value, {
       duration: 0.6,
-      ease: [0.25, 0.1, 0.25, 1],
+      ease: [0.25, 0.1, 0.25, 1] as const,
     })
     return () => controls.stop()
   }, [mv, value])
@@ -248,7 +248,7 @@ export default function MapCard() {
   // In dev mode: use admin store data
   const establishments = useMemo(() => {
     if (!isDevMode && mapData?.restaurants?.length) {
-      return apiToEstablishments(mapData.restaurants, restaurantDetails as Array<Record<string, unknown>>)
+      return apiToEstablishments(mapData.restaurants, restaurantDetails as unknown as Array<Record<string, unknown>>)
     }
     return storeEstablishments
   }, [isDevMode, mapData, restaurantDetails, storeEstablishments])

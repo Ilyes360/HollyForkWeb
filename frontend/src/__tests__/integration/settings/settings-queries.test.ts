@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook, waitFor } from "@testing-library/react"
 import { createElement } from "react"
-import { useSettings, usePaymentMethods, useNotes } from "@/hooks/use-settings"
+import { useRestaurantSettings, usePaymentMethods, useNotes } from "@/hooks/use-settings"
 import { setTokens } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 
@@ -21,17 +21,16 @@ describe("Settings queries (user mode — API via MSW)", () => {
     setTokens("test-token", "test-refresh")
   })
 
-  it("fetches settings from API", async () => {
-    const { result } = renderHook(() => useSettings(), {
+  it("fetches restaurant settings from API", async () => {
+    const { result } = renderHook(() => useRestaurantSettings(1), {
       wrapper: createWrapper(),
     })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.source).toBe("api")
     expect(result.current.data).not.toBeNull()
-    expect(result.current.data!.nomRestaurant).toBe("Holly Fork — Marais")
-    expect(result.current.data!.telephone).toBe("+33 1 42 72 00 00")
+    expect(result.current.data!.name).toBe("Holly Fork — Marais")
+    expect(result.current.data!.phoneNumber).toBe("+33 1 42 72 00 00")
   })
 
   it("fetches payment methods", async () => {
@@ -42,7 +41,7 @@ describe("Settings queries (user mode — API via MSW)", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(4)
-    expect(result.current.data[0].nom).toBe("Carte bancaire")
+    expect(result.current.data[0].name).toBe("Carte bancaire")
   })
 
   it("fetches notes", async () => {
@@ -53,7 +52,7 @@ describe("Settings queries (user mode — API via MSW)", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(2)
-    expect(result.current.data[0].contenu).toBe("Vérifier livraison lundi")
+    expect(result.current.data[0].message).toBe("Vérifier livraison lundi")
   })
 })
 
@@ -64,11 +63,11 @@ describe("Settings queries (dev mode)", () => {
   })
 
   it("returns null in dev mode (settings managed by admin store)", () => {
-    const { result } = renderHook(() => useSettings(), {
+    const { result } = renderHook(() => useRestaurantSettings(1), {
       wrapper: createWrapper(),
     })
 
-    expect(result.current.source).toBe("mock")
     expect(result.current.isLoading).toBe(false)
+    expect(result.current.data).toBeNull()
   })
 })

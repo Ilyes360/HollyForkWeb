@@ -5,7 +5,6 @@ import {
   UserMultiple02Icon,
   Clock01Icon,
   Alert02Icon,
-  CheckmarkCircle02Icon,
   Calendar03Icon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"

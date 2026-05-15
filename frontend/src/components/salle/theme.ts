@@ -6,26 +6,6 @@
  * hex/rgb values derived from the current :root / .dark variables.
  */
 
-function resolveColor(varName: string, fallback: string): string {
-  if (typeof document === "undefined") return fallback
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(varName)
-    .trim()
-  if (!value) return fallback
-
-  // oklch() values can't be used directly by Konva — convert via a temp element
-  const el = document.createElement("div")
-  el.style.color = value.startsWith("oklch") ? value : `var(${varName})`
-  // If it's already a hex/rgb string, return as-is
-  if (/^#|^rgb/.test(value)) return value
-
-  el.style.color = value
-  document.body.appendChild(el)
-  const computed = getComputedStyle(el).color
-  document.body.removeChild(el)
-  return computed || fallback
-}
-
 export interface CanvasColors {
   tableFill: string
   tableStroke: string

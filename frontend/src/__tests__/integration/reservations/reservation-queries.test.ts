@@ -60,7 +60,7 @@ describe("Reservation queries (user mode — API via MSW)", () => {
 
     expect(result.current.data).toHaveLength(7)
     expect(result.current.data[0].label).toBe("T1")
-    expect(result.current.data[0].places).toBe(4)
+    expect((result.current.data[0] as any).places).toBe(4)
   })
 })
 

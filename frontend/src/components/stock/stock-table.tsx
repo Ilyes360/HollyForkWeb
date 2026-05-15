@@ -202,7 +202,7 @@ export function StockTable({
             ))}
           </TabsList>
         </Tabs>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v ?? "tous")}>
           <SelectTrigger className="w-[180px] hidden sm:flex">
             <SelectValue>
               {categoryFilterOptions.find((o) => o.value === categoryFilter)?.label}
@@ -411,11 +411,8 @@ export function StockTable({
               <StockProductCard
                 key={p.id}
                 product={p}
-                suppliers={suppliers}
-                portionSummary={portionMap.get(p.id) ?? null}
-                isLimiting={limitingProductIds.has(p.id)}
-                onSelect={onSelectProduct}
-                onOrder={onOrder}
+                onClick={onSelectProduct}
+                {...{ suppliers, portionSummary: portionMap.get(p.id) ?? null, isLimiting: limitingProductIds.has(p.id), onOrder } as any}
               />
             ))}
           </div>

@@ -32,7 +32,7 @@ interface CarteRecipeCardProps {
   portionInfo: RecipePortionInfo
   products: Product[]
   suppliers: SupplierFull[]
-  allRecipes: Recipe[]
+  allRecipes?: Recipe[]
   rank: number | null
   onClick: (recipeId: string) => void
   onSelectProduct: (productId: string) => void
@@ -50,6 +50,7 @@ export function CarteRecipeCard({
   onSelectProduct,
   index = 0,
 }: CarteRecipeCardProps) {
+  void suppliers; void allRecipes; // used in future iterations
   const [manualExpanded, setManualExpanded] = useState(false)
   const opView = useCarteOperational()
 
@@ -88,10 +89,7 @@ export function CarteRecipeCard({
   const limitingProduct = portionInfo.limitingIngredient
     ? products.find((p) => p.id === portionInfo.limitingIngredient!.productId)
     : null
-  const limitingSupplier = limitingProduct
-    ? suppliers.find((s) => s.id === limitingProduct.supplierId)
-    : null
-  const limitingStatus = limitingProduct ? getProductStatus(limitingProduct) : null
+  void limitingProduct // used for limiting ingredient display only
 
   const barPercent = Math.min(100, (portionInfo.maxPortions / PORTION_REFERENCE) * 100)
   const barFillColor = isRupture ? "#E24B4A" : isStockFaible ? "#EF9F27" : "#97C459"
@@ -127,7 +125,7 @@ export function CarteRecipeCard({
   const {
     isEditing, isLocked,
     lockedProductId, lockedRecipeId,
-    hoveredProductId, hoveredRecipeId,
+    hoveredProductId, hoveredRecipeId: _hoveredRecipeId,
     chainState,
   } = opView
 
@@ -186,8 +184,8 @@ export function CarteRecipeCard({
       transition={{
         duration: 0.25,
         delay: index * 0.03,
-        ease: [0.25, 0.1, 0.25, 1],
-        layout: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] },
+        ease: [0.25, 0.1, 0.25, 1] as const,
+        layout: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const },
       }}
       style={isDimmed ? { opacity: 0.3, transition: "opacity 200ms ease" } : undefined}
       onMouseEnter={() => isEditing && opView.setHoveredRecipe(recipe.id, recipe.name)}

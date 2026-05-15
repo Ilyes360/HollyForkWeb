@@ -33,7 +33,7 @@ export default function EtablissementsPage() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      const est = establishments.find((e: Record<string, unknown>) =>
+      const est = (establishments as any[]).find((e: Record<string, unknown>) =>
         String(e.restaurantId ?? e.id) === id
       )
       if (est) {

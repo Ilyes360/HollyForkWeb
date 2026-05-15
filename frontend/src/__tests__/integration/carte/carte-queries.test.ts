@@ -23,7 +23,7 @@ describe("Carte queries (user mode — API via MSW)", () => {
     setTokens("test-token", "test-refresh")
   })
 
-  it("fetches articles with camelized keys", async () => {
+  it("fetches articles and maps to Recipe type", async () => {
     const { result } = renderHook(
       () => useArticles(),
       { wrapper: createWrapper() },
@@ -33,9 +33,11 @@ describe("Carte queries (user mode — API via MSW)", () => {
 
     expect(result.current.source).toBe("api")
     expect(result.current.data).toHaveLength(3)
-    const first = result.current.data[0] as Record<string, unknown>
+    // Hook maps ApiArticle → Recipe (id is string, name, category, sellingPrice)
+    const first = result.current.data[0]
     expect(first.name).toBe("Salade de tomates fraîches")
-    expect((first.categorie as Record<string, unknown>).id).toBe(1)
+    expect(first.category).toBe("entree") // mapped from "Entrées"
+    expect(first.sellingPrice).toBe(12)
   })
 
   it("fetches categories from API", async () => {

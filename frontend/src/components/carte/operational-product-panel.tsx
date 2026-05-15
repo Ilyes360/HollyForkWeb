@@ -43,7 +43,7 @@ interface OperationalProductPanelProps {
 export function OperationalProductPanel({
   products,
   suppliers,
-  productPortionSummaries,
+  productPortionSummaries: _productPortionSummaries,
   onSelectProduct,
 }: OperationalProductPanelProps) {
   const [filter, setFilter] = useState<ProductFilter>("tous")
@@ -266,7 +266,7 @@ function ProductRow({
   isChainFiltered,
   hoverRecipeProductIds,
   opView,
-  onSelectProduct,
+  onSelectProduct: _onSelectProduct,
 }: {
   product: Product
   index: number

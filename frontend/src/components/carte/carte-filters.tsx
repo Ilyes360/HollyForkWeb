@@ -40,7 +40,7 @@ export function CarteFilters({
         />
       </InputGroup>
 
-      <Select value={feasibilityFilter} onValueChange={onFeasibilityFilterChange}>
+      <Select value={feasibilityFilter} onValueChange={(v) => onFeasibilityFilterChange(v ?? "")}>
         <SelectTrigger className="w-[170px]">
           <SelectValue>
             {FEASIBILITY_FILTER_OPTIONS.find((o) => o.value === feasibilityFilter)?.label}

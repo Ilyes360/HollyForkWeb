@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiPatch, apiDelete, getAccessToken } from "@/api/client"
+import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { MOCK_RESERVATIONS, RESTAURANT_TABLES } from "@/components/reservations/data"
 import type { PaginatedResponse } from "@/api/types"

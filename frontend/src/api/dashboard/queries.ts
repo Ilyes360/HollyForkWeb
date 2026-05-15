@@ -4,7 +4,6 @@ import type {
   DashboardKpis,
   DashboardKpisParams,
   DashboardMapResponse,
-  DashboardMapParams,
 } from "./types"
 
 export const dashboardKeys = {

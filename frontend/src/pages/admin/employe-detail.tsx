@@ -78,7 +78,7 @@ export default function EmployeDetailPage() {
   const isNew = !id
   // Find employee from API data or store
   const employee = !isNew
-    ? (allEmployees as Array<Record<string, unknown>>).find(
+    ? (allEmployees as unknown as Array<Record<string, unknown>>).find(
         (e) => String(e.id) === id
       )
     : null

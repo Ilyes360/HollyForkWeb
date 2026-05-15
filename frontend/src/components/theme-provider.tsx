@@ -5,8 +5,11 @@ type ThemeProviderProps = {
   children: React.ReactNode
 }
 
+type Theme = "light" | "dark" | "system"
+
 type ThemeProviderState = {
-  theme: "light"
+  theme: Theme
+  setTheme: (theme: Theme) => void
 }
 
 const ThemeProviderContext = React.createContext<
@@ -20,7 +23,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.classList.add("light")
   }, [])
 
-  const value = React.useMemo(() => ({ theme: "light" as const }), [])
+  const setTheme = React.useCallback((_theme: Theme) => {
+    // Currently only light mode is supported
+  }, [])
+
+  const value = React.useMemo(() => ({ theme: "light" as Theme, setTheme }), [setTheme])
 
   return (
     <ThemeProviderContext.Provider value={value}>

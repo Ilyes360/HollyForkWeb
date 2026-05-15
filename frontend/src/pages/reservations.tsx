@@ -54,7 +54,7 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
@@ -97,7 +97,7 @@ export default function ReservationsPage() {
 
   const createReservation = useCreateReservation()
   const updateReservation = useUpdateReservation()
-  const deleteReservation = useDeleteReservation()
+  void useDeleteReservation()
   const { data: salles } = useSalles(restaurantId)
   const defaultSalleId = salles.length > 0 ? (salles[0] as { id: number }).id : null
 

@@ -52,7 +52,7 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
@@ -75,7 +75,8 @@ export default function StocksProductPage() {
   const isEditing = !!editProduct
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       name: "",
       quantity: 0,
@@ -104,7 +105,7 @@ export default function StocksProductPage() {
         updateProduct(editProduct.id, {
           name: data.name,
           quantity: data.quantity,
-          unit: data.unit,
+          unit: data.unit as ProductUnit,
           minStock: data.minStock,
           unitPrice: data.unitPrice,
         })
@@ -113,7 +114,7 @@ export default function StocksProductPage() {
           id: `p-${Date.now()}`,
           name: data.name,
           quantity: data.quantity,
-          unit: data.unit,
+          unit: data.unit as ProductUnit,
           minStock: data.minStock,
           maxStock: 100,
           unitPrice: data.unitPrice,
@@ -134,7 +135,7 @@ export default function StocksProductPage() {
         updateProduct(editProduct.id, {
           name: data.name,
           quantity: data.quantity,
-          unit: data.unit,
+          unit: data.unit as ProductUnit,
           minStock: data.minStock,
           unitPrice: data.unitPrice,
         })
@@ -143,7 +144,7 @@ export default function StocksProductPage() {
           id: `p-${Date.now()}`,
           name: data.name,
           quantity: data.quantity,
-          unit: data.unit,
+          unit: data.unit as ProductUnit,
           minStock: data.minStock,
           maxStock: 100,
           unitPrice: data.unitPrice,
@@ -168,7 +169,7 @@ export default function StocksProductPage() {
         } else {
           const ingredient = await apiPost<{ id: number }>("ingredients/", {
             name: data.name,
-            unit: data.unit,
+            unit: data.unit as ProductUnit,
             unitPrice: String(data.unitPrice),
           })
           await apiPost("stocks/", {

@@ -4,7 +4,6 @@ export function snapToGrid(val: number) {
   return Math.round(val / GRID_SIZE) * GRID_SIZE
 }
 
-let nextId = 0
 export function genId() {
   return `el-${crypto.randomUUID().slice(0, 8)}`
 }

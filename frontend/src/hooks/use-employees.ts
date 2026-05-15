@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiPost, apiPut, apiPatch, apiDelete, getAccessToken } from "@/api/client"
+import { apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useAdminStore } from "@/stores/admin-store"
 import { fetchAllPages } from "@/api/pagination"

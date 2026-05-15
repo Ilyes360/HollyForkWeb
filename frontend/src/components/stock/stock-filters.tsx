@@ -42,7 +42,7 @@ export function StockFilters({
         />
       </InputGroup>
 
-      <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
+      <Select value={categoryFilter} onValueChange={(v) => onCategoryFilterChange(v ?? "")}>
         <SelectTrigger className="w-[170px] hidden sm:flex">
           <SelectValue>
             {categories.find((o) => o.value === categoryFilter)?.label}
@@ -57,7 +57,7 @@ export function StockFilters({
         </SelectContent>
       </Select>
 
-      <Select value={supplierFilter} onValueChange={onSupplierFilterChange}>
+      <Select value={supplierFilter} onValueChange={(v) => onSupplierFilterChange(v ?? "")}>
         <SelectTrigger className="w-[170px] hidden sm:flex">
           <SelectValue>
             {suppliers.find((o) => o.value === supplierFilter)?.label}

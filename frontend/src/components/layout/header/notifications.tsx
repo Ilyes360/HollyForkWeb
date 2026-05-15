@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+// Avatar import removed — not used in dropdown preview
 import { useIsMobile } from "@/hooks/use-mobile"
 import { MOCK_NOTIFICATIONS, CATEGORY_META } from "@/components/notifications/data"
 import { NotificationCenter } from "@/components/notifications/notification-center"

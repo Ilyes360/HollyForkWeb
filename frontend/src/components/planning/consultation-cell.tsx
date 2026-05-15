@@ -11,7 +11,7 @@ interface ConsultationCellProps {
 export function ConsultationCell({
   shifts,
   employees,
-  service,
+  service: _service,
 }: ConsultationCellProps) {
   if (shifts.length === 0) {
     return (

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import { motion, useMotionValue, useTransform, animate } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -17,7 +17,7 @@ import {
   ChartAreaIcon,
   GridViewIcon,
 } from "@hugeicons/core-free-icons"
-import type { IconSvgElement } from "@hugeicons/react"
+// IconSvgElement type import removed — not used
 import {
   Area,
   AreaChart,
@@ -101,6 +101,7 @@ const MOCK_VENTES: VentesData = {
   ],
   changePct: 8,
 }
+void MOCK_VENTES
 
 // ---------------------------------------------------------------------------
 // Animated number (motion.dev pattern)
@@ -123,7 +124,7 @@ function AnimatedNumber({
   useEffect(() => {
     const controls = animate(mv, value, {
       duration: 0.6,
-      ease: [0.25, 0.1, 0.25, 1],
+      ease: [0.25, 0.1, 0.25, 1] as const,
     })
     return () => controls.stop()
   }, [mv, value])
@@ -186,7 +187,7 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
@@ -293,7 +294,7 @@ function OccupancyCard({
                 animate={{ width: `${value}%` }}
                 transition={{
                   duration: 0.8,
-                  ease: [0.25, 0.1, 0.25, 1],
+                  ease: [0.25, 0.1, 0.25, 1] as const,
                   delay: 0.2,
                 }}
               />
@@ -816,7 +817,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
                       }}
                       transition={{
                         duration: 0.8,
-                        ease: [0.25, 0.1, 0.25, 1],
+                        ease: [0.25, 0.1, 0.25, 1] as const,
                         delay: 0.2 + i * 0.1,
                       }}
                     />
@@ -839,7 +840,7 @@ function VentesCategorieCard({ ventesData }: { ventesData: VentesData }) {
 // ---------------------------------------------------------------------------
 export default function DashboardPage() {
   usePageTitle("Dashboard")
-  const user = useAuthStore((s) => s.user)
+  void useAuthStore((s) => s.user)
   const { title: greetingTitle, subtitle: greetingSubtitle } = useGreeting()
 
   const [period, setPeriod] = useState<PeriodRange>(getThisWeek)

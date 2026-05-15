@@ -1,6 +1,6 @@
 import type { DayRecapData } from "./utils"
 import { DAILY_BUDGET } from "./data"
-import { cn } from "@/lib/utils"
+import { cn as _cn } from "@/lib/utils"
 
 interface DayRecapProps {
   recap: DayRecapData

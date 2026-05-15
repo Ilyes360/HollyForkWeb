@@ -20,7 +20,7 @@ export function useGanttDensity(
 } {
   const [auto, setAuto] = useState<GanttDensity>("normal")
   const [override, setOverride] = useState<GanttDensity | null>(null)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const handleResize = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)

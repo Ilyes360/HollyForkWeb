@@ -213,7 +213,7 @@ const renderers: Partial<Record<DecorationType, ConfigFn>> = {
   }),
 
   // ── Signage ──
-  "sign-restroom-m": (el, c) => ({
+  "sign-restroom-m": (el, _c) => ({
     fill: "#3b82f6",
     stroke: "#2563eb",
     strokeWidth: 1,
@@ -222,7 +222,7 @@ const renderers: Partial<Record<DecorationType, ConfigFn>> = {
       { type: "text", x: -(el.width ?? 24) / 2, y: -7, text: "H", fontSize: 12, fill: "#ffffff", width: el.width ?? 24, align: "center" },
     ],
   }),
-  "sign-restroom-f": (el, c) => ({
+  "sign-restroom-f": (el, _c) => ({
     fill: "#ec4899",
     stroke: "#db2777",
     strokeWidth: 1,
@@ -231,7 +231,7 @@ const renderers: Partial<Record<DecorationType, ConfigFn>> = {
       { type: "text", x: -(el.width ?? 24) / 2, y: -7, text: "F", fontSize: 12, fill: "#ffffff", width: el.width ?? 24, align: "center" },
     ],
   }),
-  "sign-restroom-pmr": (el, c) => ({
+  "sign-restroom-pmr": (el, _c) => ({
     fill: "#3b82f6",
     stroke: "#2563eb",
     strokeWidth: 1,
@@ -240,7 +240,7 @@ const renderers: Partial<Record<DecorationType, ConfigFn>> = {
       { type: "text", x: -(el.width ?? 24) / 2, y: -7, text: "♿", fontSize: 11, fill: "#ffffff", width: el.width ?? 24, align: "center" },
     ],
   }),
-  "sign-emergency-exit": (el, c) => ({
+  "sign-emergency-exit": (el, _c) => ({
     fill: "#22c55e",
     stroke: "#16a34a",
     strokeWidth: 1,
@@ -390,7 +390,7 @@ const renderers: Partial<Record<DecorationType, ConfigFn>> = {
   }),
 
   // ── Safety ──
-  "fire-extinguisher": (el, c) => ({
+  "fire-extinguisher": (el, _c) => ({
     fill: "#ef4444",
     stroke: "#dc2626",
     strokeWidth: 1,
@@ -399,7 +399,7 @@ const renderers: Partial<Record<DecorationType, ConfigFn>> = {
       { type: "text", x: -(el.width ?? 16) / 2, y: -5, text: "E", fontSize: 9, fill: "#ffffff", width: el.width ?? 16, align: "center" },
     ],
   }),
-  "emergency-exit-sign": (el, c) => ({
+  "emergency-exit-sign": (el, _c) => ({
     fill: "#22c55e",
     stroke: "#16a34a",
     strokeWidth: 1,

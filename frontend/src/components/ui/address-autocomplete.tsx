@@ -260,7 +260,7 @@ export function AddressAutocomplete({
 
         <PopoverContent
           className="w-(--anchor-width) p-0"
-          onOpenAutoFocus={(e) => e.preventDefault()}
+          {...{ onOpenAutoFocus: (e: Event) => e.preventDefault() } as any}
         >
           {isLoading && (
             <div className="px-3 py-2.5 text-center text-sm text-muted-foreground">

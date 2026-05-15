@@ -48,7 +48,7 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const as [number, number, number, number] },
   },
 }
 
@@ -196,6 +196,7 @@ export default function StocksPage() {
     setSelectedRecipeId(recipeId)
     setRecipeDetailOpen(true)
   }, [])
+  void handleSelectRecipe
 
   const handleOrderFromDetail = useCallback((product: Product) => {
     const supplier = suppliers.find((s) => s.id === product.supplierId)

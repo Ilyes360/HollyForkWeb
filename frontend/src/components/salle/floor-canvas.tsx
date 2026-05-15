@@ -300,7 +300,7 @@ export function FloorCanvas() {
   )
 
   const handleMouseMove = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent>) => {
+    (_e: Konva.KonvaEventObject<MouseEvent>) => {
       const stage = stageRef.current
       if (!stage) return
       const canvasPos = getCanvasPos(stage)
@@ -385,7 +385,7 @@ export function FloorCanvas() {
       }
 
       // Click on stage background → clear selection (if not starting marquee)
-      if (isStageTarget && tool !== "wall") {
+      if (isStageTarget && (tool as string) !== "wall") {
         clearSelection()
       }
     },
@@ -430,7 +430,7 @@ export function FloorCanvas() {
   )
 
   const handleDblClick = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent>) => {
+    (_e: Konva.KonvaEventObject<MouseEvent>) => {
       if (tool === "wall") {
         const state = useSalleStore.getState()
         if (!state.wallDrawing || state.wallDrawing.points.length < 2) return

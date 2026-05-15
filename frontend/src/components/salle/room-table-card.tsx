@@ -14,7 +14,7 @@ export function RoomTableCard({ table, index = 0 }: RoomTableCardProps) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.12 } }}
-      transition={{ duration: 0.18, delay: index * 0.015, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ duration: 0.18, delay: index * 0.015, ease: [0.25, 0.1, 0.25, 1] as const }}
     >
       <div className="flex items-center gap-2 rounded-md bg-muted/60 px-2 py-1.5">
         {/* Shape icon */}

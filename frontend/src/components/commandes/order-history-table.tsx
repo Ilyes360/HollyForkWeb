@@ -103,7 +103,7 @@ export function OrderHistoryTable({
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={periodFilter} onValueChange={setPeriodFilter}>
+        <Select value={periodFilter} onValueChange={(v) => setPeriodFilter(v ?? "all")}>
           <SelectTrigger className="w-[160px]">
             <SelectValue>
               {PERIOD_OPTIONS.find((o) => o.value === periodFilter)?.label}
@@ -117,7 +117,7 @@ export function OrderHistoryTable({
             ))}
           </SelectContent>
         </Select>
-        <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+        <Select value={supplierFilter} onValueChange={(v) => setSupplierFilter(v ?? "tous")}>
           <SelectTrigger className="w-[180px]">
             <SelectValue>
               {supplierFilter === "tous"

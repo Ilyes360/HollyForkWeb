@@ -56,7 +56,7 @@ export function StepTeam() {
             />
             <Select
               value={member.role}
-              onValueChange={(val) => updateMember(index, { role: val })}
+              onValueChange={(val) => updateMember(index, { role: val ?? undefined })}
             >
               <SelectTrigger className="h-9 w-40">
                 <SelectValue placeholder={ONBOARDING.team.columns.role} />

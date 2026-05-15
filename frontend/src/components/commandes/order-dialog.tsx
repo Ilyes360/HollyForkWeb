@@ -144,7 +144,7 @@ export function OrderDialog({
         {/* Supplier selector */}
         <div className="space-y-2">
           <Label>Fournisseur</Label>
-          <Select value={activeSupplier.id} onValueChange={handleSupplierChange}>
+          <Select value={activeSupplier.id} onValueChange={(v) => handleSupplierChange(v ?? "")}>
             <SelectTrigger className="w-full">
               <SelectValue>{activeSupplier.name}</SelectValue>
             </SelectTrigger>

@@ -73,7 +73,7 @@ export function PendingOrders({
             key={order.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: i * 0.04, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.25, delay: i * 0.04, ease: [0.25, 0.1, 0.25, 1] as const }}
           >
           <Card className="flex flex-col gap-3 p-4">
             <div className="flex items-start justify-between">

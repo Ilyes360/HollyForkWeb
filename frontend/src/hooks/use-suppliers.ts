@@ -1,8 +1,10 @@
+import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useInventoryStore } from "@/stores/inventory-store"
 import { fetchAllPages } from "@/api/pagination"
+import type { SupplierFull } from "@/components/commandes/types"
 
 export type ApiSupplier = {
   id: number
@@ -15,6 +17,20 @@ export type ApiSupplier = {
   postalCode: string | null
   notes: string | null
   isActive: boolean
+  joursLivraison?: { id: number; jour: string; deliveryTime: string }[]
+}
+
+function apiSupplierToFull(s: ApiSupplier): SupplierFull {
+  return {
+    id: String(s.id),
+    name: s.name,
+    category: "epicerie",
+    phone: s.telephone ?? "",
+    email: s.email ?? "",
+    address: [s.address, s.postalCode, s.city].filter(Boolean).join(", "),
+    averageDeliveryDays: 3,
+    notes: s.notes ?? "",
+  }
 }
 
 const keys = {
@@ -37,6 +53,11 @@ export function useSuppliers() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const suppliers = useMemo(
+    () => (query.data ?? []).map(apiSupplierToFull),
+    [query.data],
+  )
+
   if (isDevMode) {
     return {
       data: storeSuppliers,
@@ -46,7 +67,7 @@ export function useSuppliers() {
   }
 
   return {
-    data: query.data ?? [],
+    data: suppliers,
     isLoading: query.isLoading,
     source: "api" as const,
   }

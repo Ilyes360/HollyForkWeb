@@ -1,10 +1,15 @@
 export class ApiError extends Error {
+  readonly status: number
+  readonly body: unknown
+
   constructor(
-    public readonly status: number,
-    public readonly body: unknown,
+    status: number,
+    body: unknown,
     message?: string,
   ) {
     super(message ?? `API error ${status}`)
+    this.status = status
+    this.body = body
     this.name = "ApiError"
   }
 }
