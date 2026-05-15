@@ -20,10 +20,9 @@ describe("Reservation queries (API via MSW)", () => {
   })
 
   it("fetches reservations with camelized keys", async () => {
-    const { result } = renderHook(
-      () => useReservations(1, "2026-05-05"),
-      { wrapper: createWrapper() },
-    )
+    const { result } = renderHook(() => useReservations(1, "2026-05-05"), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -35,10 +34,9 @@ describe("Reservation queries (API via MSW)", () => {
   })
 
   it("fetches salles from API", async () => {
-    const { result } = renderHook(
-      () => useSalles(1),
-      { wrapper: createWrapper() },
-    )
+    const { result } = renderHook(() => useSalles(1), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -48,15 +46,16 @@ describe("Reservation queries (API via MSW)", () => {
   })
 
   it("fetches tables from API", async () => {
-    const { result } = renderHook(
-      () => useTables(1),
-      { wrapper: createWrapper() },
-    )
+    const { result } = renderHook(() => useTables(1), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(7)
     expect(result.current.data[0].label).toBe("T1")
-    expect((result.current.data[0] as any).places).toBe(4)
+    expect(
+      (result.current.data[0] as unknown as { places: number }).places
+    ).toBe(4)
   })
 })

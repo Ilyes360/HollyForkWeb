@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { useEstablishment, useUpdateEstablishment } from "@/hooks/use-establishments"
+import {
+  useEstablishment,
+  useUpdateEstablishment,
+} from "@/hooks/use-establishments"
 
 const JOURS = [
   "Lundi",
@@ -40,7 +43,7 @@ export function HorairesForm() {
   const updateEstablishment = useUpdateEstablishment()
 
   const [schedules, setSchedules] = useState<Record<string, DaySchedule>>(
-    Object.fromEntries(JOURS.map((j) => [j, { ...DEFAULT_SCHEDULE }])),
+    Object.fromEntries(JOURS.map((j) => [j, { ...DEFAULT_SCHEDULE }]))
   )
   const [isDirty, setIsDirty] = useState(false)
 
@@ -50,11 +53,16 @@ export function HorairesForm() {
       for (const jour of JOURS) {
         newSchedules[jour] = { ...DEFAULT_SCHEDULE }
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSchedules(newSchedules)
     }
   }, [establishment])
 
-  function updateDay(jour: string, field: keyof DaySchedule, value: string | boolean) {
+  function updateDay(
+    jour: string,
+    field: keyof DaySchedule,
+    value: string | boolean
+  ) {
     setSchedules((prev) => ({
       ...prev,
       [jour]: { ...prev[jour], [field]: value },

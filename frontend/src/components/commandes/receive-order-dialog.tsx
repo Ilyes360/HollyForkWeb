@@ -20,7 +20,10 @@ interface ReceiveOrderDialogProps {
   suppliers: SupplierFull[]
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: (orderId: string, receivedQuantities: Record<string, number>) => void
+  onConfirm: (
+    orderId: string,
+    receivedQuantities: Record<string, number>
+  ) => void
 }
 
 export function ReceiveOrderDialog({
@@ -39,6 +42,7 @@ export function ReceiveOrderDialog({
       for (const item of order.items) {
         initial[item.productId] = item.quantity
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuantities(initial)
     }
   }, [order, open])
@@ -58,7 +62,8 @@ export function ReceiveOrderDialog({
         <DialogHeader>
           <DialogTitle>Réceptionner la commande</DialogTitle>
           <DialogDescription>
-            {supplier?.name ?? "—"} — {new Date(order.date).toLocaleDateString("fr-FR", {
+            {supplier?.name ?? "—"} —{" "}
+            {new Date(order.date).toLocaleDateString("fr-FR", {
               day: "numeric",
               month: "short",
             })}
@@ -67,7 +72,7 @@ export function ReceiveOrderDialog({
 
         <div className="max-h-[350px] space-y-3 overflow-y-auto">
           {/* Header row */}
-          <div className="grid grid-cols-[1fr_80px_80px_60px] items-center gap-3 text-xs font-medium text-muted-foreground px-1">
+          <div className="grid grid-cols-[1fr_80px_80px_60px] items-center gap-3 px-1 text-xs font-medium text-muted-foreground">
             <span>Produit</span>
             <span>Commandé</span>
             <span>Reçu</span>
@@ -86,7 +91,7 @@ export function ReceiveOrderDialog({
                 key={item.productId}
                 className="grid grid-cols-[1fr_80px_80px_60px] items-center gap-3 rounded-lg border p-3"
               >
-                <span className="text-sm font-medium truncate">
+                <span className="truncate text-sm font-medium">
                   {product?.name ?? "Produit inconnu"}
                 </span>
                 <span className="text-sm text-muted-foreground">
@@ -109,13 +114,19 @@ export function ReceiveOrderDialog({
                 </div>
                 <div>
                   {isMatch && (
-                    <Badge variant="success" className="text-xs">OK</Badge>
+                    <Badge variant="success" className="text-xs">
+                      OK
+                    </Badge>
                   )}
                   {isPartial && (
-                    <Badge variant="warning" className="text-xs">Partiel</Badge>
+                    <Badge variant="warning" className="text-xs">
+                      Partiel
+                    </Badge>
                   )}
                   {received === 0 && (
-                    <Badge variant="destructive" className="text-xs">0</Badge>
+                    <Badge variant="destructive" className="text-xs">
+                      0
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -127,9 +138,7 @@ export function ReceiveOrderDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button onClick={handleConfirm}>
-            Confirmer réception
-          </Button>
+          <Button onClick={handleConfirm}>Confirmer réception</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

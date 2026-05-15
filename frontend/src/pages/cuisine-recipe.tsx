@@ -27,6 +27,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import type { Product } from "@/components/stock/types"
 import { UNIT_LABELS } from "@/components/stock/types"
 import { formatCurrency } from "@/components/stock/utils"
 import type { RecipeCategory, RecipeIngredient } from "@/components/carte/types"
@@ -127,6 +128,7 @@ export default function CuisineRecipePage() {
         portions: editRecipe.portions,
         notes: editRecipe.notes,
       })
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIngredients(
         editRecipe.ingredients.map((ing) => {
           const product = products.find((p) => p.id === ing.productId)
@@ -174,7 +176,7 @@ export default function CuisineRecipePage() {
       i.unit) as RecipeIngredient["unit"],
   }))
 
-  const materialCost = getMaterialCost(recipeIngredients, products as any)
+  const materialCost = getMaterialCost(recipeIngredients, products as Product[])
   const foodCostPct = getFoodCostPercent(materialCost, watchedPrice || 0)
   const margin = getGrossMargin(watchedPrice || 0, materialCost)
 
@@ -311,7 +313,7 @@ export default function CuisineRecipePage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium">Ingrédients</h2>
                 <IngredientCombobox
-                  products={products as any}
+                  products={products as Product[]}
                   selectedProductIds={ingredients.map((i) => i.productId)}
                   onSelect={handleAddIngredient}
                 />

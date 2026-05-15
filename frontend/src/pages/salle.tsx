@@ -1,7 +1,12 @@
 import { useState, useCallback, useRef } from "react"
 import { motion, type Variants } from "motion/react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { FloorPlan, FloorElement, ZoneShape, TableShape } from "@/components/salle/types"
+import type {
+  FloorPlan,
+  FloorElement,
+  ZoneShape,
+  TableShape,
+} from "@/components/salle/types"
 import { findRoomForPoint, pointInPolygon } from "@/components/salle/utils"
 import { ConsultationView } from "@/components/salle/consultation-view"
 import { PlanCardView } from "@/components/salle/plan-card-view"
@@ -37,7 +42,7 @@ const fadeUp: Variants = {
 async function syncPlanToApi(
   elements: FloorElement[],
   restaurantId: number,
-  _editingRoomId: string | null,
+  _editingRoomId: string | null
 ) {
   const zones = elements.filter((el): el is ZoneShape => el.kind === "zone")
   const tables = elements.filter((el): el is TableShape => el.kind === "table")
@@ -121,7 +126,8 @@ function findRoomForElement(
     // Boundary walls: nudge midpoint 2px toward each zone centroid and test
     for (const zone of zones) {
       const n = zone.points.length / 2
-      let cx = 0, cy = 0
+      let cx = 0,
+        cy = 0
       for (let i = 0; i < zone.points.length; i += 2) {
         cx += zone.points[i]
         cy += zone.points[i + 1]
@@ -158,111 +164,136 @@ export default function SallePage() {
   const fullPlanRef = useRef<FloorPlan>(plan)
 
   /** Helper: extract a single room's elements from the full plan */
-  const extractRoomElements = useCallback((fullPlan: FloorPlan, roomId: string): FloorElement[] | null => {
-    const zones = fullPlan.elements.filter((el): el is ZoneShape => el.kind === "zone")
-    const targetZone = zones.find((z) => z.id === roomId)
-    if (!targetZone) return null
+  const extractRoomElements = useCallback(
+    (fullPlan: FloorPlan, roomId: string): FloorElement[] | null => {
+      const zones = fullPlan.elements.filter(
+        (el): el is ZoneShape => el.kind === "zone"
+      )
+      const targetZone = zones.find((z) => z.id === roomId)
+      if (!targetZone) return null
 
-    const roomElements: FloorElement[] = [targetZone]
-    for (const el of fullPlan.elements) {
-      if (el.kind === "zone") continue
-      if (findRoomForElement(el, zones) === roomId) {
-        roomElements.push(el)
-      }
-    }
-    return roomElements
-  }, [])
-
-  const handleOpenEditor = useCallback((roomId: string | null) => {
-    fullPlanRef.current = plan
-    editingRoomIdRef.current = roomId
-
-    let editorPlan: FloorPlan
-
-    if (roomId) {
-      // Edit existing room: load only that room's elements
-      const roomElements = extractRoomElements(plan, roomId)
-      if (roomElements) {
-        editorPlan = { ...plan, elements: roomElements }
-      } else {
-        // Room not found — treat as new room
-        editorPlan = { ...plan, elements: [] }
-        editingRoomIdRef.current = null
-      }
-    } else {
-      // New room: empty canvas
-      editorPlan = { ...plan, elements: [] }
-    }
-
-    const handleSave = (editedPlan: FloorPlan) => {
-      const rid = editingRoomIdRef.current
-      const full = fullPlanRef.current
-
-      let finalElements: FloorElement[]
-
-      if (rid) {
-        // Editing existing room: remove old room elements, add new ones
-        const allZones = full.elements.filter((el): el is ZoneShape => el.kind === "zone")
-        const oldRoomElementIds = new Set<string>()
-        oldRoomElementIds.add(rid)
-        for (const el of full.elements) {
-          if (el.kind === "zone") continue
-          if (findRoomForElement(el, allZones) === rid) {
-            oldRoomElementIds.add(el.id)
-          }
+      const roomElements: FloorElement[] = [targetZone]
+      for (const el of fullPlan.elements) {
+        if (el.kind === "zone") continue
+        if (findRoomForElement(el, zones) === roomId) {
+          roomElements.push(el)
         }
-        const keptElements = full.elements.filter((el) => !oldRoomElementIds.has(el.id))
-        finalElements = [...keptElements, ...editedPlan.elements]
+      }
+      return roomElements
+    },
+    []
+  )
+
+  const handleOpenEditor = useCallback(
+    (roomId: string | null) => {
+      fullPlanRef.current = plan
+      editingRoomIdRef.current = roomId
+
+      let editorPlan: FloorPlan
+
+      if (roomId) {
+        // Edit existing room: load only that room's elements
+        const roomElements = extractRoomElements(plan, roomId)
+        if (roomElements) {
+          editorPlan = { ...plan, elements: roomElements }
+        } else {
+          // Room not found — treat as new room
+          editorPlan = { ...plan, elements: [] }
+          editingRoomIdRef.current = null
+        }
       } else {
-        // New room: append new elements to the existing plan
-        finalElements = [...full.elements, ...editedPlan.elements]
+        // New room: empty canvas
+        editorPlan = { ...plan, elements: [] }
       }
 
-      setPlan({ ...full, elements: finalElements })
+      const handleSave = (editedPlan: FloorPlan) => {
+        const rid = editingRoomIdRef.current
+        const full = fullPlanRef.current
 
-      // Complete getting-started task if plan has at least one table
-      if (finalElements.some((el) => el.kind === "table")) {
-        completeTask("floor-plan")
+        let finalElements: FloorElement[]
+
+        if (rid) {
+          // Editing existing room: remove old room elements, add new ones
+          const allZones = full.elements.filter(
+            (el): el is ZoneShape => el.kind === "zone"
+          )
+          const oldRoomElementIds = new Set<string>()
+          oldRoomElementIds.add(rid)
+          for (const el of full.elements) {
+            if (el.kind === "zone") continue
+            if (findRoomForElement(el, allZones) === rid) {
+              oldRoomElementIds.add(el.id)
+            }
+          }
+          const keptElements = full.elements.filter(
+            (el) => !oldRoomElementIds.has(el.id)
+          )
+          finalElements = [...keptElements, ...editedPlan.elements]
+        } else {
+          // New room: append new elements to the existing plan
+          finalElements = [...full.elements, ...editedPlan.elements]
+        }
+
+        setPlan({ ...full, elements: finalElements })
+
+        // Complete getting-started task if plan has at least one table
+        if (finalElements.some((el) => el.kind === "table")) {
+          completeTask("floor-plan")
+        }
+
+        // Sync to API
+        if (restaurantId) {
+          syncPlanToApi(editedPlan.elements, restaurantId, rid)
+        }
       }
 
-      // Sync to API
-      if (restaurantId) {
-        syncPlanToApi(editedPlan.elements, restaurantId, rid)
+      startEditing({
+        initialPlan: editorPlan,
+        onSave: handleSave,
+        onClose: stopEditing,
+      })
+
+      // Set initial step based on room content
+      const hasWalls = editorPlan.elements.some((el) => el.kind === "wall")
+      const hasTables = editorPlan.elements.some((el) => el.kind === "table")
+      if (hasTables) {
+        useSalleStore.getState().setEditorStep("tables")
+      } else if (hasWalls) {
+        useSalleStore.getState().setEditorStep("doors")
       }
-    }
+      // else stays on "walls" (default from loadPlan)
+    },
+    [
+      plan,
+      startEditing,
+      stopEditing,
+      extractRoomElements,
+      completeTask,
+      setPlan,
+      restaurantId,
+    ]
+  )
 
-    startEditing({
-      initialPlan: editorPlan,
-      onSave: handleSave,
-      onClose: stopEditing,
-    })
-
-    // Set initial step based on room content
-    const hasWalls = editorPlan.elements.some((el) => el.kind === "wall")
-    const hasTables = editorPlan.elements.some((el) => el.kind === "table")
-    if (hasTables) {
-      useSalleStore.getState().setEditorStep("tables")
-    } else if (hasWalls) {
-      useSalleStore.getState().setEditorStep("doors")
-    }
-    // else stays on "walls" (default from loadPlan)
-  }, [plan, startEditing, stopEditing, extractRoomElements, completeTask])
-
-  const handleDeleteRoom = useCallback((roomId: string) => {
-    const zones = plan.elements.filter((el): el is ZoneShape => el.kind === "zone")
-    const idsToRemove = new Set<string>()
-    idsToRemove.add(roomId)
-    for (const el of plan.elements) {
-      if (el.kind === "zone") continue
-      if (findRoomForElement(el, zones) === roomId) {
-        idsToRemove.add(el.id)
+  const handleDeleteRoom = useCallback(
+    (roomId: string) => {
+      const zones = plan.elements.filter(
+        (el): el is ZoneShape => el.kind === "zone"
+      )
+      const idsToRemove = new Set<string>()
+      idsToRemove.add(roomId)
+      for (const el of plan.elements) {
+        if (el.kind === "zone") continue
+        if (findRoomForElement(el, zones) === roomId) {
+          idsToRemove.add(el.id)
+        }
       }
-    }
-    setPlan({
-      ...plan,
-      elements: plan.elements.filter((el) => !idsToRemove.has(el.id)),
-    })
-  }, [plan])
+      setPlan({
+        ...plan,
+        elements: plan.elements.filter((el) => !idsToRemove.has(el.id)),
+      })
+    },
+    [plan, setPlan]
+  )
 
   if (isEditing) {
     return <EditionOverlay />
@@ -279,14 +310,16 @@ export default function SallePage() {
         variants={fadeUp}
         className="flex shrink-0 items-center justify-between"
       >
-        <h1 className="font-display text-lg font-semibold tracking-tight">Plan de salle</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight">
+          Plan de salle
+        </h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="service" className="text-xs px-3">
+            <TabsTrigger value="service" className="px-3 text-xs">
               Service
             </TabsTrigger>
-            <TabsTrigger value="plan" className="text-xs px-3">
+            <TabsTrigger value="plan" className="px-3 text-xs">
               Plan
             </TabsTrigger>
           </TabsList>
@@ -297,7 +330,11 @@ export default function SallePage() {
         {activeTab === "service" ? (
           <ConsultationView plan={plan} />
         ) : (
-          <PlanCardView plan={plan} onEdit={handleOpenEditor} onDelete={handleDeleteRoom} />
+          <PlanCardView
+            plan={plan}
+            onEdit={handleOpenEditor}
+            onDelete={handleDeleteRoom}
+          />
         )}
       </motion.div>
     </motion.div>

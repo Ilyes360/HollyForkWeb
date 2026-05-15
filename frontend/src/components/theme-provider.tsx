@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
 
 type ThemeProviderProps = {
@@ -27,7 +26,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     // Currently only light mode is supported
   }, [])
 
-  const value = React.useMemo(() => ({ theme: "light" as Theme, setTheme }), [setTheme])
+  const value = React.useMemo(
+    () => ({ theme: "light" as Theme, setTheme }),
+    [setTheme]
+  )
 
   return (
     <ThemeProviderContext.Provider value={value}>

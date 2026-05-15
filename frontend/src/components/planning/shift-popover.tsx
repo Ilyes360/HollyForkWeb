@@ -45,20 +45,14 @@ export function ShiftPopover({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={<div />}
-      >
+      <PopoverTrigger render={<div />}>
         <ShiftMiniCard
           shift={shift}
           employee={employee}
           onClick={() => setOpen(true)}
         />
       </PopoverTrigger>
-      <PopoverContent
-        side="right"
-        sideOffset={8}
-        className="z-[110] w-64"
-      >
+      <PopoverContent side="right" sideOffset={8} className="z-[110] w-64">
         <div className="space-y-3">
           {/* Employee info */}
           <div className="flex items-center gap-2">
@@ -84,10 +78,14 @@ export function ShiftPopover({
           {/* Time inputs */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-xs text-muted-foreground">
+              <label
+                htmlFor="shift-start-time"
+                className="mb-1 block text-xs text-muted-foreground"
+              >
                 Début
               </label>
               <Input
+                id="shift-start-time"
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
@@ -95,10 +93,14 @@ export function ShiftPopover({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-muted-foreground">
+              <label
+                htmlFor="shift-end-time"
+                className="mb-1 block text-xs text-muted-foreground"
+              >
                 Fin
               </label>
               <Input
+                id="shift-end-time"
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
@@ -109,11 +111,7 @@ export function ShiftPopover({
 
           {/* Actions */}
           <div className="flex items-center justify-between">
-            <Button
-              variant="destructive"
-              size="xs"
-              onClick={handleRemove}
-            >
+            <Button variant="destructive" size="xs" onClick={handleRemove}>
               <HugeiconsIcon
                 icon={Delete02Icon}
                 className="size-3"

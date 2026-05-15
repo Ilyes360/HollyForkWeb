@@ -31,7 +31,13 @@ export const WallShape = memo(
           const dy = y2 - y1
           const len = Math.sqrt(dx * dx + dy * dy)
           if (len === 0) return
-          const t = Math.max(0.1, Math.min(0.9, ((localPos.x - x1) * dx + (localPos.y - y1) * dy) / (len * len)))
+          const t = Math.max(
+            0.1,
+            Math.min(
+              0.9,
+              ((localPos.x - x1) * dx + (localPos.y - y1) * dy) / (len * len)
+            )
+          )
           splitWallForDoor(element.id, t)
           return
         }
@@ -39,7 +45,7 @@ export const WallShape = memo(
         // Walls are structural — no selection/transformer
         e.cancelBubble = true
       },
-      [element.id, tool, splitWallForDoor]
+      [element.id, element.points, tool, splitWallForDoor]
     )
 
     const cursor = tool === "door" ? "pointer" : undefined
@@ -61,7 +67,11 @@ export const WallShape = memo(
         shadowOffset={{ x: 0, y: 1 }}
         draggable={false}
         onClick={handleClick}
-        onTap={handleClick as unknown as (e: Konva.KonvaEventObject<TouchEvent>) => void}
+        onTap={
+          handleClick as unknown as (
+            e: Konva.KonvaEventObject<TouchEvent>
+          ) => void
+        }
         hitStrokeWidth={12}
         style={{ cursor }}
       />

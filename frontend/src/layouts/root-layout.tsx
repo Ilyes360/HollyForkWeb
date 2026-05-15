@@ -79,20 +79,27 @@ function LayoutInner() {
     <SidebarProvider
       defaultOpen={getSidebarDefaultOpen()}
       open={isEditing ? true : undefined}
-      className={isFullscreenEditing ? "!h-svh !min-h-0 overflow-hidden" : undefined}
+      className={
+        isFullscreenEditing ? "!h-svh !min-h-0 overflow-hidden" : undefined
+      }
       style={
         {
           "--sidebar-width": isFullscreenEditing
             ? "calc(var(--spacing) * 80)"
             : "calc(var(--spacing) * 64)",
           "--header-height": "calc(var(--spacing) * 14)",
-          "--content-padding": isFullscreenEditing ? "0px" : "calc(var(--spacing) * 4)",
+          "--content-padding": isFullscreenEditing
+            ? "0px"
+            : "calc(var(--spacing) * 4)",
           "--content-margin": "calc(var(--spacing) * 1.5)",
         } as React.CSSProperties
       }
     >
       {planning.isEditing ? (
-        <EmployeePanel employees={planning.employees} shifts={planning.state.shifts} />
+        <EmployeePanel
+          employees={planning.employees}
+          shifts={planning.state.shifts}
+        />
       ) : salle.isEditing ? (
         <EditorStepper />
       ) : carte.isEditing ? (
@@ -100,7 +107,9 @@ function LayoutInner() {
       ) : (
         <AppSidebar variant="inset" />
       )}
-      <SidebarInset className={isFullscreenEditing ? "min-h-0 overflow-hidden" : undefined}>
+      <SidebarInset
+        className={isFullscreenEditing ? "min-h-0 overflow-hidden" : undefined}
+      >
         {planning.isEditing ? (
           <EditionToolbar
             isDirty={planning.state.isDirty}
@@ -119,14 +128,18 @@ function LayoutInner() {
         ) : (
           <SiteHeader />
         )}
-        <div className={cn(
-          "flex min-h-0 flex-1 flex-col bg-muted/40",
-          isFullscreenEditing ? "overflow-hidden" : "overflow-y-auto"
-        )}>
-          <div className={cn(
-            "flex min-h-0 flex-1 flex-col",
-            !isFullscreenEditing && "@container/main p-(--content-padding)"
-          )}>
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col bg-muted/40",
+            isFullscreenEditing ? "overflow-hidden" : "overflow-y-auto"
+          )}
+        >
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col",
+              !isFullscreenEditing && "@container/main p-(--content-padding)"
+            )}
+          >
             <Outlet />
           </div>
         </div>
@@ -136,7 +149,9 @@ function LayoutInner() {
 
   if (planning.isEditing) {
     return (
-      <DragDropProvider onDragEnd={planning.handleDragEnd as any}>
+      <DragDropProvider
+        onDragEnd={planning.handleDragEnd as (event: unknown) => void}
+      >
         {layout}
       </DragDropProvider>
     )

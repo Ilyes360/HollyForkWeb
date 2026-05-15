@@ -5,7 +5,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import type { RecipeCategory, Recipe, RecipePortionInfo } from "@/components/carte/types"
+import type {
+  RecipeCategory,
+  Recipe,
+  RecipePortionInfo,
+} from "@/components/carte/types"
 import { CATEGORY_LABELS_PLURAL } from "@/components/carte/types"
 import type { Product } from "@/components/stock/types"
 import type { SupplierFull } from "@/components/commandes/types"
@@ -33,7 +37,7 @@ export function CategorySection({
   onSelectRecipe,
   onSelectProduct,
 }: CategorySectionProps) {
-  if (portionInfos.length === 0) return null
+  const { isEditing } = useCarteOperational()
 
   const sorted = [...portionInfos].sort((a, b) => {
     if (b.maxPortions !== a.maxPortions) return b.maxPortions - a.maxPortions
@@ -42,10 +46,10 @@ export function CategorySection({
 
   const recipeMap = new Map(recipes.map((r) => [r.id, r]))
 
-  const { isEditing } = useCarteOperational()
-
   const servable = portionInfos.filter((r) => r.maxPortions >= 10).length
-  const stockFaible = portionInfos.filter((r) => r.maxPortions > 0 && r.maxPortions < 10).length
+  const stockFaible = portionInfos.filter(
+    (r) => r.maxPortions > 0 && r.maxPortions < 10
+  ).length
   const rupture = portionInfos.filter((r) => r.maxPortions === 0).length
 
   // Ambient heatmap background (operational mode only)
@@ -56,11 +60,14 @@ export function CategorySection({
     return "rgba(151, 196, 89, 0.02)"
   }, [isEditing, rupture, stockFaible])
 
+  if (portionInfos.length === 0) return null
+
   return (
     <Collapsible defaultOpen>
-      <CollapsibleTrigger className="flex w-full items-center justify-between border-b border-border pb-3 pt-2 text-left">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {CATEGORY_LABELS_PLURAL[category]} · {portionInfos.length} recette{portionInfos.length > 1 ? "s" : ""}
+      <CollapsibleTrigger className="flex w-full items-center justify-between border-b border-border pt-2 pb-3 text-left">
+        <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          {CATEGORY_LABELS_PLURAL[category]} · {portionInfos.length} recette
+          {portionInfos.length > 1 ? "s" : ""}
         </span>
         <div className="flex items-center gap-3">
           {servable > 0 && (
@@ -83,8 +90,12 @@ export function CategorySection({
       <CollapsibleContent>
         <motion.div
           layout
-          className="mt-3 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 rounded-lg transition-colors duration-500"
-          style={sectionTint ? { backgroundColor: sectionTint, padding: 12, margin: -12 } : undefined}
+          className="mt-3 grid grid-cols-1 gap-3.5 rounded-lg transition-colors duration-500 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          style={
+            sectionTint
+              ? { backgroundColor: sectionTint, padding: 12, margin: -12 }
+              : undefined
+          }
         >
           <AnimatePresence mode="popLayout">
             {sorted.map((info, i) => {

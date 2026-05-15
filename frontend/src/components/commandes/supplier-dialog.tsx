@@ -28,10 +28,12 @@ interface SupplierDialogProps {
   onSubmit: (data: Omit<SupplierFull, "id">) => void
 }
 
-const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
-  value,
-  label,
-}))
+const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS).map(
+  ([value, label]) => ({
+    value,
+    label,
+  })
+)
 
 export function SupplierDialog({
   open,
@@ -51,6 +53,8 @@ export function SupplierDialog({
 
   useEffect(() => {
     if (open && supplier) {
+      // Form-reset-on-open — intentional setState in effect
+      /* eslint-disable react-hooks/set-state-in-effect */
       setName(supplier.name)
       setCategory(supplier.category)
       setPhone(supplier.phone)
@@ -58,6 +62,7 @@ export function SupplierDialog({
       setAddress(supplier.address)
       setAverageDeliveryDays(supplier.averageDeliveryDays)
       setNotes(supplier.notes)
+      /* eslint-enable react-hooks/set-state-in-effect */
     } else if (open && !supplier) {
       setName("")
       setCategory("viandes")
@@ -112,7 +117,10 @@ export function SupplierDialog({
 
           <div className="space-y-2">
             <Label>Catégorie</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v ?? "")}>
+            <Select
+              value={category}
+              onValueChange={(v) => setCategory(v ?? "")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -159,7 +167,9 @@ export function SupplierDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="supplier-delivery">Délai de livraison moyen (jours)</Label>
+            <Label htmlFor="supplier-delivery">
+              Délai de livraison moyen (jours)
+            </Label>
             <Input
               id="supplier-delivery"
               type="number"

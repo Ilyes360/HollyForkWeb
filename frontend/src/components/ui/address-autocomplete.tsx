@@ -18,12 +18,12 @@ import {
   InputGroupInput,
   InputGroupButton,
 } from "@/components/ui/input-group"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
-  Command,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Command, CommandItem, CommandList } from "@/components/ui/command"
 
 interface AddressAutocompleteProps {
   value: LocationData | null
@@ -68,6 +68,7 @@ export function AddressAutocomplete({
   useEffect(() => {
     if (manual) return
     if (hasContent && !value) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpen(true)
     } else {
       setOpen(false)
@@ -215,10 +216,7 @@ export function AddressAutocomplete({
   return (
     <div className={cn("space-y-1.5", className)}>
       <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger
-          render={<div />}
-          className="w-full"
-        >
+        <PopoverTrigger render={<div />} className="w-full">
           <InputGroup className="bg-background">
             <InputGroupAddon>
               <HugeiconsIcon
@@ -260,7 +258,8 @@ export function AddressAutocomplete({
 
         <PopoverContent
           className="w-(--anchor-width) p-0"
-          {...{ onOpenAutoFocus: (e: Event) => e.preventDefault() } as any}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          {...({ onOpenAutoFocus: (e: Event) => e.preventDefault() } as any)}
         >
           {isLoading && (
             <div className="px-3 py-2.5 text-center text-sm text-muted-foreground">
@@ -291,10 +290,7 @@ export function AddressAutocomplete({
               ))}
 
               {canUseManual && !error && (
-                <CommandItem
-                  value="__manual__"
-                  onSelect={switchToManual}
-                >
+                <CommandItem value="__manual__" onSelect={switchToManual}>
                   <HugeiconsIcon
                     icon={PencilEdit01Icon}
                     strokeWidth={2}

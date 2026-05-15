@@ -35,7 +35,12 @@ import { UNIT_LABELS } from "@/components/stock/types"
 import { formatCurrency } from "@/components/stock/utils"
 import type { Recipe, RecipeCategory, RecipeIngredient } from "./types"
 import { CATEGORY_LABELS, ALLERGEN_OPTIONS } from "./types"
-import { getMaterialCost, getFoodCostPercent, getGrossMargin, getFoodCostColor } from "./utils"
+import {
+  getMaterialCost,
+  getFoodCostPercent,
+  getGrossMargin,
+  getFoodCostColor,
+} from "./utils"
 import { IngredientCombobox } from "./ingredient-combobox"
 
 const schema = z.object({
@@ -97,7 +102,10 @@ export function AddRecipeDialog({
         portions: editRecipe.portions,
         notes: editRecipe.notes,
       })
+      // Batch form-state sync from props — intentional setState in effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAllergens(editRecipe.allergens)
+
       setIngredients(
         editRecipe.ingredients.map((ing) => {
           const product = products.find((p) => p.id === ing.productId)
@@ -112,7 +120,9 @@ export function AddRecipeDialog({
       )
     } else if (open && !editRecipe) {
       form.reset()
+
       setIngredients([])
+
       setAllergens([])
     }
   }, [open, editRecipe, form, products])
@@ -136,9 +146,7 @@ export function AddRecipeDialog({
 
   const handleQuantityChange = (productId: string, quantity: number) => {
     setIngredients((prev) =>
-      prev.map((i) =>
-        i.productId === productId ? { ...i, quantity } : i
-      )
+      prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
     )
   }
 
@@ -153,7 +161,8 @@ export function AddRecipeDialog({
   const recipeIngredients: RecipeIngredient[] = ingredients.map((i) => ({
     productId: i.productId,
     quantity: i.quantity,
-    unit: (products.find((p) => p.id === i.productId)?.unit ?? i.unit) as RecipeIngredient["unit"],
+    unit: (products.find((p) => p.id === i.productId)?.unit ??
+      i.unit) as RecipeIngredient["unit"],
   }))
 
   const materialCost = getMaterialCost(recipeIngredients, products)
@@ -202,7 +211,10 @@ export function AddRecipeDialog({
                 <FormItem>
                   <FormLabel>Nom de la recette</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Filet de bœuf sauce poivre" {...field} />
+                    <Input
+                      placeholder="Ex: Filet de bœuf sauce poivre"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,11 +237,13 @@ export function AddRecipeDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.keys(CATEGORY_LABELS) as RecipeCategory[]).map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {CATEGORY_LABELS[key]}
-                          </SelectItem>
-                        ))}
+                        {(Object.keys(CATEGORY_LABELS) as RecipeCategory[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {CATEGORY_LABELS[key]}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -291,7 +305,10 @@ export function AddRecipeDialog({
                         step="0.01"
                         value={ing.quantity}
                         onChange={(e) =>
-                          handleQuantityChange(ing.productId, Number(e.target.value))
+                          handleQuantityChange(
+                            ing.productId,
+                            Number(e.target.value)
+                          )
                         }
                         className="h-8 w-20"
                       />
@@ -307,7 +324,11 @@ export function AddRecipeDialog({
                         size="icon-xs"
                         onClick={() => handleRemoveIngredient(ing.productId)}
                       >
-                        <HugeiconsIcon icon={Delete02Icon} className="size-4" strokeWidth={2} />
+                        <HugeiconsIcon
+                          icon={Delete02Icon}
+                          className="size-4"
+                          strokeWidth={2}
+                        />
                       </Button>
                     </div>
                   ))}
@@ -320,11 +341,15 @@ export function AddRecipeDialog({
                   <div className="space-y-0.5">
                     <p>
                       Coût matière :{" "}
-                      <span className="font-medium">{formatCurrency(materialCost)}</span>
+                      <span className="font-medium">
+                        {formatCurrency(materialCost)}
+                      </span>
                     </p>
                     <p>
                       Food Cost :{" "}
-                      <span className={`font-medium ${getFoodCostColor(foodCostPct)}`}>
+                      <span
+                        className={`font-medium ${getFoodCostColor(foodCostPct)}`}
+                      >
                         {foodCostPct.toFixed(1)}%
                       </span>
                     </p>
@@ -378,7 +403,11 @@ export function AddRecipeDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Annuler
               </Button>
               <Button type="submit">

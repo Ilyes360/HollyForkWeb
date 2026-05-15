@@ -17,13 +17,29 @@ function TooltipProvider({
   )
 }
 
-function Tooltip({ delayDuration, ...props }: TooltipPrimitive.Root.Props & { delayDuration?: number }) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...(delayDuration !== undefined ? { delay: delayDuration } as any : {})} {...props} />
+function Tooltip({
+  delayDuration,
+  ...props
+}: TooltipPrimitive.Root.Props & { delayDuration?: number }) {
+  return (
+    <TooltipPrimitive.Root
+      data-slot="tooltip"
+      {...(delayDuration !== undefined
+        ? ({ delay: delayDuration } as Record<string, unknown>)
+        : {})}
+      {...props}
+    />
+  )
 }
 
-function TooltipTrigger({ asChild, children, ...props }: TooltipPrimitive.Trigger.Props & { asChild?: boolean }) {
+function TooltipTrigger({
+  asChild,
+  children,
+  ...props
+}: TooltipPrimitive.Trigger.Props & { asChild?: boolean }) {
   // base-ui uses `render` instead of `asChild`
-  const renderProp = asChild && children ? children as React.ReactElement : undefined
+  const renderProp =
+    asChild && children ? (children as React.ReactElement) : undefined
   return (
     <TooltipPrimitive.Trigger
       data-slot="tooltip-trigger"

@@ -5,7 +5,6 @@ import { PAGE_META } from "@/lib/copy/pages"
 import { useCarteOperational } from "./operational-view-context"
 import { useArticles } from "@/hooks/use-articles"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { cn as _cn } from "@/lib/utils"
 
 interface CarteHeaderProps {
   onAddRecipe: () => void
@@ -26,14 +25,16 @@ export function CarteHeader({ onAddRecipe }: CarteHeaderProps) {
           className="group flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground"
         >
           <span className="relative flex size-2">
-            <span className="relative inline-flex size-2 rounded-full bg-muted-foreground/40 group-hover:bg-emerald-500 transition-colors" />
+            <span className="relative inline-flex size-2 rounded-full bg-muted-foreground/40 transition-colors group-hover:bg-emerald-500" />
           </span>
           Vue op.
         </button>
       )}
 
-      <h1 className="font-display text-lg font-semibold tracking-tight">{PAGE_META.carte.title}</h1>
-      <span className="text-sm text-muted-foreground hidden sm:inline">
+      <h1 className="font-display text-lg font-semibold tracking-tight">
+        {PAGE_META.carte.title}
+      </h1>
+      <span className="hidden text-sm text-muted-foreground sm:inline">
         {PAGE_META.carte.subtitle}
       </span>
 

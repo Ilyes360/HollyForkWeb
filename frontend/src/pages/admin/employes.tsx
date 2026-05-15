@@ -7,7 +7,7 @@ import { AdminLayoutContext } from "./index"
 import { EmployesFilters } from "@/components/administration/employes/employes-filters"
 import { EmployesTable } from "@/components/administration/employes/employes-table"
 import { EmployeeSheet } from "@/components/administration/employes/employee-sheet"
-import type { Employee } from "@/components/administration/types"
+import type { Employee, Role } from "@/components/administration/types"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
@@ -27,7 +27,9 @@ export default function EmployesPage() {
   const [statusFilter, setStatusFilter] = useState("tous")
 
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  )
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp: Employee) => {
@@ -37,8 +39,13 @@ export default function EmployesPage() {
         if (!fullName.includes(q)) return false
       }
       if (posteFilter !== "tous" && emp.position !== posteFilter) return false
-      if (etablissementFilter !== "tous" && emp.establishmentId !== etablissementFilter) return false
-      if (statusFilter !== "tous" && emp.accountStatus !== statusFilter) return false
+      if (
+        etablissementFilter !== "tous" &&
+        emp.establishmentId !== etablissementFilter
+      )
+        return false
+      if (statusFilter !== "tous" && emp.accountStatus !== statusFilter)
+        return false
       return true
     })
   }, [employees, search, posteFilter, etablissementFilter, statusFilter])
@@ -48,9 +55,12 @@ export default function EmployesPage() {
     setSheetOpen(true)
   }, [])
 
-  const handleEdit = useCallback((employee: Employee) => {
-    navigate(`/admin/employes/${employee.id}`)
-  }, [navigate])
+  const handleEdit = useCallback(
+    (employee: Employee) => {
+      navigate(`/admin/employes/${employee.id}`)
+    },
+    [navigate]
+  )
 
   const handleAdd = useCallback(() => {
     navigate("/admin/employes/nouveau")
@@ -61,13 +71,10 @@ export default function EmployesPage() {
     return () => setOnAdd(null)
   }, [setOnAdd, handleAdd])
 
-  const handleToggleStatus = useCallback(
-    (_id: string) => {
-      // Backend doesn't have an account status field — not available
-      toast.info("Le statut du compte n'est pas géré par l'API")
-    },
-    []
-  )
+  const handleToggleStatus = useCallback((_id: string) => {
+    // Backend doesn't have an account status field — not available
+    toast.info("Le statut du compte n'est pas géré par l'API")
+  }, [])
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -114,7 +121,7 @@ export default function EmployesPage() {
         onOpenChange={setSheetOpen}
         employee={selectedEmployee}
         establishments={establishments}
-        roles={roles as any}
+        roles={roles as unknown as Role[]}
         onDelete={handleDelete}
       />
     </div>

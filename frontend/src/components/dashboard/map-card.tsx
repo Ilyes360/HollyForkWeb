@@ -38,7 +38,10 @@ import type { Establishment } from "@/stores/admin-types"
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 
 // Map KPIs per establishment (mock data for dev mode)
-const mapKpis: Record<string, { revenue: number; covers: number; occupancy: number; rating: number }> = {
+const mapKpis: Record<
+  string,
+  { revenue: number; covers: number; occupancy: number; rating: number }
+> = {
   "est-1": { revenue: 127500, covers: 1890, occupancy: 74, rating: 4.6 },
   "est-2": { revenue: 98200, covers: 1120, occupancy: 58, rating: 4.1 },
 }
@@ -50,14 +53,17 @@ const defaultKpis = { revenue: 0, covers: 0, occupancy: 0, rating: 0 }
  * Merges coordinates from /dashboard/map/ with details from /restaurants/.
  */
 function apiToEstablishments(
-  apiRestaurants: Array<{ restaurantId: number; name: string; lat: number; lng: number; city: string }>,
-  restaurantDetails: Array<Record<string, unknown>>,
+  apiRestaurants: Array<{
+    restaurantId: number
+    name: string
+    lat: number
+    lng: number
+    city: string
+  }>,
+  restaurantDetails: Array<Record<string, unknown>>
 ): Establishment[] {
   const detailsById = Object.fromEntries(
-    restaurantDetails.map((r) => [
-      r.restaurantId as number,
-      r,
-    ]),
+    restaurantDetails.map((r) => [r.restaurantId as number, r])
   ) as Record<number, Record<string, unknown>>
 
   return apiRestaurants.map((r) => {
@@ -90,7 +96,13 @@ function apiToEstablishments(
       services: [],
       storageZones: [],
       isActive: true,
-      legalInfo: { licenseType: "", licenseNumber: "", insurance: "", erpCapacity: 0, notes: "" },
+      legalInfo: {
+        licenseType: "",
+        licenseNumber: "",
+        insurance: "",
+        erpCapacity: 0,
+        notes: "",
+      },
       createdAt: "",
       updatedAt: "",
     }
@@ -242,7 +254,10 @@ export default function MapCard() {
   // Use API data converted to Establishment format
   const establishments = useMemo(() => {
     if (mapData?.restaurants?.length) {
-      return apiToEstablishments(mapData.restaurants, restaurantDetails as unknown as Array<Record<string, unknown>>)
+      return apiToEstablishments(
+        mapData.restaurants,
+        restaurantDetails as unknown as Array<Record<string, unknown>>
+      )
     }
     return restaurantDetails
   }, [mapData, restaurantDetails])
@@ -252,7 +267,10 @@ export default function MapCard() {
     () => establishments.filter((e) => e.address),
     [establishments]
   )
-  const connectionLineData = useMemo(() => buildConnectionLine(restaurants), [restaurants])
+  const connectionLineData = useMemo(
+    () => buildConnectionLine(restaurants),
+    [restaurants]
+  )
   const [monochrome, setMonochrome] = useState(true)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -265,7 +283,9 @@ export default function MapCard() {
 
   const establishment = activeIndex !== null ? restaurants[activeIndex] : null
   const restaurant = establishment // alias for JSX readability
-  const restaurantKpis = establishment ? (mapKpis[establishment.id] ?? defaultKpis) : null
+  const restaurantKpis = establishment
+    ? (mapKpis[establishment.id] ?? defaultKpis)
+    : null
 
   const FRANCE_VIEW = { longitude: 2.5, latitude: 46.8, zoom: 4.8 }
 
@@ -367,7 +387,9 @@ export default function MapCard() {
     const r = locked ? restaurants[activeIndex] : null
     try {
       map.setConfigProperty("basemap", "showBuildingModels", locked)
-    } catch { /* style may not be ready yet */ }
+    } catch {
+      /* style may not be ready yet */
+    }
     if (r) {
       map.flyTo({
         center: [r.address!.longitude, r.address!.latitude],
@@ -418,6 +440,7 @@ export default function MapCard() {
   // Reset style-loaded flags on expand/collapse so remounted maps wait for onLoad
   useEffect(() => {
     if (isExpanded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCardStyleLoaded(false)
     } else {
       setFullscreenStyleLoaded(false)
@@ -460,7 +483,7 @@ export default function MapCard() {
         )}
         onClick={handleExpand}
       >
-        <Card className="!gap-0 relative h-full overflow-hidden !p-0">
+        <Card className="relative h-full !gap-0 overflow-hidden !p-0">
           <div className="map-card h-full min-h-[300px]">
             <Map
               ref={cardMapRef}
@@ -485,7 +508,11 @@ export default function MapCard() {
               onLoad={handleCardMapLoad}
             >
               {cardStyleLoaded && (
-                <Source id="connections" type="geojson" data={connectionLineData}>
+                <Source
+                  id="connections"
+                  type="geojson"
+                  data={connectionLineData}
+                >
                   <Layer
                     id="connection-line"
                     type="line"
@@ -608,7 +635,7 @@ export default function MapCard() {
           <AnimatePresence>
             {isExpanded && (
               <motion.div
-                className="fixed inset-y-6 inset-x-10 z-[61] flex overflow-hidden rounded-2xl shadow-2xl"
+                className="fixed inset-x-10 inset-y-6 z-[61] flex overflow-hidden rounded-2xl shadow-2xl"
                 initial={{ opacity: 0, scale: 0.92 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.92 }}
@@ -647,11 +674,13 @@ export default function MapCard() {
                             >
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium truncate">
+                                  <span className="truncate text-sm font-medium">
                                     {r.name}
                                   </span>
                                   <Badge
-                                    variant={r.isActive ? "success" : "destructive"}
+                                    variant={
+                                      r.isActive ? "success" : "destructive"
+                                    }
                                     className="text-[10px]"
                                   >
                                     {r.isActive ? "Ouvert" : "Fermé"}
@@ -661,11 +690,11 @@ export default function MapCard() {
                                   {r.address!.city}, {r.address!.postalCode}
                                 </p>
                               </div>
-                              <div className="text-right shrink-0 ml-3">
-                                <p className="text-xs tabular-nums text-muted-foreground">
+                              <div className="ml-3 shrink-0 text-right">
+                                <p className="text-xs text-muted-foreground tabular-nums">
                                   {r.totalCapacity} cvts
                                 </p>
-                                <p className="text-xs tabular-nums text-muted-foreground">
+                                <p className="text-xs text-muted-foreground tabular-nums">
                                   {(mapKpis[r.id] ?? defaultKpis).occupancy}%
                                 </p>
                               </div>
@@ -692,7 +721,9 @@ export default function MapCard() {
                           </div>
                           <div className="absolute bottom-2 left-3">
                             <Badge
-                              variant={restaurant!.isActive ? "success" : "destructive"}
+                              variant={
+                                restaurant!.isActive ? "success" : "destructive"
+                              }
                             >
                               {restaurant!.isActive ? "Ouvert" : "Fermé"}
                             </Badge>
@@ -705,7 +736,8 @@ export default function MapCard() {
                             {restaurant!.name}
                           </h2>
                           <p className="text-sm text-muted-foreground">
-                            {restaurant!.address!.city}, {restaurant!.address!.postalCode}
+                            {restaurant!.address!.city},{" "}
+                            {restaurant!.address!.postalCode}
                           </p>
                         </div>
 
@@ -732,7 +764,9 @@ export default function MapCard() {
                               <AnimatedNumber
                                 value={restaurantKpis!.covers}
                                 formatFn={(n) =>
-                                  n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                                  n
+                                    .toFixed(0)
+                                    .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
                                 }
                               />
                             </p>
@@ -743,7 +777,10 @@ export default function MapCard() {
                                 Occupation
                               </p>
                               <p className="text-[11px] font-medium tabular-nums">
-                                <AnimatedNumber value={restaurantKpis!.occupancy} />%
+                                <AnimatedNumber
+                                  value={restaurantKpis!.occupancy}
+                                />
+                                %
                               </p>
                             </div>
                             <Progress
@@ -760,7 +797,7 @@ export default function MapCard() {
                                 value={restaurantKpis!.rating}
                                 decimals={1}
                               />
-                              <span className="text-sm text-muted-foreground font-normal">
+                              <span className="text-sm font-normal text-muted-foreground">
                                 /5
                               </span>
                             </p>
@@ -816,11 +853,7 @@ export default function MapCard() {
                         {/* Navigation footer */}
                         <div className="mt-auto border-t p-3">
                           <div className="flex items-center justify-between">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={prev}
-                            >
+                            <Button variant="ghost" size="sm" onClick={prev}>
                               <HugeiconsIcon
                                 icon={ArrowLeft01Icon}
                                 className="size-3.5"
@@ -838,11 +871,7 @@ export default function MapCard() {
                                 className="size-4"
                               />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={next}
-                            >
+                            <Button variant="ghost" size="sm" onClick={next}>
                               Suiv.
                               <HugeiconsIcon
                                 icon={ArrowRight01Icon}
@@ -989,9 +1018,7 @@ export default function MapCard() {
                         icon={Navigation03Icon}
                         className="size-4"
                       />
-                      <span className="sr-only">
-                        Réinitialiser orientation
-                      </span>
+                      <span className="sr-only">Réinitialiser orientation</span>
                     </Button>
                   </motion.div>
 
@@ -1013,7 +1040,9 @@ export default function MapCard() {
                         className={monochrome ? "size-4 opacity-50" : "size-4"}
                       />
                       <span className="sr-only">
-                        {monochrome ? "Activer les couleurs" : "Mode monochrome"}
+                        {monochrome
+                          ? "Activer les couleurs"
+                          : "Mode monochrome"}
                       </span>
                     </Button>
                   </motion.div>

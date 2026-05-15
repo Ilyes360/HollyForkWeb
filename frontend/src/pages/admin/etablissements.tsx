@@ -1,5 +1,8 @@
 import { useState, useCallback, useContext, useEffect } from "react"
-import { useEstablishments, useDeleteEstablishment } from "@/hooks/use-establishments"
+import {
+  useEstablishments,
+  useDeleteEstablishment,
+} from "@/hooks/use-establishments"
 import { useEmployees } from "@/hooks/use-employees"
 import { toast } from "sonner"
 import { AdminLayoutContext } from "./index"
@@ -15,7 +18,10 @@ export default function EtablissementsPage() {
   const { setOnAdd } = useContext(AdminLayoutContext)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   const openAddDialog = useCallback(() => setAddDialogOpen(true), [])
 
@@ -24,20 +30,20 @@ export default function EtablissementsPage() {
     return () => setOnAdd(null)
   }, [setOnAdd, openAddDialog])
 
-  const handleToggleActive = useCallback(
-    (_id: string) => {
-      // Backend doesn't have isActive field — no-op
-    },
-    []
-  )
+  const handleToggleActive = useCallback((_id: string) => {
+    // Backend doesn't have isActive field — no-op
+  }, [])
 
   const handleDelete = useCallback(
     (id: string) => {
-      const est = (establishments as any[]).find((e: Record<string, unknown>) =>
-        String(e.restaurantId ?? e.id) === id
+      const est = establishments.find(
+        (e) =>
+          String(
+            (e as unknown as { restaurantId?: number }).restaurantId ?? e.id
+          ) === id
       )
       if (est) {
-        setDeleteTarget({ id, name: (est as { name: string }).name })
+        setDeleteTarget({ id, name: est.name })
         setDeleteDialogOpen(true)
       }
     },

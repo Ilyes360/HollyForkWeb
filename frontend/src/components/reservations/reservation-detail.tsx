@@ -53,6 +53,7 @@ export function ReservationDetail({
 
   useEffect(() => {
     if (reservation) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotes(reservation.notes)
     }
   }, [reservation])
@@ -68,10 +69,13 @@ export function ReservationDetail({
           <SheetTitle>{reservation.clientName}</SheetTitle>
           <SheetDescription>
             Réservation du{" "}
-            {new Date(reservation.date + "T00:00:00").toLocaleDateString("fr-FR", {
-              day: "numeric",
-              month: "long",
-            })}{" "}
+            {new Date(reservation.date + "T00:00:00").toLocaleDateString(
+              "fr-FR",
+              {
+                day: "numeric",
+                month: "long",
+              }
+            )}{" "}
             à {reservation.time}
           </SheetDescription>
         </SheetHeader>
@@ -85,7 +89,9 @@ export function ReservationDetail({
             <>
               <Separator />
               <div className="space-y-2">
-                <span className="text-xs font-medium text-muted-foreground">Pipeline</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Pipeline
+                </span>
                 <PipelineStepper
                   stages={pipelineStages}
                   currentStageId={reservation.pipeline?.currentStageId}
@@ -99,7 +105,10 @@ export function ReservationDetail({
             <InfoField label="Téléphone" value={reservation.clientPhone} />
             <InfoField label="Email" value={reservation.clientEmail ?? ""} />
             <InfoField label="Couverts" value={String(reservation.covers)} />
-            <InfoField label="Table" value={getTableLabel(reservation.tableNumber)} />
+            <InfoField
+              label="Table"
+              value={getTableLabel(reservation.tableNumber)}
+            />
             <InfoField label="Canal" value={CANAL_LABELS[reservation.canal]} />
             <InfoField label="Heure" value={reservation.time} />
           </div>
@@ -127,7 +136,10 @@ export function ReservationDetail({
           )}
           {reservation.status === "en_attente" && (
             <>
-              <Button className="w-full" onClick={() => onStatusChange(reservation.id, "confirmee")}>
+              <Button
+                className="w-full"
+                onClick={() => onStatusChange(reservation.id, "confirmee")}
+              >
                 Confirmer
               </Button>
               <Button
@@ -148,7 +160,10 @@ export function ReservationDetail({
           )}
           {reservation.status === "confirmee" && (
             <>
-              <Button className="w-full" onClick={() => onStatusChange(reservation.id, "arrivee")}>
+              <Button
+                className="w-full"
+                onClick={() => onStatusChange(reservation.id, "arrivee")}
+              >
                 Marquer arrivée
               </Button>
               <Button

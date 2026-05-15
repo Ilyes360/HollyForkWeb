@@ -37,7 +37,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import type { Product, Supplier, ProductPortionSummary } from "@/components/stock/types"
+import type {
+  Product,
+  Supplier,
+  ProductPortionSummary,
+} from "@/components/stock/types"
 import type { RecipePortionInfo } from "@/components/carte/types"
 import {
   STATUS_CONFIG,
@@ -74,7 +78,15 @@ const STATUS_PRIORITY: Record<string, number> = {
   surstock: 3,
 }
 
-type SortKey = "status" | "name" | "category" | "zone" | "stock" | "portions" | "value" | "expiration"
+type SortKey =
+  | "status"
+  | "name"
+  | "category"
+  | "zone"
+  | "stock"
+  | "portions"
+  | "value"
+  | "expiration"
 type ViewMode = "list" | "grid"
 
 interface StockTableProps {
@@ -184,7 +196,10 @@ export function StockTable({
     [portionMap]
   )
 
-  const { sortedData, sortKey, sortDir, handleSort } = useTableSort<Product, SortKey>({
+  const { sortedData, sortKey, sortDir, handleSort } = useTableSort<
+    Product,
+    SortKey
+  >({
     data: filtered,
     defaultSortKey: "status",
     getSortValue,
@@ -203,10 +218,16 @@ export function StockTable({
             ))}
           </TabsList>
         </Tabs>
-        <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v ?? "tous")}>
-          <SelectTrigger className="w-[180px] hidden sm:flex">
+        <Select
+          value={categoryFilter}
+          onValueChange={(v) => setCategoryFilter(v ?? "tous")}
+        >
+          <SelectTrigger className="hidden w-[180px] sm:flex">
             <SelectValue>
-              {categoryFilterOptions.find((o) => o.value === categoryFilter)?.label}
+              {
+                categoryFilterOptions.find((o) => o.value === categoryFilter)
+                  ?.label
+              }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -220,7 +241,11 @@ export function StockTable({
         <div className="ml-auto flex items-center gap-2">
           <InputGroup className="w-64 bg-background">
             <InputGroupAddon>
-              <HugeiconsIcon icon={Search01Icon} className="size-4" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={Search01Icon}
+                className="size-4"
+                strokeWidth={2}
+              />
             </InputGroupAddon>
             <InputGroupInput
               placeholder="Rechercher un produit..."
@@ -234,10 +259,18 @@ export function StockTable({
           >
             <TabsList>
               <TabsTrigger value="list">
-                <HugeiconsIcon icon={Menu01Icon} className="size-4" strokeWidth={2} />
+                <HugeiconsIcon
+                  icon={Menu01Icon}
+                  className="size-4"
+                  strokeWidth={2}
+                />
               </TabsTrigger>
               <TabsTrigger value="grid">
-                <HugeiconsIcon icon={GridViewIcon} className="size-4" strokeWidth={2} />
+                <HugeiconsIcon
+                  icon={GridViewIcon}
+                  className="size-4"
+                  strokeWidth={2}
+                />
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -249,14 +282,70 @@ export function StockTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead label="Produit" sortKey="name" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="min-w-[200px]" />
-                <SortableTableHead label="Catégorie" sortKey="category" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[100px] hidden md:table-cell" />
-                <SortableTableHead label="Zone" sortKey="zone" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[120px] hidden lg:table-cell" />
-                <SortableTableHead label="Stock" sortKey="stock" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[160px]" />
-                <SortableTableHead label="Statut" sortKey="status" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[110px]" />
-                <SortableTableHead label="Équiv. portions" sortKey="portions" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[180px]" />
-                <SortableTableHead label="Valeur" sortKey="value" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[100px] hidden lg:table-cell" />
-                <SortableTableHead label="Expiration" sortKey="expiration" activeSortKey={sortKey} sortDir={sortDir} onSort={handleSort as (key: string) => void} className="w-[100px] hidden xl:table-cell" />
+                <SortableTableHead
+                  label="Produit"
+                  sortKey="name"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="min-w-[200px]"
+                />
+                <SortableTableHead
+                  label="Catégorie"
+                  sortKey="category"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="hidden w-[100px] md:table-cell"
+                />
+                <SortableTableHead
+                  label="Zone"
+                  sortKey="zone"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="hidden w-[120px] lg:table-cell"
+                />
+                <SortableTableHead
+                  label="Stock"
+                  sortKey="stock"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="w-[160px]"
+                />
+                <SortableTableHead
+                  label="Statut"
+                  sortKey="status"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="w-[110px]"
+                />
+                <SortableTableHead
+                  label="Équiv. portions"
+                  sortKey="portions"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="w-[180px]"
+                />
+                <SortableTableHead
+                  label="Valeur"
+                  sortKey="value"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="hidden w-[100px] lg:table-cell"
+                />
+                <SortableTableHead
+                  label="Expiration"
+                  sortKey="expiration"
+                  activeSortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort as (key: string) => void}
+                  className="hidden w-[100px] xl:table-cell"
+                />
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -328,7 +417,12 @@ export function StockTable({
                     </TableCell>
                     <TableCell>
                       <Badge variant={STATUS_CONFIG[status].variant}>
-                        {getStockStatusInsight(status, summary?.portionEquivalents.length ?? 0).text}
+                        {
+                          getStockStatusInsight(
+                            status,
+                            summary?.portionEquivalents.length ?? 0
+                          ).text
+                        }
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -390,18 +484,25 @@ export function StockTable({
                   </TableRow>
                 )
               })}
-              {sortedData.length === 0 && (() => {
-                const hasFilters = statusFilter !== "tous" || categoryFilter !== "toutes" || zoneFilter !== "toutes" || search.trim() !== ""
-                const empty = getStockEmptyState(hasFilters)
-                return (
-                  <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
-                      <p className="text-sm font-medium">{empty.title}</p>
-                      <p className="text-sm text-muted-foreground">{empty.description}</p>
-                    </TableCell>
-                  </TableRow>
-                )
-              })()}
+              {sortedData.length === 0 &&
+                (() => {
+                  const hasFilters =
+                    statusFilter !== "tous" ||
+                    categoryFilter !== "toutes" ||
+                    zoneFilter !== "toutes" ||
+                    search.trim() !== ""
+                  const empty = getStockEmptyState(hasFilters)
+                  return (
+                    <TableRow>
+                      <TableCell colSpan={9} className="h-24 text-center">
+                        <p className="text-sm font-medium">{empty.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {empty.description}
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })()}
             </TableBody>
           </Table>
         </div>
@@ -413,23 +514,28 @@ export function StockTable({
                 key={p.id}
                 product={p}
                 onClick={onSelectProduct}
-                {...{ suppliers, portionSummary: portionMap.get(p.id) ?? null, isLimiting: limitingProductIds.has(p.id), onOrder } as any}
               />
             ))}
           </div>
         </div>
-      ) : (() => {
-        const hasFilters = statusFilter !== "tous" || categoryFilter !== "toutes" || zoneFilter !== "toutes" || search.trim() !== ""
-        const empty = getStockEmptyState(hasFilters)
-        return (
-          <EmptyState
-            title={empty.title}
-            description={empty.description}
-            actionLabel={empty.actionLabel}
-            onAction={onAddProduct}
-          />
-        )
-      })()}
+      ) : (
+        (() => {
+          const hasFilters =
+            statusFilter !== "tous" ||
+            categoryFilter !== "toutes" ||
+            zoneFilter !== "toutes" ||
+            search.trim() !== ""
+          const empty = getStockEmptyState(hasFilters)
+          return (
+            <EmptyState
+              title={empty.title}
+              description={empty.description}
+              actionLabel={empty.actionLabel}
+              onAction={onAddProduct}
+            />
+          )
+        })()
+      )}
     </div>
   )
 }
