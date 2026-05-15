@@ -47,8 +47,11 @@ export function useArticleIngredients(articleId: number | null) {
 export function useAddArticleIngredient() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiArticleIngredient>("article-ingredients/", data),
+    mutationFn: (data: {
+      articleId: number
+      ingredientId: number
+      quantite: number
+    }) => apiPost<ApiArticleIngredient>("article-ingredients/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["article-ingredients"] }),
   })
 }

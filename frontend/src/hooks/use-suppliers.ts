@@ -65,8 +65,17 @@ export function useSuppliers() {
 export function useCreateSupplier() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiSupplier>("suppliers/", data),
+    mutationFn: (data: {
+      name: string
+      contactName?: string | null
+      email?: string | null
+      telephone?: string | null
+      address?: string | null
+      city?: string | null
+      postalCode?: string | null
+      notes?: string | null
+      isActive?: boolean
+    }) => apiPost<ApiSupplier>("suppliers/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
   })
 }
@@ -77,8 +86,17 @@ export function useCreateSupplier() {
 export function useUpdateSupplier() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiSupplier>(`suppliers/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      name: string
+      contactName: string | null
+      email: string | null
+      telephone: string | null
+      address: string | null
+      city: string | null
+      postalCode: string | null
+      notes: string | null
+      isActive: boolean
+    }> }) => apiPut<ApiSupplier>(`suppliers/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
   })
 }

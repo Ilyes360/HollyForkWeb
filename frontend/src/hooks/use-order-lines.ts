@@ -46,8 +46,12 @@ export function useOrderLines(commandeId: number | null) {
 export function useCreateOrderLine() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiOrderLine>("lignes-commandes/", data),
+    mutationFn: (data: {
+      commandeId: number
+      articleId: number
+      quantite: number
+      prixUnitaire: number
+    }) => apiPost<ApiOrderLine>("lignes-commandes/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
   })
 }
@@ -58,8 +62,12 @@ export function useCreateOrderLine() {
 export function useUpdateOrderLine() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiOrderLine>(`lignes-commandes/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      commandeId: number
+      articleId: number
+      quantite: number
+      prixUnitaire: number
+    }> }) => apiPut<ApiOrderLine>(`lignes-commandes/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
   })
 }

@@ -158,13 +158,13 @@ export default function ReservationsPage() {
       const datetime = `${data.date}T${data.time}:00`
       createReservation.mutate(
         {
-          client_name: data.clientName,
-          party_size: data.covers,
+          clientName: data.clientName,
+          partySize: data.covers,
           datetime,
-          phone_number: data.clientPhone,
-          salle_id: defaultSalleId,
-          table_id: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
-        } as Record<string, unknown>,
+          phoneNumber: data.clientPhone,
+          salleId: defaultSalleId,
+          tableId: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
+        },
         {
           onSuccess: () => {
             toast.success("Réservation créée")

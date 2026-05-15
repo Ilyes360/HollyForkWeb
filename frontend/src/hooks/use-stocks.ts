@@ -68,8 +68,13 @@ export function useStocks(restaurantId: number | null) {
 export function useUpdateStock() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiStock>(`stocks/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      restaurantId: number
+      ingredientId: number
+      quantityInStock: string
+      alertThreshold: string
+      weightedAverageCost: string
+    }> }) => apiPut<ApiStock>(`stocks/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["stocks"] }),
   })
 }

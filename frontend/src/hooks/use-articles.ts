@@ -128,8 +128,14 @@ export function useCreateArticle() {
 export function useUpdateArticle() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPatch<ApiArticle>(`articles/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      name: string
+      categorieId: number
+      price: string
+      description: string | null
+      available: boolean
+      ingredientsUpdate: { ingredientId: number; requiredQuantity: string }[]
+    }> }) => apiPatch<ApiArticle>(`articles/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
   })
 }

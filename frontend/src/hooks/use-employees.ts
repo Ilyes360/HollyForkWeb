@@ -99,8 +99,14 @@ export function useCreateEmployee() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiEmploye>("employes/", data),
+    mutationFn: (data: {
+      lastName: string
+      firstName: string
+      typeEmployeId: number
+      salary: string
+      hireDate: string
+      phoneNumber?: string | null
+    }) => apiPost<ApiEmploye>("employes/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 }
@@ -109,8 +115,14 @@ export function useUpdateEmployee() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPatch<ApiEmploye>(`employes/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      lastName: string
+      firstName: string
+      typeEmployeId: number
+      salary: string
+      hireDate: string
+      phoneNumber: string | null
+    }> }) => apiPatch<ApiEmploye>(`employes/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 }

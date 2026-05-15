@@ -72,8 +72,15 @@ export function useReservations(restaurantId: number | null, date?: string) {
 export function useCreateReservation() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiReservation>("reservations/", data),
+    mutationFn: (data: {
+      clientName: string
+      partySize: number
+      datetime: string
+      phoneNumber?: string
+      salleId: number
+      tableId?: number | null
+      notes?: string | null
+    }) => apiPost<ApiReservation>("reservations/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reservations"] }),
   })
 }
@@ -84,8 +91,16 @@ export function useCreateReservation() {
 export function useUpdateReservation() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPatch<ApiReservation>(`reservations/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      clientName: string
+      partySize: number
+      datetime: string
+      phoneNumber: string
+      salleId: number
+      tableId: number | null
+      status: string
+      notes: string | null
+    }> }) => apiPatch<ApiReservation>(`reservations/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reservations"] }),
   })
 }

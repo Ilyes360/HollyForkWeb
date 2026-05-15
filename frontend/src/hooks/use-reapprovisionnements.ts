@@ -49,8 +49,13 @@ export function useReapprovisionnements(restaurantId: number | null) {
 export function useCreateReapprovisionnement() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiReapprovisionnement>("reapprovisionnements/", data),
+    mutationFn: (data: {
+      stockId: number
+      quantite: number
+      date?: string
+      fournisseurId: number
+      restaurantId: number
+    }) => apiPost<ApiReapprovisionnement>("reapprovisionnements/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reapprovisionnements"] }),
   })
 }

@@ -183,8 +183,14 @@ export function useCreateShift() {
 export function useUpdateShift() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiShift>(`planning/shifts/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      employeId: number
+      restaurantId: number
+      startDate: string
+      endDate: string
+      typeShift: string
+      notes: string
+    }> }) => apiPut<ApiShift>(`planning/shifts/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 }

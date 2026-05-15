@@ -38,8 +38,11 @@ export function useCategories() {
 export function useCreateCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiCategory>("categories/", data),
+    mutationFn: (data: {
+      name: string
+      displayOrder?: number
+      description?: string
+    }) => apiPost<ApiCategory>("categories/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
   })
 }
@@ -50,8 +53,11 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiCategory>(`categories/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: {
+      name: string
+      displayOrder?: number
+      description?: string
+    } }) => apiPut<ApiCategory>(`categories/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
   })
 }

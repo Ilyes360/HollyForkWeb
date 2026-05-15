@@ -48,8 +48,12 @@ export function useRestaurantEmployees(restaurantId: number | null) {
 export function useAssignEmployee() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiRestaurantEmployee>("restaurant-employes/", data),
+    mutationFn: (data: {
+      restaurantId: number
+      employeId: number
+      dateAffectation?: string
+      actif?: boolean
+    }) => apiPost<ApiRestaurantEmployee>("restaurant-employes/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["restaurant-employees"] }),
   })
 }

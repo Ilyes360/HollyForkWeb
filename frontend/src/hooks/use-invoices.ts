@@ -51,8 +51,13 @@ export function useInvoices(restaurantId: number | null) {
 export function useCreateInvoice() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiInvoice>("factures/", data),
+    mutationFn: (data: {
+      commandeId: number
+      restaurantId: number
+      dateFacture?: string
+      dateEcheance?: string
+      lignes?: { description: string; quantite: number; prixUnitaire: number; tvaRate: number }[]
+    }) => apiPost<ApiInvoice>("factures/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
   })
 }

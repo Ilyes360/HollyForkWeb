@@ -35,8 +35,11 @@ export function useIngredients() {
 export function useCreateIngredient() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiIngredient>("ingredients/", data),
+    mutationFn: (data: {
+      name: string
+      unit: string
+      unitPrice?: string
+    }) => apiPost<ApiIngredient>("ingredients/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   })
 }
@@ -47,8 +50,11 @@ export function useCreateIngredient() {
 export function useUpdateIngredient() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPut<ApiIngredient>(`ingredients/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      name: string
+      unit: string
+      unitPrice: string
+    }> }) => apiPut<ApiIngredient>(`ingredients/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   })
 }

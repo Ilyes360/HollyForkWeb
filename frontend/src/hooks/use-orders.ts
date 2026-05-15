@@ -69,8 +69,12 @@ export function useOrders(restaurantId: number | null) {
 export function useCreateOrder() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiSupplierOrder>("suppliers/orders/", data),
+    mutationFn: (data: {
+      fournisseurId: number
+      restaurantId: number
+      expectedDeliveryDate?: string
+      notes?: string
+    }) => apiPost<ApiSupplierOrder>("suppliers/orders/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
   })
 }
@@ -78,8 +82,13 @@ export function useCreateOrder() {
 export function useUpdateOrder() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
-      apiPatch<ApiSupplierOrder>(`suppliers/orders/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<{
+      fournisseurId: number
+      restaurantId: number
+      expectedDeliveryDate: string
+      status: string
+      notes: string
+    }> }) => apiPatch<ApiSupplierOrder>(`suppliers/orders/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
   })
 }

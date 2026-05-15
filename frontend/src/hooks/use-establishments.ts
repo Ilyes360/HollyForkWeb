@@ -105,8 +105,17 @@ export function useCreateEstablishment() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiRestaurant>("restaurants/", data),
+    mutationFn: (data: {
+      name: string
+      address: string
+      postalCode: string
+      city: string
+      phoneNumber: string
+      siret?: string
+      nafCode?: string | null
+      pin?: string
+      logoUrl?: string | null
+    }) => apiPost<ApiRestaurant>("restaurants/", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.all })
       qc.invalidateQueries({ queryKey: ["restaurants"] })
@@ -118,8 +127,17 @@ export function useUpdateEstablishment() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number | string; data: Record<string, unknown> }) =>
-      apiPatch<ApiRestaurant>(`restaurants/${id}/`, data),
+    mutationFn: ({ id, data }: { id: number | string; data: Partial<{
+      name: string
+      address: string
+      postalCode: string
+      city: string
+      phoneNumber: string
+      siret: string
+      nafCode: string | null
+      pin: string
+      logoUrl: string | null
+    }> }) => apiPatch<ApiRestaurant>(`restaurants/${id}/`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.all })
       qc.invalidateQueries({ queryKey: ["restaurants"] })

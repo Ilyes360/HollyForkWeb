@@ -45,8 +45,13 @@ export function usePayments(restaurantId: number | null) {
 export function useCreatePayment() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPost<ApiPayment>("paiements/", data),
+    mutationFn: (data: {
+      commandeId: number
+      montant: number
+      methodePaiement: string
+      datePaiement?: string
+      reference?: string
+    }) => apiPost<ApiPayment>("paiements/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["payments"] }),
   })
 }
