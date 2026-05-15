@@ -1050,9 +1050,9 @@ import type { LocalType } from "./types"
 
 ### 22.3 CSP (Content Security Policy)
 
-**Statut actuel : NON IMPLÉMENTÉE.** C'est la priorité sécurité n°1 à implémenter.
+**Statut : IMPLÉMENTÉE** dans `vercel.json` (security headers).
 
-La CSP cible pour le déploiement (Vercel headers ou `<meta>` tag) :
+La CSP déployée via Vercel headers :
 
 ```
 default-src 'self';
@@ -1067,7 +1067,7 @@ object-src 'none';
 base-uri 'self';
 ```
 
-**À configurer dans `vercel.json`** (headers) ou en `<meta http-equiv="Content-Security-Policy">` dans `index.html`.
+**Configurée dans `vercel.json`** avec les headers additionnels : `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`.
 
 ### 22.4 Dépendances
 
