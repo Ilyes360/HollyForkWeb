@@ -5,7 +5,6 @@ import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { useShifts, useCreateShift, useUpdateShift, useDeleteShift } from "@/hooks/use-planning"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import type { Shift, DayOfWeek } from "@/components/planning/types"
 import { ConsultationView } from "@/components/planning/consultation-view"
 import { EditionOverlay } from "@/components/planning/edition-overlay"
@@ -69,7 +68,6 @@ function toISOWeek(date: Date): string {
 export default function PlanningPage() {
   usePageTitle("Planning")
   const { restaurantId } = useActiveRestaurant()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const { isEditing, startEditing, stopEditing } = usePlanningEdition()
   const { weekStart, direction, prev, next, today } = useWeekNavigation()
   const isoWeek = toISOWeek(weekStart)
@@ -92,8 +90,7 @@ export default function PlanningPage() {
       completeTask("first-service")
     }
 
-    // In dev mode, just show success (no API)
-    if (isDevMode || !restaurantId) {
+    if (!restaurantId) {
       toast.success("Planning enregistré")
       return
     }
@@ -148,7 +145,7 @@ export default function PlanningPage() {
     }
 
     toast.success(opCount > 0 ? "Planning enregistré" : "Aucune modification")
-  }, [isDevMode, restaurantId, weekStart, completeTask, createShift, updateShift, deleteShift])
+  }, [restaurantId, weekStart, completeTask, createShift, updateShift, deleteShift])
 
   const handleOpenEditor = useCallback(() => {
     shiftsBeforeEdit.current = [...shifts]

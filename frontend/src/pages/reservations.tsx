@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "motion/react"
 import { useDayNavigation } from "@/hooks/use-day-navigation"
 import { useReservations, useCreateReservation, useUpdateReservation, useDeleteReservation, useSalles } from "@/hooks/use-reservations"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { toast } from "sonner"
 
 /**
@@ -62,8 +61,6 @@ export default function ReservationsPage() {
   usePageTitle("Réservations")
   const { restaurantId } = useActiveRestaurant()
   const { data: apiReservations } = useReservations(restaurantId)
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
-
   // API is the single source of truth — map API data to frontend type
   const baseReservations = useMemo(() => {
     if (!apiReservations || apiReservations.length === 0) return []
@@ -120,17 +117,15 @@ export default function ReservationsPage() {
   }, [])
 
   const handleReschedule = useCallback((id: string, newTime: string) => {
-    if (!isDevMode) {
-      const resa = reservations.find((r) => r.id === id)
-      if (resa) {
-        const datetime = `${resa.date}T${newTime}:00`
-        updateReservation.mutate({
-          id: Number(id),
-          data: { datetime } as Record<string, unknown>,
-        })
-      }
+    const resa = reservations.find((r) => r.id === id)
+    if (resa) {
+      const datetime = `${resa.date}T${newTime}:00`
+      updateReservation.mutate({
+        id: Number(id),
+        data: { datetime } as Record<string, unknown>,
+      })
     }
-  }, [isDevMode, reservations, updateReservation])
+  }, [reservations, updateReservation])
 
   const handleDurationChange = useCallback((id: string, newDurationMinutes: number) => {
     setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], estimatedDurationMinutes: newDurationMinutes } }))
@@ -155,37 +150,31 @@ export default function ReservationsPage() {
       tableNumber: string
       notes: string
     }) => {
-      if (!isDevMode && restaurantId) {
-        // User mode: POST to API
-        if (!defaultSalleId) {
-          toast.error("Aucune salle configurée pour ce restaurant")
-          return
-        }
-        const datetime = `${data.date}T${data.time}:00`
-        createReservation.mutate(
-          {
-            client_name: data.clientName,
-            party_size: data.covers,
-            datetime,
-            phone_number: data.clientPhone,
-            salle_id: defaultSalleId,
-            table_id: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
-          } as Record<string, unknown>,
-          {
-            onSuccess: () => {
-              toast.success("Réservation créée")
-              completeTask("first-reservation")
-            },
-            onError: () => toast.error("Erreur lors de la création"),
-          },
-        )
-      } else {
-        // Dev mode: no API — toast only
-        toast.success("Réservation créée (dev mode)")
-        completeTask("first-reservation")
+      if (!restaurantId) return
+      if (!defaultSalleId) {
+        toast.error("Aucune salle configurée pour ce restaurant")
+        return
       }
+      const datetime = `${data.date}T${data.time}:00`
+      createReservation.mutate(
+        {
+          client_name: data.clientName,
+          party_size: data.covers,
+          datetime,
+          phone_number: data.clientPhone,
+          salle_id: defaultSalleId,
+          table_id: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
+        } as Record<string, unknown>,
+        {
+          onSuccess: () => {
+            toast.success("Réservation créée")
+            completeTask("first-reservation")
+          },
+          onError: () => toast.error("Erreur lors de la création"),
+        },
+      )
     },
-    [isDevMode, restaurantId, createReservation, defaultSalleId, completeTask]
+    [restaurantId, createReservation, defaultSalleId, completeTask]
   )
 
   // --- Keyboard shortcuts: N = new reservation, Escape = close detail ---

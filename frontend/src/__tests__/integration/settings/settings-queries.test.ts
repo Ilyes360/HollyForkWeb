@@ -4,7 +4,6 @@ import { renderHook, waitFor } from "@testing-library/react"
 import { createElement } from "react"
 import { useRestaurantSettings, usePaymentMethods, useNotes } from "@/hooks/use-settings"
 import { setTokens } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -17,7 +16,6 @@ function createWrapper() {
 describe("Settings queries (user mode — API via MSW)", () => {
   beforeEach(() => {
     localStorage.clear()
-    useDevModeStore.setState({ isDevMode: false })
     setTokens("test-token", "test-refresh")
   })
 
@@ -56,13 +54,12 @@ describe("Settings queries (user mode — API via MSW)", () => {
   })
 })
 
-describe("Settings queries (dev mode)", () => {
+describe("Settings queries (no token)", () => {
   beforeEach(() => {
     localStorage.clear()
-    useDevModeStore.setState({ isDevMode: true })
   })
 
-  it("returns null in dev mode (settings managed by admin store)", () => {
+  it("returns null when no auth token is available", () => {
     const { result } = renderHook(() => useRestaurantSettings(1), {
       wrapper: createWrapper(),
     })

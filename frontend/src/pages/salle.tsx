@@ -12,7 +12,6 @@ import { useFloorPlanStore } from "@/stores/floor-plan-store"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { useDevModeStore } from "@/stores/dev-mode-store"
 import { apiPost } from "@/api/client"
 import { toast } from "sonner"
 
@@ -155,7 +154,6 @@ export default function SallePage() {
   const { isEditing, startEditing, stopEditing } = useSalleEdition()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
   const { restaurantId } = useActiveRestaurant()
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const editingRoomIdRef = useRef<string | null>(null)
   const fullPlanRef = useRef<FloorPlan>(plan)
 
@@ -227,8 +225,8 @@ export default function SallePage() {
         completeTask("floor-plan")
       }
 
-      // Sync to API in user mode
-      if (!isDevMode && restaurantId) {
+      // Sync to API
+      if (restaurantId) {
         syncPlanToApi(editedPlan.elements, restaurantId, rid)
       }
     }

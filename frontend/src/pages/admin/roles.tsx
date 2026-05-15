@@ -3,10 +3,6 @@ import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { SecurityLockIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { apiGet, getAccessToken } from "@/api/client"
-import { useDevModeStore } from "@/stores/dev-mode-store"
-import { useRoles } from "@/hooks/use-roles"
-import { useEmployees } from "@/hooks/use-employees"
-import { RolesOverview } from "@/components/administration/roles/roles-overview"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { usePageTitle } from "@/hooks/use-page-title"
@@ -70,31 +66,21 @@ const PERMISSION_LABELS: Record<string, string> = {
 
 export default function RolesPage() {
   usePageTitle("Rôles & Accès")
-  const isDevMode = useDevModeStore((s) => s.isDevMode)
   const hasToken = !!getAccessToken()
 
-  // Dev mode: use old component
-  const { data: roles } = useRoles()
-  const { data: employees } = useEmployees()
-
-  // User mode: fetch real hierarchy + matrix
   const { data: hierarchy } = useQuery({
     queryKey: ["permissions", "hierarchy"],
     queryFn: () => apiGet<ApiHierarchy>("staff/permissions/hierarchy/"),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 10 * 60 * 1000,
   })
 
   const { data: matrix } = useQuery({
     queryKey: ["permissions", "matrix"],
     queryFn: () => apiGet<ApiMatrix>("staff/permissions/matrix/"),
-    enabled: !isDevMode && hasToken,
+    enabled: hasToken,
     staleTime: 10 * 60 * 1000,
   })
-
-  if (isDevMode) {
-    return <RolesOverview roles={roles as any} employees={employees} />
-  }
 
   const sortedRoles = hierarchy?.hierarchy
     ?.slice()
