@@ -29,10 +29,42 @@ type DevModeState = {
 export const useDevModeStore = create<DevModeState>()(
   persist(
     (set, get) => ({
-      isDevMode: false,
-      toggle: () => set({ isDevMode: !get().isDevMode }),
+      // In production, always force false regardless of persisted value
+      isDevMode: import.meta.env.DEV ? false : false,
+      toggle: import.meta.env.DEV
+        ? () => {
+            const next = !get().isDevMode
+            set({ isDevMode: next })
+
+            // Start or stop MSW worker on toggle (real browser only — skip in jsdom/Node)
+            if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+              if (next) {
+                import("@/mocks/browser").then(({ worker }) => {
+                  worker.start({ onUnhandledRequest: "bypass" })
+                })
+              } else {
+                import("@/mocks/browser").then(({ worker }) => {
+                  worker.stop()
+                })
+              }
+            }
+          }
+        : () => {
+            // No-op in production
+          },
     }),
-    { name: "holly-fork-dev-mode" },
+    {
+      name: "holly-fork-dev-mode",
+      // In production, override any persisted isDevMode to false
+      ...(import.meta.env.DEV
+        ? {}
+        : {
+            merge: (
+              _persistedState: unknown,
+              currentState: DevModeState,
+            ) => currentState,
+          }),
+    },
   ),
 )
 

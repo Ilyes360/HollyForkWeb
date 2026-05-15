@@ -11,17 +11,34 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { DevModeToggle } from "@/components/dev-mode-toggle"
 import { router } from "@/router"
 
-// Fetch CSRF cookie early so POST requests (login, register) have it available
-ensureCsrfCookie()
+async function startApp() {
+  // Start MSW worker in dev mode when dev mode is enabled
+  if (import.meta.env.DEV) {
+    const { useDevModeStore } = await import("@/stores/dev-mode-store")
+    const isDevMode = useDevModeStore.getState().isDevMode
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <RouterProvider router={router} />
-        <Toaster richColors position="top-right" />
-        {import.meta.env.DEV && <DevModeToggle />}
-      </ThemeProvider>
-    </QueryClientProvider>
-  </StrictMode>
-)
+    if (isDevMode) {
+      const { worker } = await import("@/mocks/browser")
+      await worker.start({
+        onUnhandledRequest: "bypass",
+      })
+    }
+  }
+
+  // Fetch CSRF cookie early so POST requests (login, register) have it available
+  ensureCsrfCookie()
+
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <RouterProvider router={router} />
+          <Toaster richColors position="top-right" />
+          {import.meta.env.DEV && <DevModeToggle />}
+        </ThemeProvider>
+      </QueryClientProvider>
+    </StrictMode>
+  )
+}
+
+startApp()
