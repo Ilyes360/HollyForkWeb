@@ -171,6 +171,7 @@ frontend/
 ### 5.1 Principe fondamental
 
 **Le backend Django est la source de vérité.** Le frontend consomme l'API telle qu'elle est documentée dans `docs/api/openapi.json` et le swagger à `http://localhost:8000/api/docs/`.
+Voici lieu de la documentation précise de l'API: /Users/antoinemoulin/Documents/Side projects/holly_pi/swagger.json
 
 ### 5.2 Flux de génération
 
