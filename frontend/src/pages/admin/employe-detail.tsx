@@ -14,7 +14,14 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form"
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,7 +34,12 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { useEmployees, useEmployeeTypes } from "@/hooks/use-employees"
+import {
+  useEmployees,
+  useEmployeeTypes,
+  type ApiTypeEmploye,
+} from "@/hooks/use-employees"
+import type { Employee } from "@/stores/admin-types"
 import { apiPost, apiPatch, apiDelete } from "@/api/client"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -67,10 +79,8 @@ export default function EmployeDetailPage() {
 
   const isNew = !id
   // Find employee from API data or store
-  const employee = !isNew
-    ? (allEmployees as unknown as Array<Record<string, unknown>>).find(
-        (e) => String(e.id) === id
-      )
+  const employee: Employee | null | undefined = !isNew
+    ? (allEmployees.find((e) => e.id === id) ?? null)
     : null
 
   const form = useForm<FormValues>({
@@ -78,12 +88,12 @@ export default function EmployeDetailPage() {
     resolver: zodResolver(schema) as any,
     defaultValues: employee
       ? {
-          firstName: String(employee.firstName ?? ""),
-          lastName: String(employee.lastName ?? ""),
-          phoneNumber: String(employee.phone ?? employee.phoneNumber ?? ""),
-          typeEmployeId: String(employee.roleId ?? employee.typeEmployeId ?? ""),
-          salary: String(employee.salary ?? "0.00"),
-          hireDate: String(employee.hireDate ?? ""),
+          firstName: employee.firstName ?? "",
+          lastName: employee.lastName ?? "",
+          phoneNumber: employee.phone ?? "",
+          typeEmployeId: employee.roleId ?? "",
+          salary: String(employee.hourlyRate * 151.67 || "0.00"),
+          hireDate: employee.hireDate ?? "",
         }
       : {
           firstName: "",
@@ -140,9 +150,7 @@ export default function EmployeDetailPage() {
   }
 
   // Get type name for header
-  const typeName = employee
-    ? String(employee.position ?? "")
-    : ""
+  const typeName = employee?.position ?? ""
 
   return (
     <motion.div
@@ -154,9 +162,13 @@ export default function EmployeDetailPage() {
       <motion.div variants={fadeUp}>
         <Link
           to="/admin/employes"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <HugeiconsIcon icon={ArrowLeft02Icon} strokeWidth={2} className="size-4" />
+          <HugeiconsIcon
+            icon={ArrowLeft02Icon}
+            strokeWidth={2}
+            className="size-4"
+          />
           Employés
         </Link>
       </motion.div>
@@ -165,19 +177,22 @@ export default function EmployeDetailPage() {
         {employee ? (
           <>
             <div
-              className={`flex size-10 items-center justify-center rounded-full text-sm font-medium text-white ${(employee.avatarColor as string) ?? "bg-gray-400"}`}
+              className={`flex size-10 items-center justify-center rounded-full text-sm font-medium text-white`}
+              style={{ backgroundColor: employee.avatarColor || "#9ca3af" }}
             >
-              {getInitials(String(employee.firstName), String(employee.lastName))}
+              {getInitials(employee.firstName, employee.lastName)}
             </div>
             <div>
               <h1 className="font-display text-lg font-semibold tracking-tight">
-                {String(employee.firstName)} {String(employee.lastName)}
+                {employee.firstName} {employee.lastName}
               </h1>
               <p className="text-sm text-muted-foreground">{typeName}</p>
             </div>
           </>
         ) : (
-          <h1 className="font-display text-lg font-semibold tracking-tight">Nouvel employé</h1>
+          <h1 className="font-display text-lg font-semibold tracking-tight">
+            Nouvel employé
+          </h1>
         )}
       </motion.div>
 
@@ -193,7 +208,9 @@ export default function EmployeDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Prénom</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -204,7 +221,9 @@ export default function EmployeDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nom</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -217,7 +236,9 @@ export default function EmployeDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Téléphone</FormLabel>
-                      <FormControl><Input {...field} placeholder="+33 6 12 34 56 78" /></FormControl>
+                      <FormControl>
+                        <Input {...field} placeholder="+33 6 12 34 56 78" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -228,7 +249,11 @@ export default function EmployeDetailPage() {
 
           {/* Poste & Contrat */}
           <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Poste & contrat" icon={Briefcase01Icon} defaultOpen>
+            <CollapsibleSection
+              title="Poste & contrat"
+              icon={Briefcase01Icon}
+              defaultOpen
+            >
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -236,22 +261,26 @@ export default function EmployeDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type d'employé</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue>
                               {field.value
-                                ? (employeeTypes as Array<Record<string, unknown>>).find(
-                                    (t) => String(t.id) === field.value
-                                  )?.typeName as string ?? field.value
+                                ? (employeeTypes.find(
+                                    (t: ApiTypeEmploye) =>
+                                      String(t.id) === field.value
+                                  )?.typeName ?? field.value)
                                 : "Sélectionner"}
                             </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {(employeeTypes as Array<Record<string, unknown>>).map((t) => (
+                          {employeeTypes.map((t: ApiTypeEmploye) => (
                             <SelectItem key={String(t.id)} value={String(t.id)}>
-                              {String(t.typeName ?? t.id)}
+                              {t.typeName ?? String(t.id)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -266,7 +295,9 @@ export default function EmployeDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Salaire (€/mois)</FormLabel>
-                      <FormControl><Input type="number" step="0.01" min="0" {...field} /></FormControl>
+                      <FormControl>
+                        <Input type="number" step="0.01" min="0" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -279,7 +310,9 @@ export default function EmployeDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Date d'embauche</FormLabel>
-                      <FormControl><Input type="date" {...field} /></FormControl>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -297,8 +330,15 @@ export default function EmployeDetailPage() {
           */}
 
           {/* Footer */}
-          <motion.div variants={fadeUp} className="flex items-center gap-2 pt-4 border-t">
-            <Button type="submit" disabled={!isNew && !form.formState.isDirty} className="flex-1">
+          <motion.div
+            variants={fadeUp}
+            className="flex items-center gap-2 border-t pt-4"
+          >
+            <Button
+              type="submit"
+              disabled={!isNew && !form.formState.isDirty}
+              className="flex-1"
+            >
               {isNew ? "Créer" : "Enregistrer"}
             </Button>
             {!isNew && (
@@ -309,7 +349,11 @@ export default function EmployeDetailPage() {
                 onClick={handleDelete}
                 title="Supprimer"
               >
-                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
+                <HugeiconsIcon
+                  icon={Delete02Icon}
+                  strokeWidth={2}
+                  className="size-4"
+                />
               </Button>
             )}
           </motion.div>
@@ -331,10 +375,19 @@ function CollapsibleSection({
   children: React.ReactNode
 }) {
   return (
-    <Collapsible defaultOpen={defaultOpen} className="rounded-lg border bg-background">
-      <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors">
+    <Collapsible
+      defaultOpen={defaultOpen}
+      className="rounded-lg border bg-background"
+    >
+      <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50">
         <span className="flex items-center gap-2">
-          {icon && <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4 text-muted-foreground" />}
+          {icon && (
+            <HugeiconsIcon
+              icon={icon}
+              strokeWidth={2}
+              className="size-4 text-muted-foreground"
+            />
+          )}
           {title}
         </span>
         <HugeiconsIcon
@@ -344,7 +397,9 @@ function CollapsibleSection({
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="border-t px-4 pt-4 pb-4 [&_label]:text-xs [&_label]:text-muted-foreground">{children}</div>
+        <div className="border-t px-4 pt-4 pb-4 [&_label]:text-xs [&_label]:text-muted-foreground">
+          {children}
+        </div>
       </CollapsibleContent>
     </Collapsible>
   )

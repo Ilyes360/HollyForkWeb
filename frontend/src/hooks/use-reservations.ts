@@ -1,8 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
+import {
+  apiGet,
+  apiPost,
+  apiPatch,
+  apiDelete,
+  getAccessToken,
+} from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
-type ApiReservation = {
+export type ApiReservation = {
   id: number
   clientName: string
   clientPhone: string
@@ -19,7 +25,7 @@ type ApiReservation = {
   createdAt: string
 }
 
-type ApiSalle = {
+export type ApiSalle = {
   id: number
   nom: string
   restaurantId: number
@@ -50,10 +56,13 @@ export function useReservations(restaurantId: number | null, date?: string) {
   const query = useQuery({
     queryKey: keys.reservations(restaurantId ?? undefined, date),
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiReservation>>("reservations/", {
-        restaurantId: restaurantId!,
-        date,
-      })
+      const res = await apiGet<PaginatedResponse<ApiReservation>>(
+        "reservations/",
+        {
+          restaurantId: restaurantId!,
+          date,
+        }
+      )
       return res.results
     },
     enabled: hasToken && !!restaurantId,
@@ -91,16 +100,22 @@ export function useCreateReservation() {
 export function useUpdateReservation() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
-      clientName: string
-      partySize: number
-      datetime: string
-      phoneNumber: string
-      salleId: number
-      tableId: number | null
-      status: string
-      notes: string | null
-    }> }) => apiPatch<ApiReservation>(`reservations/${id}/`, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Partial<{
+        clientName: string
+        partySize: number
+        datetime: string
+        phoneNumber: string
+        salleId: number
+        tableId: number | null
+        status: string
+        notes: string | null
+      }>
+    }) => apiPatch<ApiReservation>(`reservations/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reservations"] }),
   })
 }

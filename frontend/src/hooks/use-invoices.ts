@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, getAccessToken } from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
-type ApiInvoice = {
+export type ApiInvoice = {
   id: number
   numero: string
   commandeId: number
@@ -14,7 +14,12 @@ type ApiInvoice = {
   montantTva: number
   montantTtc: number
   statut: string
-  lignes: { description: string; quantite: number; prixUnitaire: number; tvaRate: number }[]
+  lignes: {
+    description: string
+    quantite: number
+    prixUnitaire: number
+    tvaRate: number
+  }[]
 }
 
 const keys = {
@@ -56,7 +61,12 @@ export function useCreateInvoice() {
       restaurantId: number
       dateFacture?: string
       dateEcheance?: string
-      lignes?: { description: string; quantite: number; prixUnitaire: number; tvaRate: number }[]
+      lignes?: {
+        description: string
+        quantite: number
+        prixUnitaire: number
+        tvaRate: number
+      }[]
     }) => apiPost<ApiInvoice>("factures/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
   })

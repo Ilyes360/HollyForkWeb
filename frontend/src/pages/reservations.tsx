@@ -10,6 +10,7 @@ import {
   useUpdateReservation,
   useDeleteReservation,
   useSalles,
+  type ApiReservation,
 } from "@/hooks/use-reservations"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { toast } from "sonner"
@@ -17,27 +18,24 @@ import { toast } from "sonner"
 /**
  * Maps API reservation (camelized) to frontend Reservation type.
  */
-function mapApiReservation(api: Record<string, unknown>): Reservation {
-  const dt = String(api.datetime ?? "")
-  const [datePart, timePart] = dt.includes("T") ? dt.split("T") : [dt, ""]
-  const time = (timePart ?? "").slice(0, 5) // "HH:MM"
-  const hour = parseInt(time.split(":")[0] ?? "12", 10)
+function mapApiReservation(api: ApiReservation): Reservation {
+  const hour = parseInt(api.time?.split(":")[0] ?? "12", 10)
   const service: ServiceType = hour < 16 ? "midi" : "soir"
 
   return {
-    id: String(api.id ?? ""),
-    clientName: String(api.clientName ?? ""),
-    clientPhone: String(api.phoneNumber ?? ""),
-    clientEmail: undefined,
-    date: datePart,
-    time,
+    id: String(api.id),
+    clientName: api.clientName ?? "",
+    clientPhone: api.clientPhone ?? "",
+    clientEmail: api.clientEmail ?? undefined,
+    date: api.date,
+    time: api.time?.slice(0, 5) ?? "",
     service,
-    covers: Number(api.partySize ?? 0),
-    tableNumber: api.tableId ? Number(api.tableId) : null,
-    canal: "telephone",
-    status: "confirmee",
-    notes: "",
-    createdAt: dt,
+    covers: api.covers ?? 0,
+    tableNumber: api.tableNumber ?? null,
+    canal: (api.canal as Reservation["canal"]) ?? "telephone",
+    status: (api.status as Reservation["status"]) ?? "confirmee",
+    notes: api.notes ?? "",
+    createdAt: api.createdAt ?? "",
   }
 }
 import type {
@@ -74,7 +72,7 @@ export default function ReservationsPage() {
   // API is the single source of truth — map API data to frontend type
   const baseReservations = useMemo(() => {
     if (!apiReservations || apiReservations.length === 0) return []
-    return (apiReservations as Record<string, unknown>[]).map(mapApiReservation)
+    return apiReservations.map(mapApiReservation)
   }, [apiReservations])
 
   // Local-only overrides for fields not in API (status, notes, duration)
@@ -111,8 +109,7 @@ export default function ReservationsPage() {
   const updateReservation = useUpdateReservation()
   void useDeleteReservation()
   const { data: salles } = useSalles(restaurantId)
-  const defaultSalleId =
-    salles.length > 0 ? (salles[0] as { id: number }).id : null
+  const defaultSalleId = salles.length > 0 ? salles[0].id : null
 
   // Keep selected reservation in sync with latest data
   const currentSelected = useMemo(() => {
@@ -146,7 +143,7 @@ export default function ReservationsPage() {
         const datetime = `${resa.date}T${newTime}:00`
         updateReservation.mutate({
           id: Number(id),
-          data: { datetime } as Record<string, unknown>,
+          data: { datetime },
         })
       }
     },

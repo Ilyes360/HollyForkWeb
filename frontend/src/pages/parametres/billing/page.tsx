@@ -40,7 +40,10 @@ const statusVariant: Record<string, "warning" | "success" | "destructive"> = {
 
 function formatCurrency(value: number | string) {
   const num = typeof value === "string" ? parseFloat(value) : value
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(num || 0)
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(num || 0)
 }
 
 function formatDate(dateStr: string) {
@@ -52,9 +55,11 @@ function formatDate(dateStr: string) {
 export function BillingPage() {
   const navigate = useNavigate()
   const { restaurantId } = useActiveRestaurant()
-  const { data: billingSettings, isLoading: billingLoading } = useBillingSettings(restaurantId)
+  const { data: billingSettings, isLoading: billingLoading } =
+    useBillingSettings(restaurantId)
   const { data: paymentMethods, isLoading: pmLoading } = usePaymentMethods()
-  const { data: invoices, isLoading: invoicesLoading } = useInvoices(restaurantId)
+  const { data: invoices, isLoading: invoicesLoading } =
+    useInvoices(restaurantId)
 
   return (
     <div className="space-y-4">
@@ -67,9 +72,9 @@ export function BillingPage() {
               <Skeleton className="h-4 w-48" />
             ) : billingSettings ? (
               <>
-                TVA par défaut : {billingSettings.defaultVatRate}% ·
-                Devise : {billingSettings.currency} ·
-                Factures auto : {billingSettings.autoInvoice ? "Oui" : "Non"}
+                TVA par défaut : {billingSettings.defaultVatRate}% · Devise :{" "}
+                {billingSettings.currency} · Factures auto :{" "}
+                {billingSettings.autoInvoice ? "Oui" : "Non"}
               </>
             ) : (
               "Aucun paramètre de facturation configuré"
@@ -139,40 +144,24 @@ export function BillingPage() {
                 {invoices.map((inv) => (
                   <TableRow key={inv.id}>
                     <TableCell className="font-medium">
-                      {String((inv as Record<string, unknown>).number ?? (inv as Record<string, unknown>).numero ?? `#${inv.id}`)}
+                      {inv.numero ?? `#${inv.id}`}
                     </TableCell>
-                    <TableCell>
-                      {formatDate(
-                        ((inv as Record<string, unknown>).date as string) ??
-                        ((inv as Record<string, unknown>).dateFacture as string) ?? ""
-                      )}
-                    </TableCell>
+                    <TableCell>{formatDate(inv.dateFacture ?? "")}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          statusVariant[
-                            ((inv as Record<string, unknown>).state as string) ??
-                            ((inv as Record<string, unknown>).statut as string) ?? "en_attente"
-                          ] ?? "warning"
+                          statusVariant[inv.statut ?? "en_attente"] ?? "warning"
                         }
                       >
-                        {statusLabels[
-                          ((inv as Record<string, unknown>).state as string) ??
-                          ((inv as Record<string, unknown>).statut as string) ?? "en_attente"
-                        ] ?? "En attente"}
+                        {statusLabels[inv.statut ?? "en_attente"] ??
+                          "En attente"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatCurrency(
-                        ((inv as Record<string, unknown>).amountBeforeTax as number) ??
-                        ((inv as Record<string, unknown>).montantHt as number) ?? 0
-                      )}
+                      {formatCurrency(inv.montantHt ?? 0)}
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(
-                        ((inv as Record<string, unknown>).amountIncludingTax as number) ??
-                        ((inv as Record<string, unknown>).montantTtc as number) ?? 0
-                      )}
+                      {formatCurrency(inv.montantTtc ?? 0)}
                     </TableCell>
                   </TableRow>
                 ))}
