@@ -12,6 +12,7 @@ interface ConsultationViewProps {
   onPrev: () => void
   onNext: () => void
   onToday: () => void
+  navRightSlot?: React.ReactNode
 }
 
 const slideVariants = {
@@ -34,6 +35,7 @@ export function ConsultationView({
   onPrev,
   onNext,
   onToday,
+  navRightSlot,
 }: ConsultationViewProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -43,6 +45,7 @@ export function ConsultationView({
           onPrev={onPrev}
           onNext={onNext}
           onToday={onToday}
+          rightSlot={navRightSlot}
         />
       </div>
       <div className="relative min-h-0 flex-1 p-4">

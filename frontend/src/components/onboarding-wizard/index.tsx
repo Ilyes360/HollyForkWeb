@@ -52,7 +52,10 @@ interface OnboardingWizardProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) {
+export function OnboardingWizard({
+  open,
+  onOpenChange,
+}: OnboardingWizardProps) {
   const currentStep = useWizardStore((s) => s.currentStep)
   const direction = useWizardStore((s) => s.direction)
   const data = useWizardStore((s) => s.data)
@@ -123,7 +126,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
 
           {/* Panel */}
           <motion.div
-            className="fixed inset-y-6 inset-x-10 z-[61] flex flex-col overflow-hidden rounded-2xl bg-background shadow-2xl"
+            className="fixed inset-x-10 inset-y-6 z-[61] flex flex-col overflow-hidden rounded-2xl bg-background shadow-2xl"
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.92 }}
@@ -133,10 +136,12 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
             <div className="flex shrink-0 items-center justify-between px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                  <img src="/hollyfork-logo.svg" alt="" className="h-5" />
+                  <img src="/holyfork-logo.svg" alt="" className="h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">{ONBOARDING.header.title}</h2>
+                  <h2 className="text-lg font-semibold">
+                    {ONBOARDING.header.title}
+                  </h2>
                   <p className="text-xs text-muted-foreground">
                     {ONBOARDING.header.stepOf(currentStep + 1, STEPS.length)}
                   </p>
@@ -144,7 +149,7 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
               </div>
 
               {/* Step pills */}
-              <div className="hidden sm:flex items-center gap-1.5">
+              <div className="hidden items-center gap-1.5 sm:flex">
                 {STEPS.map((step, i) => (
                   <div key={i} className="flex items-center gap-1.5">
                     <div
@@ -158,17 +163,25 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                       )}
                     >
                       {i < currentStep ? (
-                        <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-3" strokeWidth={2} />
+                        <HugeiconsIcon
+                          icon={CheckmarkCircle02Icon}
+                          className="size-3"
+                          strokeWidth={2}
+                        />
                       ) : (
-                        <span className="text-[10px] font-semibold">{i + 1}</span>
+                        <span className="text-[10px] font-semibold">
+                          {i + 1}
+                        </span>
                       )}
                       <span className="hidden md:inline">{step.label}</span>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <div className={cn(
-                        "h-px w-4 transition-colors",
-                        i < currentStep ? "bg-primary/30" : "bg-border"
-                      )} />
+                      <div
+                        className={cn(
+                          "h-px w-4 transition-colors",
+                          i < currentStep ? "bg-primary/30" : "bg-border"
+                        )}
+                      />
                     )}
                   </div>
                 ))}
@@ -179,7 +192,11 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                 size="icon-sm"
                 onClick={() => onOpenChange(false)}
               >
-                <HugeiconsIcon icon={Cancel01Icon} className="size-4" strokeWidth={2} />
+                <HugeiconsIcon
+                  icon={Cancel01Icon}
+                  className="size-4"
+                  strokeWidth={2}
+                />
               </Button>
             </div>
 
@@ -226,7 +243,11 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     onClick={prevStep}
                     className="gap-1.5"
                   >
-                    <HugeiconsIcon icon={ArrowLeft01Icon} className="size-3.5" strokeWidth={2} />
+                    <HugeiconsIcon
+                      icon={ArrowLeft01Icon}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
                     {ONBOARDING.footer.back}
                   </Button>
                 )}
@@ -245,13 +266,13 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                 )}
 
                 {isFirstStep ? (
-                  <Button
-                    size="sm"
-                    onClick={nextStep}
-                    className="gap-1.5"
-                  >
+                  <Button size="sm" onClick={nextStep} className="gap-1.5">
                     {ONBOARDING.footer.start}
-                    <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" strokeWidth={2} />
+                    <HugeiconsIcon
+                      icon={ArrowRight01Icon}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
                   </Button>
                 ) : isLastStep ? (
                   <Button
@@ -259,17 +280,21 @@ export function OnboardingWizard({ open, onOpenChange }: OnboardingWizardProps) 
                     onClick={handleComplete}
                     className="gap-1.5"
                   >
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-3.5" strokeWidth={2} />
+                    <HugeiconsIcon
+                      icon={CheckmarkCircle02Icon}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
                     {ONBOARDING.footer.finish}
                   </Button>
                 ) : (
-                  <Button
-                    size="sm"
-                    onClick={nextStep}
-                    className="gap-1.5"
-                  >
+                  <Button size="sm" onClick={nextStep} className="gap-1.5">
                     {ONBOARDING.footer.next}
-                    <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" strokeWidth={2} />
+                    <HugeiconsIcon
+                      icon={ArrowRight01Icon}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
                   </Button>
                 )}
               </div>

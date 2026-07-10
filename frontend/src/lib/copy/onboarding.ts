@@ -22,20 +22,24 @@ export const ONBOARDING = {
   },
 
   welcome: {
-    title: "Bienvenue sur Holly Fork",
-    description: "Configure ton restaurant en quelques etapes. Tu pourras tout modifier plus tard.",
+    title: "Bienvenue sur Holy Fork",
+    description:
+      "Configure ton restaurant en quelques etapes. Tu pourras tout modifier plus tard.",
     features: [
       {
         title: "Reservations",
-        description: "Gere tes resas, ton carnet clients et le service en temps reel.",
+        description:
+          "Gere tes resas, ton carnet clients et le service en temps reel.",
       },
       {
         title: "Planning",
-        description: "Organise les services, les horaires et les conges de ta brigade.",
+        description:
+          "Organise les services, les horaires et les conges de ta brigade.",
       },
       {
         title: "Plan de salle",
-        description: "Configure ta salle, place tes tables et visualise l'occupation.",
+        description:
+          "Configure ta salle, place tes tables et visualise l'occupation.",
       },
     ],
   },
@@ -58,14 +62,16 @@ export const ONBOARDING = {
 
   salle: {
     title: "Ta salle",
-    description: "Choisis un modele de depart. Tu pourras tout personnaliser ensuite dans l'editeur.",
+    description:
+      "Choisis un modele de depart. Tu pourras tout personnaliser ensuite dans l'editeur.",
     scratchTitle: "Commencer de zero",
     scratchDescription: "Configure manuellement dans l'editeur",
   },
 
   team: {
     title: "Ta brigade",
-    description: "Ajoute tes premiers membres. Tu pourras en ajouter d'autres plus tard.",
+    description:
+      "Ajoute tes premiers membres. Tu pourras en ajouter d'autres plus tard.",
     columns: {
       firstName: "Prenom",
       role: "Poste",
@@ -84,7 +90,8 @@ export const GETTING_STARTED = {
   srOnlyLabel: "Guide de demarrage",
   launchWizard: "Lancer l'assistant",
   wizardSubtitle: "Configuration guidee en 4 etapes",
-  progress: (completed: number, total: number) => `${completed}/${total} terminees`,
+  progress: (completed: number, total: number) =>
+    `${completed}/${total} terminees`,
   done: "Termine !",
 
   tasks: {

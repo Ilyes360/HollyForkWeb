@@ -1,6 +1,7 @@
 import { useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
+import { apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { fetchAllPages } from "@/api/pagination"
 import type { SupplierFull } from "@/components/commandes/types"
 
@@ -50,7 +51,7 @@ export function useSuppliers() {
 
   const suppliers = useMemo(
     () => (query.data ?? []).map(apiSupplierToFull),
-    [query.data],
+    [query.data]
   )
 
   return {
@@ -64,7 +65,7 @@ export function useSuppliers() {
  */
 export function useCreateSupplier() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       name: string
       contactName?: string | null
@@ -85,18 +86,24 @@ export function useCreateSupplier() {
  */
 export function useUpdateSupplier() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
-      name: string
-      contactName: string | null
-      email: string | null
-      telephone: string | null
-      address: string | null
-      city: string | null
-      postalCode: string | null
-      notes: string | null
-      isActive: boolean
-    }> }) => apiPut<ApiSupplier>(`suppliers/${id}/`, data),
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Partial<{
+        name: string
+        contactName: string | null
+        email: string | null
+        telephone: string | null
+        address: string | null
+        city: string | null
+        postalCode: string | null
+        notes: string | null
+        isActive: boolean
+      }>
+    }) => apiPatch<ApiSupplier>(`suppliers/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
   })
 }
@@ -106,7 +113,7 @@ export function useUpdateSupplier() {
  */
 export function useDeleteSupplier() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (id: number) => apiDelete(`suppliers/${id}/`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
   })

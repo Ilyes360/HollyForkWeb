@@ -57,7 +57,7 @@ function renderLogoutTest() {
           <Route path="/login" element={<div>Login Page</div>} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 
@@ -69,8 +69,8 @@ describe("Logout", () => {
     await user.click(screen.getByRole("button", { name: /déconnexion/i }))
 
     await waitFor(() => {
-      expect(localStorage.getItem("holly_access_token")).toBeNull()
-      expect(localStorage.getItem("holly_refresh_token")).toBeNull()
+      expect(localStorage.getItem("holy_access_token")).toBeNull()
+      expect(localStorage.getItem("holy_refresh_token")).toBeNull()
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
       expect(screen.getByText("Login Page")).toBeInTheDocument()
     })

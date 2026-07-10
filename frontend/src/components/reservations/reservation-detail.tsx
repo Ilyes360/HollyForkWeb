@@ -12,9 +12,19 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet"
-import type { Reservation, ReservationStatus } from "./types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import type { Reservation, ReservationStatus, RestaurantTable } from "./types"
 import { STATUS_CONFIG, CANAL_LABELS } from "./types"
-import { RESTAURANT_TABLES } from "./data"
 import { PipelineStepper } from "./pipeline-stepper"
 import { getTemplateById } from "./pipeline-templates"
 
@@ -24,6 +34,9 @@ interface ReservationDetailProps {
   onOpenChange: (open: boolean) => void
   onStatusChange: (id: string, status: ReservationStatus) => void
   onNotesChange: (id: string, notes: string) => void
+  onDelete: (id: string) => void
+  isDeleting?: boolean
+  tables: RestaurantTable[]
 }
 
 function InfoField({ label, value }: { label: string; value: string }) {
@@ -35,10 +48,13 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
-function getTableLabel(tableNumber: number | null): string {
-  if (tableNumber === null) return "Non assignée"
-  const table = RESTAURANT_TABLES.find((t) => t.number === tableNumber)
-  return table ? `${table.label} (${table.seats} places)` : `#${tableNumber}`
+function getTableLabel(
+  tableId: number | null,
+  tables: RestaurantTable[]
+): string {
+  if (tableId === null) return "Non assignée"
+  const table = tables.find((t) => t.id === tableId)
+  return table ? `${table.label} (${table.seats} places)` : `Table #${tableId}`
 }
 
 export function ReservationDetail({
@@ -47,6 +63,9 @@ export function ReservationDetail({
   onOpenChange,
   onStatusChange,
   onNotesChange,
+  onDelete,
+  isDeleting,
+  tables,
 }: ReservationDetailProps) {
   const [notes, setNotes] = useState("")
   const pipelineStages = getTemplateById("brasserie")?.stages ?? []
@@ -107,11 +126,48 @@ export function ReservationDetail({
             <InfoField label="Couverts" value={String(reservation.covers)} />
             <InfoField
               label="Table"
-              value={getTableLabel(reservation.tableNumber)}
+              value={getTableLabel(reservation.tableId, tables)}
             />
             <InfoField label="Canal" value={CANAL_LABELS[reservation.canal]} />
             <InfoField label="Heure" value={reservation.time} />
           </div>
+
+          {(reservation.allergies.length > 0 ||
+            reservation.dietTypes.length > 0) && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                {reservation.allergies.length > 0 && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">
+                      Allergies
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {reservation.allergies.map((a) => (
+                        <Badge key={a.id} variant="destructive">
+                          {a.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {reservation.dietTypes.length > 0 && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">
+                      Régimes alimentaires
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {reservation.dietTypes.map((d) => (
+                        <Badge key={d.id} variant="secondary">
+                          {d.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
           <Separator />
 
           <div className="space-y-2">
@@ -182,6 +238,35 @@ export function ReservationDetail({
               </Button>
             </>
           )}
+          <Separator className="my-2" />
+          <AlertDialog>
+            <AlertDialogTrigger>
+              <Button
+                variant="outline"
+                className="w-full text-destructive"
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Suppression..." : "Supprimer la réservation"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Supprimer cette réservation ?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. La réservation de{" "}
+                  {reservation.clientName} sera définitivement supprimée.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(reservation.id)}>
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </SheetFooter>
       </SheetContent>
     </Sheet>

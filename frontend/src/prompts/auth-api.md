@@ -2,7 +2,7 @@
 
 ## CONTEXTE PROJET
 
-Holly Fork — dashboard admin SaaS de gestion de restaurant multi-établissements.
+Holy Fork — dashboard admin SaaS de gestion de restaurant multi-établissements.
 Stack front : React 19 + Vite + TypeScript + Tailwind CSS + shadcn/ui.
 Backend : Django REST Framework, SimpleJWT, drf-spectacular (Swagger à `/api/docs/`).
 Architecture multi-tenant : chaque ressource est scopée à un restaurant.
@@ -19,7 +19,7 @@ Rôles métier : Gérant, Chef, Responsable salle, Serveur.
 - `frontend/src/api/auth/mutations.ts` — Hooks TanStack Query : useLogin, useVerifyMfa, useRegister, useLogout, useMfaSetup, useMfaConfirm, useMfaDisable, useDeleteAccount.
 - `frontend/src/api/auth/queries.ts` — useProfile (5min stale), useMfaStatus (10min stale), query keys factory.
 - `frontend/src/api/query-client.ts` — QueryClient configuré (staleTime 2min, gcTime 10min, retry 1).
-- `frontend/src/stores/auth-store.ts` — Zustand store persisté (holly-fork-auth) avec user, isAuthenticated, setUser, clearUser.
+- `frontend/src/stores/auth-store.ts` — Zustand store persisté (holy-fork-auth) avec user, isAuthenticated, setUser, clearUser.
 - `frontend/src/guards/auth-guard.tsx` — Guard basique (check user + loading state).
 - `frontend/src/pages/public/login.tsx` et `register.tsx` — Pages existantes.
 

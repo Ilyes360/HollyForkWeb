@@ -30,8 +30,7 @@ import {
 import type { Product } from "@/components/stock/types"
 import { UNIT_LABELS } from "@/components/stock/types"
 import { formatCurrency } from "@/components/stock/utils"
-import type { RecipeCategory, RecipeIngredient } from "@/components/carte/types"
-import { CATEGORY_LABELS } from "@/components/carte/types"
+import type { RecipeIngredient } from "@/components/carte/types"
 import {
   getMaterialCost,
   getFoodCostPercent,
@@ -39,15 +38,19 @@ import {
   getFoodCostColor,
 } from "@/components/carte/utils"
 import { IngredientCombobox } from "@/components/carte/ingredient-combobox"
-import { PRODUCT_ICONS } from "@/components/stock/product-icons"
-import { useArticles } from "@/hooks/use-articles"
+import {
+  useArticles,
+  useCreateArticle,
+  useUpdateArticle,
+} from "@/hooks/use-articles"
 import { useIngredients } from "@/hooks/use-ingredients"
-import { apiPost, apiPatch } from "@/api/client"
+import { useCategories } from "@/hooks/use-categories"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { handleMutationError } from "@/lib/mutation-error-handler"
 
 const schema = z.object({
   name: z.string().min(2, "Le nom est requis"),
-  category: z.enum(["entree", "plat", "dessert", "boisson"]),
+  categorieId: z.coerce.number().min(1, "Catégorie requise"),
   sellingPrice: z.coerce.number().min(0.01, "Min. 0,01 €"),
   portions: z.coerce.number().min(1).optional(),
   notes: z.string(),
@@ -97,6 +100,7 @@ export default function CuisineRecipePage() {
     storageZone: "",
   }))
 
+  const { data: apiCategories } = useCategories()
   const { data: recipes } = useArticles()
 
   const editRecipe = id ? (recipes.find((r) => r.id === id) ?? null) : null
@@ -109,7 +113,7 @@ export default function CuisineRecipePage() {
     resolver: zodResolver(schema) as any,
     defaultValues: {
       name: "",
-      category: "plat",
+      categorieId: 0,
       sellingPrice: 0,
       portions: 4,
       notes: "",
@@ -117,13 +121,12 @@ export default function CuisineRecipePage() {
   })
 
   const watchedPrice = useWatch({ control: form.control, name: "sellingPrice" })
-  void PRODUCT_ICONS
 
   useEffect(() => {
     if (editRecipe) {
       form.reset({
         name: editRecipe.name,
-        category: editRecipe.category,
+        categorieId: editRecipe.categorieId,
         sellingPrice: editRecipe.sellingPrice,
         portions: editRecipe.portions,
         notes: editRecipe.notes,
@@ -180,25 +183,49 @@ export default function CuisineRecipePage() {
   const foodCostPct = getFoodCostPercent(materialCost, watchedPrice || 0)
   const margin = getGrossMargin(watchedPrice || 0, materialCost)
 
-  async function handleSubmit(data: FormValues) {
-    try {
-      const apiPayload = {
-        name: data.name,
-        categorieId: 1, // Default category — would need a category picker mapping
-        price: String(data.sellingPrice),
-        description: data.notes || null,
-      }
+  const createArticle = useCreateArticle()
+  const updateArticle = useUpdateArticle()
 
-      if (isEditing && editRecipe) {
-        await apiPatch(`articles/${id}/`, apiPayload)
-        toast.success("Article modifié")
-      } else {
-        await apiPost("articles/", apiPayload)
-        toast.success("Article créé")
-      }
+  function handleSubmit(data: FormValues) {
+    const ingredientsPayload = ingredients.map((ing) => ({
+      ingredientId: Number(ing.productId),
+      requiredQuantity: String(ing.quantity),
+    }))
+
+    const onSuccess = () => {
+      toast.success(isEditing ? "Article modifié" : "Article créé")
       navigate("/cuisine")
-    } catch {
-      toast.error("Erreur lors de l'enregistrement")
+    }
+
+    const onError = (err: Error) =>
+      handleMutationError(err, { setError: form.setError })
+
+    if (isEditing && editRecipe) {
+      updateArticle.mutate(
+        {
+          id: Number(id),
+          data: {
+            name: data.name,
+            categorieId: data.categorieId,
+            price: String(data.sellingPrice),
+            description: data.notes || null,
+            ingredientsUpdate: ingredientsPayload,
+          },
+        },
+        { onSuccess, onError }
+      )
+    } else {
+      createArticle.mutate(
+        {
+          name: data.name,
+          categorieId: data.categorieId,
+          price: String(data.sellingPrice),
+          description: data.notes || null,
+          ingredientsUpdate:
+            ingredientsPayload.length > 0 ? ingredientsPayload : undefined,
+        },
+        { onSuccess, onError }
+      )
     }
   }
 
@@ -264,26 +291,28 @@ export default function CuisineRecipePage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
-                name="category"
+                name="categorieId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Catégorie</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={(v) => field.onChange(Number(v))}
+                    >
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {CATEGORY_LABELS[field.value as RecipeCategory]}
+                          <SelectValue placeholder="Sélectionner">
+                            {apiCategories.find((c) => c.id === field.value)
+                              ?.name ?? "Sélectionner"}
                           </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.keys(CATEGORY_LABELS) as RecipeCategory[]).map(
-                          (key) => (
-                            <SelectItem key={key} value={key}>
-                              {CATEGORY_LABELS[key]}
-                            </SelectItem>
-                          )
-                        )}
+                        {apiCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={String(cat.id)}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

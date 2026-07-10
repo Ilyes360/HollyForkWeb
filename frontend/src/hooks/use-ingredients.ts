@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
+import { apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { fetchAllPages } from "@/api/pagination"
 
 export type ApiIngredient = {
@@ -34,12 +35,9 @@ export function useIngredients() {
  */
 export function useCreateIngredient() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: {
-      name: string
-      unit: string
-      unitPrice?: string
-    }) => apiPost<ApiIngredient>("ingredients/", data),
+  return useMutationWithDefaults({
+    mutationFn: (data: { name: string; unit: string; unitPrice?: string }) =>
+      apiPost<ApiIngredient>("ingredients/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   })
 }
@@ -49,12 +47,18 @@ export function useCreateIngredient() {
  */
 export function useUpdateIngredient() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
-      name: string
-      unit: string
-      unitPrice: string
-    }> }) => apiPut<ApiIngredient>(`ingredients/${id}/`, data),
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Partial<{
+        name: string
+        unit: string
+        unitPrice: string
+      }>
+    }) => apiPatch<ApiIngredient>(`ingredients/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   })
 }
@@ -64,7 +68,7 @@ export function useUpdateIngredient() {
  */
 export function useDeleteIngredient() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (id: number) => apiDelete(`ingredients/${id}/`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   })

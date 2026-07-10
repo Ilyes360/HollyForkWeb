@@ -32,21 +32,20 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { useDashboardMapData } from "@/hooks/use-dashboard"
+import { useDashboardKpis } from "@/api/dashboard/queries"
 import { useEstablishments } from "@/hooks/use-establishments"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import type { Establishment } from "@/stores/admin-types"
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 
-// Map KPIs per establishment (mock data for dev mode)
-const mapKpis: Record<
-  string,
-  { revenue: number; covers: number; occupancy: number; rating: number }
-> = {
-  "est-1": { revenue: 127500, covers: 1890, occupancy: 74, rating: 4.6 },
-  "est-2": { revenue: 98200, covers: 1120, occupancy: 58, rating: 4.1 },
+// Map KPIs per establishment — fetched from /api/dashboard/kpis/ for the active restaurant
+type MapEstablishmentKpis = {
+  revenue: number | null
+  covers: number | null
+  occupancy: number | null
+  rating: number | null
 }
-
-const defaultKpis = { revenue: 0, covers: 0, occupancy: 0, rating: 0 }
 
 /**
  * Converts API map data + restaurant details to Establishment-compatible format.
@@ -271,6 +270,8 @@ export default function MapCard() {
     () => buildConnectionLine(restaurants),
     [restaurants]
   )
+  // Sync map view to sidebar's selected restaurant (one-way: sidebar → map)
+  const { restaurantId: sidebarRestaurantId } = useActiveRestaurant()
   const [monochrome, setMonochrome] = useState(true)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -281,10 +282,35 @@ export default function MapCard() {
   const cardRef = useRef<HTMLDivElement>(null)
   const [transformOrigin, setTransformOrigin] = useState("center center")
 
+  // When the sidebar restaurant changes, sync the map to it
+  useEffect(() => {
+    if (restaurants.length === 0 || sidebarRestaurantId == null) return
+    const idx = restaurants.findIndex(
+      (r) => r.id === String(sidebarRestaurantId)
+    )
+    if (idx !== -1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveIndex(idx)
+    }
+  }, [sidebarRestaurantId]) // Only react to sidebar changes, not restaurants array rebuilds
+
   const establishment = activeIndex !== null ? restaurants[activeIndex] : null
   const restaurant = establishment // alias for JSX readability
-  const restaurantKpis = establishment
-    ? (mapKpis[establishment.id] ?? defaultKpis)
+
+  // Fetch KPIs for the active restaurant from /api/dashboard/kpis/
+  const activeRestaurantId = establishment
+    ? parseInt(establishment.id, 10)
+    : null
+  const { data: kpiData } = useDashboardKpis(
+    activeRestaurantId ? { restaurantId: activeRestaurantId } : null
+  )
+  const restaurantKpis: MapEstablishmentKpis | null = kpiData
+    ? {
+        revenue: kpiData.kpis.monthlyRevenue,
+        covers: kpiData.kpis.covers,
+        occupancy: kpiData.kpis.occupancyRate,
+        rating: kpiData.kpis.satisfaction,
+      }
     : null
 
   const FRANCE_VIEW = { longitude: 2.5, latitude: 46.8, zoom: 4.8 }
@@ -354,11 +380,11 @@ export default function MapCard() {
   // Fly card map to active restaurant or back to France
   useEffect(() => {
     const map = cardMapRef.current?.getMap()
-    if (!map) return
+    if (!map || !cardStyleLoaded) return
     const r = activeIndex !== null ? restaurants[activeIndex] : null
-    if (r) {
+    if (r?.address) {
       map.flyTo({
-        center: [r.address!.longitude, r.address!.latitude],
+        center: [r.address.longitude, r.address.latitude],
         zoom: 8,
         pitch: 30,
         bearing: 10,
@@ -377,12 +403,12 @@ export default function MapCard() {
         essential: true,
       })
     }
-  }, [activeIndex])
+  }, [activeIndex, cardStyleLoaded, restaurants])
 
   // Fly fullscreen map when activeIndex changes + toggle 3D
   useEffect(() => {
     const map = fullscreenMapRef.current?.getMap()
-    if (!map) return
+    if (!map || !fullscreenStyleLoaded) return
     const locked = activeIndex !== null
     const r = locked ? restaurants[activeIndex] : null
     try {
@@ -390,9 +416,9 @@ export default function MapCard() {
     } catch {
       /* style may not be ready yet */
     }
-    if (r) {
+    if (r?.address) {
       map.flyTo({
-        center: [r.address!.longitude, r.address!.latitude],
+        center: [r.address.longitude, r.address.latitude],
         zoom: 15.5,
         pitch: 45,
         bearing: 20,
@@ -413,7 +439,7 @@ export default function MapCard() {
         essential: true,
       })
     }
-  }, [activeIndex])
+  }, [activeIndex, fullscreenStyleLoaded, restaurants])
 
   // Escape key to close
   useEffect(() => {
@@ -570,7 +596,7 @@ export default function MapCard() {
             <div className="flex items-end justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-white">
-                  {restaurant ? restaurant.name : "Holly Fork"}
+                  {restaurant ? restaurant.name : "Holy Fork"}
                 </h3>
                 <p className="text-xs text-white/70">
                   {restaurant
@@ -656,7 +682,7 @@ export default function MapCard() {
                       >
                         {/* Header */}
                         <div className="p-5 pb-3">
-                          <h2 className="text-lg font-semibold">Holly Fork</h2>
+                          <h2 className="text-lg font-semibold">Holy Fork</h2>
                           <p className="text-sm text-muted-foreground">
                             {restaurants.length} restaurants
                           </p>
@@ -695,7 +721,7 @@ export default function MapCard() {
                                   {r.totalCapacity} cvts
                                 </p>
                                 <p className="text-xs text-muted-foreground tabular-nums">
-                                  {(mapKpis[r.id] ?? defaultKpis).occupancy}%
+                                  N/A
                                 </p>
                               </div>
                             </button>
@@ -750,10 +776,16 @@ export default function MapCard() {
                               CA mensuel
                             </p>
                             <p className="text-lg font-semibold tabular-nums">
-                              <AnimatedNumber
-                                value={restaurantKpis!.revenue}
-                                formatFn={(n) => `${formatRevenue(n)}€`}
-                              />
+                              {restaurantKpis?.revenue != null ? (
+                                <AnimatedNumber
+                                  value={restaurantKpis.revenue}
+                                  formatFn={(n) => `${formatRevenue(n)}€`}
+                                />
+                              ) : (
+                                <span className="text-muted-foreground/50">
+                                  N/A
+                                </span>
+                              )}
                             </p>
                           </div>
                           <div>
@@ -761,14 +793,20 @@ export default function MapCard() {
                               Couverts
                             </p>
                             <p className="text-lg font-semibold tabular-nums">
-                              <AnimatedNumber
-                                value={restaurantKpis!.covers}
-                                formatFn={(n) =>
-                                  n
-                                    .toFixed(0)
-                                    .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-                                }
-                              />
+                              {restaurantKpis?.covers != null ? (
+                                <AnimatedNumber
+                                  value={restaurantKpis.covers}
+                                  formatFn={(n) =>
+                                    n
+                                      .toFixed(0)
+                                      .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                                  }
+                                />
+                              ) : (
+                                <span className="text-muted-foreground/50">
+                                  N/A
+                                </span>
+                              )}
                             </p>
                           </div>
                           <div className="col-span-2">
@@ -777,14 +815,22 @@ export default function MapCard() {
                                 Occupation
                               </p>
                               <p className="text-[11px] font-medium tabular-nums">
-                                <AnimatedNumber
-                                  value={restaurantKpis!.occupancy}
-                                />
-                                %
+                                {restaurantKpis?.occupancy != null ? (
+                                  <>
+                                    <AnimatedNumber
+                                      value={restaurantKpis.occupancy}
+                                    />
+                                    %
+                                  </>
+                                ) : (
+                                  <span className="text-muted-foreground/50">
+                                    N/A
+                                  </span>
+                                )}
                               </p>
                             </div>
                             <Progress
-                              value={restaurantKpis!.occupancy}
+                              value={restaurantKpis?.occupancy ?? 0}
                               className="mt-1.5"
                             />
                           </div>
@@ -793,13 +839,21 @@ export default function MapCard() {
                               Satisfaction
                             </p>
                             <p className="text-lg font-semibold tabular-nums">
-                              <AnimatedNumber
-                                value={restaurantKpis!.rating}
-                                decimals={1}
-                              />
-                              <span className="text-sm font-normal text-muted-foreground">
-                                /5
-                              </span>
+                              {restaurantKpis?.rating != null ? (
+                                <>
+                                  <AnimatedNumber
+                                    value={restaurantKpis.rating}
+                                    decimals={1}
+                                  />
+                                  <span className="text-sm font-normal text-muted-foreground">
+                                    /5
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground/50">
+                                  N/A
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>

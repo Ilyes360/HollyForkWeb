@@ -951,7 +951,7 @@ Le plan implémente tout en mock local (état React). La structure est conçue p
 - Les `Reservation[]` et `PipelineStageDefinition[]` sont des interfaces — quand l'API existe, on remplace `useState(MOCK)` par un `useQuery()` (React Query / SWR).
 - Le `pipeline.history[].enteredAt` viendra du système qui alimente le pipeline :
   - **Option A** : POS (caisse) qui pousse les changements d'étape
-  - **Option B** : Boutons dans l'interface Holly Fork (le serveur clique "Plat servi")
+  - **Option B** : Boutons dans l'interface Holy Fork (le serveur clique "Plat servi")
   - **Option C** : Intégration KDS (Kitchen Display System)
 - Le choix de la source n'impacte pas le frontend — l'interface consomme un array d'étapes avec timestamps, quelle que soit l'origine.
 - Pour le MVP : on utilise l'option B (boutons dans le detail sheet). Les boutons d'avancement pipeline sont déjà prévus dans le `ReservationDetail` via le stepper interactif.

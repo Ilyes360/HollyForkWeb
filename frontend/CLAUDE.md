@@ -1,4 +1,4 @@
-# Holly Fork — Frontend Engineering Standards
+# Holy Fork — Frontend Engineering Standards
 
 > Document de référence unique. Toute décision technique doit s'y conformer.
 > Dernière mise à jour : 2026-05-15.
@@ -12,7 +12,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Nom | Holly Fork |
+| Nom | Holy Fork |
 | Type | Dashboard SaaS B2B — gestion de restaurant |
 | Domaines métier | Réservations, planning, carte/menu, stocks, commandes fournisseurs, facturation, salle/plan |
 | Utilisateurs | Gérants et employés de restaurants |
@@ -245,9 +245,9 @@ apiUpload<T>(url, formData, options?) // POST FormData (pas de JSON transform)
 | Refresh | POST `/api/auth/token/refresh/` → `{ access }` |
 | Logout | POST `/api/auth/logout/` |
 | Profil | GET `/api/auth/profile/` |
-| Stockage tokens | `localStorage` (`holly_access_token`, `holly_refresh_token`) |
+| Stockage tokens | `localStorage` (`holy_access_token`, `holy_refresh_token`) |
 | CSRF | Cookie `csrftoken` → header `X-CSRFToken` sur mutations |
-| Auth state | Zustand store `auth-store.ts` (persisté localStorage `holly-fork-auth`) |
+| Auth state | Zustand store `auth-store.ts` (persisté localStorage `holy-fork-auth`) |
 | Guards | `AuthGuard` (vérifie token + profil), `GuestGuard` (redirige si connecté) |
 
 **Trade-off sécurité tokens :** Les JWT sont stockés en `localStorage`, ce qui est vulnérable à une attaque XSS. Pour un SaaS B2B manipulant des données personnelles (réservations clients), des cookies `httpOnly` seraient plus défensifs. Ce choix est conscient : le backend Django envoie les tokens dans le body de la réponse login (pas en cookie), et migrer vers des cookies `httpOnly` nécessite un changement backend. **Mitigation** : s'assurer qu'une CSP stricte est en place, ne jamais injecter de HTML non sanitizé, ne jamais utiliser `dangerouslySetInnerHTML`.
@@ -369,7 +369,7 @@ mutationFn: (data: Record<string, unknown>) => apiPost(...)
 
 | Store | Fichier | Persist | Usage |
 |-------|---------|---------|-------|
-| Auth | `auth-store.ts` | Oui (localStorage `holly-fork-auth`) | user, isAuthenticated |
+| Auth | `auth-store.ts` | Oui (localStorage `holy-fork-auth`) | user, isAuthenticated |
 | Floor plan | `floor-plan-store.ts` | Non | Plan de salle actif |
 | Getting started | `getting-started-store.ts` | Oui | Checklist onboarding |
 

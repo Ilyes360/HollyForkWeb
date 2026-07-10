@@ -36,12 +36,7 @@ export default function EtablissementsPage() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      const est = establishments.find(
-        (e) =>
-          String(
-            (e as unknown as { restaurantId?: number }).restaurantId ?? e.id
-          ) === id
-      )
+      const est = establishments.find((e) => e.id === id)
       if (est) {
         setDeleteTarget({ id, name: est.name })
         setDeleteDialogOpen(true)
@@ -52,9 +47,15 @@ export default function EtablissementsPage() {
 
   const handleConfirmDelete = useCallback(() => {
     if (!deleteTarget) return
-    deleteEstablishment(deleteTarget.id)
-    toast.success("Restaurant supprimé")
-    setDeleteTarget(null)
+    deleteEstablishment(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Restaurant supprimé")
+        setDeleteTarget(null)
+      },
+      onError: () => {
+        toast.error("Erreur lors de la suppression")
+      },
+    })
   }, [deleteTarget, deleteEstablishment])
 
   return (

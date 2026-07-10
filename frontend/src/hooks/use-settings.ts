@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiGet, apiPatch, apiPost, getAccessToken } from "@/api/client"
 import { fetchAllPages } from "@/api/pagination"
 import type { PaginatedResponse } from "@/api/types"
@@ -79,9 +80,12 @@ export type ApiNote = {
 
 const keys = {
   profile: () => ["profile"] as const,
-  restaurantSettings: (restaurantId?: number) => ["restaurant-settings", restaurantId] as const,
-  notifications: (restaurantId?: number) => ["notification-settings", restaurantId] as const,
-  billing: (restaurantId?: number) => ["billing-settings", restaurantId] as const,
+  restaurantSettings: (restaurantId?: number) =>
+    ["restaurant-settings", restaurantId] as const,
+  notifications: (restaurantId?: number) =>
+    ["notification-settings", restaurantId] as const,
+  billing: (restaurantId?: number) =>
+    ["billing-settings", restaurantId] as const,
   paymentMethods: () => ["payment-methods"] as const,
   notes: () => ["notes"] as const,
 }
@@ -103,9 +107,12 @@ export function useProfile() {
 
 export function useUpdateProfile() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: { email?: string; firstName?: string; lastName?: string }) =>
-      apiPatch<ApiProfile>("auth/profile/", data),
+  return useMutationWithDefaults({
+    mutationFn: (data: {
+      email?: string
+      firstName?: string
+      lastName?: string
+    }) => apiPatch<ApiProfile>("auth/profile/", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.profile() })
     },
@@ -132,13 +139,15 @@ export function useRestaurantSettings(restaurantId: number | null) {
 
 export function useUpdateRestaurantSettings(restaurantId: number | null) {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: Partial<Omit<ApiRestaurantSettings, "restaurantId">>) =>
       apiPatch<ApiRestaurantSettings>("settings/restaurant/", data, {
         searchParams: { restaurant_id: String(restaurantId!) },
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.restaurantSettings(restaurantId ?? undefined) })
+      qc.invalidateQueries({
+        queryKey: keys.restaurantSettings(restaurantId ?? undefined),
+      })
       qc.invalidateQueries({ queryKey: ["establishments"] })
     },
   })
@@ -154,7 +163,7 @@ export function useNotificationSettings(restaurantId: number | null) {
     queryFn: async () => {
       const res = await apiGet<PaginatedResponse<ApiNotificationSettings>>(
         "settings/notifications/",
-        { restaurantId: restaurantId! },
+        { restaurantId: restaurantId! }
       )
       return res.results[0] ?? null
     },
@@ -167,7 +176,7 @@ export function useNotificationSettings(restaurantId: number | null) {
 
 export function useUpsertNotificationSettings(restaurantId: number | null) {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: async (data: {
       emailNotifications?: boolean
       smsNotifications?: boolean
@@ -180,16 +189,18 @@ export function useUpsertNotificationSettings(restaurantId: number | null) {
       if (existingId) {
         return apiPatch<ApiNotificationSettings>(
           `settings/notifications/${existingId}/`,
-          payload,
+          payload
         )
       }
-      return apiPost<ApiNotificationSettings>(
-        "settings/notifications/",
-        { ...payload, restaurantId },
-      )
+      return apiPost<ApiNotificationSettings>("settings/notifications/", {
+        ...payload,
+        restaurantId,
+      })
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.notifications(restaurantId ?? undefined) })
+      qc.invalidateQueries({
+        queryKey: keys.notifications(restaurantId ?? undefined),
+      })
     },
   })
 }
@@ -204,7 +215,7 @@ export function useBillingSettings(restaurantId: number | null) {
     queryFn: async () => {
       const res = await apiGet<PaginatedResponse<ApiBillingSettings>>(
         "settings/billing/",
-        { restaurantId: restaurantId! },
+        { restaurantId: restaurantId! }
       )
       return res.results[0] ?? null
     },
@@ -222,7 +233,8 @@ export function usePaymentMethods() {
 
   const query = useQuery({
     queryKey: keys.paymentMethods(),
-    queryFn: () => fetchAllPages<ApiMethodePaiement>("billing/methodes-paiement/", {}),
+    queryFn: () =>
+      fetchAllPages<ApiMethodePaiement>("billing/methodes-paiement/", {}),
     enabled: hasToken,
     staleTime: 10 * 60 * 1000,
   })
@@ -252,9 +264,12 @@ export function useNotes(restaurantId: number | null) {
 
 export function useCreateNote() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: { createdById: number; restaurantId: number; message: string }) =>
-      apiPost<ApiNote>("notes/", data),
+  return useMutationWithDefaults({
+    mutationFn: (data: {
+      createdById: number
+      restaurantId: number
+      message: string
+    }) => apiPost<ApiNote>("notes/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.notes() }),
   })
 }

@@ -1,7 +1,7 @@
 import { defineConfig } from "orval"
 
 export default defineConfig({
-  hollyFork: {
+  holyFork: {
     input: {
       target: "./docs/api/openapi.json",
     },

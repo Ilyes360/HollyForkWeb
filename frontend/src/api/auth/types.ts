@@ -10,11 +10,10 @@ export type LoginRequest = {
   password: string
 }
 
-/** Réponse login standard */
+/** Réponse login standard (matches backend LoginResponse schema after camelizeKeys) */
 export type LoginResponse = {
   message: string
   accessToken: string
-  token: string
   refreshToken: string
   userId: number
   username: string

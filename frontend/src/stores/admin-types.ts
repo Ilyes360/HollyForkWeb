@@ -1,5 +1,5 @@
 import type { LocationData } from "@/types/location"
-import type { DayOfWeek, Department } from "@/components/planning/types"
+import type { DayOfWeek } from "@/components/planning/types"
 
 // --- Service & Storage ---
 
@@ -73,24 +73,14 @@ export interface Employee {
   id: string
   firstName: string
   lastName: string
-  email: string
   phone: string
-  dateOfBirth: string
-  address: string
-  position: PositionType
-  department: Department
-  establishmentId: string
-  contractType: ContractType
+  typeEmployeId: number
+  typeEmployeName: string
+  salary: number // Monthly salary (€) — as returned by API
   hireDate: string
-  endDate?: string
-  weeklyHours: number
-  hourlyRate: number
-  roleId: string
-  loginEmail: string
-  accountStatus: AccountStatus
   avatarColor: string
-  createdAt: string
-  updatedAt: string
+  // Resolved from /api/restaurant-employes/ (optional)
+  establishmentId?: string
 }
 
 // --- Roles ---

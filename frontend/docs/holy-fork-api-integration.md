@@ -1,6 +1,6 @@
-# Holly Fork — Méthodologie d'intégration de l'API Holly Pi
+# Holy Fork — Méthodologie d'intégration de l'API Holly Pi
 
-Ce document est la référence opérationnelle pour intégrer l'API Holly Pi (~150 endpoints, 28 tags) dans le dashboard React Holly Fork. Il s'utilise dans cet ordre : Phase 0 → Phase 6 d'abord, puis répétition de la Phase 6 pour chaque feature.
+Ce document est la référence opérationnelle pour intégrer l'API Holly Pi (~150 endpoints, 28 tags) dans le dashboard React Holy Fork. Il s'utilise dans cet ordre : Phase 0 → Phase 6 d'abord, puis répétition de la Phase 6 pour chaque feature.
 
 **Principe directeur** : on génère depuis la spec OpenAPI tout ce qui peut l'être, on ne réécrit à la main que ce qui apporte une vraie valeur (logique métier, edge cases). Zéro type API écrit à la main, zéro fonction `fetch`/`ky` directe dans un composant.
 
@@ -521,7 +521,7 @@ export function renderWithProviders(
 ### 4.1 `CLAUDE.md` à la racine
 
 ```markdown
-# Holly Fork — Conventions et règles strictes
+# Holy Fork — Conventions et règles strictes
 
 Ce fichier est lu par Claude Code à chaque session. Toute violation est un bug.
 
@@ -1397,4 +1397,4 @@ Une fois le tag `staff` intégré (`/api/staff/permissions/me/`), créer un hook
 
 ---
 
-**Version de ce document : 1.0 — créé pour démarrage Holly Fork. À mettre à jour si le pattern évolue après l'intégration de 2-3 features supplémentaires.**
+**Version de ce document : 1.0 — créé pour démarrage Holy Fork. À mettre à jour si le pattern évolue après l'intégration de 2-3 features supplémentaires.**

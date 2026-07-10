@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -24,7 +23,7 @@ import {
   getCategoryLabel,
   getZoneLabel,
 } from "@/components/stock/utils"
-import { getProductIcon } from "@/components/stock/product-icons"
+import { IngredientIcon } from "@/components/carte/ingredient-icon"
 import { DEFAULT_CATEGORIES, DEFAULT_STORAGE_ZONES } from "./types"
 import { SupplierPopover } from "@/components/shared/supplier-popover"
 import { ProductFlowGraph } from "./product-flow-graph"
@@ -83,20 +82,11 @@ export function ProductDetailModal({
 
   const status = getProductStatus(product)
   const config = STATUS_CONFIG[status]
-  const iconEntry = getProductIcon(product.icon)
   const stockPercent = getStockPercentage(product)
 
   const title = (
     <span className="flex items-center gap-2">
-      {iconEntry && (
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-          <HugeiconsIcon
-            icon={iconEntry.icon}
-            className="size-4 text-muted-foreground"
-            strokeWidth={2}
-          />
-        </span>
-      )}
+      <IngredientIcon product={product} size="sm" />
       {product.name}
       <Badge variant={config.variant} className="ml-1">
         {config.label}
@@ -107,8 +97,8 @@ export function ProductDetailModal({
   const leftColumn = (
     <>
       {/* Stock block */}
-      <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-3 rounded-xl bg-muted/50 p-4">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Stock
         </h4>
         <div className="grid grid-cols-2 gap-4">
@@ -121,17 +111,20 @@ export function ProductDetailModal({
             value={`${product.minStock} / ${product.maxStock} ${UNIT_LABELS[product.unit]}`}
           />
         </div>
-        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className={cn("h-full rounded-full transition-all", getStockBarColor(status))}
+            className={cn(
+              "h-full rounded-full transition-all",
+              getStockBarColor(status)
+            )}
             style={{ width: `${stockPercent}%` }}
           />
         </div>
       </div>
 
       {/* Prix block */}
-      <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-3 rounded-xl bg-muted/50 p-4">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Prix
         </h4>
         <div className="grid grid-cols-2 gap-4">
@@ -147,35 +140,44 @@ export function ProductDetailModal({
       </div>
 
       {/* Logistique block */}
-      <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-3 rounded-xl bg-muted/50 p-4">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Logistique
         </h4>
         <div className="grid grid-cols-2 gap-4">
           <InfoField
-            label="Rotation"
-            value={`${product.rotation} jours`}
-          />
-          <InfoField
             label="Zone de stockage"
             value={getZoneLabel(product.storageZone, storageZones)}
           />
-          <InfoField
-            label="Expiration"
-            value={new Date(product.expirationDate).toLocaleDateString("fr-FR", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          />
-          <InfoField
-            label="Dernière commande"
-            value={new Date(product.lastOrderDate).toLocaleDateString("fr-FR", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          />
+          {product.rotation != null && product.rotation > 0 && (
+            <InfoField label="Rotation" value={`${product.rotation} jours`} />
+          )}
+          {product.expirationDate && (
+            <InfoField
+              label="Expiration"
+              value={new Date(product.expirationDate).toLocaleDateString(
+                "fr-FR",
+                {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                }
+              )}
+            />
+          )}
+          {product.lastOrderDate && (
+            <InfoField
+              label="Dernière commande"
+              value={new Date(product.lastOrderDate).toLocaleDateString(
+                "fr-FR",
+                {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                }
+              )}
+            />
+          )}
         </div>
       </div>
 
@@ -184,7 +186,9 @@ export function ProductDetailModal({
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fournisseur</h4>
+            <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Fournisseur
+            </h4>
             <SupplierPopover
               supplier={supplier}
               products={allProducts}
@@ -199,7 +203,8 @@ export function ProductDetailModal({
                 <p className="text-sm font-medium">{supplier.name}</p>
                 <p className="text-xs text-muted-foreground">
                   Délai : ~{supplier.averageDeliveryDays} jour
-                  {supplier.averageDeliveryDays > 1 ? "s" : ""} · {supplier.phone}
+                  {supplier.averageDeliveryDays > 1 ? "s" : ""} ·{" "}
+                  {supplier.phone}
                 </p>
               </button>
             </SupplierPopover>
@@ -226,14 +231,19 @@ export function ProductDetailModal({
       />
 
       {/* Order history */}
-      {product.orderHistory.length > 0 && (
+      {product.orderHistory && product.orderHistory.length > 0 && (
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dernières commandes</h4>
+            <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Dernières commandes
+            </h4>
             <div className="space-y-2">
               {product.orderHistory.map((oh) => (
-                <div key={oh.id} className="flex items-center justify-between rounded-lg border p-3">
+                <div
+                  key={oh.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
                   <div>
                     <p className="text-sm font-medium">
                       {new Date(oh.date).toLocaleDateString("fr-FR", {
@@ -241,11 +251,15 @@ export function ProductDetailModal({
                         month: "short",
                       })}
                     </p>
-                    <p className="text-xs text-muted-foreground">{oh.supplier}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {oh.supplier}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{oh.quantity} unités</p>
-                    <p className="text-xs text-muted-foreground">{formatCurrency(oh.unitPrice)}/u</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatCurrency(oh.unitPrice)}/u
+                    </p>
                   </div>
                 </div>
               ))}

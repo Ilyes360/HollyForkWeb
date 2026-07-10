@@ -57,7 +57,7 @@ import {
   getZoneLabel,
   formatPortionEquivalents,
 } from "@/components/stock/utils"
-import { getProductIcon } from "@/components/stock/product-icons"
+import { IngredientIcon } from "@/components/carte/ingredient-icon"
 import { DEFAULT_CATEGORIES, DEFAULT_STORAGE_ZONES } from "./types"
 import { getStockStatusInsight, getStockEmptyState } from "@/lib/copy/stock"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -188,7 +188,7 @@ export function StockTable({
         case "value":
           return p.quantity * p.unitPrice
         case "expiration":
-          return p.expirationDate
+          return p.expirationDate ?? ""
         default:
           return 0
       }
@@ -353,12 +353,13 @@ export function StockTable({
               {sortedData.map((p) => {
                 const status = getProductStatus(p)
                 const pct = getStockPercentage(p)
-                const expDate = new Date(p.expirationDate)
+                const expDate = p.expirationDate
+                  ? new Date(p.expirationDate)
+                  : null
                 const now = new Date()
-                const daysUntilExp = Math.ceil(
-                  (expDate.getTime() - now.getTime()) / 86400000
-                )
-                const iconEntry = getProductIcon(p.icon)
+                const daysUntilExp = expDate
+                  ? Math.ceil((expDate.getTime() - now.getTime()) / 86400000)
+                  : null
                 const summary = portionMap.get(p.id)
                 const isLimiting = limitingProductIds.has(p.id)
 
@@ -375,15 +376,7 @@ export function StockTable({
                   >
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        {iconEntry && (
-                          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                            <HugeiconsIcon
-                              icon={iconEntry.icon}
-                              className="size-4 text-muted-foreground"
-                              strokeWidth={2}
-                            />
-                          </div>
-                        )}
+                        <IngredientIcon product={p} size="sm" />
                         <div>
                           <span className="font-medium">{p.name}</span>
                           <span className="block text-xs text-muted-foreground">
@@ -437,20 +430,24 @@ export function StockTable({
                       {formatCurrency(p.quantity * p.unitPrice)}
                     </TableCell>
                     <TableCell className="hidden xl:table-cell">
-                      <span
-                        className={
-                          daysUntilExp < 3
-                            ? "text-destructive"
-                            : daysUntilExp < 7
-                              ? "text-amber-600"
-                              : ""
-                        }
-                      >
-                        {expDate.toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
+                      {expDate ? (
+                        <span
+                          className={
+                            daysUntilExp != null && daysUntilExp < 3
+                              ? "text-destructive"
+                              : daysUntilExp != null && daysUntilExp < 7
+                                ? "text-amber-600"
+                                : ""
+                          }
+                        >
+                          {expDate.toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

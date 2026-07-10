@@ -5,7 +5,7 @@
 
 export const mockSettings = {
   restaurant_id: 1,
-  name: "Holly Fork — Marais",
+  name: "Holy Fork — Marais",
   address: "12 rue des Rosiers",
   postal_code: "75004",
   city: "Paris",
@@ -24,6 +24,20 @@ export const mockMethodesPaiement = [
 ]
 
 export const mockNotes = [
-  { id: 1, created_by_id: 1, created_by_name: "Admin", restaurant_id: 1, created_at: "2026-05-01T10:00:00Z", message: "Vérifier livraison lundi" },
-  { id: 2, created_by_id: 1, created_by_name: "Admin", restaurant_id: 1, created_at: "2026-05-02T14:00:00Z", message: "Formation nouvelle recrue mercredi" },
+  {
+    id: 1,
+    created_by_id: 1,
+    created_by_name: "Admin",
+    restaurant_id: 1,
+    created_at: "2026-05-01T10:00:00Z",
+    message: "Vérifier livraison lundi",
+  },
+  {
+    id: 2,
+    created_by_id: 1,
+    created_by_name: "Admin",
+    restaurant_id: 1,
+    created_at: "2026-05-02T14:00:00Z",
+    message: "Formation nouvelle recrue mercredi",
+  },
 ]

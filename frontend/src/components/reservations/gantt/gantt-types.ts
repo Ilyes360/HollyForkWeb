@@ -1,9 +1,9 @@
 import type { Reservation, RestaurantTable, ServiceType } from "../types"
 
 export interface DepartureWindow {
-  earlyMinute: number   // début fenêtre (optimiste)
-  lateMinute: number    // fin fenêtre (pessimiste)
-  label: string         // "13:15–13:30" ou "Table libre"
+  earlyMinute: number // début fenêtre (optimiste)
+  lateMinute: number // fin fenêtre (pessimiste)
+  label: string // "13:15–13:30" ou "Table libre"
 }
 
 export interface GanttBlock {
@@ -14,7 +14,7 @@ export interface GanttBlock {
   isEstimated: boolean
   x: number
   width: number
-  pipelineProgress: number  // 0–1
+  pipelineProgress: number // 0–1
   departureWindow: DepartureWindow | null
   reservation: Reservation
 }
@@ -36,6 +36,7 @@ export interface GanttTimelineProps {
   onReschedule: (reservationId: string, newTime: string) => void
   onDurationChange: (reservationId: string, newDurationMinutes: number) => void
   selectedReservationId: string | null
+  tables: import("../types").RestaurantTable[]
 }
 
 export type ResizeSide = "left" | "right"

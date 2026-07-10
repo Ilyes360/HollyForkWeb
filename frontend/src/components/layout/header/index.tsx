@@ -8,15 +8,15 @@ import { UserMenu } from "@/components/layout/header/user-menu"
 
 function Logo() {
   return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center">
-      <img src="/hollyfork-logo.svg" alt="Holly Fork" className="h-7" />
+    <div className="absolute top-1/2 left-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center md:flex">
+      <img src="/holyfork-logo.svg" alt="Holy Fork" className="h-7" />
     </div>
   )
 }
 
 export function SiteHeader() {
   return (
-    <header className="bg-background/40 sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b backdrop-blur-md md:rounded-tl-xl md:rounded-tr-xl">
+    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background/40 backdrop-blur-md md:rounded-tl-xl md:rounded-tr-xl">
       <div className="relative flex w-full items-center gap-1 px-4 lg:gap-2">
         <SidebarTrigger />
         <Separator

@@ -1,6 +1,8 @@
 import { useMemo } from "react"
-import type { Reservation, RestaurantTable } from "@/components/reservations/types"
-import { RESTAURANT_TABLES } from "@/components/reservations/data"
+import type {
+  Reservation,
+  RestaurantTable,
+} from "@/components/reservations/types"
 
 export interface TableAvailability {
   table: RestaurantTable
@@ -19,7 +21,7 @@ interface UseTableAvailabilityReturn {
 export function useTableAvailability(
   reservations: Reservation[],
   currentTime: Date,
-  tables: RestaurantTable[] = RESTAURANT_TABLES
+  tables: RestaurantTable[]
 ): UseTableAvailabilityReturn {
   return useMemo(() => {
     const currentHH = String(currentTime.getHours()).padStart(2, "0")
@@ -29,14 +31,14 @@ export function useTableAvailability(
     const result: TableAvailability[] = tables.map((table) => {
       const currentReservation =
         reservations.find(
-          (r) => r.status === "arrivee" && r.tableNumber === table.number
+          (r) => r.status === "arrivee" && r.tableId === table.id
         ) ?? null
 
       const nextReservation =
         reservations
           .filter(
             (r) =>
-              r.tableNumber === table.number &&
+              r.tableId === table.id &&
               r.time > currentTimeStr &&
               (r.status === "confirmee" || r.status === "en_attente")
           )

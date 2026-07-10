@@ -15,29 +15,33 @@ const steps = [
   {
     component: WelcomeContent,
     label: "Restaurant",
-    title: "Bienvenue sur Holly Fork",
-    subtitle: "Configurons votre espace en quelques étapes. Parlez-nous de votre restaurant.",
+    title: "Bienvenue sur Holy Fork",
+    subtitle:
+      "Configurons votre espace en quelques étapes. Parlez-nous de votre restaurant.",
     nextLabel: "Continuer",
   },
   {
     component: EstablishmentContent,
     label: "Établissement",
     title: "Votre établissement",
-    subtitle: "Ces informations nous aident à configurer votre espace de manière optimale.",
+    subtitle:
+      "Ces informations nous aident à configurer votre espace de manière optimale.",
     nextLabel: "Continuer",
   },
   {
     component: PlanContent,
     label: "Offre",
     title: "Choisissez votre offre",
-    subtitle: "Essai gratuit de 14 jours, sans engagement. Mise en place en 48h.",
+    subtitle:
+      "Essai gratuit de 14 jours, sans engagement. Mise en place en 48h.",
     nextLabel: "Continuer",
   },
   {
     component: ModulesContent,
     label: "Modules",
     title: "Activez vos modules",
-    subtitle: "Sélectionnez les fonctionnalités dont vous avez besoin. Vous pourrez les modifier à tout moment.",
+    subtitle:
+      "Sélectionnez les fonctionnalités dont vous avez besoin. Vous pourrez les modifier à tout moment.",
     nextLabel: "Démarrer l'essai gratuit",
   },
   {
@@ -52,7 +56,16 @@ const steps = [
 const progressSteps = steps.slice(0, 4)
 
 export default function Onboarding() {
-  const { currentStep, totalSteps, direction, data, nextStep, prevStep, goToStep, hydrateFromSession } = useOnboardingStore()
+  const {
+    currentStep,
+    totalSteps,
+    direction,
+    data,
+    nextStep,
+    prevStep,
+    goToStep,
+    hydrateFromSession,
+  } = useOnboardingStore()
   const hydrated = useRef(false)
 
   useEffect(() => {
@@ -68,7 +81,12 @@ export default function Onboarding() {
 
   // Centralized validation
   const validators = [
-    () => !!(data.restaurant.name.trim() && data.restaurant.cuisineType && data.restaurant.location),
+    () =>
+      !!(
+        data.restaurant.name.trim() &&
+        data.restaurant.cuisineType &&
+        data.restaurant.location
+      ),
     () => !!(data.establishment.covers && data.establishment.teamSize),
     () => !!data.plan,
     () => data.modules.length > 0,
@@ -79,12 +97,12 @@ export default function Onboarding() {
   if (isCompletion) {
     return (
       <div className="flex min-h-svh flex-col">
-        <header className="fixed top-0 left-0 right-0 z-10 border-b bg-background">
+        <header className="fixed top-0 right-0 left-0 z-10 border-b bg-background">
           <div className="mx-auto flex max-w-2xl items-center gap-2 px-4 py-4">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
               HF
             </div>
-            <span className="font-semibold">Holly Fork</span>
+            <span className="font-semibold">Holy Fork</span>
           </div>
         </header>
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pt-16">
@@ -97,16 +115,19 @@ export default function Onboarding() {
   return (
     <div className="flex min-h-svh flex-col">
       {/* HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-10 border-b bg-background">
+      <header className="fixed top-0 right-0 left-0 z-10 border-b bg-background">
         <div className="relative flex items-center justify-center px-6 py-4">
           <div className="absolute left-6 flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
               HF
             </div>
-            <span className="font-semibold hidden sm:block">Holly Fork</span>
+            <span className="hidden font-semibold sm:block">Holy Fork</span>
           </div>
 
-          <nav aria-label="Progression" className="flex w-full max-w-2xl gap-1.5 px-4">
+          <nav
+            aria-label="Progression"
+            className="flex w-full max-w-2xl gap-1.5 px-4"
+          >
             {progressSteps.map((step, index) => {
               const isCompleted = index < currentStep
               const isActive = index === currentStep
@@ -126,9 +147,9 @@ export default function Onboarding() {
                   <span
                     className={`text-xs whitespace-nowrap transition-colors duration-300 ${
                       isActive
-                        ? "text-primary font-semibold"
+                        ? "font-semibold text-primary"
                         : isCompleted
-                          ? "text-foreground font-medium"
+                          ? "font-medium text-foreground"
                           : "text-muted-foreground"
                     }`}
                   >
@@ -144,7 +165,7 @@ export default function Onboarding() {
             })}
           </nav>
 
-          <span className="absolute right-6 text-muted-foreground text-xs tabular-nums">
+          <span className="absolute right-6 text-xs text-muted-foreground tabular-nums">
             {currentStep + 1}/{totalSteps - 1}
           </span>
         </div>
@@ -153,8 +174,10 @@ export default function Onboarding() {
       {/* CONTENT */}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-24 pb-24">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{currentConfig.title}</h1>
-          <p className="text-muted-foreground mt-2 text-base leading-relaxed">
+          <h1 className="font-display text-3xl font-bold">
+            {currentConfig.title}
+          </h1>
+          <p className="mt-2 text-base leading-relaxed text-muted-foreground">
             {currentConfig.subtitle}
           </p>
         </div>
@@ -177,11 +200,16 @@ export default function Onboarding() {
       </main>
 
       {/* FOOTER */}
-      <footer className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background">
+      <footer className="fixed right-0 bottom-0 left-0 z-10 border-t bg-background">
         <div className="mx-auto max-w-2xl px-4 py-4">
           {currentStep > 0 ? (
             <div className="flex items-center justify-end gap-3">
-              <Button variant="outline" onClick={prevStep} aria-label="Retour à l'étape précédente" className="mr-auto">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                aria-label="Retour à l'étape précédente"
+                className="mr-auto"
+              >
                 Retour
               </Button>
               <Button
@@ -191,7 +219,11 @@ export default function Onboarding() {
                 className="gap-2"
               >
                 {currentConfig.nextLabel}
-                <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
+                <HugeiconsIcon
+                  icon={ArrowRight01Icon}
+                  className="size-4"
+                  strokeWidth={2}
+                />
               </Button>
             </div>
           ) : (
@@ -202,7 +234,11 @@ export default function Onboarding() {
               className="w-full gap-2"
             >
               {currentConfig.nextLabel}
-              <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                className="size-4"
+                strokeWidth={2}
+              />
             </Button>
           )}
         </div>

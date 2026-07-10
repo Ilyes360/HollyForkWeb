@@ -1,10 +1,28 @@
-export type ReservationStatus = "confirmee" | "en_attente" | "arrivee" | "annulee" | "no_show"
+export type ReservationStatus =
+  | "confirmee"
+  | "en_attente"
+  | "arrivee"
+  | "annulee"
+  | "no_show"
 export type ReservationCanal = "site" | "telephone" | "thefork" | "walk_in"
 export type ServiceType = "midi" | "soir"
 export type ReservationViewMode = "table" | "gantt"
 
+export interface AllergyInfo {
+  id: number
+  code: string
+  label: string
+}
+
+export interface DietTypeInfo {
+  id: number
+  code: string
+  label: string
+}
+
 export interface RestaurantTable {
-  number: number
+  id: number // PK — used for API calls (table_id)
+  number: number // Display number (numero) — shown to user
   label: string
   seats: number
 }
@@ -14,14 +32,17 @@ export interface Reservation {
   clientName: string
   clientPhone: string
   clientEmail?: string
-  date: string              // "YYYY-MM-DD"
-  time: string              // "HH:MM"
+  date: string // "YYYY-MM-DD"
+  time: string // "HH:MM"
   service: ServiceType
   covers: number
-  tableNumber: number | null
+  tableId: number | null // PK — for API operations (backend table_id)
+  tableNumber: number | null // Display numero — for presentation & gantt matching
   canal: ReservationCanal
   status: ReservationStatus
   notes: string
+  allergies: AllergyInfo[]
+  dietTypes: DietTypeInfo[]
   pipeline?: ReservationPipelineState
   estimatedDurationMinutes?: number
   createdAt: string
@@ -31,7 +52,16 @@ export const TOTAL_CAPACITY = 48
 
 export const STATUS_CONFIG: Record<
   ReservationStatus,
-  { label: string; variant: "success" | "warning" | "destructive" | "outline" | "secondary" | "info" }
+  {
+    label: string
+    variant:
+      | "success"
+      | "warning"
+      | "destructive"
+      | "outline"
+      | "secondary"
+      | "info"
+  }
 > = {
   confirmee: { label: "Confirmée", variant: "info" },
   en_attente: { label: "En attente", variant: "warning" },

@@ -14,16 +14,26 @@ export const stockHandlers = [
     })
   }),
 
-  // Stock alerts
-  http.get(`${API}/stocks/alerts/`, () => {
-    const alerts = mockStocks.filter(
-      (s) => parseFloat(s.quantity_in_stock) <= parseFloat(s.alert_threshold)
-    )
+  // Stock alerts (custom endpoint — NOT paginated)
+  http.get(`${API}/stocks/alerts/`, ({ request }) => {
+    const url = new URL(request.url)
+    const restaurantId = url.searchParams.get("restaurant_id")
+    const alerts = mockStocks
+      .filter(
+        (s) => parseFloat(s.quantity_in_stock) <= parseFloat(s.alert_threshold)
+      )
+      .map((s) => ({
+        stock_id: s.id,
+        ingredient_name: s.ingredient_name,
+        quantity_in_stock: parseFloat(s.quantity_in_stock),
+        alert_threshold: parseFloat(s.alert_threshold),
+        unit: s.ingredient_unit,
+        restaurant_name: "Test Restaurant",
+      }))
     return HttpResponse.json({
-      count: alerts.length,
-      next: null,
-      previous: null,
-      results: alerts,
+      restaurant_id: restaurantId,
+      alerts_count: alerts.length,
+      alerts,
     })
   }),
 
@@ -33,17 +43,27 @@ export const stockHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update stock
+  // Update stock (full)
   http.put(`${API}/stocks/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),
 
-  // Adjust stock
-  http.post(`${API}/stocks/:id/adjust/`, async ({ request, params }) => {
+  // Update stock (partial)
+  http.patch(`${API}/stocks/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     const stock = mockStocks.find((s) => s.id === Number(params.id))
     return HttpResponse.json({ ...stock, ...body, id: Number(params.id) })
+  }),
+
+  // Adjust stock — returns { message, stock } per swagger StockAdjustResponse
+  http.post(`${API}/stocks/:id/adjust/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const stock = mockStocks.find((s) => s.id === Number(params.id))
+    return HttpResponse.json({
+      message: "Stock ajusté avec succès",
+      stock: { ...stock, ...body, id: Number(params.id) },
+    })
   }),
 
   // Delete stock

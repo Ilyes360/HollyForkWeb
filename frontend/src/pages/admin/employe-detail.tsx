@@ -11,6 +11,7 @@ import {
   Delete02Icon,
   UserIcon,
   Briefcase01Icon,
+  Building06Icon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,16 +38,23 @@ import {
 import {
   useEmployees,
   useEmployeeTypes,
+  useCreateEmployee,
+  useUpdateEmployee,
+  useDeleteEmployee,
   type ApiTypeEmploye,
 } from "@/hooks/use-employees"
+import { useEstablishments } from "@/hooks/use-establishments"
+import {
+  useAllRestaurantAssignments,
+  useAssignEmployee,
+  useUnassignEmployee,
+} from "@/hooks/use-restaurant-employees"
 import type { Employee } from "@/stores/admin-types"
-import { apiPost, apiPatch, apiDelete } from "@/api/client"
-import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { handleMutationError } from "@/lib/mutation-error-handler"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { getInitials } from "@/components/administration/utils"
 
-// Only fields that exist in the backend API
 const schema = z.object({
   firstName: z.string().min(1, "Prénom requis"),
   lastName: z.string().min(1, "Nom requis"),
@@ -54,6 +62,7 @@ const schema = z.object({
   typeEmployeId: z.string().min(1, "Type d'employé requis"),
   salary: z.string().optional(),
   hireDate: z.string().optional(),
+  establishmentId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -72,28 +81,41 @@ export default function EmployeDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const { data: allEmployees } = useEmployees()
   const { data: employeeTypes } = useEmployeeTypes()
+  const { data: establishments } = useEstablishments()
+  const { data: assignments } = useAllRestaurantAssignments()
+  const createEmployee = useCreateEmployee()
+  const updateEmployee = useUpdateEmployee()
+  const deleteEmployee = useDeleteEmployee()
+  const assignEmployee = useAssignEmployee()
+  const unassignEmployee = useUnassignEmployee()
 
   const isNew = !id
-  // Find employee from API data or store
   const employee: Employee | null | undefined = !isNew
     ? (allEmployees.find((e) => e.id === id) ?? null)
     : null
 
+  // Find current assignment for this employee
+  const currentAssignment = !isNew
+    ? assignments.find((a) => String(a.employeId) === id)
+    : undefined
+  const currentEstablishmentId = currentAssignment
+    ? String(currentAssignment.restaurantId)
+    : ""
+
   const form = useForm<FormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(schema),
     defaultValues: employee
       ? {
           firstName: employee.firstName ?? "",
           lastName: employee.lastName ?? "",
           phoneNumber: employee.phone ?? "",
-          typeEmployeId: employee.roleId ?? "",
-          salary: String(employee.hourlyRate * 151.67 || "0.00"),
+          typeEmployeId: String(employee.typeEmployeId ?? ""),
+          salary: employee.salary ? String(employee.salary) : "0.00",
           hireDate: employee.hireDate ?? "",
+          establishmentId: currentEstablishmentId,
         }
       : {
           firstName: "",
@@ -102,6 +124,7 @@ export default function EmployeDetailPage() {
           typeEmployeId: "",
           salary: "0.00",
           hireDate: new Date().toISOString().split("T")[0],
+          establishmentId: "",
         },
   })
 
@@ -116,41 +139,78 @@ export default function EmployeDetailPage() {
     )
   }
 
+  function handleAssignment(employeId: number, newEstablishmentId: string) {
+    // Remove old assignment if exists
+    if (
+      currentAssignment &&
+      String(currentAssignment.restaurantId) !== newEstablishmentId
+    ) {
+      unassignEmployee.mutate(currentAssignment.id)
+    }
+    // Create new assignment if selected
+    if (newEstablishmentId) {
+      assignEmployee.mutate({
+        restaurantId: Number(newEstablishmentId),
+        employeId,
+      })
+    }
+  }
+
   function onSubmit(data: FormValues) {
     const apiData = {
       firstName: data.firstName,
       lastName: data.lastName,
-      phoneNumber: data.phoneNumber || undefined,
+      phoneNumber: data.phoneNumber || null,
       typeEmployeId: Number(data.typeEmployeId),
       salary: data.salary || "0.00",
-      hireDate: data.hireDate || undefined,
+      hireDate: data.hireDate || new Date().toISOString().split("T")[0],
     }
 
-    const promise = isNew
-      ? apiPost("employes/", apiData)
-      : apiPatch(`employes/${id}/`, apiData)
+    const onSuccess = (result: { id: number } | unknown) => {
+      // Handle establishment assignment
+      const newEstId = data.establishmentId ?? ""
+      if (isNew && result && typeof result === "object" && "id" in result) {
+        // For creation, assign to establishment after employee is created
+        if (newEstId) {
+          assignEmployee.mutate({
+            restaurantId: Number(newEstId),
+            employeId: (result as { id: number }).id,
+          })
+        }
+      } else if (!isNew) {
+        // For edit, update assignment if changed
+        if (newEstId !== currentEstablishmentId) {
+          handleAssignment(Number(id), newEstId)
+        }
+      }
+      toast.success(isNew ? "Employé créé" : "Employé modifié")
+      navigate("/admin/employes")
+    }
 
-    promise
-      .then(() => {
-        toast.success(isNew ? "Employé créé" : "Employé modifié")
-        queryClient.invalidateQueries({ queryKey: ["employees"] })
-        navigate("/admin/employes")
-      })
-      .catch(() => toast.error("Erreur lors de l'enregistrement"))
+    const onError = (err: unknown) =>
+      handleMutationError(err, { setError: form.setError })
+
+    if (isNew) {
+      createEmployee.mutate(apiData, { onSuccess, onError })
+    } else {
+      updateEmployee.mutate(
+        { id: Number(id), data: apiData },
+        { onSuccess, onError }
+      )
+    }
   }
 
   function handleDelete() {
-    apiDelete(`employes/${id}/`)
-      .then(() => {
+    deleteEmployee.mutate(Number(id), {
+      onSuccess: () => {
         toast.success("Employé supprimé")
-        queryClient.invalidateQueries({ queryKey: ["employees"] })
         navigate("/admin/employes")
-      })
-      .catch(() => toast.error("Erreur lors de la suppression"))
+      },
+      onError: () => toast.error("Erreur lors de la suppression"),
+    })
   }
 
-  // Get type name for header
-  const typeName = employee?.position ?? ""
+  const typeName = employee?.typeEmployeName ?? ""
 
   return (
     <motion.div
@@ -177,7 +237,7 @@ export default function EmployeDetailPage() {
         {employee ? (
           <>
             <div
-              className={`flex size-10 items-center justify-center rounded-full text-sm font-medium text-white`}
+              className="flex size-10 items-center justify-center rounded-full text-sm font-medium text-white"
               style={{ backgroundColor: employee.avatarColor || "#9ca3af" }}
             >
               {getInitials(employee.firstName, employee.lastName)}
@@ -321,13 +381,49 @@ export default function EmployeDetailPage() {
             </CollapsibleSection>
           </motion.div>
 
-          {/* TODO: sections commentées — pas de champs correspondants dans l'API backend
-          - Établissement (assignment via /api/restaurant-employes/)
-          - Type de contrat (CDI/CDD/etc.)
-          - Heures/semaine, taux horaire
-          - Rôle & permissions
-          - Email de connexion, statut compte
-          */}
+          {/* Établissement */}
+          <motion.div variants={fadeUp}>
+            <CollapsibleSection
+              title="Établissement"
+              icon={Building06Icon}
+              defaultOpen
+            >
+              <FormField
+                control={form.control}
+                name="establishmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rattacher à un établissement</FormLabel>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue>
+                            {field.value
+                              ? (establishments.find(
+                                  (e) => e.id === field.value
+                                )?.name ?? "Sélectionner")
+                              : "Aucun"}
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Aucun</SelectItem>
+                        {establishments.map((e) => (
+                          <SelectItem key={e.id} value={e.id}>
+                            {e.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CollapsibleSection>
+          </motion.div>
 
           {/* Footer */}
           <motion.div

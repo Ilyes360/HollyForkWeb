@@ -27,8 +27,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { RESTAURANT_TABLES } from "./data"
-import type { ReservationCanal } from "./types"
+import type { RestaurantTable, ReservationCanal } from "./types"
 import { CANAL_LABELS } from "./types"
 
 const schema = z.object({
@@ -37,9 +36,12 @@ const schema = z.object({
   clientEmail: z.string().email("Email invalide").or(z.literal("")),
   date: z.string().min(1, "La date est requise"),
   time: z.string().min(1, "L'heure est requise"),
-  covers: z.coerce.number().min(1, "Min. 1 couvert").max(20, "Max. 20 couverts"),
+  covers: z.coerce
+    .number()
+    .min(1, "Min. 1 couvert")
+    .max(20, "Max. 20 couverts"),
   canal: z.enum(["site", "telephone", "thefork", "walk_in"]),
-  tableNumber: z.string(),
+  tableId: z.string(),
   notes: z.string(),
 })
 
@@ -50,6 +52,7 @@ interface NewReservationDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (data: FormValues) => void
   defaultDate: string
+  tables: RestaurantTable[]
 }
 
 export function NewReservationDialog({
@@ -57,6 +60,7 @@ export function NewReservationDialog({
   onOpenChange,
   onSubmit,
   defaultDate,
+  tables,
 }: NewReservationDialogProps) {
   const now = new Date()
   const todayStr = now.toISOString().slice(0, 10)
@@ -73,7 +77,7 @@ export function NewReservationDialog({
       time: nowTime,
       covers: 2,
       canal: "telephone",
-      tableNumber: "",
+      tableId: "",
       notes: "",
     },
   })
@@ -86,7 +90,8 @@ export function NewReservationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg!">{/* force override default sm:max-w-sm */}
+      <DialogContent className="sm:max-w-lg!">
+        {/* force override default sm:max-w-sm */}
         <DialogHeader>
           <DialogTitle>Nouvelle réservation</DialogTitle>
           <DialogDescription>
@@ -94,7 +99,10 @@ export function NewReservationDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -131,7 +139,11 @@ export function NewReservationDialog({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="email@exemple.fr" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="email@exemple.fr"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,11 +208,13 @@ export function NewReservationDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.keys(CANAL_LABELS) as ReservationCanal[]).map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {CANAL_LABELS[key]}
-                          </SelectItem>
-                        ))}
+                        {(Object.keys(CANAL_LABELS) as ReservationCanal[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {CANAL_LABELS[key]}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -211,7 +225,7 @@ export function NewReservationDialog({
 
             <FormField
               control={form.control}
-              name="tableNumber"
+              name="tableId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Table</FormLabel>
@@ -221,10 +235,12 @@ export function NewReservationDialog({
                         <SelectValue placeholder="Sélectionner une table">
                           {field.value
                             ? (() => {
-                                const t = RESTAURANT_TABLES.find(
-                                  (t) => String(t.number) === field.value
+                                const matched = tables.find(
+                                  (t) => String(t.id) === field.value
                                 )
-                                return t ? `${t.label} (${t.seats} places)` : "Aucune"
+                                return matched
+                                  ? `${matched.label} (${matched.seats} places)`
+                                  : "Aucune"
                               })()
                             : "Aucune"}
                         </SelectValue>
@@ -232,8 +248,8 @@ export function NewReservationDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="">Aucune</SelectItem>
-                      {RESTAURANT_TABLES.map((t) => (
-                        <SelectItem key={t.number} value={String(t.number)}>
+                      {tables.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
                           {t.label} ({t.seats} places)
                         </SelectItem>
                       ))}
@@ -263,7 +279,11 @@ export function NewReservationDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Annuler
               </Button>
               <Button type="submit">Créer la réservation</Button>

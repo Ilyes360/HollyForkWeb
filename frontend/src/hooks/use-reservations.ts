@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import {
   apiGet,
   apiPost,
@@ -7,37 +8,44 @@ import {
   getAccessToken,
 } from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
+import { fetchAllPages } from "@/api/pagination"
 
+/** Matches the backend Reservation schema (after camelizeKeys) */
 export type ApiReservation = {
   id: number
   clientName: string
-  clientPhone: string
-  clientEmail: string | null
-  date: string
-  time: string
-  service: string
-  covers: number
-  tableNumber: number
-  canal: string
-  status: string
-  notes: string | null
-  restaurantId: number
-  createdAt: string
+  partySize: number
+  datetime: string // ISO 8601: "2026-05-16T12:00:00"
+  phoneNumber: string
+  salleId: number
+  tableId: number | null
+  noteServeur: string | null
+  noteClient: string | null
+  allergie: string | null
+  allergyIds?: number[]
+  dietTypeIds?: number[]
+  allergies?: { id: number; code: string; label: string }[]
+  dietTypes?: { id: number; code: string; label: string }[]
 }
 
+/** Matches backend Salle schema (after camelizeKeys) */
 export type ApiSalle = {
   id: number
-  nom: string
+  name: string
   restaurantId: number
-  capacite: number
+  capacity: number
+  floor: number | null
+  description: string | null
 }
 
+/** Matches backend Table schema (after camelizeKeys) */
 type ApiTable = {
   id: number
   numero: number
-  label: string
-  places: number
+  capacity: number
   salleId: number
+  positionX: number | null
+  positionY: number | null
 }
 
 const keys = {
@@ -56,21 +64,20 @@ export function useReservations(restaurantId: number | null, date?: string) {
   const query = useQuery({
     queryKey: keys.reservations(restaurantId ?? undefined, date),
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiReservation>>(
-        "reservations/",
-        {
-          restaurantId: restaurantId!,
-          date,
-        }
-      )
-      return res.results
+      const params: Record<string, string | number | boolean> = {
+        restaurantId: restaurantId!,
+      }
+      if (date) params.date = date
+      return fetchAllPages<ApiReservation>("reservations/", params)
     },
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000, // 30s — reservations change often
+    refetchOnWindowFocus: true, // §6.2 — gérant revient sur l'onglet → voir nouvelles résas
   })
 
+  const reservations: ApiReservation[] = query.data ?? []
   return {
-    data: query.data ?? [],
+    data: reservations,
     isLoading: query.isLoading,
   }
 }
@@ -80,7 +87,7 @@ export function useReservations(restaurantId: number | null, date?: string) {
  */
 export function useCreateReservation() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       clientName: string
       partySize: number
@@ -88,7 +95,8 @@ export function useCreateReservation() {
       phoneNumber?: string
       salleId: number
       tableId?: number | null
-      notes?: string | null
+      noteServeur?: string | null
+      noteClient?: string | null
     }) => apiPost<ApiReservation>("reservations/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reservations"] }),
   })
@@ -99,7 +107,7 @@ export function useCreateReservation() {
  */
 export function useUpdateReservation() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: ({
       id,
       data,
@@ -112,8 +120,8 @@ export function useUpdateReservation() {
         phoneNumber: string
         salleId: number
         tableId: number | null
-        status: string
-        notes: string | null
+        noteServeur: string | null
+        noteClient: string | null
       }>
     }) => apiPatch<ApiReservation>(`reservations/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reservations"] }),
@@ -125,7 +133,7 @@ export function useUpdateReservation() {
  */
 export function useDeleteReservation() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (id: number) => apiDelete(`reservations/${id}/`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reservations"] }),
   })
@@ -170,5 +178,6 @@ export function useTables(salleId?: number) {
     staleTime: 5 * 60 * 1000,
   })
 
-  return { data: query.data ?? [], isLoading: query.isLoading }
+  const tables: ApiTable[] = query.data ?? []
+  return { data: tables, isLoading: query.isLoading }
 }

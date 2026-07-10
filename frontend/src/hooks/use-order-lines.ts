@@ -1,5 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
+import {
+  apiGet,
+  apiPost,
+  apiPatch,
+  apiDelete,
+  getAccessToken,
+} from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
 type ApiOrderLine = {
@@ -25,13 +32,17 @@ export function useOrderLines(commandeId: number | null) {
   const query = useQuery({
     queryKey: keys.orderLines(commandeId ?? undefined),
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiOrderLine>>("lignes-commandes/", {
-        commandeId: commandeId!,
-      })
+      const res = await apiGet<PaginatedResponse<ApiOrderLine>>(
+        "lignes-commandes/",
+        {
+          commandeId: commandeId!,
+        }
+      )
       return res.results
     },
     enabled: hasToken && !!commandeId,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   return {
@@ -45,14 +56,15 @@ export function useOrderLines(commandeId: number | null) {
  */
 export function useCreateOrderLine() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       commandeId: number
       articleId: number
       quantite: number
       prixUnitaire: number
     }) => apiPost<ApiOrderLine>("lignes-commandes/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.orderLines(variables.commandeId) }),
   })
 }
 
@@ -61,14 +73,21 @@ export function useCreateOrderLine() {
  */
 export function useUpdateOrderLine() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
       commandeId: number
-      articleId: number
-      quantite: number
-      prixUnitaire: number
-    }> }) => apiPut<ApiOrderLine>(`lignes-commandes/${id}/`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
+      data: Partial<{
+        articleId: number
+        quantite: number
+        prixUnitaire: number
+      }>
+    }) => apiPatch<ApiOrderLine>(`lignes-commandes/${id}/`, data),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.orderLines(variables.commandeId) }),
   })
 }
 
@@ -77,8 +96,10 @@ export function useUpdateOrderLine() {
  */
 export function useDeleteOrderLine() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => apiDelete(`lignes-commandes/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["order-lines"] }),
+  return useMutationWithDefaults({
+    mutationFn: (variables: { id: number; commandeId: number }) =>
+      apiDelete(`lignes-commandes/${variables.id}/`),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.orderLines(variables.commandeId) }),
   })
 }

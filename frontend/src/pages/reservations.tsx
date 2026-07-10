@@ -10,32 +10,60 @@ import {
   useUpdateReservation,
   useDeleteReservation,
   useSalles,
+  useTables,
   type ApiReservation,
 } from "@/hooks/use-reservations"
+import type { RestaurantTable } from "@/components/reservations/types"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { toast } from "sonner"
 
 /**
- * Maps API reservation (camelized) to frontend Reservation type.
+ * Maps API reservation (camelized from backend schema) to frontend Reservation type.
+ * Backend returns `datetime` (ISO 8601) — we split into separate `date` and `time`.
+ * Backend returns `partySize` — we map to `covers`.
  */
-function mapApiReservation(api: ApiReservation): Reservation {
-  const hour = parseInt(api.time?.split(":")[0] ?? "12", 10)
+function mapApiReservation(
+  api: ApiReservation,
+  tables: { id: number; numero: number }[]
+): Reservation {
+  // Parse datetime: "2026-05-16T12:00:00" → date="2026-05-16", time="12:00"
+  const dt = api.datetime ?? ""
+  const date = dt.slice(0, 10) // "YYYY-MM-DD"
+  const time = dt.slice(11, 16) // "HH:MM"
+  const hour = parseInt(time.split(":")[0] ?? "12", 10)
   const service: ServiceType = hour < 16 ? "midi" : "soir"
+
+  // Resolve table PK → display number (numero)
+  const tableId = api.tableId ?? null
+  const matchedTable =
+    tableId !== null ? tables.find((t) => t.id === tableId) : null
+  const tableNumber = matchedTable ? matchedTable.numero : null
 
   return {
     id: String(api.id),
     clientName: api.clientName ?? "",
-    clientPhone: api.clientPhone ?? "",
-    clientEmail: api.clientEmail ?? undefined,
-    date: api.date,
-    time: api.time?.slice(0, 5) ?? "",
+    clientPhone: api.phoneNumber ?? "",
+    clientEmail: undefined, // not in backend schema
+    date,
+    time,
     service,
-    covers: api.covers ?? 0,
-    tableNumber: api.tableNumber ?? null,
-    canal: (api.canal as Reservation["canal"]) ?? "telephone",
-    status: (api.status as Reservation["status"]) ?? "confirmee",
-    notes: api.notes ?? "",
-    createdAt: api.createdAt ?? "",
+    covers: api.partySize ?? 0,
+    tableId,
+    tableNumber,
+    canal: "telephone", // not in backend schema — default
+    status: "confirmee", // not in backend schema — default
+    notes: api.noteServeur ?? api.noteClient ?? "",
+    allergies: (api.allergies ?? []).map((a) => ({
+      id: a.id,
+      code: a.code,
+      label: a.label,
+    })),
+    dietTypes: (api.dietTypes ?? []).map((d) => ({
+      id: d.id,
+      code: d.code,
+      label: d.label,
+    })),
+    createdAt: "",
   }
 }
 import type {
@@ -68,12 +96,35 @@ const fadeUp = {
 export default function ReservationsPage() {
   usePageTitle("Réservations")
   const { restaurantId } = useActiveRestaurant()
-  const { data: apiReservations } = useReservations(restaurantId)
+  const { currentDate, prev, next, today } = useDayNavigation()
+  const currentDateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`
+
+  const { data: apiReservations } = useReservations(
+    restaurantId,
+    currentDateStr
+  )
+  const createReservation = useCreateReservation()
+  const updateReservation = useUpdateReservation()
+  const deleteReservation = useDeleteReservation()
+  const { data: salles } = useSalles(restaurantId)
+  const defaultSalleId = salles.length > 0 ? salles[0].id : null
+  const { data: apiTables } = useTables(defaultSalleId ?? undefined)
+  const tables: RestaurantTable[] = useMemo(
+    () =>
+      apiTables.map((t) => ({
+        id: t.id,
+        number: t.numero,
+        label: `T${t.numero}`,
+        seats: t.capacity,
+      })),
+    [apiTables]
+  )
+
   // API is the single source of truth — map API data to frontend type
   const baseReservations = useMemo(() => {
     if (!apiReservations || apiReservations.length === 0) return []
-    return apiReservations.map(mapApiReservation)
-  }, [apiReservations])
+    return apiReservations.map((api) => mapApiReservation(api, apiTables))
+  }, [apiReservations, apiTables])
 
   // Local-only overrides for fields not in API (status, notes, duration)
   const [localOverrides, setLocalOverrides] = useState<
@@ -92,10 +143,7 @@ export default function ReservationsPage() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ReservationViewMode>("table")
-  const { currentDate, prev, next, today } = useDayNavigation()
   const completeTask = useGettingStartedStore((s) => s.completeTask)
-
-  const currentDateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`
 
   const serviceReservations = useMemo(
     () =>
@@ -104,12 +152,6 @@ export default function ReservationsPage() {
       ),
     [reservations, currentDateStr, service]
   )
-
-  const createReservation = useCreateReservation()
-  const updateReservation = useUpdateReservation()
-  void useDeleteReservation()
-  const { data: salles } = useSalles(restaurantId)
-  const defaultSalleId = salles.length > 0 ? salles[0].id : null
 
   // Keep selected reservation in sync with latest data
   const currentSelected = useMemo(() => {
@@ -124,6 +166,8 @@ export default function ReservationsPage() {
 
   const handleStatusChange = useCallback(
     (id: string, newStatus: ReservationStatus) => {
+      // UI-only update — backend Reservation model does not have a `status` field yet
+      // TODO: persist when backend adds status field to Reservation schema
       setLocalOverrides((prev) => ({
         ...prev,
         [id]: { ...prev[id], status: newStatus },
@@ -132,9 +176,26 @@ export default function ReservationsPage() {
     []
   )
 
-  const handleNotesChange = useCallback((id: string, notes: string) => {
-    setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], notes } }))
-  }, [])
+  const handleNotesChange = useCallback(
+    (id: string, notes: string) => {
+      const previousNotes = reservations.find((r) => r.id === id)?.notes
+      setLocalOverrides((prev) => ({ ...prev, [id]: { ...prev[id], notes } }))
+      updateReservation.mutate(
+        { id: Number(id), data: { noteServeur: notes } },
+        {
+          onError: () => {
+            // Revert optimistic update on failure
+            setLocalOverrides((prev) => ({
+              ...prev,
+              [id]: { ...prev[id], notes: previousNotes ?? "" },
+            }))
+            toast.error("Erreur lors de la mise à jour des notes")
+          },
+        }
+      )
+    },
+    [updateReservation, reservations]
+  )
 
   const handleReschedule = useCallback(
     (id: string, newTime: string) => {
@@ -160,6 +221,20 @@ export default function ReservationsPage() {
     []
   )
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteReservation.mutate(Number(id), {
+        onSuccess: () => {
+          toast.success("Réservation supprimée")
+          setDetailOpen(false)
+          setSelectedReservation(null)
+        },
+        onError: () => toast.error("Erreur lors de la suppression"),
+      })
+    },
+    [deleteReservation]
+  )
+
   const handleNewFromPanel = useCallback(() => {
     setNewDialogOpen(true)
   }, [])
@@ -173,7 +248,7 @@ export default function ReservationsPage() {
       time: string
       covers: number
       canal: string
-      tableNumber: string
+      tableId: string
       notes: string
     }) => {
       if (!restaurantId) return
@@ -189,7 +264,8 @@ export default function ReservationsPage() {
           datetime,
           phoneNumber: data.clientPhone,
           salleId: defaultSalleId,
-          tableId: data.tableNumber ? parseInt(data.tableNumber, 10) : null,
+          tableId: data.tableId ? parseInt(data.tableId, 10) : null,
+          noteServeur: data.notes || null,
         },
         {
           onSuccess: () => {
@@ -280,6 +356,7 @@ export default function ReservationsPage() {
                   onServiceChange={setService}
                   onSelectReservation={handleSelectReservation}
                   onStatusChange={handleStatusChange}
+                  tables={tables}
                 />
               </motion.div>
             ) : (
@@ -300,6 +377,7 @@ export default function ReservationsPage() {
                   onReschedule={handleReschedule}
                   onDurationChange={handleDurationChange}
                   selectedReservationId={currentSelected?.id ?? null}
+                  tables={tables}
                 />
               </motion.div>
             )}
@@ -311,6 +389,7 @@ export default function ReservationsPage() {
               reservations={serviceReservations}
               onSelectReservation={handleSelectReservation}
               onNewReservation={handleNewFromPanel}
+              tables={tables}
             />
           </aside>
         )}
@@ -322,6 +401,9 @@ export default function ReservationsPage() {
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}
         onNotesChange={handleNotesChange}
+        onDelete={handleDelete}
+        isDeleting={deleteReservation.isPending}
+        tables={tables}
       />
 
       <NewReservationDialog
@@ -329,6 +411,7 @@ export default function ReservationsPage() {
         onOpenChange={setNewDialogOpen}
         onSubmit={handleNewReservation}
         defaultDate={currentDateStr}
+        tables={tables}
       />
     </motion.div>
   )

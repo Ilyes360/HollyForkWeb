@@ -28,6 +28,7 @@ interface EditionGridProps {
   onToday: () => void
   onUpdateTime: (shiftId: string, startTime: string, endTime: string) => void
   onRemove: (shiftId: string) => void
+  navRightSlot?: React.ReactNode
 }
 
 const slideVariants = {
@@ -52,6 +53,7 @@ export function EditionGrid({
   onToday,
   onUpdateTime,
   onRemove,
+  navRightSlot,
 }: EditionGridProps) {
   const daysData = DAYS.map((day) => {
     const date = getDayDate(weekStart, day)
@@ -61,7 +63,16 @@ export function EditionGrid({
     const soirShifts = getShiftsForDayAndService(shifts, day, "soir")
     const req = staffingRequirements[day] ?? { midi: 0, soir: 0 }
     const recap = getDayRecap(midiShifts, soirShifts, req.midi, req.soir)
-    return { day, date, dayIsToday, dayIsPast, midiShifts, soirShifts, req, recap }
+    return {
+      day,
+      date,
+      dayIsToday,
+      dayIsPast,
+      midiShifts,
+      soirShifts,
+      req,
+      recap,
+    }
   })
 
   return (
@@ -72,6 +83,7 @@ export function EditionGrid({
           onPrev={onPrev}
           onNext={onNext}
           onToday={onToday}
+          rightSlot={navRightSlot}
         />
       </div>
       <div className="relative min-h-0 flex-1 p-4">
@@ -103,13 +115,20 @@ export function EditionGrid({
                     dayIsPast && "opacity-50"
                   )}
                 >
-                  <div className={cn("text-sm font-medium", dayIsToday && "text-primary")}>
+                  <div
+                    className={cn(
+                      "text-sm font-medium",
+                      dayIsToday && "text-primary"
+                    )}
+                  >
                     {DAY_LABELS_FULL[day]}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {formatDateShort(date)}
                     {recap.totalHours > 0 && (
-                      <span className="ml-1.5 text-foreground/50">· {Math.round(recap.totalHours)}h</span>
+                      <span className="ml-1.5 text-foreground/50">
+                        · {Math.round(recap.totalHours)}h
+                      </span>
                     )}
                   </div>
                 </div>
@@ -121,7 +140,10 @@ export function EditionGrid({
                   key={`midi-${day}`}
                   day={day}
                   service="midi"
-                  className={cn("flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2", dayIsPast && "opacity-50")}
+                  className={cn(
+                    "flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2",
+                    dayIsPast && "opacity-50"
+                  )}
                 >
                   <div className="mb-1 flex shrink-0 items-center justify-between">
                     <span className="text-xs font-medium text-muted-foreground">
@@ -149,7 +171,10 @@ export function EditionGrid({
                   key={`soir-${day}`}
                   day={day}
                   service="soir"
-                  className={cn("flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2", dayIsPast && "opacity-50")}
+                  className={cn(
+                    "flex min-h-0 flex-col overflow-hidden border-r border-b bg-card px-2 py-2",
+                    dayIsPast && "opacity-50"
+                  )}
                 >
                   <div className="mb-1 flex shrink-0 items-center justify-between">
                     <span className="text-xs font-medium text-muted-foreground">

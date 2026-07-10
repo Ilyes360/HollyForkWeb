@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiGet, apiPost, getAccessToken } from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
@@ -31,6 +32,7 @@ export function usePayments(restaurantId: number | null) {
     },
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   return {
@@ -44,7 +46,7 @@ export function usePayments(restaurantId: number | null) {
  */
 export function useCreatePayment() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       commandeId: number
       montant: number
@@ -53,5 +55,6 @@ export function useCreatePayment() {
       reference?: string
     }) => apiPost<ApiPayment>("paiements/", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["payments"] }),
+    // Note: commandeId in payload, no restaurantId — broad invalidation is correct here
   })
 }

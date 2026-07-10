@@ -14,11 +14,26 @@ import {
 import type { IconSvgElement } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { FrenchAddressInput, type FrenchAddressResult } from "@/components/ui/french-address-input"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  FrenchAddressInput,
+  type FrenchAddressResult,
+} from "@/components/ui/french-address-input"
 import { cn } from "@/lib/utils"
-import { useEstablishment, useUpdateEstablishment, useDeleteEstablishment } from "@/hooks/use-establishments"
+import {
+  useEstablishment,
+  useUpdateEstablishment,
+  useDeleteEstablishment,
+} from "@/hooks/use-establishments"
 import { toast } from "sonner"
+import { handleMutationError } from "@/lib/mutation-error-handler"
 import { DeleteEtablissementDialog } from "@/components/administration/etablissements/delete-etablissement-dialog"
 import { usePageTitle } from "@/hooks/use-page-title"
 import type { Establishment } from "@/stores/admin-types"
@@ -30,7 +45,10 @@ const schema = z.object({
   postalCode: z.string().optional(),
   city: z.string().optional(),
   phoneNumber: z.string().optional(),
-  siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres").or(z.literal("")),
+  siret: z
+    .string()
+    .regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres")
+    .or(z.literal("")),
   pin: z.string().max(6).optional(),
 })
 
@@ -46,7 +64,10 @@ const fadeUp = {
   },
 }
 
-function extractFromEstablishment(est: Establishment, pin?: string): FormValues {
+function extractFromEstablishment(
+  est: Establishment,
+  pin?: string
+): FormValues {
   return {
     name: est.name ?? "",
     address: est.address?.fullAddress?.split(",")[0]?.trim() ?? "",
@@ -62,14 +83,18 @@ export default function EtablissementDetailPage() {
   usePageTitle("Administration")
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data: establishment, raw: rawRestaurant, isLoading } = useEstablishment(id ? Number(id) : null)
-  const { mutate: updateEstablishment, isPending: isUpdating } = useUpdateEstablishment()
+  const {
+    data: establishment,
+    raw: rawRestaurant,
+    isLoading,
+  } = useEstablishment(id ? Number(id) : null)
+  const { mutate: updateEstablishment, isPending: isUpdating } =
+    useUpdateEstablishment()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const form = useForm<FormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(schema),
     defaultValues: {
       name: "",
       address: "",
@@ -90,7 +115,11 @@ export default function EtablissementDetailPage() {
   }, [establishment, rawRestaurant])
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-12 text-muted-foreground">Chargement…</div>
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        Chargement…
+      </div>
+    )
   }
 
   if (!establishment) {
@@ -113,10 +142,8 @@ export default function EtablissementDetailPage() {
           toast.success("Établissement modifié")
           form.reset(data)
         },
-        onError: () => {
-          toast.error("Erreur lors de la modification")
-        },
-      },
+        onError: (err) => handleMutationError(err, { setError: form.setError }),
+      }
     )
   }
 
@@ -142,9 +169,13 @@ export default function EtablissementDetailPage() {
       <motion.div variants={fadeUp}>
         <Link
           to="/admin"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <HugeiconsIcon icon={ArrowLeft02Icon} strokeWidth={2} className="size-4" />
+          <HugeiconsIcon
+            icon={ArrowLeft02Icon}
+            strokeWidth={2}
+            className="size-4"
+          />
           Établissements
         </Link>
       </motion.div>
@@ -158,7 +189,11 @@ export default function EtablissementDetailPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <motion.div variants={fadeUp}>
-            <CollapsibleSection title="Informations générales" icon={Building06Icon} defaultOpen>
+            <CollapsibleSection
+              title="Informations générales"
+              icon={Building06Icon}
+              defaultOpen
+            >
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -166,7 +201,9 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem className="col-span-2">
                       <FormLabel>Nom</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -182,8 +219,12 @@ export default function EtablissementDetailPage() {
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           onSelect={(result: FrenchAddressResult) => {
-                            form.setValue("postalCode", result.postalCode, { shouldDirty: true })
-                            form.setValue("city", result.city, { shouldDirty: true })
+                            form.setValue("postalCode", result.postalCode, {
+                              shouldDirty: true,
+                            })
+                            form.setValue("city", result.city, {
+                              shouldDirty: true,
+                            })
                           }}
                           placeholder="12 rue des Rosiers"
                         />
@@ -198,7 +239,9 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Code postal</FormLabel>
-                      <FormControl><Input {...field} placeholder="75004" /></FormControl>
+                      <FormControl>
+                        <Input {...field} placeholder="75004" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -209,7 +252,9 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ville</FormLabel>
-                      <FormControl><Input {...field} placeholder="Paris" /></FormControl>
+                      <FormControl>
+                        <Input {...field} placeholder="Paris" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -220,7 +265,9 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Téléphone</FormLabel>
-                      <FormControl><Input {...field} placeholder="+33 1 42 72 00 00" /></FormControl>
+                      <FormControl>
+                        <Input {...field} placeholder="+33 1 42 72 00 00" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -231,7 +278,13 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>SIRET</FormLabel>
-                      <FormControl><Input {...field} maxLength={14} placeholder="12345678901234" /></FormControl>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          maxLength={14}
+                          placeholder="12345678901234"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -242,7 +295,9 @@ export default function EtablissementDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Code PIN</FormLabel>
-                      <FormControl><Input {...field} maxLength={6} placeholder="000000" /></FormControl>
+                      <FormControl>
+                        <Input {...field} maxLength={6} placeholder="000000" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -251,7 +306,10 @@ export default function EtablissementDetailPage() {
             </CollapsibleSection>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="flex items-center gap-2 pt-4 border-t">
+          <motion.div
+            variants={fadeUp}
+            className="flex items-center gap-2 border-t pt-4"
+          >
             <Button
               type="submit"
               disabled={!form.formState.isDirty || isUpdating}
@@ -266,7 +324,11 @@ export default function EtablissementDetailPage() {
               onClick={() => setDeleteDialogOpen(true)}
               title="Supprimer"
             >
-              <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
+              <HugeiconsIcon
+                icon={Delete02Icon}
+                strokeWidth={2}
+                className="size-4"
+              />
             </Button>
           </motion.div>
         </form>
@@ -298,20 +360,31 @@ function CollapsibleSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+        className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50"
       >
         <span className="flex items-center gap-2">
-          {icon && <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4 text-muted-foreground" />}
+          {icon && (
+            <HugeiconsIcon
+              icon={icon}
+              strokeWidth={2}
+              className="size-4 text-muted-foreground"
+            />
+          )}
           {title}
         </span>
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           strokeWidth={2}
-          className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")}
+          className={cn(
+            "size-4 text-muted-foreground transition-transform",
+            open && "rotate-180"
+          )}
         />
       </button>
       {open && (
-        <div className="border-t px-4 pt-4 pb-4 [&_label]:text-xs [&_label]:text-muted-foreground">{children}</div>
+        <div className="border-t px-4 pt-4 pb-4 [&_label]:text-xs [&_label]:text-muted-foreground">
+          {children}
+        </div>
       )}
     </div>
   )

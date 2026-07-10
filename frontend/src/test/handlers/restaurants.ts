@@ -19,10 +19,32 @@ export const restaurantHandlers = [
     if (id === 999) {
       return HttpResponse.json(
         { detail: "Restaurant non trouvé" },
-        { status: 404 },
+        { status: 404 }
       )
     }
 
     return HttpResponse.json(mockRestaurantDetail)
+  }),
+
+  http.post(`${API}/restaurants/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ restaurant_id: 42, ...body }, { status: 201 })
+  }),
+
+  http.patch(`${API}/restaurants/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const existing = mockRestaurants.find(
+      (r) => r.restaurant_id === Number(params.id)
+    )
+    return HttpResponse.json({ ...existing, ...body })
+  }),
+
+  http.put(`${API}/restaurants/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ restaurant_id: Number(params.id), ...body })
+  }),
+
+  http.delete(`${API}/restaurants/:id/`, () => {
+    return new HttpResponse(null, { status: 204 })
   }),
 ]

@@ -1,10 +1,11 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { apiPost } from "@/api/client"
+import { useCreateEstablishment } from "@/hooks/use-establishments"
 import { useActiveRestaurantStore } from "@/hooks/use-active-restaurant"
+import { handleMutationError } from "@/lib/mutation-error-handler"
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FrenchAddressInput, type FrenchAddressResult } from "@/components/ui/french-address-input"
+import {
+  FrenchAddressInput,
+  type FrenchAddressResult,
+} from "@/components/ui/french-address-input"
 import {
   Form,
   FormControl,
@@ -30,13 +34,8 @@ const formSchema = z.object({
   postalCode: z.string().min(1, "Le code postal est requis"),
   city: z.string().min(1, "La ville est requise"),
   phoneNumber: z.string().min(1, "Le téléphone est requis"),
-  siret: z
-    .string()
-    .regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres"),
-  pin: z
-    .string()
-    .min(1, "Le code PIN est requis")
-    .max(6, "6 caractères max"),
+  siret: z.string().regex(/^\d{14}$/, "Le SIRET doit contenir 14 chiffres"),
+  pin: z.string().min(1, "Le code PIN est requis").max(6, "6 caractères max"),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -52,6 +51,7 @@ export function CreateRestaurantDialog({
 }: CreateRestaurantDialogProps) {
   const queryClient = useQueryClient()
   const setSelectedId = useActiveRestaurantStore((s) => s.setSelectedId)
+  const createEstablishment = useCreateEstablishment()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,27 +66,17 @@ export function CreateRestaurantDialog({
     },
   })
 
-  const mutation = useMutation({
-    mutationFn: (data: FormValues) =>
-      apiPost<{ restaurantId: number; name: string }>("restaurants/", data),
-    onSuccess: (result) => {
-      toast.success(`${result.name} créé avec succès`)
-      queryClient.invalidateQueries({ queryKey: ["establishments"] })
-      queryClient.invalidateQueries({ queryKey: ["restaurants"] })
-      queryClient.invalidateQueries({ queryKey: ["revenue-by-category"] })
-      setSelectedId(result.restaurantId)
-      form.reset()
-      onOpenChange(false)
-    },
-    onError: (err: unknown) => {
-      const apiErr = err as { body?: { siret?: string[]; name?: string[]; detail?: string } } | undefined
-      const detail = apiErr?.body?.siret?.[0] ?? apiErr?.body?.name?.[0] ?? apiErr?.body?.detail ?? "Erreur lors de la création du restaurant"
-      toast.error(detail)
-    },
-  })
-
   const onSubmit = (data: FormValues) => {
-    mutation.mutate(data)
+    createEstablishment.mutate(data, {
+      onSuccess: (result) => {
+        toast.success(`${result.name} créé avec succès`)
+        queryClient.invalidateQueries({ queryKey: ["revenue-by-category"] })
+        setSelectedId(result.restaurantId)
+        form.reset()
+        onOpenChange(false)
+      },
+      onError: (err) => handleMutationError(err, { setError: form.setError }),
+    })
   }
 
   return (
@@ -95,16 +85,13 @@ export function CreateRestaurantDialog({
         <DialogHeader>
           <DialogTitle>Nouveau restaurant</DialogTitle>
           <DialogDescription>
-            Renseignez les informations du restaurant. Vous pourrez compléter les
-            détails plus tard.
+            Renseignez les informations du restaurant. Vous pourrez compléter
+            les détails plus tard.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -112,7 +99,7 @@ export function CreateRestaurantDialog({
                 <FormItem>
                   <FormLabel>Nom du restaurant</FormLabel>
                   <FormControl>
-                    <Input placeholder="Holly Fork — Marais" {...field} />
+                    <Input placeholder="Holy Fork — Marais" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -212,11 +199,7 @@ export function CreateRestaurantDialog({
                   <FormItem>
                     <FormLabel>Code PIN</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="000000"
-                        maxLength={6}
-                        {...field}
-                      />
+                      <Input placeholder="000000" maxLength={6} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -227,9 +210,11 @@ export function CreateRestaurantDialog({
             <Button
               type="submit"
               className="w-full"
-              disabled={mutation.isPending}
+              disabled={createEstablishment.isPending}
             >
-              {mutation.isPending ? "Création..." : "Créer le restaurant"}
+              {createEstablishment.isPending
+                ? "Création..."
+                : "Créer le restaurant"}
             </Button>
           </form>
         </Form>

@@ -4,13 +4,26 @@ import { mockReservations, mockSalles, mockTables } from "../mocks/reservations"
 const API = "*/api"
 
 export const reservationHandlers = [
-  // Reservations list
-  http.get(`${API}/reservations/`, () => {
+  // Reservations list (supports date and restaurant_id filtering)
+  http.get(`${API}/reservations/`, ({ request }) => {
+    const url = new URL(request.url)
+    const dateFilter = url.searchParams.get("date")
+    const restaurantFilter = url.searchParams.get("restaurant_id")
+
+    let filtered = mockReservations
+    if (dateFilter) {
+      // datetime is ISO: "2026-05-05T12:00:00" — compare date portion
+      filtered = filtered.filter((r) => r.datetime.startsWith(dateFilter))
+    }
+    if (restaurantFilter) {
+      filtered = filtered.filter((r) => r.salle_id === Number(restaurantFilter))
+    }
+
     return HttpResponse.json({
-      count: mockReservations.length,
+      count: filtered.length,
       next: null,
       previous: null,
-      results: mockReservations,
+      results: filtered,
     })
   }),
 
@@ -18,7 +31,8 @@ export const reservationHandlers = [
   http.get(`${API}/reservations/:id/`, ({ params }) => {
     const id = Number(params.id)
     const resa = mockReservations.find((r) => r.id === id)
-    if (!resa) return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    if (!resa)
+      return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
     return HttpResponse.json(resa)
   }),
 

@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { IconSvgElement } from "@hugeicons/react"
 import { usePermissions } from "@/hooks/use-permissions"
-import { useOrders } from "@/hooks/use-orders"
+import { useOrdersPendingCount } from "@/hooks/use-orders"
 import { useReservations } from "@/hooks/use-reservations"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import {
@@ -114,47 +114,47 @@ export function NavMain() {
   const { pathname } = useLocation()
   const { can } = usePermissions()
   const { restaurantId } = useActiveRestaurant()
-  const { data: orders } = useOrders(restaurantId)
-  const pendingCount = orders.filter((o) => o.status === "pending").length
-  const { data: reservations } = useReservations(restaurantId)
+  const { count: pendingCount } = useOrdersPendingCount(restaurantId)
+  const todayStr = new Date().toISOString().split("T")[0]
+  const { data: reservations } = useReservations(restaurantId, todayStr)
   const resaCount = reservations.length
 
   return (
     <>
       {navItems.map((group) => {
-        const visibleItems = group.items.filter(
-          (item) => !item.permission || can(item.permission),
-        ).map((item) => {
-          if (item.to === "/commandes" && pendingCount > 0)
-            return { ...item, badge: String(pendingCount) }
-          if (item.to === "/reservations" && resaCount > 0)
-            return { ...item, badge: String(resaCount) }
-          return item
-        })
+        const visibleItems = group.items
+          .filter((item) => !item.permission || can(item.permission))
+          .map((item) => {
+            if (item.to === "/commandes" && pendingCount > 0)
+              return { ...item, badge: String(pendingCount) }
+            if (item.to === "/reservations" && resaCount > 0)
+              return { ...item, badge: String(resaCount) }
+            return item
+          })
         if (visibleItems.length === 0) return null
         return (
-        <SidebarGroup key={group.label}>
-          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {visibleItems.map((item) =>
-                item.items && item.items.length > 0 ? (
-                  <CollapsibleNavItem
-                    key={item.to}
-                    item={item}
-                    pathname={pathname}
-                  />
-                ) : (
-                  <SimpleNavItem
-                    key={item.to}
-                    item={item}
-                    pathname={pathname}
-                  />
-                )
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleItems.map((item) =>
+                  item.items && item.items.length > 0 ? (
+                    <CollapsibleNavItem
+                      key={item.to}
+                      item={item}
+                      pathname={pathname}
+                    />
+                  ) : (
+                    <SimpleNavItem
+                      key={item.to}
+                      item={item}
+                      pathname={pathname}
+                    />
+                  )
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )
       })}
     </>
@@ -173,10 +173,7 @@ function SimpleNavItem({
     <SidebarMenuItem>
       <SidebarMenuButton
         render={
-          <Link
-            to={item.to}
-            aria-current={isActive ? "page" : undefined}
-          />
+          <Link to={item.to} aria-current={isActive ? "page" : undefined} />
         }
         isActive={isActive}
         tooltip={item.label}
@@ -239,9 +236,7 @@ function CollapsibleNavItem({
         defaultOpen={hasActiveChild}
       >
         <CollapsibleTrigger
-          render={
-            <SidebarMenuButton isActive={hasActiveChild} />
-          }
+          render={<SidebarMenuButton isActive={hasActiveChild} />}
         >
           <HugeiconsIcon icon={item.icon} strokeWidth={2} />
           <span>{item.label}</span>
@@ -254,9 +249,12 @@ function CollapsibleNavItem({
         <CollapsibleContent>
           <SidebarMenuSub>
             {item.items!.map((sub) => {
-              const isSubActive = pathname === sub.to ||
-                (sub.to === "/admin" && pathname.startsWith("/admin/etablissements/")) ||
-                (sub.to === "/admin/employes" && /^\/admin\/employes\/[^/]+$/.test(pathname))
+              const isSubActive =
+                pathname === sub.to ||
+                (sub.to === "/admin" &&
+                  pathname.startsWith("/admin/etablissements/")) ||
+                (sub.to === "/admin/employes" &&
+                  /^\/admin\/employes\/[^/]+$/.test(pathname))
               return (
                 <SidebarMenuSubItem key={sub.to}>
                   <SidebarMenuSubButton

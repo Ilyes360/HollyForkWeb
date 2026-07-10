@@ -11,19 +11,13 @@ describe("Login page", () => {
       routerProps: { initialEntries: ["/login"] },
     })
 
-    await user.type(
-      screen.getByPlaceholderText("Identifiant ou email"),
-      "marie@hollyfork.fr",
-    )
-    await user.type(
-      screen.getByPlaceholderText("Mot de passe"),
-      "password123",
-    )
+    await user.type(screen.getByPlaceholderText("Identifiant"), "marie.dupont")
+    await user.type(screen.getByPlaceholderText("Mot de passe"), "password123")
     await user.click(screen.getByRole("button", { name: /se connecter/i }))
 
     await waitFor(() => {
-      expect(localStorage.getItem("holly_access_token")).toBeTruthy()
-      expect(localStorage.getItem("holly_refresh_token")).toBeTruthy()
+      expect(localStorage.getItem("holy_access_token")).toBeTruthy()
+      expect(localStorage.getItem("holy_refresh_token")).toBeTruthy()
     })
   })
 
@@ -36,9 +30,7 @@ describe("Login page", () => {
     await user.click(screen.getByRole("button", { name: /se connecter/i }))
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/l'identifiant est requis/i),
-      ).toBeInTheDocument()
+      expect(screen.getByText(/l'identifiant est requis/i)).toBeInTheDocument()
     })
   })
 
@@ -48,19 +40,16 @@ describe("Login page", () => {
       routerProps: { initialEntries: ["/login"] },
     })
 
-    await user.type(
-      screen.getByPlaceholderText("Identifiant ou email"),
-      "bad@example.com",
-    )
+    await user.type(screen.getByPlaceholderText("Identifiant"), "bad")
     await user.type(
       screen.getByPlaceholderText("Mot de passe"),
-      "wrongpassword",
+      "wrongpassword"
     )
     await user.click(screen.getByRole("button", { name: /se connecter/i }))
 
     await waitFor(() => {
       expect(
-        screen.getByText("Email ou mot de passe incorrect"),
+        screen.getByText("Email ou mot de passe incorrect")
       ).toBeInTheDocument()
     })
   })
@@ -71,18 +60,12 @@ describe("Login page", () => {
       routerProps: { initialEntries: ["/login"] },
     })
 
-    await user.type(
-      screen.getByPlaceholderText("Identifiant ou email"),
-      "rate-limited@example.com",
-    )
-    await user.type(
-      screen.getByPlaceholderText("Mot de passe"),
-      "password123",
-    )
+    await user.type(screen.getByPlaceholderText("Identifiant"), "rate_limited")
+    await user.type(screen.getByPlaceholderText("Mot de passe"), "password123")
     await user.click(screen.getByRole("button", { name: /se connecter/i }))
 
     await waitFor(() => {
-      expect(localStorage.getItem("holly_access_token")).toBeNull()
+      expect(localStorage.getItem("holy_access_token")).toBeNull()
     })
   })
 
@@ -92,18 +75,12 @@ describe("Login page", () => {
       routerProps: { initialEntries: ["/login"] },
     })
 
-    await user.type(
-      screen.getByPlaceholderText("Identifiant ou email"),
-      "error@example.com",
-    )
-    await user.type(
-      screen.getByPlaceholderText("Mot de passe"),
-      "password123",
-    )
+    await user.type(screen.getByPlaceholderText("Identifiant"), "error")
+    await user.type(screen.getByPlaceholderText("Mot de passe"), "password123")
     await user.click(screen.getByRole("button", { name: /se connecter/i }))
 
     await waitFor(() => {
-      expect(localStorage.getItem("holly_access_token")).toBeNull()
+      expect(localStorage.getItem("holy_access_token")).toBeNull()
     })
   })
 })

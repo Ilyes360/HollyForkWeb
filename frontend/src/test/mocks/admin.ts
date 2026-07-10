@@ -40,45 +40,25 @@ export const mockEmployees = [
 ]
 
 export const mockTypeEmployes = [
-  { id: 1, type_name: "Chef de rang", description: "Responsable d'un rang de tables" },
+  {
+    id: 1,
+    type_name: "Chef de rang",
+    description: "Responsable d'un rang de tables",
+  },
   { id: 2, type_name: "Serveur", description: "Service en salle" },
-  { id: 3, type_name: "Chef cuisinier", description: "Responsable de la cuisine" },
+  {
+    id: 3,
+    type_name: "Chef cuisinier",
+    description: "Responsable de la cuisine",
+  },
   { id: 4, type_name: "Commis", description: "Aide en cuisine" },
   { id: 5, type_name: "Barman", description: "Responsable du bar" },
 ]
 
+/** Matches GET /api/staff/permissions/roles/ response format */
 export const mockRoles = [
-  {
-    id: 1,
-    name: "gerant",
-    description: "Accès complet à toutes les fonctionnalités",
-    permissions: [
-      "manage_staff",
-      "manage_establishments",
-      "manage_roles",
-      "manage_planning",
-      "manage_reservations",
-      "manage_stocks",
-      "manage_suppliers",
-      "manage_settings",
-    ],
-  },
-  {
-    id: 2,
-    name: "chef",
-    description: "Gestion cuisine et stocks",
-    permissions: ["manage_stocks", "manage_suppliers"],
-  },
-  {
-    id: 3,
-    name: "responsable_salle",
-    description: "Gestion salle et réservations",
-    permissions: ["manage_reservations", "manage_planning"],
-  },
-  {
-    id: 4,
-    name: "serveur",
-    description: "Consultation réservations et salle",
-    permissions: [],
-  },
+  { name: "Gérant", value: "Gérant", hierarchy_level: 1 },
+  { name: "Chef", value: "Chef", hierarchy_level: 2 },
+  { name: "Responsable salle", value: "Responsable salle", hierarchy_level: 2 },
+  { name: "Serveur", value: "Serveur", hierarchy_level: 3 },
 ]

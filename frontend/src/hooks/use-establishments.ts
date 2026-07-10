@@ -1,6 +1,13 @@
 import { useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
+import {
+  apiGet,
+  apiPost,
+  apiPatch,
+  apiDelete,
+  getAccessToken,
+} from "@/api/client"
 import { fetchAllPages } from "@/api/pagination"
 import type { Establishment } from "@/stores/admin-types"
 
@@ -71,7 +78,7 @@ export function useEstablishments() {
 
   const establishments = useMemo(
     () => (query.data ?? []).map(apiRestaurantToEstablishment),
-    [query.data],
+    [query.data]
   )
 
   return {
@@ -91,7 +98,7 @@ export function useEstablishment(id: number | null) {
 
   const mapped = useMemo(
     () => (query.data ? apiRestaurantToEstablishment(query.data) : null),
-    [query.data],
+    [query.data]
   )
 
   return {
@@ -104,7 +111,7 @@ export function useEstablishment(id: number | null) {
 export function useCreateEstablishment() {
   const qc = useQueryClient()
 
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       name: string
       address: string
@@ -126,18 +133,24 @@ export function useCreateEstablishment() {
 export function useUpdateEstablishment() {
   const qc = useQueryClient()
 
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number | string; data: Partial<{
-      name: string
-      address: string
-      postalCode: string
-      city: string
-      phoneNumber: string
-      siret: string
-      nafCode: string | null
-      pin: string
-      logoUrl: string | null
-    }> }) => apiPatch<ApiRestaurant>(`restaurants/${id}/`, data),
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number | string
+      data: Partial<{
+        name: string
+        address: string
+        postalCode: string
+        city: string
+        phoneNumber: string
+        siret: string
+        nafCode: string | null
+        pin: string
+        logoUrl: string | null
+      }>
+    }) => apiPatch<ApiRestaurant>(`restaurants/${id}/`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.all })
       qc.invalidateQueries({ queryKey: ["restaurants"] })
@@ -148,7 +161,7 @@ export function useUpdateEstablishment() {
 export function useDeleteEstablishment() {
   const qc = useQueryClient()
 
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (id: number | string) => apiDelete(`restaurants/${id}/`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.all })

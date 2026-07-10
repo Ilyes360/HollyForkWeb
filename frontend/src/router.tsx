@@ -34,6 +34,7 @@ import PricingTable from "@/pages/parametres/billing/pricing-table"
 import { Navigate } from "react-router"
 
 import LoginPage from "@/pages/public/login"
+import RegisterPage from "@/pages/public/register"
 import OnboardingPage from "@/pages/public/onboarding-flow/page"
 
 export const router = createBrowserRouter([
@@ -45,20 +46,61 @@ export const router = createBrowserRouter([
       {
         element: <RootLayout />,
         children: [
-          { index: true, element: <Suspense fallback={<PageSkeleton />}><DashboardPage /></Suspense>, errorElement: <RouteErrorBoundary /> },
-          { path: "reservations", element: <Suspense fallback={<PageSkeleton />}><ReservationsPage /></Suspense>, errorElement: <RouteErrorBoundary /> },
-          { path: "salle", element: <Suspense fallback={<PageSkeleton />}><SallePage /></Suspense>, errorElement: <RouteErrorBoundary /> },
-          { path: "planning", element: <Suspense fallback={<PageSkeleton />}><PlanningPage /></Suspense>, errorElement: <RouteErrorBoundary /> },
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <DashboardPage />
+              </Suspense>
+            ),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "reservations",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <ReservationsPage />
+              </Suspense>
+            ),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "salle",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <SallePage />
+              </Suspense>
+            ),
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: "planning",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <PlanningPage />
+              </Suspense>
+            ),
+            errorElement: <RouteErrorBoundary />,
+          },
           { path: "cuisine", element: <CartePage /> },
           { path: "cuisine/nouvelle", element: <CuisineRecipePage /> },
           { path: "cuisine/:id/modifier", element: <CuisineRecipePage /> },
           { path: "stocks", element: <StocksPage /> },
-          { path: "stocks/configuration", element: <Navigate to="/stocks" replace /> },
+          {
+            path: "stocks/configuration",
+            element: <Navigate to="/stocks" replace />,
+          },
           { path: "stocks/nouveau", element: <StocksProductPage /> },
           { path: "stocks/:id/modifier", element: <StocksProductPage /> },
           { path: "commandes", element: <CommandesPage /> },
-          { path: "fournisseurs", element: <Navigate to="/commandes" replace /> },
-          { path: "fournisseurs/:id", element: <Navigate to="/commandes" replace /> },
+          {
+            path: "fournisseurs",
+            element: <Navigate to="/commandes" replace />,
+          },
+          {
+            path: "fournisseurs/:id",
+            element: <Navigate to="/commandes" replace />,
+          },
           {
             path: "admin",
             element: <AdminLayout />,
@@ -66,7 +108,10 @@ export const router = createBrowserRouter([
               { index: true, element: <EtablissementsPage /> },
               { path: "employes", element: <EmployesPage /> },
               { path: "roles", element: <RolesPage /> },
-              { path: "etablissements/:id", element: <EtablissementDetailPage /> },
+              {
+                path: "etablissements/:id",
+                element: <EtablissementDetailPage />,
+              },
               { path: "employes/nouveau", element: <EmployeDetailPage /> },
               { path: "employes/:id", element: <EmployeDetailPage /> },
             ],
@@ -86,9 +131,7 @@ export const router = createBrowserRouter([
       // Onboarding is auth-protected (needs POST to API)
       {
         element: <PublicLayout />,
-        children: [
-          { path: "onboarding", element: <OnboardingPage /> },
-        ],
+        children: [{ path: "onboarding", element: <OnboardingPage /> }],
       },
     ],
   },
@@ -98,10 +141,8 @@ export const router = createBrowserRouter([
     element: <GuestGuard />,
     children: [
       { path: "login", element: <LoginPage /> },
+      { path: "register", element: <RegisterPage /> },
     ],
   },
-
-  // Blocked routes — redirect to login
-  { path: "register", element: <Navigate to="/login" replace /> },
   { path: "forgot-password", element: <Navigate to="/login" replace /> },
 ])

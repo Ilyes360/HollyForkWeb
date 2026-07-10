@@ -7,7 +7,7 @@ import AuthGuard from "@/guards/auth-guard"
 
 function renderWithAuth(token?: string) {
   if (token) {
-    localStorage.setItem("holly_access_token", token)
+    localStorage.setItem("holy_access_token", token)
   }
 
   const queryClient = new QueryClient({
@@ -27,7 +27,7 @@ function renderWithAuth(token?: string) {
           <Route path="/login" element={<div>Login Page</div>} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 

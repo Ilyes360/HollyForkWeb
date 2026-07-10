@@ -9,7 +9,7 @@ import type { ProductPortionSummary } from "@/components/stock/types"
 import type { SupplierFull } from "@/components/commandes/types"
 import type { Recipe } from "@/components/carte/types"
 import { getProductStatus } from "@/components/stock/utils"
-import { getProductIcon } from "@/components/stock/product-icons"
+import { IngredientIcon } from "@/components/carte/ingredient-icon"
 
 interface SupplierFlowGraphProps {
   supplier: SupplierFull
@@ -48,17 +48,21 @@ export function SupplierFlowGraph({
   productPortionSummaries,
   recipes,
 }: SupplierFlowGraphProps) {
-  const summaryMap = new Map(productPortionSummaries.map((s) => [s.productId, s]))
+  const summaryMap = new Map(
+    productPortionSummaries.map((s) => [s.productId, s])
+  )
 
   // Build product nodes
   const productNodes = products.map((p) => {
     const status = getProductStatus(p)
-    const iconEntry = getProductIcon(p.icon)
-    return { product: p, status, iconEntry }
+    return { product: p, status }
   })
 
   // Deduplicated recipes from all products' portion equivalents
-  const recipeMap = new Map<string, { id: string; name: string; portions: number; icon?: string }>()
+  const recipeMap = new Map<
+    string,
+    { id: string; name: string; portions: number; icon?: string }
+  >()
   for (const p of products) {
     const summary = summaryMap.get(p.id)
     if (!summary) continue
@@ -99,7 +103,11 @@ export function SupplierFlowGraph({
         <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-3">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-              <HugeiconsIcon icon={TruckDeliveryIcon} className="size-3.5 text-muted-foreground" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={TruckDeliveryIcon}
+                className="size-3.5 text-muted-foreground"
+                strokeWidth={2}
+              />
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold">{supplier.name}</p>
@@ -120,7 +128,7 @@ export function SupplierFlowGraph({
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: columnDelay * 1 }}
         >
-          {visibleProducts.map(({ product: p, status, iconEntry }) => (
+          {visibleProducts.map(({ product: p, status }) => (
             <div
               key={p.id}
               className={cn(
@@ -129,11 +137,7 @@ export function SupplierFlowGraph({
               )}
             >
               <div className="flex items-center gap-2">
-                {iconEntry && (
-                  <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-background/60">
-                    <HugeiconsIcon icon={iconEntry.icon} className="size-3 text-muted-foreground" strokeWidth={2} />
-                  </div>
-                )}
+                <IngredientIcon product={p} size="sm" />
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{p.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -142,7 +146,10 @@ export function SupplierFlowGraph({
                 </div>
               </div>
               <div className="mt-1">
-                <Badge variant={STATUS_CONFIG[status].variant} className="text-[10px]">
+                <Badge
+                  variant={STATUS_CONFIG[status].variant}
+                  className="text-[10px]"
+                >
                   {STATUS_CONFIG[status].label}
                 </Badge>
               </div>

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook, waitFor } from "@testing-library/react"
 import { createElement } from "react"
-import { useOrders } from "@/hooks/use-orders"
+import { useOrders, useOrdersPendingCount } from "@/hooks/use-orders"
 import { useSuppliers } from "@/hooks/use-suppliers"
 import { setTokens } from "@/api/client"
 
@@ -20,11 +20,10 @@ describe("Commandes queries (API via MSW)", () => {
     setTokens("test-token", "test-refresh")
   })
 
-  it("fetches orders and maps to Order type", async () => {
-    const { result } = renderHook(
-      () => useOrders(1),
-      { wrapper: createWrapper() },
-    )
+  it("fetches orders (paginated) and maps to Order type", async () => {
+    const { result } = renderHook(() => useOrders(1), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -37,11 +36,30 @@ describe("Commandes queries (API via MSW)", () => {
     expect(first.status).toBe("pending") // "SENT" → "pending"
   })
 
+  it("returns pagination metadata", async () => {
+    const { result } = renderHook(() => useOrders(1), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.total).toBe(2)
+    expect(result.current.hasNextPage).toBe(false)
+    expect(result.current.page).toBe(1)
+  })
+
+  it("useOrdersPendingCount returns count", async () => {
+    const { result } = renderHook(() => useOrdersPendingCount(1), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.count).toBeGreaterThanOrEqual(0))
+  })
+
   it("fetches suppliers and maps to SupplierFull type", async () => {
-    const { result } = renderHook(
-      () => useSuppliers(),
-      { wrapper: createWrapper() },
-    )
+    const { result } = renderHook(() => useSuppliers(), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 

@@ -1,18 +1,50 @@
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { useGanttLayout } from "@/components/reservations/gantt/use-gantt-layout"
-import type { Reservation, RestaurantTable, PipelineStageDefinition } from "@/components/reservations/types"
+import type {
+  Reservation,
+  RestaurantTable,
+  PipelineStageDefinition,
+} from "@/components/reservations/types"
 
 const TABLES: RestaurantTable[] = [
-  { number: 1, label: "T1", seats: 4 },
-  { number: 2, label: "T2", seats: 2 },
+  { id: 1, number: 1, label: "T1", seats: 4 },
+  { id: 2, number: 2, label: "T2", seats: 2 },
 ]
 
 const STAGES: PipelineStageDefinition[] = [
-  { id: "installe", label: "Installé", shortLabel: "Inst.", color: "text-blue-500", avgDurationMinutes: 0, order: 0 },
-  { id: "commande", label: "Commande", shortLabel: "Cmd", color: "text-amber-500", avgDurationMinutes: 8, order: 1 },
-  { id: "plat", label: "Plat", shortLabel: "Plat", color: "text-orange-500", avgDurationMinutes: 35, order: 2 },
-  { id: "addition", label: "Addition", shortLabel: "Add.", color: "text-emerald-500", avgDurationMinutes: 65, order: 3 },
+  {
+    id: "installe",
+    label: "Installé",
+    shortLabel: "Inst.",
+    color: "text-blue-500",
+    avgDurationMinutes: 0,
+    order: 0,
+  },
+  {
+    id: "commande",
+    label: "Commande",
+    shortLabel: "Cmd",
+    color: "text-amber-500",
+    avgDurationMinutes: 8,
+    order: 1,
+  },
+  {
+    id: "plat",
+    label: "Plat",
+    shortLabel: "Plat",
+    color: "text-orange-500",
+    avgDurationMinutes: 35,
+    order: 2,
+  },
+  {
+    id: "addition",
+    label: "Addition",
+    shortLabel: "Add.",
+    color: "text-emerald-500",
+    avgDurationMinutes: 65,
+    order: 3,
+  },
 ]
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
@@ -24,10 +56,13 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     time: "12:00",
     service: "midi",
     covers: 2,
+    tableId: 1,
     tableNumber: 1,
     canal: "site",
     status: "confirmee",
     notes: "",
+    allergies: [],
+    dietTypes: [],
     createdAt: "2026-03-21T10:00:00",
     ...overrides,
   }
@@ -41,7 +76,7 @@ describe("useGanttLayout", () => {
     )
     const block = result.current.blocks[0]
     expect(block.startMinute).toBe(720) // 12:00
-    expect(block.endMinute).toBe(795)   // 13:15
+    expect(block.endMinute).toBe(795) // 13:15
     expect(block.isEstimated).toBe(true)
   })
 
@@ -83,7 +118,10 @@ describe("useGanttLayout", () => {
   })
 
   it("scales x and width correctly with zoom", () => {
-    const resa = makeReservation({ time: "12:00", estimatedDurationMinutes: 60 })
+    const resa = makeReservation({
+      time: "12:00",
+      estimatedDurationMinutes: 60,
+    })
     const { result: r1 } = renderHook(() =>
       useGanttLayout([resa], TABLES, STAGES, "midi", "normal", 1)
     )
@@ -91,7 +129,9 @@ describe("useGanttLayout", () => {
       useGanttLayout([resa], TABLES, STAGES, "midi", "normal", 2)
     )
     expect(r2.current.blocks[0].x).toBe(r1.current.blocks[0].x * 2)
-    expect(r2.current.blocks[0].width).toBeGreaterThanOrEqual(r1.current.blocks[0].width * 2 - 1)
+    expect(r2.current.blocks[0].width).toBeGreaterThanOrEqual(
+      r1.current.blocks[0].width * 2 - 1
+    )
   })
 
   it("computes pipelineProgress for arrivee with pipeline", () => {

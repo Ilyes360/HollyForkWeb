@@ -32,7 +32,7 @@ describe("Restaurant queries", () => {
       const data = result.current.data!
       expect(data).toHaveLength(2)
       expect(data[0].restaurantId).toBe(1)
-      expect(data[0].name).toBe("Holly Fork — Marais")
+      expect(data[0].name).toBe("Holy Fork — Marais")
       expect(data[0].postalCode).toBe("75004")
       expect(data[1].restaurantId).toBe(2)
     })
@@ -56,7 +56,7 @@ describe("Restaurant queries", () => {
 
       const data = result.current.data!
       expect(data.restaurantId).toBe(1)
-      expect(data.name).toBe("Holly Fork — Marais")
+      expect(data.name).toBe("Holy Fork — Marais")
       expect(data.phoneNumber).toBe("01 42 72 00 00")
       expect(data.siret).toBe("12345678901234")
     })

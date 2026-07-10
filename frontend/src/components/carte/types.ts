@@ -12,6 +12,7 @@ export interface Recipe {
   id: string
   name: string
   icon?: string
+  categorieId: number
   category: RecipeCategory
   sellingPrice: number
   portions: number

@@ -1,10 +1,24 @@
 import { useState, useMemo, useCallback } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Search01Icon, Message01Icon, Tick02Icon, CheckmarkCircle02Icon, Cancel01Icon, Clock01Icon, Sun02Icon, Moon02Icon } from "@hugeicons/core-free-icons"
+import {
+  Search01Icon,
+  Message01Icon,
+  Tick02Icon,
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
+  Clock01Icon,
+  Sun02Icon,
+  Moon02Icon,
+} from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import {
   InputGroup,
@@ -20,8 +34,12 @@ import {
   TableCell,
   SortableTableHead,
 } from "@/components/ui/table"
-import { RESTAURANT_TABLES } from "./data"
-import type { Reservation, ReservationStatus, ServiceType } from "./types"
+import type {
+  Reservation,
+  ReservationStatus,
+  RestaurantTable,
+  ServiceType,
+} from "./types"
 import { STATUS_CONFIG, STATUS_FILTER_OPTIONS } from "./types"
 import { useTableSort } from "@/hooks/use-table-sort"
 
@@ -42,12 +60,16 @@ interface ReservationsTableProps {
   onServiceChange: (service: import("./types").ServiceType) => void
   onSelectReservation: (reservation: Reservation) => void
   onStatusChange: (id: string, status: ReservationStatus) => void
+  tables: RestaurantTable[]
 }
 
-function getTableLabel(tableNumber: number | null): string {
+function getTableLabel(
+  tableNumber: number | null,
+  tables: RestaurantTable[]
+): string {
   if (tableNumber === null) return "—"
-  const table = RESTAURANT_TABLES.find((t) => t.number === tableNumber)
-  return table ? table.label : `#${tableNumber}`
+  const table = tables.find((t) => t.number === tableNumber)
+  return table ? table.label : `T${tableNumber}`
 }
 
 export function ReservationsTable({
@@ -57,6 +79,7 @@ export function ReservationsTable({
   onServiceChange,
   onSelectReservation,
   onStatusChange,
+  tables,
 }: ReservationsTableProps) {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("tous")
@@ -72,33 +95,49 @@ export function ReservationsTable({
       const q = search.toLowerCase()
       result = result.filter((r) => {
         if (r.clientName.toLowerCase().includes(q)) return true
-        const label = getTableLabel(r.tableNumber)
+        const label = getTableLabel(r.tableNumber, tables)
         return label.toLowerCase().includes(q)
       })
     }
 
     return result
-  }, [reservations, statusFilter, search])
+  }, [reservations, statusFilter, search, tables])
 
-  const getSortValue = useCallback((r: Reservation, key: SortKey): string | number => {
-    switch (key) {
-      case "client": return r.clientName.toLowerCase()
-      case "time": return r.time
-      case "covers": return r.covers
-      case "table": return r.tableNumber ?? 999
-      case "status": return STATUS_PRIORITY[r.status] ?? 99
-      default: return 0
-    }
-  }, [])
+  const getSortValue = useCallback(
+    (r: Reservation, key: SortKey): string | number => {
+      switch (key) {
+        case "client":
+          return r.clientName.toLowerCase()
+        case "time":
+          return r.time
+        case "covers":
+          return r.covers
+        case "table":
+          return r.tableNumber ?? 999
+        case "status":
+          return STATUS_PRIORITY[r.status] ?? 99
+        default:
+          return 0
+      }
+    },
+    []
+  )
 
-  const { sortedData, sortKey, sortDir, handleSort } = useTableSort<Reservation, SortKey>({
+  const { sortedData, sortKey, sortDir, handleSort } = useTableSort<
+    Reservation,
+    SortKey
+  >({
     data: filtered,
     defaultSortKey: "time",
     getSortValue,
     secondarySortKey: "client",
   })
 
-  const sortProps = { activeSortKey: sortKey, sortDir, onSort: handleSort as (key: string) => void }
+  const sortProps = {
+    activeSortKey: sortKey,
+    sortDir,
+    onSort: handleSort as (key: string) => void,
+  }
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -109,11 +148,19 @@ export function ReservationsTable({
         >
           <TabsList>
             <TabsTrigger value="midi">
-              <HugeiconsIcon icon={Sun02Icon} className="mr-1 size-3.5 text-amber-500" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={Sun02Icon}
+                className="mr-1 size-3.5 text-amber-500"
+                strokeWidth={2}
+              />
               Midi
             </TabsTrigger>
             <TabsTrigger value="soir">
-              <HugeiconsIcon icon={Moon02Icon} className="mr-1 size-3.5 text-indigo-400" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={Moon02Icon}
+                className="mr-1 size-3.5 text-indigo-400"
+                strokeWidth={2}
+              />
               Soir
             </TabsTrigger>
           </TabsList>
@@ -131,7 +178,11 @@ export function ReservationsTable({
         <div className="ml-auto">
           <InputGroup className="w-64 bg-background">
             <InputGroupAddon>
-              <HugeiconsIcon icon={Search01Icon} className="size-4" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={Search01Icon}
+                className="size-4"
+                strokeWidth={2}
+              />
             </InputGroupAddon>
             <InputGroupInput
               placeholder="Nom ou table..."
@@ -146,11 +197,36 @@ export function ReservationsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <SortableTableHead label="Client" sortKey="client" {...sortProps} className="min-w-[160px]" />
-              <SortableTableHead label="Heure" sortKey="time" {...sortProps} className="w-[80px]" />
-              <SortableTableHead label="Couverts" sortKey="covers" {...sortProps} className="w-[90px]" />
-              <SortableTableHead label="Table" sortKey="table" {...sortProps} className="w-[70px]" />
-              <SortableTableHead label="Statut" sortKey="status" {...sortProps} className="w-[110px]" />
+              <SortableTableHead
+                label="Client"
+                sortKey="client"
+                {...sortProps}
+                className="min-w-[160px]"
+              />
+              <SortableTableHead
+                label="Heure"
+                sortKey="time"
+                {...sortProps}
+                className="w-[80px]"
+              />
+              <SortableTableHead
+                label="Couverts"
+                sortKey="covers"
+                {...sortProps}
+                className="w-[90px]"
+              />
+              <SortableTableHead
+                label="Table"
+                sortKey="table"
+                {...sortProps}
+                className="w-[70px]"
+              />
+              <SortableTableHead
+                label="Statut"
+                sortKey="status"
+                {...sortProps}
+                className="w-[110px]"
+              />
               <TableHead className="w-[120px]" />
             </TableRow>
           </TableHeader>
@@ -165,13 +241,17 @@ export function ReservationsTable({
                   <span className="flex items-center gap-1.5">
                     {r.clientName}
                     {r.notes && (
-                      <HugeiconsIcon icon={Message01Icon} className="size-3.5 text-muted-foreground" strokeWidth={2} />
+                      <HugeiconsIcon
+                        icon={Message01Icon}
+                        className="size-3.5 text-muted-foreground"
+                        strokeWidth={2}
+                      />
                     )}
                   </span>
                 </TableCell>
                 <TableCell>{r.time}</TableCell>
                 <TableCell>{r.covers}</TableCell>
-                <TableCell>{getTableLabel(r.tableNumber)}</TableCell>
+                <TableCell>{getTableLabel(r.tableNumber, tables)}</TableCell>
                 <TableCell>
                   <Badge variant={STATUS_CONFIG[r.status].variant}>
                     {STATUS_CONFIG[r.status].label}
@@ -187,7 +267,10 @@ export function ReservationsTable({
             ))}
             {sortedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   Aucune réservation trouvée.
                 </TableCell>
               </TableRow>
@@ -217,7 +300,11 @@ function ActionIcon({
           <Button
             variant="ghost"
             size="icon-xs"
-            className={destructive ? "text-muted-foreground hover:text-destructive" : "text-muted-foreground hover:text-foreground"}
+            className={
+              destructive
+                ? "text-muted-foreground hover:text-destructive"
+                : "text-muted-foreground hover:text-foreground"
+            }
             onClick={onClick}
           />
         }
@@ -242,7 +329,10 @@ function StatusActions({
 
   return (
     <TooltipProvider>
-      <span className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+      <span
+        className="flex items-center justify-end gap-1"
+        onClick={(e) => e.stopPropagation()}
+      >
         {status === "en_attente" && (
           <>
             <ActionIcon

@@ -45,7 +45,7 @@ export function useTableSort<T, K extends string>({
       if (typeof va === "string" && typeof vb === "string") {
         cmp = va.localeCompare(vb, "fr")
       } else {
-        cmp = (va as number) - (vb as number)
+        cmp = Number(va) - Number(vb)
       }
       if (cmp === 0 && secondarySortKey) {
         const sa = getSortValue(a, secondarySortKey)
@@ -53,7 +53,7 @@ export function useTableSort<T, K extends string>({
         if (typeof sa === "string" && typeof sb === "string") {
           cmp = sa.localeCompare(sb, "fr")
         } else {
-          cmp = (sa as number) - (sb as number)
+          cmp = Number(sa) - Number(sb)
         }
       }
       return sortDir === "asc" ? cmp : -cmp

@@ -1,19 +1,31 @@
 /**
- * Types pour GET /api/dashboard/kpis/
+ * Types pour GET /api/dashboard/kpis/ (alias of /api/dashboard/overview/)
  * et GET /api/dashboard/map/
+ *
+ * Aligned with DashboardOverviewKpis in swagger.json.
  */
 
 export type DashboardKpis = {
   restaurantId: number
   restaurantName: string
   date: string
+  period?: {
+    start: string
+    end: string
+    days: number
+  }
   kpis: {
     dailyRevenue: number
+    weeklyRevenue: number
     monthlyRevenue: number
+    validatedOrders: number
+    averageTicket: number
+    grossMargin: number
+    foodCostRate: number
     occupancyRate: number
     covers: number
-    foodCost: number
-    satisfaction: number | null
+    stockAlerts: number
+    scheduledStaffToday: number
   }
 }
 

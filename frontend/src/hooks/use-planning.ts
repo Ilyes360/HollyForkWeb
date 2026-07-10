@@ -1,6 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiPost, apiPut, apiDelete, getAccessToken } from "@/api/client"
-import type { Shift, Employee, DayOfWeek, ServiceType } from "@/components/planning/types"
+import type {
+  Shift,
+  Employee,
+  DayOfWeek,
+  ServiceType,
+} from "@/components/planning/types"
 import { fetchAllPages } from "@/api/pagination"
 
 // ── API types (flat, after camelizeKeys from snake_case response) ──
@@ -34,7 +40,22 @@ type ApiEmploye = {
 
 // ── Mappers ──
 
-const DAYS_FR: DayOfWeek[] = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"]
+const DAYS_FR: DayOfWeek[] = [
+  "dimanche",
+  "lundi",
+  "mardi",
+  "mercredi",
+  "jeudi",
+  "vendredi",
+  "samedi",
+]
+
+const TYPE_SHIFT_TO_SERVICE: Record<string, ServiceType> = {
+  MORNING: "midi",
+  AFTERNOON: "midi",
+  EVENING: "soir",
+  NIGHT: "soir",
+}
 
 function mapApiShiftToFront(api: ApiShift): Shift {
   const start = new Date(api.startDate)
@@ -43,7 +64,8 @@ function mapApiShiftToFront(api: ApiShift): Shift {
   const day = DAYS_FR[dayIndex]
 
   const startHour = start.getHours()
-  const service: ServiceType = startHour < 16 ? "midi" : "soir"
+  const service: ServiceType =
+    TYPE_SHIFT_TO_SERVICE[api.typeShift] ?? (startHour < 16 ? "midi" : "soir")
 
   const startTime = `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`
   const endTime = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`
@@ -64,20 +86,29 @@ function mapApiShiftToFront(api: ApiShift): Shift {
 const DEPARTMENT_MAP: Record<string, Employee["department"]> = {
   "Chef Cuisinier": "cuisine",
   "Second de cuisine": "cuisine",
-  "Commis": "cuisine",
-  "Cuisinier": "cuisine",
-  "Serveur": "salle",
+  Commis: "cuisine",
+  Cuisinier: "cuisine",
+  Serveur: "salle",
   "Chef de rang": "salle",
   "Manager Salle": "salle",
   "Responsable Salle": "salle",
-  "Barman": "bar",
-  "Plongeur": "plonge",
+  Barman: "bar",
+  Plongeur: "plonge",
 }
 
 const COLORS = [
-  "bg-blue-500", "bg-pink-500", "bg-orange-500", "bg-emerald-500",
-  "bg-purple-500", "bg-rose-500", "bg-amber-500", "bg-teal-500",
-  "bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-lime-500",
+  "bg-blue-500",
+  "bg-pink-500",
+  "bg-orange-500",
+  "bg-emerald-500",
+  "bg-purple-500",
+  "bg-rose-500",
+  "bg-amber-500",
+  "bg-teal-500",
+  "bg-indigo-500",
+  "bg-violet-500",
+  "bg-cyan-500",
+  "bg-lime-500",
 ]
 
 function mapEmployeToFront(emp: ApiEmploye, index: number): Employee {
@@ -119,15 +150,19 @@ export function useShifts(restaurantId: number | null, week?: string) {
       return all.map(mapApiShiftToFront)
     },
     enabled: hasToken && !!restaurantId,
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000, // §6.2 — planning is real-time data
+    refetchOnWindowFocus: true, // §6.2 — gérant revient sur l'onglet → voir les mises à jour
   })
 
   const linksQuery = useQuery({
     queryKey: [...keys.employees(restaurantId ?? 0), "links"],
     queryFn: async () => {
-      const all = await fetchAllPages<ApiRestaurantEmploye>("restaurant-employes/", {
-        restaurant: restaurantId!,
-      })
+      const all = await fetchAllPages<ApiRestaurantEmploye>(
+        "restaurant-employes/",
+        {
+          restaurant: restaurantId!,
+        }
+      )
       return all.map((r) => r.employeId)
     },
     enabled: hasToken && !!restaurantId,
@@ -154,7 +189,10 @@ export function useShifts(restaurantId: number | null, week?: string) {
   return {
     data: shiftsQuery.data ?? [],
     employees: restaurantEmployees,
-    isLoading: shiftsQuery.isLoading || linksQuery.isLoading || allEmployeesQuery.isLoading,
+    isLoading:
+      shiftsQuery.isLoading ||
+      linksQuery.isLoading ||
+      allEmployeesQuery.isLoading,
   }
 }
 
@@ -164,7 +202,7 @@ export function useShifts(restaurantId: number | null, week?: string) {
  */
 export function useCreateShift() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       employeId: number
       restaurantId: number
@@ -173,7 +211,10 @@ export function useCreateShift() {
       typeShift?: string
       notes?: string
     }) => apiPost<ApiShift>("planning/shifts/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: keys.shifts(variables.restaurantId) })
+      qc.invalidateQueries({ queryKey: keys.employees(variables.restaurantId) })
+    },
   })
 }
 
@@ -182,16 +223,26 @@ export function useCreateShift() {
  */
 export function useUpdateShift() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
-      employeId: number
-      restaurantId: number
-      startDate: string
-      endDate: string
-      typeShift: string
-      notes: string
-    }> }) => apiPut<ApiShift>(`planning/shifts/${id}/`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: {
+        employeId: number
+        restaurantId: number
+        startDate: string
+        endDate: string
+        typeShift?: string
+        notes?: string
+      }
+    }) => apiPut<ApiShift>(`planning/shifts/${id}/`, data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: keys.shifts(variables.data.restaurantId),
+      })
+    },
   })
 }
 
@@ -200,8 +251,12 @@ export function useUpdateShift() {
  */
 export function useDeleteShift() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => apiDelete(`planning/shifts/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+  return useMutationWithDefaults({
+    mutationFn: (variables: { id: number; restaurantId: number }) =>
+      apiDelete(`planning/shifts/${variables.id}/`),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: keys.shifts(variables.restaurantId) })
+      qc.invalidateQueries({ queryKey: keys.employees(variables.restaurantId) })
+    },
   })
 }

@@ -37,15 +37,15 @@ const TASK_DEFAULTS: Record<TaskId, boolean> = {
   "first-reservation": false,
 }
 
-const initialTasks: GettingStartedTask[] = (Object.keys(GETTING_STARTED.tasks) as TaskId[]).map(
-  (id) => ({
-    id,
-    label: GETTING_STARTED.tasks[id].label,
-    description: GETTING_STARTED.tasks[id].description,
-    to: TASK_ROUTES[id],
-    completed: TASK_DEFAULTS[id],
-  })
-)
+const initialTasks: GettingStartedTask[] = (
+  Object.keys(GETTING_STARTED.tasks) as TaskId[]
+).map((id) => ({
+  id,
+  label: GETTING_STARTED.tasks[id].label,
+  description: GETTING_STARTED.tasks[id].description,
+  to: TASK_ROUTES[id],
+  completed: TASK_DEFAULTS[id],
+}))
 
 export const useGettingStartedStore = create<GettingStartedStore>()(
   persist(
@@ -68,7 +68,7 @@ export const useGettingStartedStore = create<GettingStartedStore>()(
       reset: () => set({ tasks: initialTasks, dismissed: false }),
     }),
     {
-      name: "holly-fork-getting-started",
+      name: "holy-fork-getting-started",
       version: 2,
       migrate: () => ({ tasks: initialTasks, dismissed: false }),
       merge: (_persisted, current) => ({

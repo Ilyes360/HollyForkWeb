@@ -33,7 +33,6 @@ export interface OrderHistory {
 export interface Product {
   id: string
   name: string
-  icon?: string
   supplierId: string
   category: ProductCategory
   quantity: number
@@ -41,12 +40,13 @@ export interface Product {
   minStock: number
   maxStock: number
   unitPrice: number
-  rotation: number
-  lastOrderDate: string
-  expirationDate: string
   storageZone: StorageZone
   notes: string
-  orderHistory: OrderHistory[]
+  // Optional fields — only populated when backend provides them
+  rotation?: number
+  lastOrderDate?: string
+  expirationDate?: string
+  orderHistory?: OrderHistory[]
 }
 
 export const STATUS_CONFIG: Record<
@@ -86,13 +86,13 @@ export const ZONE_LABELS: Record<string, string> = {
 
 // ── Default config (seed data, previously computed in inventory-store) ──
 
-export const DEFAULT_STORAGE_ZONES: StorageZoneConfig[] = Object.entries(ZONE_LABELS).map(
-  ([id, label]) => ({ id, label })
-)
+export const DEFAULT_STORAGE_ZONES: StorageZoneConfig[] = Object.entries(
+  ZONE_LABELS
+).map(([id, label]) => ({ id, label }))
 
-export const DEFAULT_CATEGORIES: CategoryConfig[] = Object.entries(CATEGORY_LABELS).map(
-  ([id, label]) => ({ id, label })
-)
+export const DEFAULT_CATEGORIES: CategoryConfig[] = Object.entries(
+  CATEGORY_LABELS
+).map(([id, label]) => ({ id, label }))
 
 export const STATUS_FILTER_OPTIONS = [
   { value: "tous", label: "Tous" },
@@ -128,7 +128,10 @@ export const URGENCY_LABELS: Record<UrgencyCategory, string> = {
 }
 
 /** Couleurs des sections urgence */
-export const URGENCY_COLORS: Record<UrgencyCategory, { text: string; dot: string }> = {
+export const URGENCY_COLORS: Record<
+  UrgencyCategory,
+  { text: string; dot: string }
+> = {
   a_commander: { text: "#A32D2D", dot: "#E24B4A" },
   a_surveiller: { text: "#BA7517", dot: "#EF9F27" },
   stock_ok: { text: "#639922", dot: "#97C459" },

@@ -25,14 +25,14 @@ describe("Dashboard queries", () => {
     it("fetches KPIs for a restaurant", async () => {
       const { result } = renderHook(
         () => useDashboardKpis({ restaurantId: 1, date: "2026-05-05" }),
-        { wrapper: createWrapper() },
+        { wrapper: createWrapper() }
       )
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
       const data = result.current.data!
       expect(data.restaurantId).toBe(1)
-      expect(data.restaurantName).toBe("Holly Fork — Marais")
+      expect(data.restaurantName).toBe("Holy Fork — Marais")
       expect(data.kpis.dailyRevenue).toBe(4250.5)
       expect(data.kpis.occupancyRate).toBe(78.5)
       expect(data.kpis.covers).toBe(142)
@@ -51,7 +51,7 @@ describe("Dashboard queries", () => {
     it("is disabled when restaurantId is 0", () => {
       const { result } = renderHook(
         () => useDashboardKpis({ restaurantId: 0 }),
-        { wrapper: createWrapper() },
+        { wrapper: createWrapper() }
       )
 
       expect(result.current.fetchStatus).toBe("idle")
@@ -69,7 +69,7 @@ describe("Dashboard queries", () => {
       const data = result.current.data!
       expect(data.restaurants).toHaveLength(2)
       expect(data.restaurants[0].restaurantId).toBe(1)
-      expect(data.restaurants[0].name).toBe("Holly Fork — Marais")
+      expect(data.restaurants[0].name).toBe("Holy Fork — Marais")
       expect(data.restaurants[1].restaurantId).toBe(2)
     })
   })

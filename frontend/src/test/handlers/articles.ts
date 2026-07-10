@@ -23,26 +23,59 @@ export const articleHandlers = [
   http.get(`${API}/articles/:id/`, ({ params }) => {
     const id = Number(params.id)
     const article = mockArticles.find((a) => a.id === id)
-    if (!article) return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    if (!article)
+      return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
     return HttpResponse.json(article)
   }),
 
   // Create article
   http.post(`${API}/articles/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
-    return HttpResponse.json({ id: 100, ...body }, { status: 201 })
+    return HttpResponse.json(
+      {
+        id: 100,
+        available: true,
+        ingredients: [],
+        allergens: [],
+        diet_types: [],
+        ...body,
+      },
+      { status: 201 }
+    )
   }),
 
   // Update article (PUT)
   http.put(`${API}/articles/:id/`, async ({ request, params }) => {
+    const id = Number(params.id)
     const body = (await request.json()) as Record<string, unknown>
-    return HttpResponse.json({ id: Number(params.id), ...body })
+    const existing = mockArticles.find((a) => a.id === id)
+    return HttpResponse.json({
+      ...(existing ?? {
+        available: true,
+        ingredients: [],
+        allergens: [],
+        diet_types: [],
+      }),
+      id,
+      ...body,
+    })
   }),
 
   // Partial update article (PATCH)
   http.patch(`${API}/articles/:id/`, async ({ request, params }) => {
+    const id = Number(params.id)
     const body = (await request.json()) as Record<string, unknown>
-    return HttpResponse.json({ id: Number(params.id), ...body })
+    const existing = mockArticles.find((a) => a.id === id)
+    return HttpResponse.json({
+      ...(existing ?? {
+        available: true,
+        ingredients: [],
+        allergens: [],
+        diet_types: [],
+      }),
+      id,
+      ...body,
+    })
   }),
 
   // Delete article
@@ -66,8 +99,12 @@ export const articleHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update category
+  // Update category (full + partial)
   http.put(`${API}/categories/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+  http.patch(`${API}/categories/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),
@@ -93,8 +130,12 @@ export const articleHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update ingredient
+  // Update ingredient (full + partial)
   http.put(`${API}/ingredients/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+  http.patch(`${API}/ingredients/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),

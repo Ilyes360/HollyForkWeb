@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useCurrentTime } from "@/hooks/use-current-time"
 import { useTableAvailability } from "@/hooks/use-table-availability"
-import type { Reservation } from "./types"
+import type { Reservation, RestaurantTable } from "./types"
 import { STATUS_CONFIG } from "./types"
 
 interface LiveSidePanelProps {
   reservations: Reservation[]
   onSelectReservation: (r: Reservation) => void
   onNewReservation: (prefill: { tableNumber: number; time: string }) => void
+  tables: RestaurantTable[]
 }
 
 function formatMinutesUntil(time: string, now: Date): string {
@@ -36,9 +37,14 @@ export function LiveSidePanel({
   reservations,
   onSelectReservation,
   onNewReservation,
+  tables,
 }: LiveSidePanelProps) {
   const now = useCurrentTime(30_000)
-  const { freeTables, occupiedTables } = useTableAvailability(reservations, now)
+  const { freeTables, occupiedTables } = useTableAvailability(
+    reservations,
+    now,
+    tables
+  )
 
   const currentHH = String(now.getHours()).padStart(2, "0")
   const currentMM = String(now.getMinutes()).padStart(2, "0")
@@ -53,7 +59,9 @@ export function LiveSidePanel({
     .sort((a, b) => a.time.localeCompare(b.time))
     .slice(0, 5)
 
-  const pendingCount = reservations.filter((r) => r.status === "en_attente").length
+  const pendingCount = reservations.filter(
+    (r) => r.status === "en_attente"
+  ).length
   const noShowCount = reservations.filter((r) => r.status === "no_show").length
   const hasAlerts = pendingCount > 0 || noShowCount > 0
 
@@ -68,25 +76,34 @@ export function LiveSidePanel({
             <CardHeader className="pb-3">
               <CardDescription>Tables</CardDescription>
               <div className="flex items-center gap-3 text-sm">
-                <span className="font-medium text-emerald-600">{freeTables.length} libres</span>
+                <span className="font-medium text-emerald-600">
+                  {freeTables.length} libres
+                </span>
                 <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">{occupiedTables.length} occupées</span>
+                <span className="text-muted-foreground">
+                  {occupiedTables.length} occupées
+                </span>
               </div>
             </CardHeader>
             <div className="flex flex-wrap gap-1.5 px-5 pb-4">
               {freeTables.map(({ table }) => (
                 <Badge
-                  key={table.number}
+                  key={table.id}
                   variant="outline"
                   className="cursor-pointer hover:bg-accent"
-                  onClick={() => onNewReservation({ tableNumber: table.number, time: nextTime })}
+                  onClick={() =>
+                    onNewReservation({
+                      tableNumber: table.number,
+                      time: nextTime,
+                    })
+                  }
                 >
                   {table.label}
                 </Badge>
               ))}
               {occupiedTables.map(({ table }) => (
                 <Badge
-                  key={table.number}
+                  key={table.id}
                   variant="secondary"
                   className="opacity-50"
                 >
@@ -115,14 +132,19 @@ export function LiveSidePanel({
                   onClick={() => onSelectReservation(r)}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{r.clientName}</p>
+                    <p className="truncate text-sm font-medium">
+                      {r.clientName}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {r.time} · {r.covers} cvt
                       {r.tableNumber != null && ` · T${r.tableNumber}`}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <Badge variant={STATUS_CONFIG[r.status].variant} className="text-[10px]">
+                    <Badge
+                      variant={STATUS_CONFIG[r.status].variant}
+                      className="text-[10px]"
+                    >
                       {STATUS_CONFIG[r.status].label}
                     </Badge>
                     <span className="text-[10px] text-muted-foreground">
@@ -139,21 +161,33 @@ export function LiveSidePanel({
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription className="flex items-center gap-1.5">
-                  <HugeiconsIcon icon={Alert02Icon} className="size-3.5 text-amber-500" strokeWidth={2} />
+                  <HugeiconsIcon
+                    icon={Alert02Icon}
+                    className="size-3.5 text-amber-500"
+                    strokeWidth={2}
+                  />
                   Alertes
                 </CardDescription>
               </CardHeader>
               <div className="flex flex-col gap-2 px-5 pb-4">
                 {pendingCount > 0 && (
                   <div className="flex items-center gap-2 text-xs">
-                    <Badge variant="warning" className="text-[10px]">{pendingCount}</Badge>
-                    <span className="text-muted-foreground">réservation{pendingCount > 1 ? "s" : ""} en attente</span>
+                    <Badge variant="warning" className="text-[10px]">
+                      {pendingCount}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      réservation{pendingCount > 1 ? "s" : ""} en attente
+                    </span>
                   </div>
                 )}
                 {noShowCount > 0 && (
                   <div className="flex items-center gap-2 text-xs">
-                    <Badge variant="destructive" className="text-[10px]">{noShowCount}</Badge>
-                    <span className="text-muted-foreground">no-show{noShowCount > 1 ? "s" : ""}</span>
+                    <Badge variant="destructive" className="text-[10px]">
+                      {noShowCount}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      no-show{noShowCount > 1 ? "s" : ""}
+                    </span>
                   </div>
                 )}
               </div>

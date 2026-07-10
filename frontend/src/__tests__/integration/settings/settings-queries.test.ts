@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook, waitFor } from "@testing-library/react"
 import { createElement } from "react"
-import { useRestaurantSettings, usePaymentMethods, useNotes } from "@/hooks/use-settings"
+import {
+  useRestaurantSettings,
+  usePaymentMethods,
+  useNotes,
+} from "@/hooks/use-settings"
 import { setTokens } from "@/api/client"
 
 function createWrapper() {
@@ -27,7 +31,7 @@ describe("Settings queries (user mode — API via MSW)", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).not.toBeNull()
-    expect(result.current.data!.name).toBe("Holly Fork — Marais")
+    expect(result.current.data!.name).toBe("Holy Fork — Marais")
     expect(result.current.data!.phoneNumber).toBe("+33 1 42 72 00 00")
   })
 

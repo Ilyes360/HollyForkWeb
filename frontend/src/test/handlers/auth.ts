@@ -6,33 +6,36 @@ const API = "*/api"
 export const authHandlers = [
   // Login
   http.post(`${API}/auth/login/`, async ({ request }) => {
-    const body = (await request.json()) as { username?: string; password?: string }
+    const body = (await request.json()) as {
+      username?: string
+      password?: string
+    }
 
     if (!body.username || !body.password) {
       return HttpResponse.json(
         { detail: "Email et mot de passe requis" },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
-    if (body.username === "bad@example.com") {
+    if (body.username === "bad") {
       return HttpResponse.json(
         { detail: "Email ou mot de passe incorrect" },
-        { status: 401 },
+        { status: 401 }
       )
     }
 
-    if (body.username === "rate-limited@example.com") {
+    if (body.username === "rate_limited") {
       return HttpResponse.json(
         { detail: "Trop de tentatives" },
-        { status: 429 },
+        { status: 429 }
       )
     }
 
-    if (body.username === "error@example.com") {
+    if (body.username === "error") {
       return HttpResponse.json(
         { detail: "Internal server error" },
-        { status: 500 },
+        { status: 500 }
       )
     }
 

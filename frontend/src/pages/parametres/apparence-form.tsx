@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
-const STORAGE_KEY = "holly-fork-apparence"
+const STORAGE_KEY = "holy-fork-apparence"
 
 const apparenceSchema = z.object({
   langue: z.enum(["fr", "en"]),
@@ -34,7 +34,9 @@ function loadSaved(): ApparenceValues {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { langue: "fr", fuseauHoraire: "europe-paris" }
 }
 
@@ -90,9 +92,15 @@ export function ApparenceForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="europe-paris">Europe/Paris (UTC+1)</SelectItem>
-                  <SelectItem value="europe-london">Europe/London (UTC+0)</SelectItem>
-                  <SelectItem value="america-new_york">America/New_York (UTC-5)</SelectItem>
+                  <SelectItem value="europe-paris">
+                    Europe/Paris (UTC+1)
+                  </SelectItem>
+                  <SelectItem value="europe-london">
+                    Europe/London (UTC+0)
+                  </SelectItem>
+                  <SelectItem value="america-new_york">
+                    America/New_York (UTC-5)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>

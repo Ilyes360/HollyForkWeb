@@ -2,7 +2,7 @@
 
 ## CONTEXTE PROJET
 
-Holly Fork — dashboard admin SaaS multi-établissements pour la restauration.
+Holy Fork — dashboard admin SaaS multi-établissements pour la restauration.
 Stack front : React 19 + Vite + TypeScript + Tailwind CSS + shadcn/ui + TanStack Query 5 + Zustand + ky + Zod + react-hook-form.
 Backend : Django REST Framework, SimpleJWT, drf-spectacular.
 Proxy Vite : `/api` → `http://localhost:8000`.

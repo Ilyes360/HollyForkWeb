@@ -3,6 +3,30 @@
  * camelizeKeys converts these to the ApiArticle type fields.
  */
 
+export const mockArticleIngredients = [
+  {
+    id: 1,
+    required_quantity: "0.5",
+    article_id: 1,
+    ingredient_id: 1,
+    ingredient_name: "Tomates",
+  },
+  {
+    id: 2,
+    required_quantity: "0.25",
+    article_id: 2,
+    ingredient_id: 2,
+    ingredient_name: "Filet de boeuf",
+  },
+  {
+    id: 3,
+    required_quantity: "0.15",
+    article_id: 3,
+    ingredient_id: 3,
+    ingredient_name: "Chocolat noir 70%",
+  },
+]
+
 export const mockArticles = [
   {
     id: 1,
@@ -13,7 +37,7 @@ export const mockArticles = [
     price: "12.00",
     description: "Entrée phare de l'été",
     available: true,
-    ingredients: [],
+    ingredients: mockArticleIngredients.filter((i) => i.article_id === 1),
     allergens: [],
     diet_types: [],
   },
@@ -26,7 +50,7 @@ export const mockArticles = [
     price: "34.00",
     description: "Plat signature",
     available: true,
-    ingredients: [],
+    ingredients: mockArticleIngredients.filter((i) => i.article_id === 2),
     allergens: [],
     diet_types: [],
   },
@@ -39,7 +63,7 @@ export const mockArticles = [
     price: "10.00",
     description: "Dessert maison",
     available: true,
-    ingredients: [],
+    ingredients: mockArticleIngredients.filter((i) => i.article_id === 3),
     allergens: [],
     diet_types: [],
   },
@@ -85,10 +109,4 @@ export const mockIngredients = [
     unit: "kg",
     unit_price: "18.00",
   },
-]
-
-export const mockArticleIngredients = [
-  { id: 1, article_id: 1, ingredient_id: 1, quantite: 0.5 },
-  { id: 2, article_id: 2, ingredient_id: 2, quantite: 0.25 },
-  { id: 3, article_id: 3, ingredient_id: 3, quantite: 0.15 },
 ]

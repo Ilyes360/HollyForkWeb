@@ -1,5 +1,6 @@
 import { useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
 import { fetchAllPages } from "@/api/pagination"
 import type { Employee } from "@/stores/admin-types"
@@ -24,8 +25,14 @@ export type ApiTypeEmploye = {
 }
 
 const AVATAR_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4",
-  "#3b82f6", "#8b5cf6", "#ec4899",
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
 ]
 
 function apiEmployeToEmployee(e: ApiEmploye): Employee {
@@ -33,23 +40,12 @@ function apiEmployeToEmployee(e: ApiEmploye): Employee {
     id: String(e.id),
     firstName: e.firstName ?? "",
     lastName: e.lastName ?? "",
-    email: "",
     phone: e.phoneNumber ?? "",
-    dateOfBirth: "",
-    address: "",
-    position: "serveur",
-    department: "salle",
-    establishmentId: "",
-    contractType: "cdi",
+    typeEmployeId: e.typeEmployeId,
+    typeEmployeName: e.typeEmployeName ?? "",
+    salary: parseFloat(e.salary) || 0,
     hireDate: e.hireDate ?? "",
-    weeklyHours: 35,
-    hourlyRate: parseFloat(e.salary) / 151.67 || 0, // approximate from monthly salary
-    roleId: String(e.typeEmployeId),
-    loginEmail: "",
-    accountStatus: "active",
     avatarColor: AVATAR_COLORS[e.id % AVATAR_COLORS.length],
-    createdAt: "",
-    updatedAt: "",
   }
 }
 
@@ -72,7 +68,7 @@ export function useEmployees() {
 
   const employees = useMemo(
     () => (query.data ?? []).map(apiEmployeToEmployee),
-    [query.data],
+    [query.data]
   )
 
   return {
@@ -98,7 +94,7 @@ export function useEmployeeTypes() {
 export function useCreateEmployee() {
   const qc = useQueryClient()
 
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       lastName: string
       firstName: string
@@ -114,15 +110,21 @@ export function useCreateEmployee() {
 export function useUpdateEmployee() {
   const qc = useQueryClient()
 
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
-      lastName: string
-      firstName: string
-      typeEmployeId: number
-      salary: string
-      hireDate: string
-      phoneNumber: string | null
-    }> }) => apiPatch<ApiEmploye>(`employes/${id}/`, data),
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Partial<{
+        lastName: string
+        firstName: string
+        typeEmployeId: number
+        salary: string
+        hireDate: string
+        phoneNumber: string | null
+      }>
+    }) => apiPatch<ApiEmploye>(`employes/${id}/`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })
 }
@@ -130,7 +132,7 @@ export function useUpdateEmployee() {
 export function useDeleteEmployee() {
   const qc = useQueryClient()
 
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (id: number) => apiDelete(`employes/${id}/`),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   })

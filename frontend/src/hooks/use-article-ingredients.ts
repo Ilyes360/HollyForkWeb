@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiGet, apiPost, apiDelete, getAccessToken } from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
@@ -27,7 +28,7 @@ export function useArticleIngredients(articleId: number | null) {
         "article-ingredients/",
         {
           articleId: articleId!,
-        },
+        }
       )
       return res.results
     },
@@ -46,13 +47,16 @@ export function useArticleIngredients(articleId: number | null) {
  */
 export function useAddArticleIngredient() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       articleId: number
       ingredientId: number
       quantite: number
     }) => apiPost<ApiArticleIngredient>("article-ingredients/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["article-ingredients"] }),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({
+        queryKey: keys.articleIngredients(variables.articleId),
+      }),
   })
 }
 
@@ -61,8 +65,12 @@ export function useAddArticleIngredient() {
  */
 export function useDeleteArticleIngredient() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => apiDelete(`article-ingredients/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["article-ingredients"] }),
+  return useMutationWithDefaults({
+    mutationFn: (variables: { id: number; articleId: number }) =>
+      apiDelete(`article-ingredients/${variables.id}/`),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({
+        queryKey: keys.articleIngredients(variables.articleId),
+      }),
   })
 }

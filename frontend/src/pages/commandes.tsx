@@ -1,15 +1,18 @@
 import { useState, useCallback, useMemo } from "react"
 import { motion } from "motion/react"
 import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
 import { useArticles } from "@/hooks/use-articles"
 import { useStocks } from "@/hooks/use-stocks"
-import { useSuppliers } from "@/hooks/use-suppliers"
-import { useOrders } from "@/hooks/use-orders"
+import {
+  useSuppliers,
+  useCreateSupplier,
+  useUpdateSupplier,
+  useDeleteSupplier,
+} from "@/hooks/use-suppliers"
+import { useOrders, useCreateOrder, useUpdateOrder } from "@/hooks/use-orders"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
-import { apiPost, apiPatch, apiDelete } from "@/api/client"
 import { getTotalMonthlySpend } from "@/components/commandes/utils"
 import { getSupplierProducts } from "@/components/commandes/utils"
 import type { OrderItem, SupplierFull } from "@/components/commandes/types"
@@ -51,26 +54,42 @@ const fadeUp = {
 export default function CommandesPage() {
   usePageTitle("Commandes")
   const { restaurantId } = useActiveRestaurant()
-  const queryClient = useQueryClient()
   const { data: recipes } = useArticles()
   const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
   const { data: orders } = useOrders(restaurantId)
 
-  const { productPortionSummaries } = usePortionCalculator(recipes, products, suppliers)
+  // Mutations
+  const updateOrder = useUpdateOrder()
+  const createOrder = useCreateOrder()
+  const createSupplier = useCreateSupplier()
+  const updateSupplier = useUpdateSupplier()
+  const deleteSupplier = useDeleteSupplier()
+
+  const { productPortionSummaries } = usePortionCalculator(
+    recipes,
+    products,
+    suppliers
+  )
 
   // State
   const [activeTab, setActiveTab] = useState<string>("en_cours")
   const [orderDialogOpen, setOrderDialogOpen] = useState(false)
   const [orderSupplierId, setOrderSupplierId] = useState<string | null>(null)
   const [receiveDialogOpen, setReceiveDialogOpen] = useState(false)
-  const [receiveOrder, setReceiveOrder] = useState<typeof orders[number] | null>(null)
+  const [receiveOrder, setReceiveOrder] = useState<
+    (typeof orders)[number] | null
+  >(null)
   const [supplierSheetOpen, setSupplierSheetOpen] = useState(false)
   const [supplierSheetId, setSupplierSheetId] = useState<string | null>(null)
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false)
-  const [editingSupplier, setEditingSupplier] = useState<SupplierFull | null>(null)
+  const [editingSupplier, setEditingSupplier] = useState<SupplierFull | null>(
+    null
+  )
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [deletingSupplierId, setDeletingSupplierId] = useState<string | null>(null)
+  const [deletingSupplierId, setDeletingSupplierId] = useState<string | null>(
+    null
+  )
 
   // Derived data
   const pendingOrders = useMemo(
@@ -112,29 +131,23 @@ export default function CommandesPage() {
   )
 
   const handleConfirmReceive = useCallback(
-    async (orderId: string, _receivedQuantities: Record<string, number>) => {
-      try {
-        await apiPatch(`suppliers/orders/${orderId}/`, { status: "DELIVERED" })
-        toast.success("Commande marquée comme livrée")
-        queryClient.invalidateQueries({ queryKey: ["orders"] })
-      } catch {
-        toast.error("Erreur lors de la mise à jour")
-      }
+    (orderId: string, _receivedQuantities: Record<string, number>) => {
+      updateOrder.mutate(
+        { id: Number(orderId), data: { status: "DELIVERED" } },
+        { onSuccess: () => toast.success("Commande marquée comme livrée") }
+      )
     },
-    [queryClient]
+    [updateOrder]
   )
 
   const handleCancel = useCallback(
-    async (orderId: string) => {
-      try {
-        await apiPatch(`suppliers/orders/${orderId}/`, { status: "CANCELLED" })
-        toast.success("Commande annulée")
-        queryClient.invalidateQueries({ queryKey: ["orders"] })
-      } catch {
-        toast.error("Erreur lors de l'annulation")
-      }
+    (orderId: string) => {
+      updateOrder.mutate(
+        { id: Number(orderId), data: { status: "CANCELLED" } },
+        { onSuccess: () => toast.success("Commande annulée") }
+      )
     },
-    [queryClient]
+    [updateOrder]
   )
 
   const handleSupplierClick = useCallback((supplierId: string) => {
@@ -158,7 +171,7 @@ export default function CommandesPage() {
   }, [])
 
   const handleSupplierSubmit = useCallback(
-    async (data: Omit<SupplierFull, "id">) => {
+    (data: Omit<SupplierFull, "id">) => {
       const apiPayload = {
         name: data.name,
         telephone: data.phone,
@@ -167,20 +180,19 @@ export default function CommandesPage() {
         notes: data.notes,
         isActive: true,
       }
-      try {
-        if (editingSupplier) {
-          await apiPatch(`suppliers/${editingSupplier.id}/`, apiPayload)
-          toast.success("Fournisseur modifié")
-        } else {
-          await apiPost("suppliers/", apiPayload)
-          toast.success("Fournisseur ajouté")
-        }
-        queryClient.invalidateQueries({ queryKey: ["suppliers"] })
-      } catch {
-        toast.error("Erreur lors de l'enregistrement")
+
+      if (editingSupplier) {
+        updateSupplier.mutate(
+          { id: Number(editingSupplier.id), data: apiPayload },
+          { onSuccess: () => toast.success("Fournisseur modifié") }
+        )
+      } else {
+        createSupplier.mutate(apiPayload, {
+          onSuccess: () => toast.success("Fournisseur ajouté"),
+        })
       }
     },
-    [editingSupplier, queryClient]
+    [editingSupplier, updateSupplier, createSupplier]
   )
 
   const handleDeleteSupplier = useCallback((supplierId: string) => {
@@ -188,47 +200,42 @@ export default function CommandesPage() {
     setDeleteConfirmOpen(true)
   }, [])
 
-  const handleConfirmDelete = useCallback(async () => {
+  const handleConfirmDelete = useCallback(() => {
     if (deletingSupplierId) {
-      try {
-        await apiDelete(`suppliers/${deletingSupplierId}/`)
-        toast.success("Fournisseur supprimé")
-        queryClient.invalidateQueries({ queryKey: ["suppliers"] })
-      } catch {
-        toast.error("Erreur lors de la suppression")
-      }
-      setSupplierSheetOpen(false)
-      setDeleteConfirmOpen(false)
-      setDeletingSupplierId(null)
+      deleteSupplier.mutate(Number(deletingSupplierId), {
+        onSuccess: () => {
+          toast.success("Fournisseur supprimé")
+          setSupplierSheetOpen(false)
+          setDeleteConfirmOpen(false)
+          setDeletingSupplierId(null)
+        },
+      })
     }
-  }, [deletingSupplierId, queryClient])
+  }, [deletingSupplierId, deleteSupplier])
 
   const handleSubmitOrder = useCallback(
-    async (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
+    (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
       const totalAmount = data.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
         0
       )
 
-      try {
-        await apiPost("suppliers/orders/", {
-          supplierId: data.supplierId,
-          items: data.items,
-          notes: data.notes,
-          totalAmount,
-        })
-        toast.success("Commande créée")
-        queryClient.invalidateQueries({ queryKey: ["orders"] })
-      } catch {
-        toast.error("Erreur lors de la création de la commande")
-      }
+      createOrder.mutate(
+        {
+          fournisseurId: Number(data.supplierId),
+          restaurantId: restaurantId!,
+          notes: data.notes || undefined,
+        },
+        { onSuccess: () => toast.success("Commande créée") }
+      )
+      void totalAmount // TODO: send items when backend supports order lines creation
     },
-    [queryClient]
+    [createOrder, restaurantId]
   )
 
   // Resolved entities
   const orderSupplier = orderSupplierId
-    ? suppliers.find((s) => s.id === orderSupplierId) ?? null
+    ? (suppliers.find((s) => s.id === orderSupplierId) ?? null)
     : null
 
   const orderProducts = orderSupplier
@@ -236,7 +243,7 @@ export default function CommandesPage() {
     : []
 
   const supplierSheetSupplier = supplierSheetId
-    ? suppliers.find((s) => s.id === supplierSheetId) ?? null
+    ? (suppliers.find((s) => s.id === supplierSheetId) ?? null)
     : null
 
   return (
@@ -247,7 +254,10 @@ export default function CommandesPage() {
       animate="show"
     >
       <motion.div variants={fadeUp}>
-        <CommandesHeader onOrder={handleOpenOrder} onAddSupplier={handleAddSupplier} />
+        <CommandesHeader
+          onOrder={handleOpenOrder}
+          onAddSupplier={handleAddSupplier}
+        />
       </motion.div>
 
       <motion.div variants={fadeUp}>
@@ -260,10 +270,15 @@ export default function CommandesPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="min-h-0 flex-1">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex h-full flex-col"
+        >
           <TabsList>
             <TabsTrigger value="en_cours">
-              En cours{pendingOrders.length > 0 ? ` (${pendingOrders.length})` : ""}
+              En cours
+              {pendingOrders.length > 0 ? ` (${pendingOrders.length})` : ""}
             </TabsTrigger>
             <TabsTrigger value="historique">Historique</TabsTrigger>
           </TabsList>
@@ -334,7 +349,8 @@ export default function CommandesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce fournisseur ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Les produits et commandes associés ne seront pas supprimés.
+              Cette action est irréversible. Les produits et commandes associés
+              ne seront pas supprimés.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

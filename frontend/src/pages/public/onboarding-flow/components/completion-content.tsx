@@ -53,23 +53,37 @@ export function CompletionContent() {
               restaurantName: restaurant.name,
             })
           }
-          sessionStorage.removeItem("holly_pending_restaurant")
+          sessionStorage.removeItem("holy_pending_restaurant")
           completeTask("restaurant-profile")
           reset()
           navigate("/")
         },
         onError: () => {
-          toast.error("Erreur lors de la création du restaurant. Veuillez réessayer.")
+          toast.error(
+            "Erreur lors de la création du restaurant. Veuillez réessayer."
+          )
         },
-      },
+      }
     )
   }
 
   const summaryLines = [
-    { icon: Restaurant01Icon, label: "Restaurant", value: data.restaurant.name },
+    {
+      icon: Restaurant01Icon,
+      label: "Restaurant",
+      value: data.restaurant.name,
+    },
     { icon: Location01Icon, label: "Ville", value: data.restaurant.city },
-    { icon: ChairBarberIcon, label: "Couverts", value: data.establishment.covers },
-    { icon: UserGroupIcon, label: "Équipe", value: `${data.establishment.teamSize} personnes` },
+    {
+      icon: ChairBarberIcon,
+      label: "Couverts",
+      value: data.establishment.covers,
+    },
+    {
+      icon: UserGroupIcon,
+      label: "Équipe",
+      value: `${data.establishment.teamSize} personnes`,
+    },
     {
       icon: CreditCardIcon,
       label: "Offre",
@@ -83,13 +97,19 @@ export function CompletionContent() {
         {...celebrationCheckmark}
         className="flex size-16 items-center justify-center rounded-full bg-primary/10"
       >
-        <HugeiconsIcon icon={Tick02Icon} className="size-8 text-primary" strokeWidth={2} />
+        <HugeiconsIcon
+          icon={Tick02Icon}
+          className="size-8 text-primary"
+          strokeWidth={2}
+        />
       </motion.div>
 
       <div>
-        <h1 className="font-display text-2xl font-bold">C'est parti, {data.restaurant.name} !</h1>
-        <p className="text-muted-foreground mt-2 leading-relaxed">
-          Votre espace Holly Fork est prêt. Voici un récapitulatif.
+        <h1 className="font-display text-2xl font-bold">
+          C'est parti, {data.restaurant.name} !
+        </h1>
+        <p className="mt-2 leading-relaxed text-muted-foreground">
+          Votre espace Holy Fork est prêt. Voici un récapitulatif.
         </p>
       </div>
 
@@ -97,11 +117,15 @@ export function CompletionContent() {
         {summaryLines.map((line) => (
           <div
             key={line.label}
-            className="flex items-center justify-between rounded-xl ring-1 ring-foreground/10 px-4 py-3 text-sm"
+            className="flex items-center justify-between rounded-xl px-4 py-3 text-sm ring-1 ring-foreground/10"
           >
             <div className="flex items-center gap-3">
               <div className="flex size-8 items-center justify-center rounded-full bg-muted">
-                <HugeiconsIcon icon={line.icon} className="size-4" strokeWidth={2} />
+                <HugeiconsIcon
+                  icon={line.icon}
+                  className="size-4"
+                  strokeWidth={2}
+                />
               </div>
               <span className="text-muted-foreground">{line.label}</span>
             </div>

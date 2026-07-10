@@ -1,11 +1,14 @@
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { useTableAvailability } from "@/hooks/use-table-availability"
-import type { Reservation, RestaurantTable } from "@/components/reservations/types"
+import type {
+  Reservation,
+  RestaurantTable,
+} from "@/components/reservations/types"
 
 const TABLES: RestaurantTable[] = [
-  { number: 1, label: "T1", seats: 4 },
-  { number: 2, label: "T2", seats: 2 },
+  { id: 1, number: 1, label: "T1", seats: 4 },
+  { id: 2, number: 2, label: "T2", seats: 2 },
 ]
 
 function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
@@ -17,10 +20,13 @@ function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     time: "12:00",
     service: "midi",
     covers: 2,
+    tableId: 1,
     tableNumber: 1,
     canal: "site",
     status: "confirmee",
     notes: "",
+    allergies: [],
+    dietTypes: [],
     createdAt: "2026-03-21T10:00:00",
     ...overrides,
   }
@@ -37,9 +43,11 @@ describe("useTableAvailability", () => {
   it("marks table as occupied when arrivee reservation exists", () => {
     const resa = makeReservation({ status: "arrivee", tableNumber: 1 })
     const now = new Date("2026-03-21T12:30:00")
-    const { result } = renderHook(() => useTableAvailability([resa], now, TABLES))
+    const { result } = renderHook(() =>
+      useTableAvailability([resa], now, TABLES)
+    )
 
-    const t1 = result.current.tables.find(t => t.table.number === 1)!
+    const t1 = result.current.tables.find((t) => t.table.number === 1)!
     expect(t1.isFree).toBe(false)
     expect(t1.currentReservation?.id).toBe("r1")
   })
@@ -47,9 +55,11 @@ describe("useTableAvailability", () => {
   it("marks table with annulee reservation as free", () => {
     const resa = makeReservation({ status: "annulee", tableNumber: 1 })
     const now = new Date("2026-03-21T12:30:00")
-    const { result } = renderHook(() => useTableAvailability([resa], now, TABLES))
+    const { result } = renderHook(() =>
+      useTableAvailability([resa], now, TABLES)
+    )
 
-    const t1 = result.current.tables.find(t => t.table.number === 1)!
+    const t1 = result.current.tables.find((t) => t.table.number === 1)!
     expect(t1.isFree).toBe(true)
   })
 
@@ -57,12 +67,14 @@ describe("useTableAvailability", () => {
     const resa = makeReservation({
       status: "confirmee",
       tableNumber: 1,
-      time: "13:00"
+      time: "13:00",
     })
     const now = new Date("2026-03-21T12:00:00")
-    const { result } = renderHook(() => useTableAvailability([resa], now, TABLES))
+    const { result } = renderHook(() =>
+      useTableAvailability([resa], now, TABLES)
+    )
 
-    const t1 = result.current.tables.find(t => t.table.number === 1)!
+    const t1 = result.current.tables.find((t) => t.table.number === 1)!
     expect(t1.isFree).toBe(true)
     expect(t1.freeUntil).toBe("13:00")
   })
@@ -71,12 +83,14 @@ describe("useTableAvailability", () => {
     const resa = makeReservation({
       status: "confirmee",
       tableNumber: 1,
-      time: "11:00"
+      time: "11:00",
     })
     const now = new Date("2026-03-21T12:00:00")
-    const { result } = renderHook(() => useTableAvailability([resa], now, TABLES))
+    const { result } = renderHook(() =>
+      useTableAvailability([resa], now, TABLES)
+    )
 
-    const t1 = result.current.tables.find(t => t.table.number === 1)!
+    const t1 = result.current.tables.find((t) => t.table.number === 1)!
     expect(t1.nextReservation).toBeNull()
   })
 })

@@ -11,9 +11,8 @@ import type { ApiError } from "./types"
  * - Gère le refresh token automatique sur 401
  */
 
-
-const TOKEN_KEY = "holly_access_token"
-const REFRESH_KEY = "holly_refresh_token"
+const TOKEN_KEY = "holy_access_token"
+const REFRESH_KEY = "holy_refresh_token"
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -31,6 +30,25 @@ export function setTokens(access: string, refresh: string): void {
 export function clearTokens(): void {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(REFRESH_KEY)
+  // Notify other tabs that the user has logged out
+  authChannel?.postMessage("logout")
+}
+
+// ── Cross-tab logout broadcast ──
+const authChannel =
+  typeof BroadcastChannel !== "undefined"
+    ? new BroadcastChannel("holy-fork-auth")
+    : null
+
+if (authChannel) {
+  authChannel.onmessage = (event) => {
+    if (event.data === "logout") {
+      // Another tab logged out — clean up this tab's state
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(REFRESH_KEY)
+      window.dispatchEvent(new CustomEvent("auth:logout"))
+    }
+  }
 }
 
 const API_BASE_URL =
@@ -49,7 +67,6 @@ export async function ensureCsrfCookie(): Promise<void> {
   }
 }
 
-let isRefreshing = false
 let refreshPromise: Promise<string | null> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -70,6 +87,19 @@ async function refreshAccessToken(): Promise<string | null> {
     clearTokens()
     return null
   }
+}
+
+/**
+ * Deduplicated refresh: multiple concurrent 401s share a single refresh call.
+ * The promise is kept alive until it resolves, then cleared for the next cycle.
+ */
+function getOrStartRefresh(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken().finally(() => {
+      refreshPromise = null
+    })
+  }
+  return refreshPromise
 }
 
 export const api: KyInstance = ky.create({
@@ -101,19 +131,11 @@ export const api: KyInstance = ky.create({
     ],
     beforeRetry: [
       async ({ request, error }) => {
-        // Refresh token sur 401
+        // Refresh token sur 401 — deduplicated via getOrStartRefresh()
         const response = (error as { response?: Response })?.response
         if (response?.status !== 401) return
 
-        if (!isRefreshing) {
-          isRefreshing = true
-          refreshPromise = refreshAccessToken()
-        }
-
-        const newToken = await refreshPromise
-        isRefreshing = false
-        refreshPromise = null
-
+        const newToken = await getOrStartRefresh()
         if (newToken) {
           request.headers.set("Authorization", `Bearer ${newToken}`)
         }
@@ -142,13 +164,13 @@ function toSnakeCase(str: string): string {
 export async function apiGet<T>(
   url: string,
   params?: Record<string, string | number | boolean | undefined>,
-  options?: Options,
+  options?: Options
 ): Promise<T> {
   const searchParams = params
     ? Object.fromEntries(
         Object.entries(params)
           .filter(([, v]) => v !== undefined)
-          .map(([k, v]) => [toSnakeCase(k), String(v)]),
+          .map(([k, v]) => [toSnakeCase(k), String(v)])
       )
     : undefined
   const raw = await api.get(url, { ...options, searchParams }).json()
@@ -158,7 +180,7 @@ export async function apiGet<T>(
 export async function apiPost<T>(
   url: string,
   body?: unknown,
-  options?: Options,
+  options?: Options
 ): Promise<T> {
   const raw = await api
     .post(url, { ...options, json: body ? snakifyKeys(body) : undefined })
@@ -169,7 +191,7 @@ export async function apiPost<T>(
 export async function apiPut<T>(
   url: string,
   body?: unknown,
-  options?: Options,
+  options?: Options
 ): Promise<T> {
   const raw = await api
     .put(url, { ...options, json: body ? snakifyKeys(body) : undefined })
@@ -180,7 +202,7 @@ export async function apiPut<T>(
 export async function apiPatch<T>(
   url: string,
   body?: unknown,
-  options?: Options,
+  options?: Options
 ): Promise<T> {
   const raw = await api
     .patch(url, { ...options, json: body ? snakifyKeys(body) : undefined })
@@ -188,10 +210,7 @@ export async function apiPatch<T>(
   return camelizeKeys<T>(raw)
 }
 
-export async function apiDelete<T>(
-  url: string,
-  options?: Options,
-): Promise<T> {
+export async function apiDelete<T>(url: string, options?: Options): Promise<T> {
   const response = await api.delete(url, options)
   if (response.status === 204) return undefined as T
   const raw = await response.json()
@@ -201,7 +220,7 @@ export async function apiDelete<T>(
 export async function apiUpload<T>(
   url: string,
   formData: FormData,
-  options?: Options,
+  options?: Options
 ): Promise<T> {
   const raw = await api.post(url, { ...options, body: formData }).json()
   return camelizeKeys<T>(raw)

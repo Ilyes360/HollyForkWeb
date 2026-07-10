@@ -81,9 +81,15 @@ export const useOnboardingStore = create<OnboardingStore>((set) => ({
       data: { ...state.data, modules },
     })),
   nextStep: () =>
-    set((state) => ({ currentStep: Math.min(state.totalSteps - 1, state.currentStep + 1), direction: 1 })),
+    set((state) => ({
+      currentStep: Math.min(state.totalSteps - 1, state.currentStep + 1),
+      direction: 1,
+    })),
   prevStep: () =>
-    set((state) => ({ currentStep: Math.max(0, state.currentStep - 1), direction: -1 })),
+    set((state) => ({
+      currentStep: Math.max(0, state.currentStep - 1),
+      direction: -1,
+    })),
   goToStep: (step) =>
     set((state) => ({
       currentStep: step,
@@ -91,7 +97,7 @@ export const useOnboardingStore = create<OnboardingStore>((set) => ({
     })),
   reset: () => set({ currentStep: 0, direction: 1, data: initialData }),
   hydrateFromSession: () => {
-    const pending = sessionStorage.getItem("holly_pending_restaurant")
+    const pending = sessionStorage.getItem("holy_pending_restaurant")
     if (!pending) return false
     try {
       const data = JSON.parse(pending)

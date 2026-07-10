@@ -17,7 +17,7 @@ import { useFloorPlanStore } from "@/stores/floor-plan-store"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { apiPost } from "@/api/client"
+import { useCreateSalle, useCreateTable } from "@/hooks/use-salles"
 import { toast } from "sonner"
 
 const container: Variants = {
@@ -37,64 +37,70 @@ const fadeUp: Variants = {
 
 /**
  * Sync plan elements (zones + tables) to the backend API.
- * Creates salles and tables via POST. Best-effort — errors are toasted.
+ * Creates salles and tables via mutations. Best-effort — errors are toasted via useMutationWithDefaults.
  */
-async function syncPlanToApi(
-  elements: FloorElement[],
-  restaurantId: number,
-  _editingRoomId: string | null
-) {
-  const zones = elements.filter((el): el is ZoneShape => el.kind === "zone")
-  const tables = elements.filter((el): el is TableShape => el.kind === "table")
+function useSyncPlanToApi() {
+  const createSalle = useCreateSalle()
+  const createTable = useCreateTable()
 
-  if (zones.length === 0 && tables.length === 0) return
+  return async (
+    elements: FloorElement[],
+    restaurantId: number,
+    _editingRoomId: string | null
+  ) => {
+    const zones = elements.filter((el): el is ZoneShape => el.kind === "zone")
+    const tables = elements.filter(
+      (el): el is TableShape => el.kind === "table"
+    )
 
-  try {
-    for (const zone of zones) {
-      // Calculate capacity from tables in this zone
-      const zoneTables = tables.filter((t) => {
-        // Simple: check if table center is within zone bounding box
-        const pts = zone.points
-        if (!pts || pts.length < 4) return false
-        const xs: number[] = []
-        const ys: number[] = []
-        for (let i = 0; i < pts.length; i += 2) {
-          xs.push(pts[i])
-          ys.push(pts[i + 1])
-        }
-        const minX = Math.min(...xs) + zone.x
-        const maxX = Math.max(...xs) + zone.x
-        const minY = Math.min(...ys) + zone.y
-        const maxY = Math.max(...ys) + zone.y
-        const cx = t.x + t.width / 2
-        const cy = t.y + t.height / 2
-        return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY
-      })
-      const capacity = zoneTables.reduce((sum, t) => sum + t.seats, 0)
+    if (zones.length === 0 && tables.length === 0) return
 
-      // Create salle
-      const salle = await apiPost<{ id: number }>("salles/", {
-        name: zone.name,
-        restaurantId,
-        capacity: capacity || 0,
-        floor: 0,
-      })
-
-      // Create tables for this salle
-      for (const table of zoneTables) {
-        await apiPost("tables/", {
-          numero: table.number,
-          capacity: table.seats,
-          positionX: Math.round(table.x),
-          positionY: Math.round(table.y),
-          salleId: salle.id,
+    try {
+      for (const zone of zones) {
+        // Calculate capacity from tables in this zone
+        const zoneTables = tables.filter((t) => {
+          const pts = zone.points
+          if (!pts || pts.length < 4) return false
+          const xs: number[] = []
+          const ys: number[] = []
+          for (let i = 0; i < pts.length; i += 2) {
+            xs.push(pts[i])
+            ys.push(pts[i + 1])
+          }
+          const minX = Math.min(...xs) + zone.x
+          const maxX = Math.max(...xs) + zone.x
+          const minY = Math.min(...ys) + zone.y
+          const maxY = Math.max(...ys) + zone.y
+          const cx = t.x + t.width / 2
+          const cy = t.y + t.height / 2
+          return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY
         })
-      }
-    }
+        const capacity = zoneTables.reduce((sum, t) => sum + t.seats, 0)
 
-    toast.success("Plan synchronisé avec le serveur")
-  } catch {
-    toast.error("Erreur lors de la synchronisation du plan")
+        // Create salle — await the mutation via mutateAsync
+        const salle = await createSalle.mutateAsync({
+          name: zone.name,
+          restaurantId,
+          capacity: capacity || 0,
+          floor: 0,
+        })
+
+        // Create tables for this salle
+        for (const table of zoneTables) {
+          await createTable.mutateAsync({
+            numero: table.number,
+            capacity: table.seats,
+            positionX: Math.round(table.x),
+            positionY: Math.round(table.y),
+            salleId: salle.id,
+          })
+        }
+      }
+
+      toast.success("Plan synchronisé avec le serveur")
+    } catch {
+      toast.error("Erreur lors de la synchronisation du plan")
+    }
   }
 }
 
@@ -162,6 +168,7 @@ export default function SallePage() {
   const { restaurantId } = useActiveRestaurant()
   const editingRoomIdRef = useRef<string | null>(null)
   const fullPlanRef = useRef<FloorPlan>(plan)
+  const syncPlanToApi = useSyncPlanToApi()
 
   /** Helper: extract a single room's elements from the full plan */
   const extractRoomElements = useCallback(
@@ -271,6 +278,7 @@ export default function SallePage() {
       completeTask,
       setPlan,
       restaurantId,
+      syncPlanToApi,
     ]
   )
 

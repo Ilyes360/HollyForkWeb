@@ -35,7 +35,7 @@ describe("Orval-generated hooks (pipeline: orval → kyMutator → ky → MSW �
     expect(response.count).toBe(2)
     expect(response.results).toHaveLength(2)
     expect(response.results[0].restaurantId).toBe(1)
-    expect(response.results[0].name).toBe("Holly Fork — Marais")
+    expect(response.results[0].name).toBe("Holy Fork — Marais")
     expect(response.results[0].postalCode).toBe("75004")
     expect(response.results[1].restaurantId).toBe(2)
   })

@@ -9,7 +9,7 @@ import type { ProductPortionSummary } from "@/components/stock/types"
 import type { SupplierFull } from "@/components/commandes/types"
 import type { Recipe } from "@/components/carte/types"
 import { getProductStatus } from "@/components/stock/utils"
-import { getProductIcon } from "@/components/stock/product-icons"
+import { IngredientIcon } from "@/components/carte/ingredient-icon"
 
 interface ProductFlowGraphProps {
   product: Product
@@ -47,11 +47,13 @@ export function ProductFlowGraph({
 }: ProductFlowGraphProps) {
   const status = getProductStatus(product)
   const config = STATUS_CONFIG[status]
-  const iconEntry = getProductIcon(product.icon)
 
   // Build recipe nodes from all recipes that use this product
   const portionMap = new Map(
-    (portionSummary?.portionEquivalents ?? []).map((eq) => [eq.recipeId, eq.portionsEnabled])
+    (portionSummary?.portionEquivalents ?? []).map((eq) => [
+      eq.recipeId,
+      eq.portionsEnabled,
+    ])
   )
   const recipeNodes = recipes
     .filter((r) => r.ingredients.some((i) => i.productId === product.id))
@@ -83,12 +85,16 @@ export function ProductFlowGraph({
         {supplier ? (
           <button
             type="button"
-            className="flex items-center gap-2 rounded-lg border bg-background p-3 text-left cursor-pointer transition-colors hover:bg-muted/50 hover:ring-1 hover:ring-primary/30"
+            className="flex cursor-pointer items-center gap-2 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/50 hover:ring-1 hover:ring-primary/30"
             onClick={onSupplierClick}
             aria-label={`Fournisseur : ${supplier.name}`}
           >
             <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-              <HugeiconsIcon icon={TruckDeliveryIcon} className="size-3.5 text-muted-foreground" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={TruckDeliveryIcon}
+                className="size-3.5 text-muted-foreground"
+                strokeWidth={2}
+              />
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium">{supplier.name}</p>
@@ -114,11 +120,7 @@ export function ProductFlowGraph({
       >
         <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-3">
           <div className="flex items-center gap-2">
-            {iconEntry && (
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                <HugeiconsIcon icon={iconEntry.icon} className="size-3.5 text-muted-foreground" strokeWidth={2} />
-              </div>
-            )}
+            <IngredientIcon product={product} size="sm" />
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold">{product.name}</p>
               <p className="text-xs text-muted-foreground">
@@ -150,7 +152,7 @@ export function ProductFlowGraph({
               key={node.id}
               type="button"
               className={cn(
-                "rounded-lg border p-2.5 text-left cursor-pointer transition-colors hover:ring-1 hover:ring-primary/30",
+                "cursor-pointer rounded-lg border p-2.5 text-left transition-colors hover:ring-1 hover:ring-primary/30",
                 getRecipeNodeColor(node.portions)
               )}
               onClick={() => onRecipeClick(node.id)}

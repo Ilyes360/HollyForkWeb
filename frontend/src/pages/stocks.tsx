@@ -4,18 +4,19 @@ import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ClipboardIcon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import type { Product } from "@/components/stock/types"
-import { DEFAULT_STORAGE_ZONES, DEFAULT_CATEGORIES } from "@/components/stock/types"
+import {
+  DEFAULT_STORAGE_ZONES,
+  DEFAULT_CATEGORIES,
+} from "@/components/stock/types"
 import { useArticles } from "@/hooks/use-articles"
-import { useStocks } from "@/hooks/use-stocks"
+import { useStocks, useDeleteStock, useAdjustStock } from "@/hooks/use-stocks"
 import { useSuppliers } from "@/hooks/use-suppliers"
-import { useOrders } from "@/hooks/use-orders"
+import { useOrders, useCreateOrder } from "@/hooks/use-orders"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { usePortionCalculator } from "@/hooks/use-portion-calculator"
 import { usePageTitle } from "@/hooks/use-page-title"
-import { apiDelete, apiPost } from "@/api/client"
 import {
   getProductStatus,
   getZoneHealth,
@@ -47,17 +48,22 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const as [number, number, number, number] },
+    transition: {
+      duration: 0.35,
+      ease: [0.25, 0.1, 0.25, 1] as const as [number, number, number, number],
+    },
   },
 }
 
 export default function StocksPage() {
   usePageTitle("Mon stock")
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   // ── Data (API is source of truth) ──
   const { restaurantId } = useActiveRestaurant()
+  const deleteStock = useDeleteStock()
+  const adjustStock = useAdjustStock()
+  const createOrder = useCreateOrder()
   const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
   const { data: orders } = useOrders(restaurantId)
@@ -67,7 +73,9 @@ export default function StocksPage() {
 
   // ── Portions ──
   const { recipePortions, productPortionSummaries } = usePortionCalculator(
-    recipes, products, suppliers
+    recipes,
+    products,
+    suppliers
   )
   const portionMap = useMemo(
     () => new Map(productPortionSummaries.map((s) => [s.productId, s])),
@@ -85,7 +93,9 @@ export default function StocksPage() {
   const [zoneManagerOpen, setZoneManagerOpen] = useState(false)
   const [orderDialogOpen, setOrderDialogOpen] = useState(false)
   const [orderSupplierId, setOrderSupplierId] = useState<string | null>(null)
-  const [preSelectedProductId, setPreSelectedProductId] = useState<string | undefined>(undefined)
+  const [preSelectedProductId, setPreSelectedProductId] = useState<
+    string | undefined
+  >(undefined)
   const [supplierSheetOpen, setSupplierSheetOpen] = useState(false)
   const [supplierSheetId, setSupplierSheetId] = useState<string | null>(null)
 
@@ -95,27 +105,29 @@ export default function StocksPage() {
 
   // Inventory mode
   const [inventoryMode, setInventoryMode] = useState(false)
-  const [inventoryValues, setInventoryValues] = useState<Map<string, number>>(new Map())
+  const [inventoryValues, setInventoryValues] = useState<Map<string, number>>(
+    new Map()
+  )
 
   // ── Computed ──
   const currentProduct = selectedProduct
-    ? products.find((p) => p.id === selectedProduct.id) ?? null
+    ? (products.find((p) => p.id === selectedProduct.id) ?? null)
     : null
   const currentSupplier = currentProduct
-    ? suppliers.find((s) => s.id === currentProduct.supplierId) ?? null
+    ? (suppliers.find((s) => s.id === currentProduct.supplierId) ?? null)
     : null
   const currentPortionSummary = currentProduct
-    ? portionMap.get(currentProduct.id) ?? null
+    ? (portionMap.get(currentProduct.id) ?? null)
     : null
   const supplierSheetSupplier = supplierSheetId
-    ? suppliers.find((s) => s.id === supplierSheetId) ?? null
+    ? (suppliers.find((s) => s.id === supplierSheetId) ?? null)
     : null
 
   const selectedRecipe = selectedRecipeId
-    ? recipes.find((r) => r.id === selectedRecipeId) ?? null
+    ? (recipes.find((r) => r.id === selectedRecipeId) ?? null)
     : null
   const selectedRecipePortionInfo = selectedRecipeId
-    ? recipePortions.find((p) => p.recipeId === selectedRecipeId) ?? null
+    ? (recipePortions.find((p) => p.recipeId === selectedRecipeId) ?? null)
     : null
 
   // ── Filtering ──
@@ -135,21 +147,31 @@ export default function StocksPage() {
   }, [products, categoryFilter, supplierFilter, search])
 
   // ── Compteurs ──
-  const ruptureCount = products.filter((p) => getProductStatus(p) === "rupture").length
-  const faibleCount = products.filter((p) => getProductStatus(p) === "stock_faible").length
+  const ruptureCount = products.filter(
+    (p) => getProductStatus(p) === "rupture"
+  ).length
+  const faibleCount = products.filter(
+    (p) => getProductStatus(p) === "stock_faible"
+  ).length
   const okCount = products.length - ruptureCount - faibleCount
   const totalValue = getTotalStockValue(products)
 
   // ── Filter options ──
-  const categoryOptions = useMemo(() => [
-    { value: "toutes", label: "Toutes catégories" },
-    ...categories.map((c) => ({ value: c.id, label: c.label })),
-  ], [categories])
+  const categoryOptions = useMemo(
+    () => [
+      { value: "toutes", label: "Toutes catégories" },
+      ...categories.map((c) => ({ value: c.id, label: c.label })),
+    ],
+    [categories]
+  )
 
-  const supplierOptions = useMemo(() => [
-    { value: "tous", label: "Tous fournisseurs" },
-    ...suppliers.map((s) => ({ value: s.id, label: s.name })),
-  ], [suppliers])
+  const supplierOptions = useMemo(
+    () => [
+      { value: "tous", label: "Tous fournisseurs" },
+      ...suppliers.map((s) => ({ value: s.id, label: s.name })),
+    ],
+    [suppliers]
+  )
 
   // ── Groupement par zone ──
   const productsByZone = useMemo(() => {
@@ -180,14 +202,17 @@ export default function StocksPage() {
   }, [])
   void handleSelectRecipe
 
-  const handleOrderFromDetail = useCallback((product: Product) => {
-    const supplier = suppliers.find((s) => s.id === product.supplierId)
-    if (supplier) {
-      setOrderSupplierId(supplier.id)
-      setPreSelectedProductId(product.id)
-      setOrderDialogOpen(true)
-    }
-  }, [suppliers])
+  const handleOrderFromDetail = useCallback(
+    (product: Product) => {
+      const supplier = suppliers.find((s) => s.id === product.supplierId)
+      if (supplier) {
+        setOrderSupplierId(supplier.id)
+        setPreSelectedProductId(product.id)
+        setOrderDialogOpen(true)
+      }
+    },
+    [suppliers]
+  )
 
   const handleOrderFromSupplier = useCallback((supplierId: string) => {
     setOrderSupplierId(supplierId)
@@ -196,42 +221,36 @@ export default function StocksPage() {
   }, [])
 
   const handleSubmitOrder = useCallback(
-    async (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
-      const totalAmount = data.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice, 0
+    (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
+      createOrder.mutate(
+        {
+          fournisseurId: Number(data.supplierId),
+          restaurantId: restaurantId!,
+          notes: data.notes || undefined,
+        },
+        { onSuccess: () => toast.success("Commande créée") }
       )
-
-      try {
-        await apiPost("suppliers/orders/", {
-          supplierId: data.supplierId,
-          items: data.items,
-          notes: data.notes,
-          totalAmount,
-        })
-        toast.success("Commande créée")
-        queryClient.invalidateQueries({ queryKey: ["orders"] })
-      } catch {
-        toast.error("Erreur lors de la création de la commande")
-      }
     },
-    [queryClient]
+    [createOrder, restaurantId]
   )
 
   const handleDelete = useCallback(
-    async (id: string) => {
-      try {
-        await apiDelete(`stocks/${id}/`)
-        toast.success("Produit supprimé")
-        queryClient.invalidateQueries({ queryKey: ["stocks"] })
-      } catch {
-        toast.error("Erreur lors de la suppression")
-      }
-      if (selectedProduct?.id === id) {
-        setDetailOpen(false)
-        setSelectedProduct(null)
-      }
+    (id: string) => {
+      if (!restaurantId) return
+      deleteStock.mutate(
+        { id: Number(id), restaurantId },
+        {
+          onSuccess: () => {
+            toast.success("Produit supprimé")
+            if (selectedProduct?.id === id) {
+              setDetailOpen(false)
+              setSelectedProduct(null)
+            }
+          },
+        }
+      )
     },
-    [selectedProduct, queryClient]
+    [selectedProduct, deleteStock, restaurantId]
   )
 
   const handleOpenSupplierSheet = useCallback((supplierId: string) => {
@@ -245,46 +264,65 @@ export default function StocksPage() {
     setInventoryValues(new Map())
   }, [])
 
-  const handleInventoryChange = useCallback((productId: string, value: number) => {
-    setInventoryValues((prev) => {
-      const next = new Map(prev)
-      next.set(productId, value)
-      return next
-    })
-  }, [])
+  const handleInventoryChange = useCallback(
+    (productId: string, value: number) => {
+      setInventoryValues((prev) => {
+        const next = new Map(prev)
+        next.set(productId, value)
+        return next
+      })
+    },
+    []
+  )
 
   const handleSaveInventory = useCallback(async () => {
-    // Inventory mode — adjust stock quantities via API
+    if (!restaurantId) return
+
     const adjustments = Array.from(inventoryValues.entries())
       .map(([productId, value]) => {
         const product = products.find((p) => p.id === productId)
         if (product && product.quantity !== value) {
-          return { id: productId, quantity: value }
+          const diff = value - product.quantity
+          return {
+            id: productId,
+            quantity: Math.abs(diff),
+            type: diff >= 0 ? ("ajout" as const) : ("retrait" as const),
+          }
         }
         return null
       })
-      .filter(Boolean)
+      .filter((a): a is NonNullable<typeof a> => a !== null)
 
-    for (const adj of adjustments) {
-      if (!adj) continue
-      try {
-        await apiPost(`stocks/${adj.id}/adjust/`, {
-          quantity: adj.quantity,
-          adjustmentType: "inventory",
-          reason: "Inventaire manuel",
-        })
-      } catch {
-        // Best-effort — continue with other adjustments
-      }
+    if (adjustments.length === 0) {
+      setInventoryMode(false)
+      setInventoryValues(new Map())
+      return
     }
 
-    if (adjustments.length > 0) {
-      queryClient.invalidateQueries({ queryKey: ["stocks"] })
+    const operations = adjustments.map((adj) =>
+      adjustStock.mutateAsync({
+        id: Number(adj.id),
+        restaurantId,
+        data: {
+          quantity: String(adj.quantity),
+          adjustmentType: adj.type,
+          reason: "Inventaire manuel",
+        },
+      })
+    )
+
+    const results = await Promise.allSettled(operations)
+    const failures = results.filter((r) => r.status === "rejected")
+
+    if (failures.length > 0) {
+      toast.error(`${failures.length} erreur(s) lors de l'inventaire`)
+    } else {
       toast.success("Inventaire enregistré")
     }
+
     setInventoryMode(false)
     setInventoryValues(new Map())
-  }, [inventoryValues, products, queryClient])
+  }, [inventoryValues, products, adjustStock, restaurantId])
 
   const handleCancelInventory = useCallback(() => {
     setInventoryMode(false)
@@ -293,7 +331,7 @@ export default function StocksPage() {
 
   // Order helpers
   const orderSupplier = orderSupplierId
-    ? suppliers.find((s) => s.id === orderSupplierId) ?? null
+    ? (suppliers.find((s) => s.id === orderSupplierId) ?? null)
     : null
   const orderProducts = orderSupplier
     ? getSupplierProducts(orderSupplier.id, products)
@@ -335,7 +373,11 @@ export default function StocksPage() {
 
           {!inventoryMode && (
             <Button variant="outline" size="sm" onClick={handleStartInventory}>
-              <HugeiconsIcon icon={ClipboardIcon} className="size-4" strokeWidth={2} />
+              <HugeiconsIcon
+                icon={ClipboardIcon}
+                className="size-4"
+                strokeWidth={2}
+              />
               Inventaire
             </Button>
           )}
@@ -355,36 +397,40 @@ export default function StocksPage() {
 
       {/* Contenu principal */}
       <motion.div variants={fadeUp} className="min-h-0 flex-1 space-y-4">
-        {filtered.length > 0 ? (
-          storageZones.map((zone) => {
-            const zoneProducts = productsByZone.get(zone.id) ?? []
-            const health = zoneProducts.length > 0 ? getZoneHealth(zoneProducts) : "ok"
-            return (
-              <StockZoneSection
-                key={zone.id}
-                zone={zone}
-                products={zoneProducts}
-                portionSummaries={portionMap}
-                defaultCollapsed={health === "ok"}
-                onSelectProduct={handleSelectProduct}
-                inventoryMode={inventoryMode}
-                inventoryValues={inventoryValues}
-                onInventoryChange={handleInventoryChange}
-              />
-            )
-          })
-        ) : (() => {
-          const hasFilters = search.trim() !== "" || categoryFilter !== "toutes" || supplierFilter !== "tous"
-          const empty = getStockEmptyState(hasFilters)
-          return (
-            <EmptyState
-              title={empty.title}
-              description={empty.description}
-              actionLabel={empty.actionLabel}
-              onAction={() => navigate("/stocks/nouveau")}
-            />
-          )
-        })()}
+        {filtered.length > 0
+          ? storageZones.map((zone) => {
+              const zoneProducts = productsByZone.get(zone.id) ?? []
+              const health =
+                zoneProducts.length > 0 ? getZoneHealth(zoneProducts) : "ok"
+              return (
+                <StockZoneSection
+                  key={zone.id}
+                  zone={zone}
+                  products={zoneProducts}
+                  portionSummaries={portionMap}
+                  defaultCollapsed={health === "ok"}
+                  onSelectProduct={handleSelectProduct}
+                  inventoryMode={inventoryMode}
+                  inventoryValues={inventoryValues}
+                  onInventoryChange={handleInventoryChange}
+                />
+              )
+            })
+          : (() => {
+              const hasFilters =
+                search.trim() !== "" ||
+                categoryFilter !== "toutes" ||
+                supplierFilter !== "tous"
+              const empty = getStockEmptyState(hasFilters)
+              return (
+                <EmptyState
+                  title={empty.title}
+                  description={empty.description}
+                  actionLabel={empty.actionLabel}
+                  onAction={() => navigate("/stocks/nouveau")}
+                />
+              )
+            })()}
       </motion.div>
 
       {/* ── Modals ── */}
@@ -410,7 +456,10 @@ export default function StocksPage() {
         suppliers={suppliers}
         open={recipeDetailOpen}
         onOpenChange={setRecipeDetailOpen}
-        onEdit={(r) => { setRecipeDetailOpen(false); navigate(`/cuisine/${r.id}/modifier`) }}
+        onEdit={(r) => {
+          setRecipeDetailOpen(false)
+          navigate(`/cuisine/${r.id}/modifier`)
+        }}
         onDuplicate={() => {}}
         onToggleActive={() => {}}
         onDelete={() => {}}

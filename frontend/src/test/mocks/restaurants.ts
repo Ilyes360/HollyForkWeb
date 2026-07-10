@@ -5,7 +5,7 @@
 export const mockRestaurants = [
   {
     restaurant_id: 1,
-    name: "Holly Fork — Marais",
+    name: "Holy Fork — Marais",
     address: "12 rue des Rosiers",
     postal_code: "75004",
     city: "Paris",
@@ -17,7 +17,7 @@ export const mockRestaurants = [
   },
   {
     restaurant_id: 2,
-    name: "Holly Fork — Opéra",
+    name: "Holy Fork — Opéra",
     address: "8 bd des Capucines",
     postal_code: "75009",
     city: "Paris",

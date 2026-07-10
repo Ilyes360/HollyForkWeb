@@ -1,4 +1,4 @@
-# Holly Pi API (HollyForkWeb)
+# Holly Pi API (HolyForkWeb)
 
 - **Version** : `1.0.0`
 - **Spécification** : OAS 3.0

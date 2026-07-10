@@ -17,8 +17,8 @@ export const useActiveRestaurantStore = create<ActiveRestaurantStore>()(
       selectedId: null,
       setSelectedId: (id) => set({ selectedId: id }),
     }),
-    { name: "holly-fork-active-restaurant" },
-  ),
+    { name: "holy-fork-active-restaurant" }
+  )
 )
 
 /**

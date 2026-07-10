@@ -25,8 +25,12 @@ export const ligneCommandeHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update ligne-commande
+  // Update ligne-commande (full + partial)
   http.put(`${API}/lignes-commandes/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+  http.patch(`${API}/lignes-commandes/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),

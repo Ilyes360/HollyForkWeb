@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiPost } from "../client"
 import { setTokens, clearTokens } from "../client"
 import { toAuthUser } from "./types"
@@ -17,7 +18,7 @@ import { useAuthStore } from "@/stores/auth-store"
 export function useLogin() {
   const setUser = useAuthStore((s) => s.setUser)
 
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: LoginRequest) =>
       apiPost<LoginResponse>("auth/login/", data),
     onSuccess: (result) => {
@@ -31,7 +32,7 @@ export function useLogin() {
  * Inscription d'un nouvel utilisateur.
  */
 export function useRegister() {
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: RegisterRequest) =>
       apiPost<RegisterResponse>("auth/register/", data),
   })
@@ -44,9 +45,16 @@ export function useLogout() {
   const queryClient = useQueryClient()
   const clearUser = useAuthStore((s) => s.clearUser)
 
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: () => apiPost<LogoutResponse>("auth/logout/"),
-    onSettled: () => {
+    onSuccess: () => {
+      clearTokens()
+      clearUser()
+      queryClient.clear()
+    },
+    onError: () => {
+      // Even if the API call fails, clean up client-side state
+      // to prevent the user from being stuck in a half-logged-out state
       clearTokens()
       clearUser()
       queryClient.clear()

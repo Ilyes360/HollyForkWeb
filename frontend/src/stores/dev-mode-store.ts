@@ -5,7 +5,7 @@ import type { AuthUser } from "@/api/auth/types"
 export const DEV_MOCK_USER: AuthUser = {
   id: 1,
   username: "demo",
-  email: "demo@hollyfork.fr",
+  email: "demo@holyfork.fr",
   firstName: "Marie",
   lastName: "Dupont",
   employeeId: 1,
@@ -13,12 +13,20 @@ export const DEV_MOCK_USER: AuthUser = {
   employeeType: "Gérant",
   employeeTypeId: 1,
   restaurantId: 1,
-  restaurantName: "Holly Fork — Marais",
+  restaurantName: "Holy Fork — Marais",
 }
 
 export const DEV_MOCK_RESTAURANTS = [
-  { restaurantId: 1, name: "Holly Fork — Marais", address: "12 rue des Rosiers, Paris 4e" },
-  { restaurantId: 2, name: "Holly Fork — Opéra", address: "8 bd des Capucines, Paris 9e" },
+  {
+    restaurantId: 1,
+    name: "Holy Fork — Marais",
+    address: "12 rue des Rosiers, Paris 4e",
+  },
+  {
+    restaurantId: 2,
+    name: "Holy Fork — Opéra",
+    address: "8 bd des Capucines, Paris 9e",
+  },
 ]
 
 type DevModeState = {
@@ -29,15 +37,18 @@ type DevModeState = {
 export const useDevModeStore = create<DevModeState>()(
   persist(
     (set, get) => ({
-      // In production, always force false regardless of persisted value
-      isDevMode: import.meta.env.DEV ? false : false,
+      // In production, always force false; in dev, start false (persist middleware restores saved value)
+      isDevMode: false,
       toggle: import.meta.env.DEV
         ? () => {
             const next = !get().isDevMode
             set({ isDevMode: next })
 
             // Start or stop MSW worker on toggle (real browser only — skip in jsdom/Node)
-            if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+            if (
+              typeof navigator !== "undefined" &&
+              "serviceWorker" in navigator
+            ) {
               if (next) {
                 import("@/mocks/browser").then(({ worker }) => {
                   worker.start({ onUnhandledRequest: "bypass" })
@@ -54,18 +65,16 @@ export const useDevModeStore = create<DevModeState>()(
           },
     }),
     {
-      name: "holly-fork-dev-mode",
+      name: "holy-fork-dev-mode",
       // In production, override any persisted isDevMode to false
       ...(import.meta.env.DEV
         ? {}
         : {
-            merge: (
-              _persistedState: unknown,
-              currentState: DevModeState,
-            ) => currentState,
+            merge: (_persistedState: unknown, currentState: DevModeState) =>
+              currentState,
           }),
-    },
-  ),
+    }
+  )
 )
 
 /**

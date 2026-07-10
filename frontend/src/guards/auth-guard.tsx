@@ -1,4 +1,5 @@
-import { Navigate, Outlet, useLocation } from "react-router"
+import { useEffect } from "react"
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router"
 import { useAuthStore } from "@/stores/auth-store"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useProfile } from "@/api/auth/queries"
@@ -6,10 +7,21 @@ import { getAccessToken, clearTokens } from "@/api/client"
 
 export default function AuthGuard() {
   const location = useLocation()
+  const navigate = useNavigate()
   const isDevMode = useDevModeStore((s) => s.isDevMode)
   const token = getAccessToken()
   const clearUser = useAuthStore((s) => s.clearUser)
   const { isLoading, isError } = useProfile(!isDevMode && !!token)
+
+  // Listen for cross-tab logout
+  useEffect(() => {
+    function handleLogout() {
+      clearUser()
+      navigate("/login", { replace: true })
+    }
+    window.addEventListener("auth:logout", handleLogout)
+    return () => window.removeEventListener("auth:logout", handleLogout)
+  }, [clearUser, navigate])
 
   // Dev mode: bypass all auth checks
   if (isDevMode) {
@@ -38,7 +50,7 @@ export default function AuthGuard() {
   }
 
   // Check for pending restaurant from register wizard
-  const pendingRestaurant = sessionStorage.getItem("holly_pending_restaurant")
+  const pendingRestaurant = sessionStorage.getItem("holy_pending_restaurant")
   if (pendingRestaurant && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />
   }

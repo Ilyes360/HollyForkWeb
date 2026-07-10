@@ -12,39 +12,39 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Establishment } from "../types"
-import { POSITION_LABELS } from "../types"
-import type { PositionType } from "../types"
+import type { ApiTypeEmploye } from "@/hooks/use-employees"
 
 interface EmployesFiltersProps {
   search: string
   onSearchChange: (value: string) => void
-  posteFilter: string
-  onPosteFilterChange: (value: string) => void
+  typeFilter: string
+  onTypeFilterChange: (value: string) => void
   etablissementFilter: string
   onEtablissementFilterChange: (value: string) => void
-  statusFilter: string
-  onStatusFilterChange: (value: string) => void
   establishments: Establishment[]
+  employeeTypes: ApiTypeEmploye[]
 }
 
 export function EmployesFilters({
   search,
   onSearchChange,
-  posteFilter,
-  onPosteFilterChange,
+  typeFilter,
+  onTypeFilterChange,
   etablissementFilter,
   onEtablissementFilterChange,
-  statusFilter,
-  onStatusFilterChange,
   establishments,
+  employeeTypes,
 }: EmployesFiltersProps) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
-      <InputGroup className="bg-background w-full sm:w-56">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <InputGroup className="w-full bg-background sm:w-56">
         <InputGroupAddon>
-          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="size-4 text-muted-foreground" />
+          <HugeiconsIcon
+            icon={Search01Icon}
+            strokeWidth={2}
+            className="size-4 text-muted-foreground"
+          />
         </InputGroupAddon>
         <InputGroupInput
           placeholder="Rechercher..."
@@ -53,12 +53,16 @@ export function EmployesFilters({
         />
       </InputGroup>
 
-      <Select value={etablissementFilter} onValueChange={(v) => onEtablissementFilterChange(v ?? "tous")}>
+      <Select
+        value={etablissementFilter}
+        onValueChange={(v) => onEtablissementFilterChange(v ?? "tous")}
+      >
         <SelectTrigger className="w-full sm:w-48">
           <SelectValue>
             {etablissementFilter === "tous"
               ? "Tous les établissements"
-              : establishments.find((e) => e.id === etablissementFilter)?.name ?? "Sélectionner"}
+              : (establishments.find((e) => e.id === etablissementFilter)
+                  ?.name ?? "Sélectionner")}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -71,31 +75,27 @@ export function EmployesFilters({
         </SelectContent>
       </Select>
 
-      <Select value={posteFilter} onValueChange={(v) => onPosteFilterChange(v ?? "tous")}>
+      <Select
+        value={typeFilter}
+        onValueChange={(v) => onTypeFilterChange(v ?? "tous")}
+      >
         <SelectTrigger className="w-full sm:w-44">
           <SelectValue>
-            {posteFilter === "tous"
+            {typeFilter === "tous"
               ? "Tous les postes"
-              : POSITION_LABELS[posteFilter as PositionType] ?? posteFilter}
+              : (employeeTypes.find((t) => String(t.id) === typeFilter)
+                  ?.typeName ?? typeFilter)}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="tous">Tous les postes</SelectItem>
-          {(Object.keys(POSITION_LABELS) as PositionType[]).map((key) => (
-            <SelectItem key={key} value={key}>
-              {POSITION_LABELS[key]}
+          {employeeTypes.map((t) => (
+            <SelectItem key={t.id} value={String(t.id)}>
+              {t.typeName}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-
-      <Tabs value={statusFilter} onValueChange={onStatusFilterChange}>
-        <TabsList>
-          <TabsTrigger value="tous">Tous</TabsTrigger>
-          <TabsTrigger value="active">Actifs</TabsTrigger>
-          <TabsTrigger value="disabled">Inactifs</TabsTrigger>
-        </TabsList>
-      </Tabs>
     </div>
   )
 }

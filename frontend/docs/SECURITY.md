@@ -1,4 +1,4 @@
-# Holly Fork — Security Documentation
+# Holy Fork — Security Documentation
 
 > Document à destination de l'équipe cybersécurité.
 > Dernière mise à jour : 2026-05-15.
@@ -10,7 +10,7 @@
 
 | Champ | Valeur |
 |-------|--------|
-| Application | Holly Fork — Dashboard SaaS B2B gestion de restaurant |
+| Application | Holy Fork — Dashboard SaaS B2B gestion de restaurant |
 | Type | Single Page Application (SPA) React |
 | Déploiement cible | Vercel (frontend statique) |
 | Backend | Django REST Framework — API REST JSON |
@@ -56,9 +56,9 @@ Le frontend est **100% côté client** — tout le code JS, les variables d'envi
 
 | Élément | Stockage | Clé |
 |---------|----------|-----|
-| Access token JWT | `localStorage` | `holly_access_token` |
-| Refresh token | `localStorage` | `holly_refresh_token` |
-| User session | `localStorage` (Zustand persist) | `holly-fork-auth` |
+| Access token JWT | `localStorage` | `holy_access_token` |
+| Refresh token | `localStorage` | `holy_refresh_token` |
+| User session | `localStorage` (Zustand persist) | `holy-fork-auth` |
 | CSRF token | Cookie httpOnly (set par Django) | `csrftoken` |
 
 **Risque connu :** `localStorage` est accessible à tout JavaScript exécuté sur le même domaine. Une faille XSS permettrait de voler les tokens.

@@ -1,54 +1,118 @@
 import { useState, useMemo, useCallback, useContext, useEffect } from "react"
 import { useNavigate } from "react-router"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowDown01Icon, Building06Icon } from "@hugeicons/core-free-icons"
 import { useEstablishments } from "@/hooks/use-establishments"
-import { useEmployees, useDeleteEmployee } from "@/hooks/use-employees"
-import { useRoles } from "@/hooks/use-roles"
+import {
+  useEmployees,
+  useEmployeeTypes,
+  useDeleteEmployee,
+} from "@/hooks/use-employees"
+import { useAllRestaurantAssignments } from "@/hooks/use-restaurant-employees"
 import { AdminLayoutContext } from "./index"
 import { EmployesFilters } from "@/components/administration/employes/employes-filters"
 import { EmployesTable } from "@/components/administration/employes/employes-table"
 import { EmployeeSheet } from "@/components/administration/employes/employee-sheet"
-import type { Employee, Role } from "@/components/administration/types"
-import { useQueryClient } from "@tanstack/react-query"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import type { Employee } from "@/components/administration/types"
 import { toast } from "sonner"
 
 export default function EmployesPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { data: establishments } = useEstablishments()
   const { data: employees } = useEmployees()
-  const { data: roles } = useRoles()
+  const { data: employeeTypes } = useEmployeeTypes()
+  const { data: assignments } = useAllRestaurantAssignments()
   const deleteEmployeeMutation = useDeleteEmployee()
 
   const { setOnAdd } = useContext(AdminLayoutContext)
 
   const [search, setSearch] = useState("")
-  const [posteFilter, setPosteFilter] = useState("tous")
+  const [typeFilter, setTypeFilter] = useState("tous")
   const [etablissementFilter, setEtablissementFilter] = useState("tous")
-  const [statusFilter, setStatusFilter] = useState("tous")
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
   )
 
+  // Build a map: employeId → restaurantId
+  const employeeToRestaurant = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const a of assignments) {
+      map.set(String(a.employeId), String(a.restaurantId))
+    }
+    return map
+  }, [assignments])
+
+  // Enrich employees with their establishment
+  const enrichedEmployees = useMemo(
+    () =>
+      employees.map((emp) => ({
+        ...emp,
+        establishmentId: employeeToRestaurant.get(emp.id),
+      })),
+    [employees, employeeToRestaurant]
+  )
+
   const filteredEmployees = useMemo(() => {
-    return employees.filter((emp: Employee) => {
+    return enrichedEmployees.filter((emp) => {
       if (search) {
         const q = search.toLowerCase()
         const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
         if (!fullName.includes(q)) return false
       }
-      if (posteFilter !== "tous" && emp.position !== posteFilter) return false
+      if (typeFilter !== "tous" && String(emp.typeEmployeId) !== typeFilter)
+        return false
       if (
         etablissementFilter !== "tous" &&
         emp.establishmentId !== etablissementFilter
       )
         return false
-      if (statusFilter !== "tous" && emp.accountStatus !== statusFilter)
-        return false
       return true
     })
-  }, [employees, search, posteFilter, etablissementFilter, statusFilter])
+  }, [enrichedEmployees, search, typeFilter, etablissementFilter])
+
+  // Group employees by establishment
+  const grouped = useMemo(() => {
+    const groups: { id: string; name: string; employees: Employee[] }[] = []
+
+    // Group by establishment
+    const byEstablishment = new Map<string, Employee[]>()
+    const unassigned: Employee[] = []
+
+    for (const emp of filteredEmployees) {
+      if (emp.establishmentId) {
+        const list = byEstablishment.get(emp.establishmentId) ?? []
+        list.push(emp)
+        byEstablishment.set(emp.establishmentId, list)
+      } else {
+        unassigned.push(emp)
+      }
+    }
+
+    // Sort establishments by name
+    for (const est of establishments) {
+      const emps = byEstablishment.get(est.id)
+      if (emps && emps.length > 0) {
+        groups.push({ id: est.id, name: est.name, employees: emps })
+      }
+    }
+
+    if (unassigned.length > 0) {
+      groups.push({
+        id: "__unassigned__",
+        name: "Non assignés",
+        employees: unassigned,
+      })
+    }
+
+    return groups
+  }, [filteredEmployees, establishments])
 
   const handleSelect = useCallback((employee: Employee) => {
     setSelectedEmployee(employee)
@@ -71,26 +135,20 @@ export default function EmployesPage() {
     return () => setOnAdd(null)
   }, [setOnAdd, handleAdd])
 
-  const handleToggleStatus = useCallback((_id: string) => {
-    // Backend doesn't have an account status field — not available
-    toast.info("Le statut du compte n'est pas géré par l'API")
-  }, [])
-
   const handleDelete = useCallback(
     (id: string) => {
       deleteEmployeeMutation.mutate(Number(id), {
         onSuccess: () => {
           toast.success("Employé supprimé")
-          queryClient.invalidateQueries({ queryKey: ["employees"] })
+          if (selectedEmployee?.id === id) {
+            setSheetOpen(false)
+            setSelectedEmployee(null)
+          }
         },
         onError: () => toast.error("Erreur lors de la suppression"),
       })
-      if (selectedEmployee?.id === id) {
-        setSheetOpen(false)
-        setSelectedEmployee(null)
-      }
     },
-    [deleteEmployeeMutation, selectedEmployee, queryClient]
+    [deleteEmployeeMutation, selectedEmployee]
   )
 
   return (
@@ -98,30 +156,65 @@ export default function EmployesPage() {
       <EmployesFilters
         search={search}
         onSearchChange={setSearch}
-        posteFilter={posteFilter}
-        onPosteFilterChange={setPosteFilter}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
         etablissementFilter={etablissementFilter}
         onEtablissementFilterChange={setEtablissementFilter}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
         establishments={establishments}
+        employeeTypes={employeeTypes}
       />
 
-      <EmployesTable
-        employees={filteredEmployees}
-        establishments={establishments}
-        onSelect={handleSelect}
-        onEdit={handleEdit}
-        onToggleStatus={handleToggleStatus}
-        onDelete={handleDelete}
-      />
+      {grouped.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <p className="text-sm text-muted-foreground">Aucun employé trouvé.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {grouped.map((group) => (
+            <Collapsible
+              key={group.id}
+              defaultOpen
+              className="rounded-lg border bg-background"
+            >
+              <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50">
+                <span className="flex items-center gap-2">
+                  <HugeiconsIcon
+                    icon={Building06Icon}
+                    strokeWidth={2}
+                    className="size-4 text-muted-foreground"
+                  />
+                  {group.name}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    ({group.employees.length})
+                  </span>
+                </span>
+                <HugeiconsIcon
+                  icon={ArrowDown01Icon}
+                  strokeWidth={2}
+                  className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="border-t">
+                  <EmployesTable
+                    employees={group.employees}
+                    establishments={establishments}
+                    onSelect={handleSelect}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </div>
+      )}
 
       <EmployeeSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         employee={selectedEmployee}
         establishments={establishments}
-        roles={roles as unknown as Role[]}
         onDelete={handleDelete}
       />
     </div>

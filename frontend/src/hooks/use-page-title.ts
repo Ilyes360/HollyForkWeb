@@ -2,7 +2,9 @@ import { useEffect } from "react"
 
 export function usePageTitle(section: string) {
   useEffect(() => {
-    document.title = section ? `${section} — Holly Fork` : "Holly Fork"
-    return () => { document.title = "Holly Fork" }
+    document.title = section ? `${section} — Holy Fork` : "Holy Fork"
+    return () => {
+      document.title = "Holy Fork"
+    }
   }, [section])
 }

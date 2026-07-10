@@ -17,7 +17,7 @@ src/
 1. **Pas de blocage** — La checklist guide, elle ne bloque jamais l'accès à une fonctionnalité
 2. **Détection automatique** — Les tâches se complètent quand l'utilisateur fait l'action, pas quand il coche une case
 3. **Dismissable** — L'utilisateur peut masquer la checklist à tout moment
-4. **Persisté** — L'état est stocké en `localStorage` (clé : `holly-fork-getting-started`)
+4. **Persisté** — L'état est stocké en `localStorage` (clé : `holy-fork-getting-started`)
 
 ## Comment ajouter une tâche
 

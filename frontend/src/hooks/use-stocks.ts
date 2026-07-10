@@ -1,8 +1,14 @@
 import { useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPut, getAccessToken } from "@/api/client"
-import type { PaginatedResponse } from "@/api/types"
-import type { Product } from "@/components/stock/types"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
+import {
+  apiGet,
+  apiPost,
+  apiPatch,
+  apiDelete,
+  getAccessToken,
+} from "@/api/client"
+import type { Product, ProductUnit } from "@/components/stock/types"
 import { fetchAllPages } from "@/api/pagination"
 
 // API response shape (flat, after camelizeKeys)
@@ -18,33 +24,48 @@ export type ApiStock = {
   weightedAverageCost: string
 }
 
+const VALID_UNITS: Set<string> = new Set<string>([
+  "kg",
+  "L",
+  "btl",
+  "unites",
+  "pieces",
+])
+
+function toProductUnit(raw: string): ProductUnit {
+  if (VALID_UNITS.has(raw)) return raw as ProductUnit
+  // Map common backend variants
+  if (raw === "litre" || raw === "l") return "L"
+  if (raw === "bouteille") return "btl"
+  if (raw === "piece" || raw === "pièce" || raw === "pcs") return "pieces"
+  if (raw === "unite" || raw === "unité") return "unites"
+  return "kg"
+}
+
 function apiStockToProduct(s: ApiStock): Product {
   const quantity = parseFloat(s.quantityInStock) || 0
   const minStock = parseFloat(s.alertThreshold) || 0
-  const unitPrice = parseFloat(s.ingredientUnitPrice) || parseFloat(s.weightedAverageCost) || 0
+  const unitPrice =
+    parseFloat(s.ingredientUnitPrice) || parseFloat(s.weightedAverageCost) || 0
   return {
     id: String(s.id),
     name: s.ingredientName,
-    icon: "naturalfood",
     quantity,
-    unit: (s.ingredientUnit || "kg") as Product["unit"],
+    unit: toProductUnit(s.ingredientUnit),
     minStock,
     maxStock: minStock * 3 || 100,
     unitPrice,
     supplierId: "",
     category: "epicerie",
-    rotation: 0,
-    lastOrderDate: "",
-    expirationDate: "",
     storageZone: "reserve_seche",
     notes: "",
-    orderHistory: [],
   }
 }
 
 const keys = {
   stocks: (restaurantId?: number) => ["stocks", restaurantId] as const,
-  stockAlerts: (restaurantId?: number) => ["stocks", "alerts", restaurantId] as const,
+  stockAlerts: (restaurantId?: number) =>
+    ["stocks", "alerts", restaurantId] as const,
 }
 
 export function useStocks(restaurantId: number | null) {
@@ -52,14 +73,16 @@ export function useStocks(restaurantId: number | null) {
 
   const query = useQuery({
     queryKey: keys.stocks(restaurantId ?? undefined),
-    queryFn: () => fetchAllPages<ApiStock>("stocks/", { restaurantId: restaurantId! }),
+    queryFn: () =>
+      fetchAllPages<ApiStock>("stocks/", { restaurantId: restaurantId! }),
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   const products = useMemo(
     () => (query.data ?? []).map(apiStockToProduct),
-    [query.data],
+    [query.data]
   )
 
   return { data: products, isLoading: query.isLoading }
@@ -67,25 +90,83 @@ export function useStocks(restaurantId: number | null) {
 
 export function useUpdateStock() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
+  return useMutationWithDefaults({
+    mutationFn: (variables: {
+      id: number
       restaurantId: number
-      ingredientId: number
-      quantityInStock: string
-      alertThreshold: string
-      weightedAverageCost: string
-    }> }) => apiPut<ApiStock>(`stocks/${id}/`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["stocks"] }),
+      data: Partial<{
+        restaurantId: number
+        ingredientId: number
+        quantityInStock: string
+        alertThreshold: string
+      }>
+    }) => apiPatch<ApiStock>(`stocks/${variables.id}/`, variables.data),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.stocks(variables.restaurantId) }),
   })
 }
 
 export function useAdjustStock() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { quantity: number; adjustmentType: string; reason?: string } }) =>
-      apiPost<ApiStock>(`stocks/${id}/adjust/`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["stocks"] }),
+  return useMutationWithDefaults({
+    mutationFn: (variables: {
+      id: number
+      restaurantId: number
+      data: {
+        quantity: string
+        adjustmentType: "ajout" | "retrait"
+        reason?: string
+      }
+    }) =>
+      apiPost<{ message: string; stock: ApiStock }>(
+        `stocks/${variables.id}/adjust/`,
+        variables.data
+      ),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.stocks(variables.restaurantId) }),
   })
+}
+
+export function useCreateStock() {
+  const qc = useQueryClient()
+  return useMutationWithDefaults({
+    mutationFn: (data: {
+      restaurantId: number
+      ingredientId: number
+      quantityInStock: string
+      alertThreshold: string
+    }) => apiPost<ApiStock>("stocks/", data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: keys.stocks(variables.restaurantId) })
+      qc.invalidateQueries({ queryKey: ["ingredients"] })
+    },
+  })
+}
+
+export function useDeleteStock() {
+  const qc = useQueryClient()
+  return useMutationWithDefaults({
+    mutationFn: (variables: { id: number; restaurantId: number }) =>
+      apiDelete(`stocks/${variables.id}/`),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.stocks(variables.restaurantId) }),
+  })
+}
+
+// API response shape for /stocks/alerts/ (NOT paginated — custom endpoint)
+type ApiStockAlertItem = {
+  stockId: number
+  ingredientName: string
+  quantityInStock: number
+  alertThreshold: number
+  unit: string
+  restaurantName: string
+}
+
+type ApiStockAlertsResponse = {
+  restaurantId: string | null
+  alertsCount: number
+  alerts: ApiStockAlertItem[]
 }
 
 export function useStockAlerts(restaurantId: number | null) {
@@ -94,12 +175,13 @@ export function useStockAlerts(restaurantId: number | null) {
   return useQuery({
     queryKey: keys.stockAlerts(restaurantId ?? undefined),
     queryFn: async () => {
-      const res = await apiGet<PaginatedResponse<ApiStock>>("stocks/alerts/", {
+      const res = await apiGet<ApiStockAlertsResponse>("stocks/alerts/", {
         restaurantId: restaurantId!,
       })
-      return res.results
+      return res.alerts
     },
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 }

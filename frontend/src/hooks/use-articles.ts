@@ -1,6 +1,13 @@
 import { useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiPatch, apiDelete, getAccessToken } from "@/api/client"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
+import {
+  apiGet,
+  apiPost,
+  apiPatch,
+  apiDelete,
+  getAccessToken,
+} from "@/api/client"
 import { fetchAllPages } from "@/api/pagination"
 import type { Recipe, RecipeCategory } from "@/components/carte/types"
 
@@ -27,15 +34,15 @@ export type ApiArticle = {
 }
 
 const CATEGORY_NAME_MAP: Record<string, RecipeCategory> = {
-  "entrées": "entree",
-  "entrée": "entree",
-  "entree": "entree",
-  "plats": "plat",
-  "plat": "plat",
-  "desserts": "dessert",
-  "dessert": "dessert",
-  "boissons": "boisson",
-  "boisson": "boisson",
+  entrées: "entree",
+  entrée: "entree",
+  entree: "entree",
+  plats: "plat",
+  plat: "plat",
+  desserts: "dessert",
+  dessert: "dessert",
+  boissons: "boisson",
+  boisson: "boisson",
 }
 
 function inferCategory(name: string | null): RecipeCategory {
@@ -47,13 +54,14 @@ function apiArticleToRecipe(a: ApiArticle): Recipe {
   return {
     id: String(a.id),
     name: a.name,
+    categorieId: a.categorieId,
     category: inferCategory(a.categorieName),
     sellingPrice: parseFloat(a.price) || 0,
     portions: 1,
     ingredients: (a.ingredients ?? []).map((ing) => ({
       productId: String(ing.ingredientId),
       quantity: parseFloat(ing.requiredQuantity) || 0,
-      unit: "kg" as const,
+      unit: "kg" as const, // API doesn't return unit on article-ingredient; resolved via product lookup in UI
     })),
     allergens: (a.allergens ?? []).map((al) => al.label),
     isActive: a.available,
@@ -64,8 +72,9 @@ function apiArticleToRecipe(a: ApiArticle): Recipe {
 }
 
 const keys = {
-  articles: () => ["articles"] as const,
-  article: (id: number) => ["articles", id] as const,
+  all: () => ["articles"] as const,
+  list: () => ["articles", "list"] as const,
+  detail: (id: number) => ["articles", "detail", id] as const,
 }
 
 /**
@@ -75,7 +84,7 @@ export function useArticles() {
   const hasToken = !!getAccessToken()
 
   const query = useQuery({
-    queryKey: keys.articles(),
+    queryKey: keys.list(),
     queryFn: () => fetchAllPages<ApiArticle>("articles/", {}),
     enabled: hasToken,
     staleTime: 5 * 60 * 1000,
@@ -83,7 +92,7 @@ export function useArticles() {
 
   const recipes = useMemo(
     () => (query.data ?? []).map(apiArticleToRecipe),
-    [query.data],
+    [query.data]
   )
 
   return {
@@ -99,7 +108,7 @@ export function useArticle(id: number | null) {
   const hasToken = !!getAccessToken()
 
   return useQuery({
-    queryKey: keys.article(id!),
+    queryKey: keys.detail(id!),
     queryFn: async () => {
       return apiGet<ApiArticle>(`articles/${id}/`)
     },
@@ -114,10 +123,15 @@ export function useArticle(id: number | null) {
  */
 export function useCreateArticle() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: { name: string; categorieId: number; price: string; description?: string | null }) =>
-      apiPost<ApiArticle>("articles/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
+  return useMutationWithDefaults({
+    mutationFn: (data: {
+      name: string
+      categorieId: number
+      price: string
+      description?: string | null
+      ingredientsUpdate?: { ingredientId: number; requiredQuantity: string }[]
+    }) => apiPost<ApiArticle>("articles/", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all() }),
   })
 }
 
@@ -127,16 +141,25 @@ export function useCreateArticle() {
  */
 export function useUpdateArticle() {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{
-      name: string
-      categorieId: number
-      price: string
-      description: string | null
-      available: boolean
-      ingredientsUpdate: { ingredientId: number; requiredQuantity: string }[]
-    }> }) => apiPatch<ApiArticle>(`articles/${id}/`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
+  return useMutationWithDefaults({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Partial<{
+        name: string
+        categorieId: number
+        price: string
+        description: string | null
+        available: boolean
+        ingredientsUpdate: { ingredientId: number; requiredQuantity: string }[]
+      }>
+    }) => apiPatch<ApiArticle>(`articles/${id}/`, data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: keys.detail(variables.id) })
+      qc.invalidateQueries({ queryKey: keys.list() })
+    },
   })
 }
 
@@ -145,8 +168,8 @@ export function useUpdateArticle() {
  */
 export function useDeleteArticle() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (id: number) => apiDelete(`articles/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all() }),
   })
 }

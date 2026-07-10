@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiGet, apiPost, getAccessToken } from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
@@ -42,6 +43,7 @@ export function useInvoices(restaurantId: number | null) {
     },
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   return {
@@ -55,7 +57,7 @@ export function useInvoices(restaurantId: number | null) {
  */
 export function useCreateInvoice() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       commandeId: number
       restaurantId: number
@@ -68,6 +70,7 @@ export function useCreateInvoice() {
         tvaRate: number
       }[]
     }) => apiPost<ApiInvoice>("factures/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: keys.invoices(variables.restaurantId) }),
   })
 }

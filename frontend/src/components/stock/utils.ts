@@ -1,4 +1,11 @@
-import type { Product, ProductStatus, ProductPortionSummary, PortionEquivalent, Supplier, UrgencyCategory } from "./types"
+import type {
+  Product,
+  ProductStatus,
+  ProductPortionSummary,
+  PortionEquivalent,
+  Supplier,
+  UrgencyCategory,
+} from "./types"
 import type { StorageZoneConfig, CategoryConfig } from "./types"
 
 export function getProductStatus(product: Product): ProductStatus {
@@ -17,7 +24,10 @@ export function getProductValue(product: Product): number {
   return product.quantity * product.unitPrice
 }
 
-export function getSupplierName(supplierId: string, suppliers: Supplier[]): string {
+export function getSupplierName(
+  supplierId: string,
+  suppliers: Supplier[]
+): string {
   const supplier = suppliers.find((s) => s.id === supplierId)
   return supplier ? supplier.name : "—"
 }
@@ -31,7 +41,10 @@ export function formatCurrency(value: number): string {
   return currencyFormatter.format(value)
 }
 
-export function getCategoryLabel(id: string, categories: CategoryConfig[]): string {
+export function getCategoryLabel(
+  id: string,
+  categories: CategoryConfig[]
+): string {
   return categories.find((c) => c.id === id)?.label ?? id
 }
 
@@ -55,7 +68,8 @@ export function formatPortionEquivalents(
 
 // ── Nouvelles fonctions pour la refonte ──
 
-export function getDaysUntilExpiration(product: Product): number {
+export function getDaysUntilExpiration(product: Product): number | null {
+  if (!product.expirationDate) return null
   const exp = new Date(product.expirationDate)
   const now = new Date()
   return Math.ceil((exp.getTime() - now.getTime()) / 86400000)
@@ -66,7 +80,7 @@ export function getUrgencyCategory(product: Product): UrgencyCategory {
   if (status === "rupture" || status === "stock_faible") return "a_commander"
 
   const daysUntilExp = getDaysUntilExpiration(product)
-  if (daysUntilExp <= 3) return "a_surveiller"
+  if (daysUntilExp != null && daysUntilExp <= 3) return "a_surveiller"
 
   if (product.quantity < product.minStock * 1.5) return "a_surveiller"
 
@@ -77,14 +91,16 @@ export function getZoneHealth(
   products: Product[]
 ): "ok" | "warning" | "danger" {
   if (products.some((p) => getProductStatus(p) === "rupture")) return "danger"
-  if (products.some((p) => getProductStatus(p) === "stock_faible")) return "warning"
+  if (products.some((p) => getProductStatus(p) === "stock_faible"))
+    return "warning"
   return "ok"
 }
 
 export function getZoneFillPercent(products: Product[]): number {
   if (products.length === 0) return 0
   const total = products.reduce(
-    (sum, p) => sum + (p.maxStock > 0 ? Math.min(p.quantity / p.maxStock, 1) : 1),
+    (sum, p) =>
+      sum + (p.maxStock > 0 ? Math.min(p.quantity / p.maxStock, 1) : 1),
     0
   )
   return Math.round((total / products.length) * 100)

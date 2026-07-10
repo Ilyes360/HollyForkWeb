@@ -47,3 +47,5 @@ export interface ServiceConfig {
 export interface StaffingRequirement {
   [key: string]: { midi: number; soir: number }
 }
+
+export type PlanningViewMode = "grille" | "gantt"

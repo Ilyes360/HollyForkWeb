@@ -12,7 +12,7 @@ export const planningHandlers = [
     if (!restaurantId) {
       return HttpResponse.json(
         { detail: "restaurant_id requis" },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -29,14 +29,28 @@ export const planningHandlers = [
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json(
       { ...mockShifts[0], ...body, id: 100 },
-      { status: 201 },
+      { status: 201 }
     )
   }),
 
   // Update shift
   http.put(`${API}/planning/shifts/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
-    return HttpResponse.json({ ...mockShifts[0], id: Number(params.id), ...body })
+    return HttpResponse.json({
+      ...mockShifts[0],
+      id: Number(params.id),
+      ...body,
+    })
+  }),
+
+  // Partial update shift
+  http.patch(`${API}/planning/shifts/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({
+      ...mockShifts[0],
+      id: Number(params.id),
+      ...body,
+    })
   }),
 
   // Delete shift

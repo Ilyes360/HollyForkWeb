@@ -1,5 +1,10 @@
 import { useMemo } from "react"
-import type { Reservation, RestaurantTable, ServiceType, PipelineStageDefinition } from "../types"
+import type {
+  Reservation,
+  RestaurantTable,
+  ServiceType,
+  PipelineStageDefinition,
+} from "../types"
 import type { GanttBlock, GanttLayout, DepartureWindow } from "./gantt-types"
 import type { GanttDensity } from "./gantt-constants"
 import {
@@ -81,26 +86,41 @@ export function useGanttLayout(
       if (r.status === "annulee" || r.status === "no_show") {
         endMinute = startMinute + 15
         isEstimated = false
-      } else if (r.status === "arrivee" && r.pipeline && pipelineStages.length > 0) {
-        const currentIdx = pipelineStages.findIndex((s) => s.id === r.pipeline!.currentStageId)
+      } else if (
+        r.status === "arrivee" &&
+        r.pipeline &&
+        pipelineStages.length > 0
+      ) {
+        const currentIdx = pipelineStages.findIndex(
+          (s) => s.id === r.pipeline!.currentStageId
+        )
         if (currentIdx >= 0 && currentIdx < pipelineStages.length - 1) {
-          const lastStageAvg = pipelineStages[pipelineStages.length - 1].avgDurationMinutes
+          const lastStageAvg =
+            pipelineStages[pipelineStages.length - 1].avgDurationMinutes
           endMinute = startMinute + lastStageAvg + 10
         } else if (currentIdx === pipelineStages.length - 1) {
-          endMinute = startMinute + (r.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service])
+          endMinute =
+            startMinute +
+            (r.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service])
         } else {
-          endMinute = startMinute + (r.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service])
+          endMinute =
+            startMinute +
+            (r.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service])
         }
         isEstimated = true
       } else {
-        endMinute = startMinute + (r.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service])
+        endMinute =
+          startMinute +
+          (r.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service])
         isEstimated = true
       }
 
       // Pipeline progress (0–1)
       let pipelineProgress = 0
       if (r.pipeline && pipelineStages.length > 0) {
-        const currentIdx = pipelineStages.findIndex((s) => s.id === r.pipeline!.currentStageId)
+        const currentIdx = pipelineStages.findIndex(
+          (s) => s.id === r.pipeline!.currentStageId
+        )
         if (currentIdx >= 0) {
           pipelineProgress = (currentIdx + 1) / pipelineStages.length
         }
@@ -108,9 +128,20 @@ export function useGanttLayout(
 
       // Departure window
       const isTerminal = r.status === "annulee" || r.status === "no_show"
-      const departureWindow = computeDepartureWindow(endMinute, pipelineProgress, isTerminal)
+      const departureWindow = computeDepartureWindow(
+        endMinute,
+        pipelineProgress,
+        isTerminal
+      )
 
-      return { reservation: r, startMinute, endMinute, isEstimated, pipelineProgress, departureWindow }
+      return {
+        reservation: r,
+        startMinute,
+        endMinute,
+        isEstimated,
+        pipelineProgress,
+        departureWindow,
+      }
     })
 
     // Time range: expand if reservations fall outside default range
@@ -124,7 +155,8 @@ export function useGanttLayout(
     // Build blocks
     const blocks: GanttBlock[] = resaData.map((rd) => {
       const x = (rd.startMinute - startMinute) * PIXELS_PER_MINUTE * zoom
-      const rawWidth = (rd.endMinute - rd.startMinute) * PIXELS_PER_MINUTE * zoom
+      const rawWidth =
+        (rd.endMinute - rd.startMinute) * PIXELS_PER_MINUTE * zoom
       const width = Math.max(rawWidth, config.minBlockWidth)
 
       return {
@@ -153,7 +185,7 @@ export function useGanttLayout(
 
     if (hasUnassigned) {
       rows.push({
-        table: { number: -1, label: "?", seats: 0 },
+        table: { id: -1, number: -1, label: "?", seats: 0 },
         y: rows.length * config.rowHeight,
         blocks: blocks.filter((b) => b.tableNumber === -1),
       })

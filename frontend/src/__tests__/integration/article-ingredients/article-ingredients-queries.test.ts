@@ -20,10 +20,9 @@ describe("Article-ingredients queries (API via MSW)", () => {
   })
 
   it("fetches article ingredients with camelized keys", async () => {
-    const { result } = renderHook(
-      () => useArticleIngredients(1),
-      { wrapper: createWrapper() },
-    )
+    const { result } = renderHook(() => useArticleIngredients(1), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -31,6 +30,6 @@ describe("Article-ingredients queries (API via MSW)", () => {
     const first = result.current.data[0] as Record<string, unknown>
     expect(first.articleId).toBe(1)
     expect(first.ingredientId).toBe(1)
-    expect(first.quantite).toBe(0.5)
+    expect(first.requiredQuantity).toBe("0.5")
   })
 })

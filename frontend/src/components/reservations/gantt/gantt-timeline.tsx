@@ -4,7 +4,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Sun02Icon, Moon02Icon, Add01Icon } from "@hugeicons/core-free-icons"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { RESTAURANT_TABLES } from "../data"
 import { getTemplateById } from "../pipeline-templates"
 import { useCurrentTime } from "@/hooks/use-current-time"
 import { useGanttLayout } from "./use-gantt-layout"
@@ -56,12 +55,17 @@ export function GanttTimeline({
   onReschedule,
   onDurationChange,
   selectedReservationId,
+  tables,
 }: GanttTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const pipelineStages = getTemplateById("brasserie")?.stages ?? []
   const now = useCurrentTime(60_000)
 
-  const { density: baseDensity, override, setOverride } = useGanttDensity(containerRef, RESTAURANT_TABLES.length)
+  const {
+    density: baseDensity,
+    override,
+    setOverride,
+  } = useGanttDensity(containerRef, tables.length)
 
   // Force compact density on medium screens (1024-1279px)
   const [isMediumScreen, setIsMediumScreen] = useState(false)
@@ -71,30 +75,41 @@ export function GanttTimeline({
       setIsMediumScreen(e.matches)
     }
     handleChange(mql)
-    mql.addEventListener("change", handleChange as (e: MediaQueryListEvent) => void)
-    return () => mql.removeEventListener("change", handleChange as (e: MediaQueryListEvent) => void)
+    mql.addEventListener(
+      "change",
+      handleChange as (e: MediaQueryListEvent) => void
+    )
+    return () =>
+      mql.removeEventListener(
+        "change",
+        handleChange as (e: MediaQueryListEvent) => void
+      )
   }, [])
 
-  const density = isMediumScreen && baseDensity === "normal" ? "compact" : baseDensity
+  const density =
+    isMediumScreen && baseDensity === "normal" ? "compact" : baseDensity
   const densityConfig = GANTT_DENSITY_CONFIG[density]
 
   const layout = useGanttLayout(
     reservations,
-    RESTAURANT_TABLES,
+    tables,
     pipelineStages,
     service,
     density,
     1
   )
 
-  const { zoom, setZoom: _setZoom, scrollContainerRef, handleWheel, scrollToNow } = useGanttZoom(
-    layout.timeRange,
-    now
-  )
+  const {
+    zoom,
+    setZoom: _setZoom,
+    scrollContainerRef,
+    handleWheel,
+    scrollToNow,
+  } = useGanttZoom(layout.timeRange, now)
 
   const zoomedLayout = useGanttLayout(
     reservations,
-    RESTAURANT_TABLES,
+    tables,
     pipelineStages,
     service,
     density,
@@ -122,7 +137,9 @@ export function GanttTimeline({
   const resizeStartXRef = useRef(0)
 
   // --- Confirmation dialog ---
-  const [confirmDialog, setConfirmDialog] = useState<ConfirmationState | null>(null)
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmationState | null>(
+    null
+  )
 
   // --- Drag handlers ---
   const handleDragStart = useCallback(
@@ -219,11 +236,15 @@ export function GanttTimeline({
 
         const [h, m] = reservation.time.split(":").map(Number)
         const originalMinutes = h * 60 + m
-        const originalDuration = reservation.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service]
+        const originalDuration =
+          reservation.estimatedDurationMinutes ?? DEFAULT_MEAL_DURATION[service]
 
         if (side === "left") {
           // Moving the start time
-          const newStartMinutes = Math.max(0, Math.min(1439, originalMinutes + roundedMinutes))
+          const newStartMinutes = Math.max(
+            0,
+            Math.min(1439, originalMinutes + roundedMinutes)
+          )
           const newTime = minutesToTime(newStartMinutes)
 
           setResizeOffsetX(roundedMinutes * PIXELS_PER_MINUTE * zoom)
@@ -300,43 +321,74 @@ export function GanttTimeline({
     min <= zoomedLayout.timeRange.endMinute;
     min += TIME_SLOT_MINUTES
   ) {
-    const x = (min - zoomedLayout.timeRange.startMinute) * PIXELS_PER_MINUTE * zoom
+    const x =
+      (min - zoomedLayout.timeRange.startMinute) * PIXELS_PER_MINUTE * zoom
     gridLines.push({ x, isHour: min % 60 === 0 })
   }
 
   const isEmpty = reservations.length === 0
 
   return (
-    <div ref={containerRef} className="flex h-full flex-col overflow-hidden rounded-lg border bg-background">
+    <div
+      ref={containerRef}
+      className="flex h-full flex-col overflow-hidden rounded-lg border bg-background"
+    >
       {/* Top bar: service tabs */}
       <div className="flex items-center justify-between border-b px-4 py-2">
-        <Tabs value={service} onValueChange={(v) => onServiceChange(v as ServiceType)}>
+        <Tabs
+          value={service}
+          onValueChange={(v) => onServiceChange(v as ServiceType)}
+        >
           <TabsList>
             <TabsTrigger value="midi" className="gap-1.5">
-              <HugeiconsIcon icon={Sun02Icon} className="size-4" strokeWidth={1.5} />
+              <HugeiconsIcon
+                icon={Sun02Icon}
+                className="size-4"
+                strokeWidth={1.5}
+              />
               Midi
             </TabsTrigger>
             <TabsTrigger value="soir" className="gap-1.5">
-              <HugeiconsIcon icon={Moon02Icon} className="size-4" strokeWidth={1.5} />
+              <HugeiconsIcon
+                icon={Moon02Icon}
+                className="size-4"
+                strokeWidth={1.5}
+              />
               Soir
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button variant="ghost" size="sm" onClick={scrollToNow} className="text-xs">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={scrollToNow}
+          className="text-xs"
+        >
           Maintenant
         </Button>
       </div>
 
       {isEmpty ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-12">
-          <p className="text-sm text-muted-foreground">Aucune réservation pour ce service</p>
+          <p className="text-sm text-muted-foreground">
+            Aucune réservation pour ce service
+          </p>
           <Button
             variant="outline"
             size="sm"
             className="gap-1.5"
-            onClick={() => onNewReservation({ tableNumber: 1, time: service === "midi" ? "12:00" : "19:00" })}
+            onClick={() =>
+              onNewReservation({
+                tableNumber: 1,
+                time: service === "midi" ? "12:00" : "19:00",
+              })
+            }
           >
-            <HugeiconsIcon icon={Add01Icon} className="size-4" strokeWidth={1.5} />
+            <HugeiconsIcon
+              icon={Add01Icon}
+              className="size-4"
+              strokeWidth={1.5}
+            />
             Nouvelle réservation
           </Button>
         </div>
@@ -356,11 +408,19 @@ export function GanttTimeline({
             />
 
             {/* Body: label column + grid */}
-            <div role="grid" aria-label="Gantt des réservations" className="relative" style={{ width: zoomedLayout.totalWidth + TABLE_LABEL_WIDTH }}>
+            <div
+              role="grid"
+              aria-label="Gantt des réservations"
+              className="relative"
+              style={{ width: zoomedLayout.totalWidth + TABLE_LABEL_WIDTH }}
+            >
               {/* Grid lines */}
               <div
                 className="pointer-events-none absolute top-0"
-                style={{ left: TABLE_LABEL_WIDTH, height: zoomedLayout.totalHeight }}
+                style={{
+                  left: TABLE_LABEL_WIDTH,
+                  height: zoomedLayout.totalHeight,
+                }}
               >
                 {gridLines.map((line, i) => (
                   <div
@@ -375,7 +435,10 @@ export function GanttTimeline({
               </div>
 
               {/* NOW cursor */}
-              <div className="absolute top-0" style={{ left: TABLE_LABEL_WIDTH }}>
+              <div
+                className="absolute top-0"
+                style={{ left: TABLE_LABEL_WIDTH }}
+              >
                 <GanttNowCursor
                   startMinute={zoomedLayout.timeRange.startMinute}
                   endMinute={zoomedLayout.timeRange.endMinute}
@@ -391,14 +454,21 @@ export function GanttTimeline({
                   <div
                     className={cn(
                       "sticky left-0 z-10 flex shrink-0 items-center justify-center border-r bg-background text-xs font-medium",
-                      row.table.number === -1 && "bg-amber-50 dark:bg-amber-950/20"
+                      row.table.number === -1 &&
+                        "bg-amber-50 dark:bg-amber-950/20"
                     )}
-                    style={{ width: TABLE_LABEL_WIDTH, height: densityConfig.rowHeight }}
+                    style={{
+                      width: TABLE_LABEL_WIDTH,
+                      height: densityConfig.rowHeight,
+                    }}
                   >
                     {row.table.label}
                   </div>
                   {/* Row content */}
-                  <div className="relative flex-1" style={{ width: zoomedLayout.totalWidth }}>
+                  <div
+                    className="relative flex-1"
+                    style={{ width: zoomedLayout.totalWidth }}
+                  >
                     <GanttRow
                       blocks={row.blocks}
                       rowIndex={rowIndex}
@@ -427,7 +497,9 @@ export function GanttTimeline({
           {/* Bottom control bar */}
           <div className="flex items-center justify-between border-t px-4 py-1.5">
             <div className="flex items-center gap-1">
-              <span className="mr-1 text-xs text-muted-foreground">Densité</span>
+              <span className="mr-1 text-xs text-muted-foreground">
+                Densité
+              </span>
               {DENSITY_OPTIONS.map((opt) => (
                 <Button
                   key={opt.value}
@@ -443,7 +515,8 @@ export function GanttTimeline({
               ))}
             </div>
             <span className="text-[10px] text-muted-foreground">
-              Glisser = déplacer · Bords = durée · Ctrl+Scroll = zoom ({Math.round(zoom * 100)}%)
+              Glisser = déplacer · Bords = durée · Ctrl+Scroll = zoom (
+              {Math.round(zoom * 100)}%)
             </span>
           </div>
         </>

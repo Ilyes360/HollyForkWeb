@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
 import { apiGet, apiPost, getAccessToken } from "@/api/client"
 import type { PaginatedResponse } from "@/api/types"
 
@@ -29,12 +30,13 @@ export function useReapprovisionnements(restaurantId: number | null) {
         "reapprovisionnements/",
         {
           restaurantId: restaurantId!,
-        },
+        }
       )
       return res.results
     },
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   return {
@@ -48,7 +50,7 @@ export function useReapprovisionnements(restaurantId: number | null) {
  */
 export function useCreateReapprovisionnement() {
   const qc = useQueryClient()
-  return useMutation({
+  return useMutationWithDefaults({
     mutationFn: (data: {
       stockId: number
       quantite: number
@@ -56,6 +58,9 @@ export function useCreateReapprovisionnement() {
       fournisseurId: number
       restaurantId: number
     }) => apiPost<ApiReapprovisionnement>("reapprovisionnements/", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["reapprovisionnements"] }),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({
+        queryKey: keys.reapprovisionnements(variables.restaurantId),
+      }),
   })
 }

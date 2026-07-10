@@ -18,7 +18,8 @@ export const commandeHandlers = [
   http.get(`${API}/suppliers/orders/:id/`, ({ params }) => {
     const id = Number(params.id)
     const commande = mockCommandes.find((c) => c.id === id)
-    if (!commande) return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    if (!commande)
+      return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
     return HttpResponse.json(commande)
   }),
 
@@ -52,7 +53,8 @@ export const commandeHandlers = [
   http.get(`${API}/commandes/:id/`, ({ params }) => {
     const id = Number(params.id)
     const commande = mockCommandes.find((c) => c.id === id)
-    if (!commande) return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    if (!commande)
+      return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
     return HttpResponse.json(commande)
   }),
 
@@ -84,7 +86,8 @@ export const commandeHandlers = [
   http.get(`${API}/suppliers/:id/`, ({ params }) => {
     const id = Number(params.id)
     const supplier = mockSuppliers.find((s) => s.id === id)
-    if (!supplier) return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    if (!supplier)
+      return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
     return HttpResponse.json(supplier)
   }),
 
@@ -94,8 +97,12 @@ export const commandeHandlers = [
     return HttpResponse.json({ id: 100, ...body }, { status: 201 })
   }),
 
-  // Update supplier
+  // Update supplier (full + partial)
   http.put(`${API}/suppliers/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ id: Number(params.id), ...body })
+  }),
+  http.patch(`${API}/suppliers/:id/`, async ({ request, params }) => {
     const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ id: Number(params.id), ...body })
   }),

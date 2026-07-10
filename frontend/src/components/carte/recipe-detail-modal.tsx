@@ -18,8 +18,11 @@ import { getProductStatus, formatCurrency } from "@/components/stock/utils"
 import type { Recipe } from "@/components/carte/types"
 import type { RecipePortionInfo } from "@/components/carte/types"
 import { CATEGORY_LABELS } from "@/components/carte/types"
-import { getFoodCostColor, getGrossMargin, getPortionGaugeColor } from "@/components/carte/utils"
-import { getProductIcon } from "@/components/stock/product-icons"
+import {
+  getFoodCostColor,
+  getGrossMargin,
+  getPortionGaugeColor,
+} from "@/components/carte/utils"
 import { PortionGauge } from "@/components/shared/portion-gauge"
 import type { SupplierFull } from "@/components/commandes/types"
 import { cn } from "@/lib/utils"
@@ -73,7 +76,6 @@ export function RecipeDetailModal({
 
   if (!recipe || !portionInfo) return null
 
-  const iconEntry = getProductIcon(recipe.icon)
   const portionColor = getPortionGaugeColor(portionInfo.maxPortions)
   const isZero = portionInfo.maxPortions === 0
 
@@ -85,10 +87,14 @@ export function RecipeDetailModal({
 
   // Price simulator
   const activePrice = simulatedPrice ?? recipe.sellingPrice
-  const activeFoodCost = activePrice > 0
-    ? (portionInfo.materialCostPerPortion / activePrice) * 100
-    : 0
-  const activeMargin = getGrossMargin(activePrice, portionInfo.materialCostPerPortion)
+  const activeFoodCost =
+    activePrice > 0
+      ? (portionInfo.materialCostPerPortion / activePrice) * 100
+      : 0
+  const activeMargin = getGrossMargin(
+    activePrice,
+    portionInfo.materialCostPerPortion
+  )
 
   // Cost breakdown
   const ingredientCosts = recipe.ingredients
@@ -101,24 +107,18 @@ export function RecipeDetailModal({
       }
     })
     .sort((a, b) => b.cost - a.cost)
-  const totalIngredientCost = ingredientCosts.reduce((sum, ic) => sum + ic.cost, 0)
-
-  const title = (
-    <span className="flex items-center gap-2">
-      {iconEntry && (
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-          <HugeiconsIcon icon={iconEntry.icon} className="size-4 text-muted-foreground" strokeWidth={2} />
-        </span>
-      )}
-      {recipe.name}
-    </span>
+  const totalIngredientCost = ingredientCosts.reduce(
+    (sum, ic) => sum + ic.cost,
+    0
   )
+
+  const title = <span className="flex items-center gap-2">{recipe.name}</span>
 
   const leftColumn = (
     <>
       {/* PORTIONS section */}
-      <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-3 rounded-xl bg-muted/50 p-4">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Portions
         </h4>
         <div className="text-center">
@@ -162,30 +162,46 @@ export function RecipeDetailModal({
       </div>
 
       {/* ÉCONOMIE section */}
-      <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-3 rounded-xl bg-muted/50 p-4">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Économie
         </h4>
         <div className="grid grid-cols-2 gap-4">
-          <InfoField label="Prix de vente" value={formatCurrency(recipe.sellingPrice)} />
-          <InfoField label="Coût matière" value={formatCurrency(portionInfo.materialCostPerPortion)} />
+          <InfoField
+            label="Prix de vente"
+            value={formatCurrency(recipe.sellingPrice)}
+          />
+          <InfoField
+            label="Coût matière"
+            value={formatCurrency(portionInfo.materialCostPerPortion)}
+          />
           <InfoField
             label="Food Cost"
             value={`${portionInfo.foodCostPercent.toFixed(1)}%`}
             className={getFoodCostColor(portionInfo.foodCostPercent)}
           />
-          <InfoField label="Marge brute" value={formatCurrency(getGrossMargin(recipe.sellingPrice, portionInfo.materialCostPerPortion))} />
+          <InfoField
+            label="Marge brute"
+            value={formatCurrency(
+              getGrossMargin(
+                recipe.sellingPrice,
+                portionInfo.materialCostPerPortion
+              )
+            )}
+          />
         </div>
       </div>
 
       {/* SIMULATEUR section */}
-      <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-3 rounded-xl bg-muted/50 p-4">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Simulateur de prix
         </h4>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Prix de vente simulé</span>
+            <span className="text-xs text-muted-foreground">
+              Prix de vente simulé
+            </span>
             <span className="text-sm font-semibold tabular-nums">
               {formatCurrency(activePrice)}
             </span>
@@ -202,16 +218,23 @@ export function RecipeDetailModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-xs text-muted-foreground">Food Cost</span>
-              <p className={cn("text-sm font-semibold", getFoodCostColor(activeFoodCost))}>
+              <p
+                className={cn(
+                  "text-sm font-semibold",
+                  getFoodCostColor(activeFoodCost)
+                )}
+              >
                 {activeFoodCost.toFixed(1)}%
               </p>
             </div>
             <div>
               <span className="text-xs text-muted-foreground">Marge</span>
-              <p className={cn(
-                "text-sm font-semibold",
-                activeMargin < 0 ? "text-destructive" : ""
-              )}>
+              <p
+                className={cn(
+                  "text-sm font-semibold",
+                  activeMargin < 0 ? "text-destructive" : ""
+                )}
+              >
                 {formatCurrency(activeMargin)}
               </p>
             </div>
@@ -230,8 +253,8 @@ export function RecipeDetailModal({
 
       {/* Allergens */}
       {recipe.allergens.length > 0 && (
-        <div className="rounded-xl bg-muted/50 p-4 space-y-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-2 rounded-xl bg-muted/50 p-4">
+          <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Allergènes
           </h4>
           <div className="flex flex-wrap gap-1.5">
@@ -250,7 +273,7 @@ export function RecipeDetailModal({
     <>
       {/* INGRÉDIENTS section */}
       <div className="space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Ingrédients ({recipe.ingredients.length})
         </h4>
         <div className="space-y-1 rounded-lg border">
@@ -258,7 +281,10 @@ export function RecipeDetailModal({
             const product = products.find((p) => p.id === ing.productId)
             if (!product) {
               return (
-                <div key={ing.productId} className="px-3 py-2 text-xs text-muted-foreground">
+                <div
+                  key={ing.productId}
+                  className="px-3 py-2 text-xs text-muted-foreground"
+                >
                   Produit inconnu ({ing.productId})
                 </div>
               )
@@ -273,11 +299,12 @@ export function RecipeDetailModal({
             const isLimiting = ingredientInfo?.isLimiting ?? false
             const supplier = supplierMap.get(product.supplierId)
 
-            const bgClass = portionsAllowed === 0
-              ? "bg-destructive/5"
-              : portionsAllowed < 5
-                ? "bg-amber-50"
-                : ""
+            const bgClass =
+              portionsAllowed === 0
+                ? "bg-destructive/5"
+                : portionsAllowed < 5
+                  ? "bg-amber-50"
+                  : ""
 
             return (
               <div key={ing.productId} className={cn("px-3 py-2", bgClass)}>
@@ -291,12 +318,19 @@ export function RecipeDetailModal({
                   <span className="w-14 shrink-0 text-right text-xs text-muted-foreground">
                     {formatCurrency(lineCost)}
                   </span>
-                  <Badge variant={STATUS_CONFIG[status].variant} className="shrink-0 text-[10px]">
+                  <Badge
+                    variant={STATUS_CONFIG[status].variant}
+                    className="shrink-0 text-[10px]"
+                  >
                     {STATUS_CONFIG[status].label}
                   </Badge>
                 </div>
                 <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <HugeiconsIcon icon={TruckDeliveryIcon} className="size-3 shrink-0" strokeWidth={2} />
+                  <HugeiconsIcon
+                    icon={TruckDeliveryIcon}
+                    className="size-3 shrink-0"
+                    strokeWidth={2}
+                  />
                   <span className="truncate">
                     {supplier?.name ?? "Fournisseur inconnu"}
                   </span>
@@ -305,11 +339,12 @@ export function RecipeDetailModal({
                       · {supplier.averageDeliveryDays}j
                     </span>
                   )}
-                  <span className="shrink-0">
-                    · {portionsAllowed} portions
-                  </span>
+                  <span className="shrink-0">· {portionsAllowed} portions</span>
                   {isLimiting && (
-                    <Badge variant="warning" className="ml-auto shrink-0 text-[10px]">
+                    <Badge
+                      variant="warning"
+                      className="ml-auto shrink-0 text-[10px]"
+                    >
                       Limitant
                     </Badge>
                   )}
@@ -325,14 +360,15 @@ export function RecipeDetailModal({
         <>
           <Separator />
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               Répartition des coûts
             </h4>
             <div className="space-y-2">
               {ingredientCosts.map((ic) => {
-                const pct = totalIngredientCost > 0
-                  ? (ic.cost / totalIngredientCost) * 100
-                  : 0
+                const pct =
+                  totalIngredientCost > 0
+                    ? (ic.cost / totalIngredientCost) * 100
+                    : 0
                 return (
                   <div key={ic.productId} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
@@ -341,7 +377,7 @@ export function RecipeDetailModal({
                         {formatCurrency(ic.cost)} ({pct.toFixed(0)}%)
                       </span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full bg-primary/60 transition-all"
                         style={{ width: `${pct}%` }}
@@ -405,12 +441,15 @@ export function RecipeDetailModal({
           <DialogHeader>
             <DialogTitle>Supprimer la recette</DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer « {recipe.name} » ? Cette action est
-              irréversible.
+              Êtes-vous sûr de vouloir supprimer « {recipe.name} » ? Cette
+              action est irréversible.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
               Annuler
             </Button>
             <Button

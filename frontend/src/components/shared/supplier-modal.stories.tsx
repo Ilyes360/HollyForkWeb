@@ -21,7 +21,6 @@ const mockProducts: Product[] = [
   {
     id: "p1",
     name: "Tomates cerises",
-    icon: "tomato",
     supplierId: "s1",
     category: "legumes",
     quantity: 3,
@@ -29,17 +28,12 @@ const mockProducts: Product[] = [
     minStock: 5,
     maxStock: 20,
     unitPrice: 4.5,
-    rotation: 12,
-    lastOrderDate: "2025-01-10",
-    expirationDate: "2025-01-20",
     storageZone: "chambre_froide_a",
     notes: "",
-    orderHistory: [],
   },
   {
     id: "p2",
     name: "Courgettes",
-    icon: "vegetable",
     supplierId: "s1",
     category: "legumes",
     quantity: 10,
@@ -47,12 +41,8 @@ const mockProducts: Product[] = [
     minStock: 3,
     maxStock: 15,
     unitPrice: 2.8,
-    rotation: 8,
-    lastOrderDate: "2025-01-08",
-    expirationDate: "2025-01-25",
     storageZone: "chambre_froide_a",
     notes: "",
-    orderHistory: [],
   },
 ]
 

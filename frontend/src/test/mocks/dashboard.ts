@@ -4,7 +4,7 @@
 
 export const mockDashboardKpis = {
   restaurant_id: 1,
-  restaurant_name: "Holly Fork — Marais",
+  restaurant_name: "Holy Fork — Marais",
   date: "2026-05-05",
   kpis: {
     daily_revenue: 4250.5,
@@ -20,7 +20,7 @@ export const mockDashboardMap = {
   restaurants: [
     {
       restaurant_id: 1,
-      name: "Holly Fork — Marais",
+      name: "Holy Fork — Marais",
       type: "restaurant",
       lat: 48.8566,
       lng: 2.3522,
@@ -28,7 +28,7 @@ export const mockDashboardMap = {
     },
     {
       restaurant_id: 2,
-      name: "Holly Fork — Opéra",
+      name: "Holy Fork — Opéra",
       type: "restaurant",
       lat: 48.8711,
       lng: 2.3316,
