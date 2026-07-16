@@ -9,16 +9,18 @@ import { UnsavedDialog } from "./unsaved-dialog"
 import { DesktopGate } from "./desktop-gate"
 import { usePlanningEdition } from "./planning-context"
 import { useWeekNavigation } from "@/hooks/use-week-navigation"
-import type { PlanningViewMode } from "./types"
+import type { PlanningViewMode, PlanningConfig } from "./types"
 
 interface EditionOverlayProps {
   initialShifts: import("./types").Shift[]
   viewMode?: PlanningViewMode
+  config: PlanningConfig
 }
 
 export function EditionOverlay({
   initialShifts,
   viewMode: initialViewMode = "grille",
+  config,
 }: EditionOverlayProps) {
   const { state, dispatch, employees, onCloseRef } = usePlanningEdition()
 
@@ -192,6 +194,7 @@ export function EditionOverlay({
                   employees={employees}
                   weekStart={weekStart}
                   direction={direction}
+                  config={config}
                   onPrev={() => handleWeekChange(prev)}
                   onNext={() => handleWeekChange(next)}
                   onToday={() => handleWeekChange(today)}

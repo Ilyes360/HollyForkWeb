@@ -16,15 +16,22 @@ export default function SettingsLayout() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="font-display text-lg font-semibold tracking-tight">Paramètres</h1>
-        <p className="text-sm text-muted-foreground">Gérez votre compte, notifications et facturation.</p>
+        <h1 className="font-display text-lg font-semibold tracking-tight">
+          Paramètres
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Gérez votre compte, notifications et facturation.
+        </p>
       </div>
       <Tabs value={tabValue}>
         <TabsList>
           <TabsTrigger value="general" render={<Link to="/settings" />}>
             Mon compte
           </TabsTrigger>
-          <TabsTrigger value="notifications" render={<Link to="/settings/notifications" />}>
+          <TabsTrigger
+            value="notifications"
+            render={<Link to="/settings/notifications" />}
+          >
             Notifications
           </TabsTrigger>
           <TabsTrigger value="billing" render={<Link to="/settings/billing" />}>
@@ -32,9 +39,7 @@ export default function SettingsLayout() {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="mx-auto max-w-3xl">
-        <Outlet />
-      </div>
+      <Outlet />
     </div>
   )
 }

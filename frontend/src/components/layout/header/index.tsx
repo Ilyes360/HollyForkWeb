@@ -1,6 +1,5 @@
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { GettingStartedButton } from "@/components/layout/header/getting-started"
 import { Notifications } from "@/components/layout/header/notifications"
 
 import { Search } from "@/components/layout/header/search"
@@ -28,7 +27,6 @@ export function SiteHeader() {
         <Logo />
 
         <div className="ml-auto flex items-center gap-2">
-          <GettingStartedButton />
           <Notifications />
           <UserMenu />
         </div>

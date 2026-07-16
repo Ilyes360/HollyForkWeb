@@ -1,4 +1,4 @@
-import type { DayOfWeek, Shift, Employee } from "./types"
+import type { DayOfWeek, Shift, Employee, PlanningCostConfig } from "./types"
 import { DAYS } from "./constants"
 
 export function getInitials(firstName: string, lastName: string): string {
@@ -88,10 +88,6 @@ export function isPast(date: Date): boolean {
   return d.getTime() < now.getTime()
 }
 
-const DAILY_OVERTIME_THRESHOLD = 7
-const HOURLY_RATE = 12
-const OVERTIME_MULTIPLIER = 1.25
-
 export interface DayRecapData {
   totalHours: number
   uniqueEmployees: number
@@ -105,7 +101,8 @@ export function getDayRecap(
   midiShifts: Shift[],
   soirShifts: Shift[],
   requiredMidi: number,
-  requiredSoir: number
+  requiredSoir: number,
+  costConfig: PlanningCostConfig
 ): DayRecapData {
   const allShifts = [...midiShifts, ...soirShifts]
   const totalHours = allShifts.reduce(
@@ -124,14 +121,15 @@ export function getDayRecap(
       (sum, s) => sum + calculateHours(s.startTime, s.endTime),
       0
     )
-    if (empHours > DAILY_OVERTIME_THRESHOLD) {
-      overtimeHours += empHours - DAILY_OVERTIME_THRESHOLD
+    if (empHours > costConfig.dailyOvertimeThreshold) {
+      overtimeHours += empHours - costConfig.dailyOvertimeThreshold
     }
   }
 
   const normalHours = totalHours - overtimeHours
   const estimatedCost = Math.round(
-    normalHours * HOURLY_RATE + overtimeHours * HOURLY_RATE * OVERTIME_MULTIPLIER
+    normalHours * costConfig.hourlyRate +
+      overtimeHours * costConfig.hourlyRate * costConfig.overtimeMultiplier
   )
 
   const coverageCurrent = midiShifts.length + soirShifts.length

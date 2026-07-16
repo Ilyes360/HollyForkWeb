@@ -17,7 +17,8 @@ import CartePage from "@/pages/carte"
 import CuisineRecipePage from "@/pages/cuisine-recipe"
 import StocksPage from "@/pages/stocks"
 import StocksProductPage from "@/pages/stocks-product"
-import CommandesPage from "@/pages/commandes"
+import FournisseursPage from "@/pages/commandes"
+import CommandesClientsPage from "@/pages/commandes-clients"
 import AdminLayout from "@/pages/admin"
 import EtablissementsPage from "@/pages/admin/etablissements"
 import EtablissementDetailPage from "@/pages/admin/etablissement-detail"
@@ -92,14 +93,11 @@ export const router = createBrowserRouter([
           },
           { path: "stocks/nouveau", element: <StocksProductPage /> },
           { path: "stocks/:id/modifier", element: <StocksProductPage /> },
-          { path: "commandes", element: <CommandesPage /> },
+          { path: "fournisseurs", element: <FournisseursPage /> },
+          { path: "commandes-clients", element: <CommandesClientsPage /> },
           {
-            path: "fournisseurs",
-            element: <Navigate to="/commandes" replace />,
-          },
-          {
-            path: "fournisseurs/:id",
-            element: <Navigate to="/commandes" replace />,
+            path: "commandes",
+            element: <Navigate to="/fournisseurs" replace />,
           },
           {
             path: "admin",

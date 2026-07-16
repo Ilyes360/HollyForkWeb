@@ -90,7 +90,7 @@ function LayoutInner() {
           "--header-height": "calc(var(--spacing) * 14)",
           "--content-padding": isFullscreenEditing
             ? "0px"
-            : "calc(var(--spacing) * 4)",
+            : "calc(var(--spacing) * 8)",
           "--content-margin": "calc(var(--spacing) * 1.5)",
         } as React.CSSProperties
       }

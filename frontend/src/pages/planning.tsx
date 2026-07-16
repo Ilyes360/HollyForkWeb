@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/shared/empty-state"
 import {
   useShifts,
   useCreateShift,
@@ -19,11 +20,13 @@ import type {
   Shift,
   DayOfWeek,
   PlanningViewMode,
+  PlanningConfig,
 } from "@/components/planning/types"
 import { ConsultationView } from "@/components/planning/consultation-view"
 import { EditionOverlay } from "@/components/planning/edition-overlay"
 import { PlanningGantt } from "@/components/planning/gantt/planning-gantt"
 import { usePlanningEdition } from "@/components/planning/planning-context"
+import { DEFAULT_PLANNING_CONFIG } from "@/components/planning/data"
 import { useWeekNavigation } from "@/hooks/use-week-navigation"
 import { useGettingStartedStore } from "@/stores/getting-started-store"
 import { usePageTitle } from "@/hooks/use-page-title"
@@ -150,6 +153,9 @@ export default function PlanningPage() {
   const completeTask = useGettingStartedStore((s) => s.completeTask)
 
   const [viewMode, setViewMode] = useState<PlanningViewMode>("grille")
+
+  // TODO: replace with usePlanningConfig(restaurantId) when backend provides per-restaurant config
+  const config: PlanningConfig = DEFAULT_PLANNING_CONFIG
 
   // Responsive: auto-switch to grille below 1024px
   useEffect(() => {
@@ -279,7 +285,9 @@ export default function PlanningPage() {
   }, [shifts, employees, handleSave, startEditing, stopEditing])
 
   if (isEditing) {
-    return <EditionOverlay initialShifts={shifts} viewMode={viewMode} />
+    return (
+      <EditionOverlay initialShifts={shifts} viewMode="gantt" config={config} />
+    )
   }
 
   if (isLoading && shifts.length === 0) {
@@ -315,58 +323,69 @@ export default function PlanningPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="min-h-0 flex-1">
-        <AnimatePresence mode="wait">
-          {viewMode === "grille" ? (
-            <motion.div
-              key="grille"
-              className="h-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ConsultationView
-                shifts={shifts}
-                employees={employees}
-                weekStart={weekStart}
-                direction={direction}
-                onPrev={prev}
-                onNext={next}
-                onToday={today}
-                navRightSlot={
-                  <ViewModeToggle
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                  />
-                }
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="gantt"
-              className="h-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <PlanningGantt
-                shifts={shifts}
-                employees={employees}
-                weekStart={weekStart}
-                onPrev={prev}
-                onNext={next}
-                onToday={today}
-                navRightSlot={
-                  <ViewModeToggle
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                  />
-                }
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {shifts.length === 0 && !isLoading ? (
+          <EmptyState
+            title="Aucun créneau planifié"
+            description="Commencez par ajouter des créneaux pour organiser la semaine de votre équipe."
+            actionLabel="Modifier le planning"
+            onAction={handleOpenEditor}
+            icon={PencilEdit01Icon}
+          />
+        ) : (
+          <AnimatePresence mode="wait">
+            {viewMode === "grille" ? (
+              <motion.div
+                key="grille"
+                className="h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ConsultationView
+                  shifts={shifts}
+                  employees={employees}
+                  weekStart={weekStart}
+                  direction={direction}
+                  onPrev={prev}
+                  onNext={next}
+                  onToday={today}
+                  config={config}
+                  navRightSlot={
+                    <ViewModeToggle
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                    />
+                  }
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="gantt"
+                className="h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <PlanningGantt
+                  shifts={shifts}
+                  employees={employees}
+                  weekStart={weekStart}
+                  onPrev={prev}
+                  onNext={next}
+                  onToday={today}
+                  navRightSlot={
+                    <ViewModeToggle
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                    />
+                  }
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </motion.div>
     </motion.div>
   )

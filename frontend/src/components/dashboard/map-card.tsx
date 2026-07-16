@@ -16,9 +16,6 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Globe02Icon,
-  Add01Icon,
-  Remove01Icon,
-  Navigation03Icon,
   Cancel01Icon,
   TelephoneIcon,
   SeatSelectorIcon,
@@ -481,19 +478,6 @@ export default function MapCard() {
     }, 400)
     return () => clearTimeout(timer)
   }, [isExpanded])
-
-  const zoomIn = () => {
-    const map = fullscreenMapRef.current?.getMap()
-    if (map) map.zoomIn({ duration: 300 })
-  }
-  const zoomOut = () => {
-    const map = fullscreenMapRef.current?.getMap()
-    if (map) map.zoomOut({ duration: 300 })
-  }
-  const resetBearing = () => {
-    const map = fullscreenMapRef.current?.getMap()
-    if (map) map.resetNorthPitch({ duration: 500 })
-  }
 
   const connectionLineColor =
     resolvedTheme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"
@@ -963,6 +947,7 @@ export default function MapCard() {
                       [15, 55],
                     ]}
                     renderWorldCopies={false}
+                    interactive={false}
                     style={{ width: "100%", height: "100%" }}
                     onLoad={handleFullscreenMapLoad}
                   >
@@ -1034,45 +1019,6 @@ export default function MapCard() {
                     >
                       <HugeiconsIcon icon={Cancel01Icon} className="size-4" />
                       <span className="sr-only">Fermer</span>
-                    </Button>
-                  </motion.div>
-
-                  {/* Custom navigation controls */}
-                  <motion.div
-                    className="absolute top-3 right-3 z-30 flex flex-col gap-1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      className="bg-card/80 backdrop-blur-sm"
-                      onClick={zoomIn}
-                    >
-                      <HugeiconsIcon icon={Add01Icon} className="size-4" />
-                      <span className="sr-only">Zoom avant</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      className="bg-card/80 backdrop-blur-sm"
-                      onClick={zoomOut}
-                    >
-                      <HugeiconsIcon icon={Remove01Icon} className="size-4" />
-                      <span className="sr-only">Zoom arrière</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      className="bg-card/80 backdrop-blur-sm"
-                      onClick={resetBearing}
-                    >
-                      <HugeiconsIcon
-                        icon={Navigation03Icon}
-                        className="size-4"
-                      />
-                      <span className="sr-only">Réinitialiser orientation</span>
                     </Button>
                   </motion.div>
 

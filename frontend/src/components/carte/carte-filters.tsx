@@ -1,24 +1,20 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Search01Icon } from "@hugeicons/core-free-icons"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group"
-import { FEASIBILITY_FILTER_OPTIONS } from "@/components/carte/types"
 
 interface CarteFiltersProps {
   search: string
   feasibilityFilter: string
   onSearchChange: (value: string) => void
   onFeasibilityFilterChange: (value: string) => void
+  servableCount?: number
+  stockFaibleCount?: number
+  ruptureCount?: number
 }
 
 export function CarteFilters({
@@ -26,12 +22,19 @@ export function CarteFilters({
   feasibilityFilter,
   onSearchChange,
   onFeasibilityFilterChange,
+  servableCount,
+  stockFaibleCount,
+  ruptureCount,
 }: CarteFiltersProps) {
   return (
     <div className="flex items-center gap-3">
       <InputGroup className="w-64 bg-background">
         <InputGroupAddon>
-          <HugeiconsIcon icon={Search01Icon} className="size-4" strokeWidth={2} />
+          <HugeiconsIcon
+            icon={Search01Icon}
+            className="size-4"
+            strokeWidth={2}
+          />
         </InputGroupAddon>
         <InputGroupInput
           placeholder="Rechercher une recette..."
@@ -40,20 +43,29 @@ export function CarteFilters({
         />
       </InputGroup>
 
-      <Select value={feasibilityFilter} onValueChange={(v) => onFeasibilityFilterChange(v ?? "")}>
-        <SelectTrigger className="w-[170px]">
-          <SelectValue>
-            {FEASIBILITY_FILTER_OPTIONS.find((o) => o.value === feasibilityFilter)?.label}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {FEASIBILITY_FILTER_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Tabs value={feasibilityFilter} onValueChange={onFeasibilityFilterChange}>
+        <TabsList>
+          <TabsTrigger value="tous">Tous</TabsTrigger>
+          <TabsTrigger value="realisable">
+            Servables
+            {servableCount !== undefined && (
+              <span className="ml-1 text-emerald-600">{servableCount}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="stock_faible">
+            Stock bas
+            {(stockFaibleCount ?? 0) > 0 && (
+              <span className="ml-1 text-amber-600">{stockFaibleCount}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="non_realisable">
+            En rupture
+            {(ruptureCount ?? 0) > 0 && (
+              <span className="ml-1 text-destructive">{ruptureCount}</span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   )
 }

@@ -233,8 +233,7 @@ export function usePaymentMethods() {
 
   const query = useQuery({
     queryKey: keys.paymentMethods(),
-    queryFn: () =>
-      fetchAllPages<ApiMethodePaiement>("billing/methodes-paiement/", {}),
+    queryFn: () => fetchAllPages<ApiMethodePaiement>("methodes-paiement/", {}),
     enabled: hasToken,
     staleTime: 10 * 60 * 1000,
   })

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react"
-import type { Shift, Employee } from "./types"
+import type { Shift, Employee, PlanningConfig } from "./types"
 import type { SlideDirection } from "@/hooks/use-week-navigation"
 import { DAYS, DAY_LABELS_FULL, SERVICE_LABELS } from "./constants"
 import {
@@ -10,7 +10,6 @@ import {
   isPast,
   getDayRecap,
 } from "./utils"
-import { staffingRequirements } from "./data"
 import { WeekNavigator } from "./week-navigator"
 import { StaffingIndicator } from "./staffing-indicator"
 import { DroppableCell } from "./droppable-cell"
@@ -23,6 +22,7 @@ interface EditionGridProps {
   employees: Employee[]
   weekStart: Date
   direction: SlideDirection
+  config: PlanningConfig
   onPrev: () => void
   onNext: () => void
   onToday: () => void
@@ -48,6 +48,7 @@ export function EditionGrid({
   employees,
   weekStart,
   direction,
+  config,
   onPrev,
   onNext,
   onToday,
@@ -61,8 +62,14 @@ export function EditionGrid({
     const dayIsPast = isPast(date)
     const midiShifts = getShiftsForDayAndService(shifts, day, "midi")
     const soirShifts = getShiftsForDayAndService(shifts, day, "soir")
-    const req = staffingRequirements[day] ?? { midi: 0, soir: 0 }
-    const recap = getDayRecap(midiShifts, soirShifts, req.midi, req.soir)
+    const req = config.staffingRequirements[day] ?? { midi: 0, soir: 0 }
+    const recap = getDayRecap(
+      midiShifts,
+      soirShifts,
+      req.midi,
+      req.soir,
+      config.cost
+    )
     return {
       day,
       date,
@@ -210,7 +217,10 @@ export function EditionGrid({
                       Récap
                     </span>
                   </div>
-                  <DayRecap recap={recap} />
+                  <DayRecap
+                    recap={recap}
+                    dailyBudget={config.cost.dailyBudget}
+                  />
                 </div>
               ))}
             </div>

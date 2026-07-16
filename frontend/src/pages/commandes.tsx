@@ -1,30 +1,24 @@
 import { useState, useCallback, useMemo } from "react"
 import { motion } from "motion/react"
-import { toast } from "sonner"
-import { useArticles } from "@/hooks/use-articles"
-import { useStocks } from "@/hooks/use-stocks"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  useSuppliers,
-  useCreateSupplier,
-  useUpdateSupplier,
-  useDeleteSupplier,
-} from "@/hooks/use-suppliers"
-import { useOrders, useCreateOrder, useUpdateOrder } from "@/hooks/use-orders"
-import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
-import { usePortionCalculator } from "@/hooks/use-portion-calculator"
-import { usePageTitle } from "@/hooks/use-page-title"
-import { getTotalMonthlySpend } from "@/components/commandes/utils"
-import { getSupplierProducts } from "@/components/commandes/utils"
-import type { OrderItem, SupplierFull } from "@/components/commandes/types"
-import { CommandesHeader } from "@/components/commandes/commandes-header"
-import { OrderSummaryBar } from "@/components/commandes/order-summary-bar"
-import { PendingOrders } from "@/components/commandes/pending-orders"
-import { OrderHistoryTable } from "@/components/commandes/order-history-table"
-import { ReceiveOrderDialog } from "@/components/commandes/receive-order-dialog"
-import { SupplierModal } from "@/components/shared/supplier-modal"
-import { OrderDialog } from "@/components/commandes/order-dialog"
-import { SupplierDialog } from "@/components/commandes/supplier-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+  Add01Icon,
+  Call02Icon,
+  Mail01Icon,
+  Location01Icon,
+  DeliveryTruck01Icon,
+  PackageIcon,
+  ArrowRight01Icon,
+} from "@hugeicons/core-free-icons"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import { Search01Icon } from "@hugeicons/core-free-icons"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +29,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useStocks } from "@/hooks/use-stocks"
+import {
+  useSuppliers,
+  useCreateSupplier,
+  useUpdateSupplier,
+  useDeleteSupplier,
+} from "@/hooks/use-suppliers"
+import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
+import { usePageTitle } from "@/hooks/use-page-title"
+import { CATEGORY_LABELS } from "@/components/stock/types"
+import { getSupplierProducts } from "@/components/commandes/utils"
+import type { SupplierFull } from "@/components/commandes/types"
+import { SupplierDialog } from "@/components/commandes/supplier-dialog"
+import { SupplierModal } from "@/components/shared/supplier-modal"
+import { useArticles } from "@/hooks/use-articles"
+import { useOrders } from "@/hooks/use-orders"
+import { usePortionCalculator } from "@/hooks/use-portion-calculator"
+import { cn } from "@/lib/utils"
 
 const container = {
   hidden: {},
@@ -51,114 +63,52 @@ const fadeUp = {
   },
 }
 
-export default function CommandesPage() {
-  usePageTitle("Commandes")
+const CATEGORY_DOT_COLORS: Record<string, string> = {
+  viandes: "bg-rose-400",
+  poissons: "bg-sky-400",
+  legumes: "bg-lime-500",
+  epicerie: "bg-amber-400",
+  boissons: "bg-violet-400",
+  autres: "bg-slate-400",
+}
+
+export default function FournisseursPage() {
+  usePageTitle("Fournisseurs")
   const { restaurantId } = useActiveRestaurant()
-  const { data: recipes } = useArticles()
   const { data: products } = useStocks(restaurantId)
   const { data: suppliers } = useSuppliers()
+  const { data: recipes } = useArticles()
   const { data: orders } = useOrders(restaurantId)
-
-  // Mutations
-  const updateOrder = useUpdateOrder()
-  const createOrder = useCreateOrder()
-  const createSupplier = useCreateSupplier()
-  const updateSupplier = useUpdateSupplier()
-  const deleteSupplier = useDeleteSupplier()
-
   const { productPortionSummaries } = usePortionCalculator(
     recipes,
     products,
     suppliers
   )
 
-  // State
-  const [activeTab, setActiveTab] = useState<string>("en_cours")
-  const [orderDialogOpen, setOrderDialogOpen] = useState(false)
-  const [orderSupplierId, setOrderSupplierId] = useState<string | null>(null)
-  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false)
-  const [receiveOrder, setReceiveOrder] = useState<
-    (typeof orders)[number] | null
-  >(null)
-  const [supplierSheetOpen, setSupplierSheetOpen] = useState(false)
-  const [supplierSheetId, setSupplierSheetId] = useState<string | null>(null)
+  const createSupplier = useCreateSupplier()
+  const updateSupplier = useUpdateSupplier()
+  const deleteSupplier = useDeleteSupplier()
+
+  const [search, setSearch] = useState("")
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false)
   const [editingSupplier, setEditingSupplier] = useState<SupplierFull | null>(
     null
   )
+  const [supplierSheetOpen, setSupplierSheetOpen] = useState(false)
+  const [supplierSheetId, setSupplierSheetId] = useState<string | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deletingSupplierId, setDeletingSupplierId] = useState<string | null>(
     null
   )
 
-  // Derived data
-  const pendingOrders = useMemo(
-    () => orders.filter((o) => o.status === "pending"),
-    [orders]
-  )
-  const historyOrders = useMemo(
-    () => orders.filter((o) => o.status !== "pending"),
-    [orders]
-  )
-  const pendingAmount = useMemo(
-    () => pendingOrders.reduce((sum, o) => sum + o.totalAmount, 0),
-    [pendingOrders]
-  )
-  const activeSupplierCount = useMemo(
-    () =>
-      new Set(
-        orders.filter((o) => o.status !== "cancelled").map((o) => o.supplierId)
-      ).size,
-    [orders]
-  )
-  const monthlySpend = useMemo(() => getTotalMonthlySpend(orders), [orders])
-
-  // Handlers
-  const handleOpenOrder = useCallback(() => {
-    setOrderSupplierId(suppliers[0]?.id ?? null)
-    setOrderDialogOpen(true)
-  }, [suppliers])
-
-  const handleReceive = useCallback(
-    (orderId: string) => {
-      const order = orders.find((o) => o.id === orderId)
-      if (order) {
-        setReceiveOrder(order)
-        setReceiveDialogOpen(true)
-      }
-    },
-    [orders]
-  )
-
-  const handleConfirmReceive = useCallback(
-    (orderId: string, _receivedQuantities: Record<string, number>) => {
-      updateOrder.mutate(
-        { id: Number(orderId), data: { status: "DELIVERED" } },
-        { onSuccess: () => toast.success("Commande marquée comme livrée") }
-      )
-    },
-    [updateOrder]
-  )
-
-  const handleCancel = useCallback(
-    (orderId: string) => {
-      updateOrder.mutate(
-        { id: Number(orderId), data: { status: "CANCELLED" } },
-        { onSuccess: () => toast.success("Commande annulée") }
-      )
-    },
-    [updateOrder]
-  )
-
-  const handleSupplierClick = useCallback((supplierId: string) => {
-    setSupplierSheetId(supplierId)
-    setSupplierSheetOpen(true)
-  }, [])
-
-  const handleOrderFromSupplier = useCallback((supplierId: string) => {
-    setOrderSupplierId(supplierId)
-    setOrderDialogOpen(true)
-  }, [])
+  const filtered = useMemo(() => {
+    if (!search.trim()) return suppliers
+    const q = search.toLowerCase()
+    return suppliers.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
+    )
+  }, [suppliers, search])
 
   const handleAddSupplier = useCallback(() => {
     setEditingSupplier(null)
@@ -166,6 +116,7 @@ export default function CommandesPage() {
   }, [])
 
   const handleEditSupplier = useCallback((supplier: SupplierFull) => {
+    setSupplierSheetOpen(false)
     setEditingSupplier(supplier)
     setSupplierDialogOpen(true)
   }, [])
@@ -180,7 +131,6 @@ export default function CommandesPage() {
         notes: data.notes,
         isActive: true,
       }
-
       if (editingSupplier) {
         updateSupplier.mutate(
           { id: Number(editingSupplier.id), data: apiPayload },
@@ -194,6 +144,11 @@ export default function CommandesPage() {
     },
     [editingSupplier, updateSupplier, createSupplier]
   )
+
+  const handleSupplierClick = useCallback((supplierId: string) => {
+    setSupplierSheetId(supplierId)
+    setSupplierSheetOpen(true)
+  }, [])
 
   const handleDeleteSupplier = useCallback((supplierId: string) => {
     setDeletingSupplierId(supplierId)
@@ -213,35 +168,6 @@ export default function CommandesPage() {
     }
   }, [deletingSupplierId, deleteSupplier])
 
-  const handleSubmitOrder = useCallback(
-    (data: { supplierId: string; items: OrderItem[]; notes: string }) => {
-      const totalAmount = data.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
-        0
-      )
-
-      createOrder.mutate(
-        {
-          fournisseurId: Number(data.supplierId),
-          restaurantId: restaurantId!,
-          notes: data.notes || undefined,
-        },
-        { onSuccess: () => toast.success("Commande créée") }
-      )
-      void totalAmount // TODO: send items when backend supports order lines creation
-    },
-    [createOrder, restaurantId]
-  )
-
-  // Resolved entities
-  const orderSupplier = orderSupplierId
-    ? (suppliers.find((s) => s.id === orderSupplierId) ?? null)
-    : null
-
-  const orderProducts = orderSupplier
-    ? getSupplierProducts(orderSupplier.id, products)
-    : []
-
   const supplierSheetSupplier = supplierSheetId
     ? (suppliers.find((s) => s.id === supplierSheetId) ?? null)
     : null
@@ -253,58 +179,184 @@ export default function CommandesPage() {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={fadeUp}>
-        <CommandesHeader
-          onOrder={handleOpenOrder}
-          onAddSupplier={handleAddSupplier}
-        />
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
-        <OrderSummaryBar
-          pendingCount={pendingOrders.length}
-          pendingAmount={pendingAmount}
-          supplierCount={activeSupplierCount}
-          monthlySpend={monthlySpend}
-        />
-      </motion.div>
-
-      <motion.div variants={fadeUp} className="min-h-0 flex-1">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex h-full flex-col"
-        >
-          <TabsList>
-            <TabsTrigger value="en_cours">
-              En cours
-              {pendingOrders.length > 0 ? ` (${pendingOrders.length})` : ""}
-            </TabsTrigger>
-            <TabsTrigger value="historique">Historique</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="en_cours" className="mt-4 flex-1">
-            <PendingOrders
-              orders={pendingOrders}
-              suppliers={suppliers}
-              products={products}
-              onReceive={handleReceive}
-              onCancel={handleCancel}
-              onSupplierClick={handleSupplierClick}
+      {/* Header */}
+      <motion.div
+        variants={fadeUp}
+        className="flex shrink-0 items-center gap-3"
+      >
+        <div>
+          <h1 className="font-display text-lg font-semibold tracking-tight">
+            Mes fournisseurs
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {suppliers.length} fournisseur{suppliers.length > 1 ? "s" : ""}
+            {" · "}
+            {products.length} produit{products.length > 1 ? "s" : ""} référencés
+          </p>
+        </div>
+        <div className="ml-auto">
+          <Button onClick={handleAddSupplier}>
+            <HugeiconsIcon
+              icon={Add01Icon}
+              className="size-4"
+              strokeWidth={2}
             />
-          </TabsContent>
-
-          <TabsContent value="historique" className="mt-4 min-h-0 flex-1">
-            <OrderHistoryTable
-              orders={historyOrders}
-              suppliers={suppliers}
-              products={products}
-              onSupplierClick={handleSupplierClick}
-            />
-          </TabsContent>
-        </Tabs>
+            Nouveau fournisseur
+          </Button>
+        </div>
       </motion.div>
 
+      {/* Search */}
+      <motion.div variants={fadeUp}>
+        <InputGroup className="w-80 bg-background">
+          <InputGroupAddon>
+            <HugeiconsIcon
+              icon={Search01Icon}
+              className="size-4"
+              strokeWidth={2}
+            />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="Rechercher un fournisseur..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </InputGroup>
+      </motion.div>
+
+      {/* Supplier cards */}
+      <motion.div
+        variants={fadeUp}
+        className="grid min-h-0 flex-1 grid-cols-1 content-start gap-4 md:grid-cols-2 xl:grid-cols-3"
+      >
+        {filtered.map((supplier, i) => {
+          const linkedProducts = getSupplierProducts(supplier.id, products)
+          const categoryLabel =
+            CATEGORY_LABELS[supplier.category] ?? supplier.category
+
+          return (
+            <motion.div
+              key={supplier.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04, duration: 0.25 }}
+            >
+              <Card
+                className="cursor-pointer p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                onClick={() => handleSupplierClick(supplier.id)}
+              >
+                {/* Top: Name + Category */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-base font-semibold">
+                      {supplier.name}
+                    </h3>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          CATEGORY_DOT_COLORS[supplier.category] ??
+                            "bg-slate-400"
+                        )}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {categoryLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <HugeiconsIcon
+                    icon={ArrowRight01Icon}
+                    className="mt-1 size-4 shrink-0 text-muted-foreground/40"
+                    strokeWidth={2}
+                  />
+                </div>
+
+                {/* Contact info */}
+                <div className="mt-4 space-y-1.5">
+                  {supplier.phone && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <HugeiconsIcon
+                        icon={Call02Icon}
+                        className="size-3.5 shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="truncate">{supplier.phone}</span>
+                    </div>
+                  )}
+                  {supplier.email && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <HugeiconsIcon
+                        icon={Mail01Icon}
+                        className="size-3.5 shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="truncate">{supplier.email}</span>
+                    </div>
+                  )}
+                  {supplier.address && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <HugeiconsIcon
+                        icon={Location01Icon}
+                        className="size-3.5 shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="truncate">{supplier.address}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer: Products + Delivery */}
+                <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <HugeiconsIcon
+                      icon={PackageIcon}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
+                    <span>
+                      <span className="font-medium text-foreground">
+                        {linkedProducts.length}
+                      </span>{" "}
+                      produit{linkedProducts.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <HugeiconsIcon
+                      icon={DeliveryTruck01Icon}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
+                    <span>~{supplier.averageDeliveryDays}j de livraison</span>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          )
+        })}
+
+        {filtered.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-sm font-medium">Aucun fournisseur trouvé</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {search
+                ? "Essayez un autre terme de recherche"
+                : "Ajoutez votre premier fournisseur pour commencer"}
+            </p>
+            {!search && (
+              <Button className="mt-4" onClick={handleAddSupplier}>
+                <HugeiconsIcon
+                  icon={Add01Icon}
+                  className="size-4"
+                  strokeWidth={2}
+                />
+                Ajouter un fournisseur
+              </Button>
+            )}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Modals */}
       <SupplierModal
         supplier={supplierSheetSupplier}
         products={products}
@@ -313,28 +365,9 @@ export default function CommandesPage() {
         recipes={recipes}
         open={supplierSheetOpen}
         onOpenChange={setSupplierSheetOpen}
-        onOrder={handleOrderFromSupplier}
+        onOrder={() => toast.info("Commandes fournisseurs bientôt disponibles")}
         onEdit={handleEditSupplier}
         onDelete={handleDeleteSupplier}
-      />
-
-      <OrderDialog
-        supplier={orderSupplier}
-        products={orderProducts}
-        open={orderDialogOpen}
-        onOpenChange={setOrderDialogOpen}
-        onSubmit={handleSubmitOrder}
-        allSuppliers={suppliers}
-        allProducts={products}
-      />
-
-      <ReceiveOrderDialog
-        order={receiveOrder}
-        products={products}
-        suppliers={suppliers}
-        open={receiveDialogOpen}
-        onOpenChange={setReceiveDialogOpen}
-        onConfirm={handleConfirmReceive}
       />
 
       <SupplierDialog
@@ -349,8 +382,8 @@ export default function CommandesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce fournisseur ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Les produits et commandes associés
-              ne seront pas supprimés.
+              Cette action est irréversible. Les produits associés ne seront pas
+              supprimés.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

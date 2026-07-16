@@ -13,6 +13,7 @@ import {
   CookBookIcon,
   PackageIcon,
   TruckDeliveryIcon,
+  Invoice01Icon,
   UserGroupIcon,
   Settings01Icon,
   ArrowRight01Icon,
@@ -79,7 +80,8 @@ export const navItems: NavGroup[] = [
     items: [
       { to: "/cuisine", label: "Ma carte", icon: CookBookIcon },
       { to: "/stocks", label: "Mon stock", icon: PackageIcon },
-      { to: "/commandes", label: "Commandes", icon: TruckDeliveryIcon },
+      { to: "/commandes-clients", label: "Commandes", icon: Invoice01Icon },
+      { to: "/fournisseurs", label: "Fournisseurs", icon: TruckDeliveryIcon },
     ],
   },
   {
@@ -125,7 +127,7 @@ export function NavMain() {
         const visibleItems = group.items
           .filter((item) => !item.permission || can(item.permission))
           .map((item) => {
-            if (item.to === "/commandes" && pendingCount > 0)
+            if (item.to === "/fournisseurs" && pendingCount > 0)
               return { ...item, badge: String(pendingCount) }
             if (item.to === "/reservations" && resaCount > 0)
               return { ...item, badge: String(resaCount) }

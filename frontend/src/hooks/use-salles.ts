@@ -1,6 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query"
+import { useMemo } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
-import { apiPost } from "@/api/client"
+import { apiPost, getAccessToken } from "@/api/client"
+import { fetchAllPages } from "@/api/pagination"
 
 type ApiSalle = {
   id: number
@@ -17,11 +19,58 @@ type ApiTable = {
   positionX: number
   positionY: number
   salleId: number
+  isOccupied: boolean
+  employeeInChargeId: number | null
+}
+
+export interface SalleWithTables {
+  id: number
+  name: string
+  restaurantId: number
+  capacity: number
+  floor: number
+  tables: ApiTable[]
 }
 
 const keys = {
-  salles: () => ["salles"] as const,
-  tables: () => ["tables"] as const,
+  salles: (restaurantId?: number) => ["salles", restaurantId] as const,
+  tables: (restaurantId?: number) => ["tables", restaurantId] as const,
+}
+
+/**
+ * Fetch salles + tables for a restaurant.
+ */
+export function useSalles(restaurantId: number | null) {
+  const hasToken = !!getAccessToken()
+
+  const sallesQuery = useQuery({
+    queryKey: keys.salles(restaurantId ?? undefined),
+    queryFn: () =>
+      fetchAllPages<ApiSalle>("salles/", { restaurantId: restaurantId! }),
+    enabled: hasToken && !!restaurantId,
+    staleTime: 5 * 60_000,
+  })
+
+  const tablesQuery = useQuery({
+    queryKey: keys.tables(restaurantId ?? undefined),
+    queryFn: () => fetchAllPages<ApiTable>("tables/", { salleId: undefined }),
+    enabled: hasToken && !!restaurantId,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+  })
+
+  const data = useMemo(() => {
+    const salles = sallesQuery.data ?? []
+    const tables = tablesQuery.data ?? []
+    return salles
+      .filter((s) => s.restaurantId === restaurantId)
+      .map((s) => ({
+        ...s,
+        tables: tables.filter((t) => t.salleId === s.id),
+      }))
+  }, [sallesQuery.data, tablesQuery.data, restaurantId])
+
+  return { data, isLoading: sallesQuery.isLoading || tablesQuery.isLoading }
 }
 
 export function useCreateSalle() {

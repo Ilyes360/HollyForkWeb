@@ -112,8 +112,14 @@ export function GanttShiftBlock({
 
       {/* ─── Compact (week view, narrow columns) ─── */}
       {compact && width > 8 && (
-        <div className={cn("flex h-full items-center px-1", colors.text)}>
-          {width > 24 && (
+        <div className={cn("flex h-full items-center gap-1 px-1", colors.text)}>
+          <span
+            className={cn(
+              "size-3 shrink-0 rounded-full",
+              block.employee.avatarColor
+            )}
+          />
+          {width > 32 && (
             <span className="truncate text-[10px] leading-tight font-medium">
               {block.employee.firstName[0]}.{block.employee.lastName[0]}.
             </span>

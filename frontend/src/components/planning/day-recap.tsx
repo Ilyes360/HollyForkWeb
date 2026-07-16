@@ -1,11 +1,11 @@
 import type { DayRecapData } from "./utils"
-import { DAILY_BUDGET } from "./data"
 
 interface DayRecapProps {
   recap: DayRecapData
+  dailyBudget: number
 }
 
-export function DayRecap({ recap }: DayRecapProps) {
+export function DayRecap({ recap, dailyBudget }: DayRecapProps) {
   const {
     totalHours,
     overtimeHours,
@@ -14,7 +14,7 @@ export function DayRecap({ recap }: DayRecapProps) {
     coverageRequired,
   } = recap
 
-  const costRatio = Math.min(estimatedCost / DAILY_BUDGET, 1)
+  const costRatio = Math.min(estimatedCost / dailyBudget, 1)
 
   return (
     <div className="space-y-1 text-[11px] text-muted-foreground tabular-nums">

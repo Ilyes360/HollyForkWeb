@@ -25,6 +25,8 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ErrorState } from "@/components/shared/error-state"
 import type { ChartConfig } from "@/components/ui/chart"
 import {
   ChartContainer,
@@ -110,6 +112,26 @@ function getThisWeek(): PeriodRange {
 function NaValue({ className }: { className?: string }) {
   return (
     <span className={`text-muted-foreground/50 ${className ?? ""}`}>N/A</span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// KPI Skeleton (loading placeholder)
+// ---------------------------------------------------------------------------
+function KpiCardSkeleton() {
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <Skeleton className="h-4 w-28" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <CardAction>
+          <Skeleton className="size-12 rounded-full" />
+        </CardAction>
+      </CardHeader>
+    </Card>
   )
 }
 
@@ -654,9 +676,12 @@ export default function DashboardPage() {
   const periodDate = period.from.toISOString().slice(0, 10)
 
   // Fetch KPIs from API — no mock fallback
-  const { data: dashboardData } = useDashboard(
-    restaurantId ? { restaurantId, date: periodDate } : null
-  )
+  const {
+    data: dashboardData,
+    isLoading: kpisLoading,
+    isError: kpisError,
+    refetch: refetchKpis,
+  } = useDashboard(restaurantId ? { restaurantId, date: periodDate } : null)
 
   const kpis = dashboardData?.kpis ?? null
   const periodDateTo = period.to.toISOString().slice(0, 10)
@@ -690,17 +715,31 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* KPIs — real API data, null when not yet loaded */}
-      <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <OccupancyCard value={kpis?.occupancyRate ?? null} change={null} />
-        <CoversCard
-          value={kpis?.covers ?? null}
-          change={null}
-          formatFn={(n) => Math.round(n).toLocaleString("fr-FR")}
-        />
-        <FoodCostCard value={kpis?.foodCostRate ?? null} change={null} />
-        <AverageTicketCard value={kpis?.averageTicket ?? null} change={null} />
-      </div>
+      {/* KPIs — real API data, skeleton while loading, error with retry */}
+      {kpisError ? (
+        <ErrorState onRetry={() => refetchKpis()} />
+      ) : kpisLoading ? (
+        <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCardSkeleton />
+          <KpiCardSkeleton />
+          <KpiCardSkeleton />
+          <KpiCardSkeleton />
+        </div>
+      ) : (
+        <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <OccupancyCard value={kpis?.occupancyRate ?? null} change={null} />
+          <CoversCard
+            value={kpis?.covers ?? null}
+            change={null}
+            formatFn={(n) => Math.round(n).toLocaleString("fr-FR")}
+          />
+          <FoodCostCard value={kpis?.foodCostRate ?? null} change={null} />
+          <AverageTicketCard
+            value={kpis?.averageTicket ?? null}
+            change={null}
+          />
+        </div>
+      )}
 
       {/* CA par catégorie + Maps */}
       <div className="grid min-h-[420px] gap-4 lg:grid-cols-2">

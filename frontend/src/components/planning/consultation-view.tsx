@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react"
-import type { Shift, Employee } from "./types"
+import type { Shift, Employee, PlanningConfig } from "./types"
 import type { SlideDirection } from "@/hooks/use-week-navigation"
 import { WeekNavigator } from "./week-navigator"
 import { ConsultationGrid } from "./consultation-grid"
@@ -12,6 +12,7 @@ interface ConsultationViewProps {
   onPrev: () => void
   onNext: () => void
   onToday: () => void
+  config: PlanningConfig
   navRightSlot?: React.ReactNode
 }
 
@@ -35,6 +36,7 @@ export function ConsultationView({
   onPrev,
   onNext,
   onToday,
+  config,
   navRightSlot,
 }: ConsultationViewProps) {
   return (
@@ -64,6 +66,7 @@ export function ConsultationView({
               shifts={shifts}
               employees={employees}
               weekStart={weekStart}
+              config={config}
             />
           </motion.div>
         </AnimatePresence>

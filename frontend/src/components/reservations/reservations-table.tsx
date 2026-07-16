@@ -267,11 +267,12 @@ export function ReservationsTable({
             ))}
             {sortedData.length === 0 && (
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Aucune réservation trouvée.
+                <TableCell colSpan={6} className="h-24 text-center">
+                  <p className="text-sm font-medium">Aucune réservation</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Aucune réservation pour ce service. Appuyez sur N pour en
+                    créer une.
+                  </p>
                 </TableCell>
               </TableRow>
             )}

@@ -1,37 +1,47 @@
-import type { Shift, Employee } from "./types"
+import type { Shift, Employee, PlanningConfig } from "./types"
 import { DAYS, DAY_LABELS_FULL, SERVICE_LABELS } from "./constants"
 import {
   getShiftsForDayAndService,
   getDayDate,
   formatDateShort,
   getDayRecap,
+  isToday,
 } from "./utils"
-import { staffingRequirements } from "./data"
 import { ConsultationCell } from "./consultation-cell"
 import { StaffingIndicator } from "./staffing-indicator"
 import { DayRecap } from "./day-recap"
+import { cn } from "@/lib/utils"
 
 interface ConsultationGridProps {
   shifts: Shift[]
   employees: Employee[]
   weekStart: Date
+  config: PlanningConfig
 }
 
 export function ConsultationGrid({
   shifts,
   employees,
   weekStart,
+  config,
 }: ConsultationGridProps) {
   // Pre-compute data for all days
   const daysData = DAYS.map((day) => {
     const date = getDayDate(weekStart, day)
+    const dayIsToday = isToday(date)
     const midiShifts = getShiftsForDayAndService(shifts, day, "midi")
     const soirShifts = getShiftsForDayAndService(shifts, day, "soir")
-    const req = staffingRequirements[day] ?? { midi: 0, soir: 0 }
+    const req = config.staffingRequirements[day] ?? { midi: 0, soir: 0 }
 
-    const recap = getDayRecap(midiShifts, soirShifts, req.midi, req.soir)
+    const recap = getDayRecap(
+      midiShifts,
+      soirShifts,
+      req.midi,
+      req.soir,
+      config.cost
+    )
 
-    return { day, date, midiShifts, soirShifts, req, recap }
+    return { day, date, dayIsToday, midiShifts, soirShifts, req, recap }
   })
 
   return (
@@ -43,16 +53,25 @@ export function ConsultationGrid({
       }}
     >
       {/* Row 1: Day headers */}
-      {daysData.map(({ day, date, recap }) => (
+      {daysData.map(({ day, date, dayIsToday, recap }) => (
         <div
           key={`header-${day}`}
-          className="relative border-r border-b bg-card px-2 py-2 text-center"
+          className={cn(
+            "relative border-r border-b bg-card px-2 py-2 text-center",
+            dayIsToday && "border-t-2 border-t-primary"
+          )}
         >
-          <div className="text-sm font-medium">{DAY_LABELS_FULL[day]}</div>
+          <div
+            className={cn("text-sm font-medium", dayIsToday && "text-primary")}
+          >
+            {DAY_LABELS_FULL[day]}
+          </div>
           <div className="text-xs text-muted-foreground">
             {formatDateShort(date)}
             {recap.totalHours > 0 && (
-              <span className="ml-1.5 text-foreground/50">· {Math.round(recap.totalHours)}h</span>
+              <span className="ml-1.5 text-foreground/50">
+                · {Math.round(recap.totalHours)}h
+              </span>
             )}
           </div>
         </div>
@@ -110,16 +129,13 @@ export function ConsultationGrid({
 
       {/* Row 4: Récap */}
       {daysData.map(({ day, recap }) => (
-        <div
-          key={`recap-${day}`}
-          className="border-r bg-muted/30 px-2 py-2"
-        >
+        <div key={`recap-${day}`} className="border-r bg-muted/30 px-2 py-2">
           <div className="mb-1">
             <span className="text-xs font-medium text-muted-foreground">
               Récap
             </span>
           </div>
-          <DayRecap recap={recap} />
+          <DayRecap recap={recap} dailyBudget={config.cost.dailyBudget} />
         </div>
       ))}
     </div>

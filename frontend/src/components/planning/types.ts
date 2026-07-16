@@ -49,3 +49,15 @@ export interface StaffingRequirement {
 }
 
 export type PlanningViewMode = "grille" | "gantt"
+
+export interface PlanningCostConfig {
+  dailyBudget: number
+  hourlyRate: number
+  overtimeMultiplier: number
+  dailyOvertimeThreshold: number
+}
+
+export interface PlanningConfig {
+  staffingRequirements: StaffingRequirement
+  cost: PlanningCostConfig
+}

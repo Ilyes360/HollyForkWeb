@@ -77,7 +77,9 @@ export default function CartePage() {
 
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
+  )
   const [productDetailOpen, setProductDetailOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [feasibilityFilter, setFeasibilityFilter] = useState("tous")
@@ -91,15 +93,19 @@ export default function CartePage() {
     return map
   }, [recipePortions])
 
-  const servableCount = recipePortions.filter((r) => r.maxPortions > 0).length
+  const servableCount = recipePortions.filter((r) => r.maxPortions >= 10).length
+  const stockFaibleCount = recipePortions.filter(
+    (r) => r.maxPortions > 0 && r.maxPortions < 10
+  ).length
   const ruptureCount = recipePortions.filter((r) => r.maxPortions === 0).length
-  const totalCount = recipePortions.length
 
   const filteredPortions = useMemo(() => {
     let result = recipePortions
 
     if (feasibilityFilter === "realisable") {
-      result = result.filter((r) => r.maxPortions > 0)
+      result = result.filter((r) => r.maxPortions >= 10)
+    } else if (feasibilityFilter === "stock_faible") {
+      result = result.filter((r) => r.maxPortions > 0 && r.maxPortions < 10)
     } else if (feasibilityFilter === "non_realisable") {
       result = result.filter((r) => r.maxPortions === 0)
     }
@@ -154,20 +160,13 @@ export default function CartePage() {
     [navigate]
   )
 
-  const handleDuplicate = useCallback(
-    (_recipe: Recipe) => {
-      toast.info("Duplication non disponible via l'API")
-    },
-    []
-  )
+  const handleDuplicate = useCallback((_recipe: Recipe) => {
+    toast.info("Duplication non disponible via l'API")
+  }, [])
 
-  const handleToggleActive = useCallback(
-    (_recipe: Recipe) => {
-      // Backend `available` is read-only computed — not toggleable
-      toast.info("Le statut actif est calculé automatiquement par le backend")
-    },
-    []
-  )
+  const handleToggleActive = useCallback((_recipe: Recipe) => {
+    toast.info("Le statut actif est calculé automatiquement par le backend")
+  }, [])
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -187,10 +186,6 @@ export default function CartePage() {
     },
     [deleteArticleMutation, selectedRecipeId, queryClient]
   )
-
-  const handleAlertClick = useCallback(() => {
-    setFeasibilityFilter("non_realisable")
-  }, [])
 
   const handleSelectProduct = useCallback((productId: string) => {
     setSelectedProductId(productId)
@@ -243,37 +238,18 @@ export default function CartePage() {
       )}
 
       <motion.div variants={fadeUp}>
-        <div className="flex items-center justify-between gap-3">
-          <CarteFilters
-            search={search}
-            feasibilityFilter={feasibilityFilter}
-            onSearchChange={setSearch}
-            onFeasibilityFilterChange={setFeasibilityFilter}
-          />
-
-          {!opView.isLocked && (
-            <p className="shrink-0 text-sm text-muted-foreground">
-              <span className="font-medium text-emerald-600">
-                {servableCount}/{totalCount} recettes servables
-              </span>
-              {ruptureCount > 0 && (
-                <>
-                  {" · "}
-                  <button
-                    type="button"
-                    className="font-medium text-destructive hover:underline"
-                    onClick={handleAlertClick}
-                  >
-                    {ruptureCount} en rupture
-                  </button>
-                </>
-              )}
-            </p>
-          )}
-        </div>
+        <CarteFilters
+          search={search}
+          feasibilityFilter={feasibilityFilter}
+          onSearchChange={setSearch}
+          onFeasibilityFilterChange={setFeasibilityFilter}
+          servableCount={servableCount}
+          stockFaibleCount={stockFaibleCount}
+          ruptureCount={ruptureCount}
+        />
       </motion.div>
 
-      <motion.div variants={fadeUp} className="min-h-0 flex-1 space-y-6">
+      <motion.div variants={fadeUp} className="min-h-0 flex-1 space-y-4">
         {filteredPortions.length > 0
           ? CATEGORY_ORDER.map((cat) => (
               <CategorySection
