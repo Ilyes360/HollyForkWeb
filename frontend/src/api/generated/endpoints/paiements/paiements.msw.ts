@@ -3,105 +3,230 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  PaginatedPaiementList,
-  Paiement
-} from '../../schemas';
+import type { PaginatedPaiementList, Paiement } from "../../schemas"
 
+export const getPaiementsListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedPaiementList, object>> = {}
+): PaginatedPaiementList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    facture_id: faker.number.int(),
+    methode_paiement_id: faker.number.int(),
+    methode_paiement_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  })),
+  ...overrideResponse,
+})
 
-export const getPaiementsListResponseMock = (overrideResponse: Partial<Extract<PaginatedPaiementList, object>> = {}): PaginatedPaiementList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), methode_paiement: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 255}}), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z'},}, amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z'})), ...overrideResponse})
+export const getPaiementsCreateResponseMock = (
+  overrideResponse: Partial<Extract<Paiement, object>> = {}
+): Paiement => ({
+  id: faker.number.int(),
+  facture_id: faker.number.int(),
+  methode_paiement_id: faker.number.int(),
+  methode_paiement_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getPaiementsCreateResponseMock = (overrideResponse: Partial<Extract<Paiement, object>> = {}): Paiement => ({id: faker.number.int(), methode_paiement: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 255}}), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z'},}, amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getPaiementsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Paiement, object>> = {}
+): Paiement => ({
+  id: faker.number.int(),
+  facture_id: faker.number.int(),
+  methode_paiement_id: faker.number.int(),
+  methode_paiement_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getPaiementsRetrieveResponseMock = (overrideResponse: Partial<Extract<Paiement, object>> = {}): Paiement => ({id: faker.number.int(), methode_paiement: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 255}}), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z'},}, amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getPaiementsUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Paiement, object>> = {}
+): Paiement => ({
+  id: faker.number.int(),
+  facture_id: faker.number.int(),
+  methode_paiement_id: faker.number.int(),
+  methode_paiement_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getPaiementsUpdateResponseMock = (overrideResponse: Partial<Extract<Paiement, object>> = {}): Paiement => ({id: faker.number.int(), methode_paiement: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 255}}), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z'},}, amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getPaiementsPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Paiement, object>> = {}
+): Paiement => ({
+  id: faker.number.int(),
+  facture_id: faker.number.int(),
+  methode_paiement_id: faker.number.int(),
+  methode_paiement_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getPaiementsPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Paiement, object>> = {}): Paiement => ({id: faker.number.int(), methode_paiement: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 255}}), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z'},}, amount: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
-
-
-export const getPaiementsListMockHandler = (overrideResponse?: PaginatedPaiementList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedPaiementList> | PaginatedPaiementList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/paiements/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPaiementsListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getPaiementsListMockHandler = (
+  overrideResponse?:
+    | PaginatedPaiementList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedPaiementList> | PaginatedPaiementList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/paiements/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPaiementsListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getPaiementsCreateMockHandler = (overrideResponse?: Paiement | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Paiement> | Paiement), options?: RequestHandlerOptions) => {
-  return http.post('*/api/paiements/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPaiementsCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getPaiementsCreateMockHandler = (
+  overrideResponse?:
+    | Paiement
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<Paiement> | Paiement),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/paiements/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPaiementsCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getPaiementsRetrieveMockHandler = (overrideResponse?: Paiement | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Paiement> | Paiement), options?: RequestHandlerOptions) => {
-  return http.get('*/api/paiements/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPaiementsRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getPaiementsRetrieveMockHandler = (
+  overrideResponse?:
+    | Paiement
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Paiement> | Paiement),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/paiements/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPaiementsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getPaiementsUpdateMockHandler = (overrideResponse?: Paiement | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Paiement> | Paiement), options?: RequestHandlerOptions) => {
-  return http.put('*/api/paiements/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPaiementsUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getPaiementsUpdateMockHandler = (
+  overrideResponse?:
+    | Paiement
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<Paiement> | Paiement),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/paiements/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPaiementsUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getPaiementsPartialUpdateMockHandler = (overrideResponse?: Paiement | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Paiement> | Paiement), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/paiements/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPaiementsPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getPaiementsPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Paiement
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Paiement> | Paiement),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/paiements/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPaiementsPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getPaiementsDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/paiements/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getPaiementsDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/paiements/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getPaiementsMock = () => [
   getPaiementsListMockHandler(),
@@ -109,5 +234,5 @@ export const getPaiementsMock = () => [
   getPaiementsRetrieveMockHandler(),
   getPaiementsUpdateMockHandler(),
   getPaiementsPartialUpdateMockHandler(),
-  getPaiementsDestroyMockHandler()
+  getPaiementsDestroyMockHandler(),
 ]

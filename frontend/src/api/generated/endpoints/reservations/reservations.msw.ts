@@ -3,105 +3,520 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  PaginatedReservationList,
-  Reservation
-} from '../../schemas';
+import type { PaginatedReservationList, Reservation } from "../../schemas"
 
+export const getReservationsListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedReservationList, object>> = {}
+): PaginatedReservationList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    client_name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+    party_size: faker.number.int(),
+    datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
+    phone_number: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      undefined,
+    ]),
+    salle_id: faker.number.int(),
+    table_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      undefined,
+    ]),
+    note_serveur: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+    note_client: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+    allergie: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+    allergy_ids: faker.helpers.arrayElement([
+      Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1
+      ).map(() => faker.number.int()),
+      undefined,
+    ]),
+    diet_type_ids: faker.helpers.arrayElement([
+      Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1
+      ).map(() => faker.number.int()),
+      undefined,
+    ]),
+    allergies: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      id: faker.number.int(),
+      code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+      label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+    })),
+    diet_types: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      id: faker.number.int(),
+      code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+      label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+    })),
+  })),
+  ...overrideResponse,
+})
 
-export const getReservationsListResponseMock = (overrideResponse: Partial<Extract<PaginatedReservationList, object>> = {}): PaginatedReservationList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), client_name: faker.string.alpha({length: {min: 10, max: 200}}), party_size: faker.number.int(), datetime: faker.date.past().toISOString().slice(0, 19) + 'Z', phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salle_id: faker.number.int(), table: {...{id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined])},}, table_id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined])})), ...overrideResponse})
+export const getReservationsCreateResponseMock = (
+  overrideResponse: Partial<Extract<Reservation, object>> = {}
+): Reservation => ({
+  id: faker.number.int(),
+  client_name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  party_size: faker.number.int(),
+  datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  table_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  note_serveur: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  note_client: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergie: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergy_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  diet_type_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  allergies: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  diet_types: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getReservationsCreateResponseMock = (overrideResponse: Partial<Extract<Reservation, object>> = {}): Reservation => ({id: faker.number.int(), client_name: faker.string.alpha({length: {min: 10, max: 200}}), party_size: faker.number.int(), datetime: faker.date.past().toISOString().slice(0, 19) + 'Z', phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salle_id: faker.number.int(), table: {...{id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined])},}, table_id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), ...overrideResponse})
+export const getReservationsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Reservation, object>> = {}
+): Reservation => ({
+  id: faker.number.int(),
+  client_name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  party_size: faker.number.int(),
+  datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  table_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  note_serveur: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  note_client: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergie: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergy_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  diet_type_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  allergies: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  diet_types: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getReservationsRetrieveResponseMock = (overrideResponse: Partial<Extract<Reservation, object>> = {}): Reservation => ({id: faker.number.int(), client_name: faker.string.alpha({length: {min: 10, max: 200}}), party_size: faker.number.int(), datetime: faker.date.past().toISOString().slice(0, 19) + 'Z', phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salle_id: faker.number.int(), table: {...{id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined])},}, table_id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), ...overrideResponse})
+export const getReservationsUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Reservation, object>> = {}
+): Reservation => ({
+  id: faker.number.int(),
+  client_name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  party_size: faker.number.int(),
+  datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  table_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  note_serveur: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  note_client: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergie: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergy_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  diet_type_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  allergies: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  diet_types: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getReservationsUpdateResponseMock = (overrideResponse: Partial<Extract<Reservation, object>> = {}): Reservation => ({id: faker.number.int(), client_name: faker.string.alpha({length: {min: 10, max: 200}}), party_size: faker.number.int(), datetime: faker.date.past().toISOString().slice(0, 19) + 'Z', phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salle_id: faker.number.int(), table: {...{id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined])},}, table_id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), ...overrideResponse})
+export const getReservationsPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Reservation, object>> = {}
+): Reservation => ({
+  id: faker.number.int(),
+  client_name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  party_size: faker.number.int(),
+  datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  table_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  note_serveur: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  note_client: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergie: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  allergy_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  diet_type_ids: faker.helpers.arrayElement([
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.number.int()),
+    undefined,
+  ]),
+  allergies: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  diet_types: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    code: faker.helpers.fromRegExp("^[-a-zA-Z0-9_]+$"),
+    label: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getReservationsPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Reservation, object>> = {}): Reservation => ({id: faker.number.int(), client_name: faker.string.alpha({length: {min: 10, max: 200}}), party_size: faker.number.int(), datetime: faker.date.past().toISOString().slice(0, 19) + 'Z', phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salle_id: faker.number.int(), table: {...{id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined])},}, table_id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), ...overrideResponse})
-
-
-export const getReservationsListMockHandler = (overrideResponse?: PaginatedReservationList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedReservationList> | PaginatedReservationList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/reservations/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReservationsListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getReservationsListMockHandler = (
+  overrideResponse?:
+    | PaginatedReservationList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedReservationList> | PaginatedReservationList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/reservations/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReservationsListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getReservationsCreateMockHandler = (overrideResponse?: Reservation | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Reservation> | Reservation), options?: RequestHandlerOptions) => {
-  return http.post('*/api/reservations/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReservationsCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getReservationsCreateMockHandler = (
+  overrideResponse?:
+    | Reservation
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<Reservation> | Reservation),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/reservations/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReservationsCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getReservationsRetrieveMockHandler = (overrideResponse?: Reservation | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Reservation> | Reservation), options?: RequestHandlerOptions) => {
-  return http.get('*/api/reservations/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReservationsRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getReservationsRetrieveMockHandler = (
+  overrideResponse?:
+    | Reservation
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Reservation> | Reservation),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/reservations/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReservationsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getReservationsUpdateMockHandler = (overrideResponse?: Reservation | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Reservation> | Reservation), options?: RequestHandlerOptions) => {
-  return http.put('*/api/reservations/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReservationsUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getReservationsUpdateMockHandler = (
+  overrideResponse?:
+    | Reservation
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<Reservation> | Reservation),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/reservations/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReservationsUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getReservationsPartialUpdateMockHandler = (overrideResponse?: Reservation | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Reservation> | Reservation), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/reservations/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReservationsPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getReservationsPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Reservation
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Reservation> | Reservation),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/reservations/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReservationsPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getReservationsDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/reservations/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getReservationsDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/reservations/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getReservationsMock = () => [
   getReservationsListMockHandler(),
@@ -109,5 +524,5 @@ export const getReservationsMock = () => [
   getReservationsRetrieveMockHandler(),
   getReservationsUpdateMockHandler(),
   getReservationsPartialUpdateMockHandler(),
-  getReservationsDestroyMockHandler()
+  getReservationsDestroyMockHandler(),
 ]

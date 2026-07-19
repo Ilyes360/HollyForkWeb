@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,8 +20,8 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   EmploiDuTempsError,
@@ -31,542 +30,870 @@ import type {
   EmploiDuTempsUnauthorized,
   PaginatedShiftList,
   PatchedShiftRequest,
+  PlanningShiftsCreateParams,
+  PlanningShiftsDestroyParams,
   PlanningShiftsEmploiDuTempsRetrieveParams,
   PlanningShiftsListParams,
+  PlanningShiftsPartialUpdateParams,
+  PlanningShiftsRetrieveParams,
+  PlanningShiftsStatsRetrieveParams,
+  PlanningShiftsUpdateParams,
+  PlanningStatsError,
+  PlanningStatsResponse,
   Shift,
-  ShiftRequest
-} from '../../schemas';
+  ShiftRequest,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type planningShiftsListResponse200 = {
   data: PaginatedShiftList
   status: 200
 }
 
-export type planningShiftsListResponseSuccess = (planningShiftsListResponse200) & {
-  headers: Headers;
-};
-;
+export type planningShiftsListResponseSuccess =
+  planningShiftsListResponse200 & {
+    headers: Headers
+  }
+export type planningShiftsListResponse = planningShiftsListResponseSuccess
 
-export type planningShiftsListResponse = (planningShiftsListResponseSuccess)
-
-export const getPlanningShiftsListUrl = (params?: PlanningShiftsListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getPlanningShiftsListUrl = (params?: PlanningShiftsListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/planning/shifts/?${stringifiedParams}` : `/api/planning/shifts/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/?${stringifiedParams}`
+    : `/api/planning/shifts/`
 }
 
-export const planningShiftsList = async (params?: PlanningShiftsListParams, options?: RequestInit): Promise<planningShiftsListResponse> => {
-
-  return kyMutator<planningShiftsListResponse>(getPlanningShiftsListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getPlanningShiftsListQueryKey = (params?: PlanningShiftsListParams,) => {
-    return [
-    `/api/planning/shifts/`, ...(params ? [params] : [])
-    ] as const;
+export const planningShiftsList = async (
+  params?: PlanningShiftsListParams,
+  options?: RequestInit
+): Promise<planningShiftsListResponse> => {
+  return kyMutator<planningShiftsListResponse>(
+    getPlanningShiftsListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
+  )
+}
 
-
-export const getPlanningShiftsListQueryOptions = <TData = Awaited<ReturnType<typeof planningShiftsList>>, TError = unknown>(params?: PlanningShiftsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsList>>, TError, TData>>, }
+export const getPlanningShiftsListQueryKey = (
+  params?: PlanningShiftsListParams
 ) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getPlanningShiftsListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof planningShiftsList>>> = ({ signal }) => planningShiftsList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof planningShiftsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return [`/api/planning/shifts/`, ...(params ? [params] : [])] as const
 }
 
-export type PlanningShiftsListQueryResult = NonNullable<Awaited<ReturnType<typeof planningShiftsList>>>
+export const getPlanningShiftsListQueryOptions = <
+  TData = Awaited<ReturnType<typeof planningShiftsList>>,
+  TError = unknown,
+>(
+  params?: PlanningShiftsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPlanningShiftsListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof planningShiftsList>>
+  > = ({ signal }) => planningShiftsList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof planningShiftsList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlanningShiftsListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsList>>
+>
 export type PlanningShiftsListQueryError = unknown
 
-
-export function usePlanningShiftsList<TData = Awaited<ReturnType<typeof planningShiftsList>>, TError = unknown>(
- params: undefined |  PlanningShiftsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsList>>, TError, TData>> & Pick<
+export function usePlanningShiftsList<
+  TData = Awaited<ReturnType<typeof planningShiftsList>>,
+  TError = unknown,
+>(
+  params: undefined | PlanningShiftsListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsList>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsList<TData = Awaited<ReturnType<typeof planningShiftsList>>, TError = unknown>(
- params?: PlanningShiftsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsList<
+  TData = Awaited<ReturnType<typeof planningShiftsList>>,
+  TError = unknown,
+>(
+  params?: PlanningShiftsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsList>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsList<TData = Awaited<ReturnType<typeof planningShiftsList>>, TError = unknown>(
- params?: PlanningShiftsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function usePlanningShiftsList<TData = Awaited<ReturnType<typeof planningShiftsList>>, TError = unknown>(
- params?: PlanningShiftsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getPlanningShiftsListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsList<
+  TData = Awaited<ReturnType<typeof planningShiftsList>>,
+  TError = unknown,
+>(
+  params?: PlanningShiftsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function usePlanningShiftsList<
+  TData = Awaited<ReturnType<typeof planningShiftsList>>,
+  TError = unknown,
+>(
+  params?: PlanningShiftsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getPlanningShiftsListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type planningShiftsCreateResponse201 = {
   data: Shift
   status: 201
 }
 
-export type planningShiftsCreateResponseSuccess = (planningShiftsCreateResponse201) & {
-  headers: Headers;
-};
-;
+export type planningShiftsCreateResponseSuccess =
+  planningShiftsCreateResponse201 & {
+    headers: Headers
+  }
+export type planningShiftsCreateResponse = planningShiftsCreateResponseSuccess
 
-export type planningShiftsCreateResponse = (planningShiftsCreateResponseSuccess)
+export const getPlanningShiftsCreateUrl = (
+  params?: PlanningShiftsCreateParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
-export const getPlanningShiftsCreateUrl = () => {
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-
-
-  return `/api/planning/shifts/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/?${stringifiedParams}`
+    : `/api/planning/shifts/`
 }
 
-export const planningShiftsCreate = async (shiftRequest: ShiftRequest, options?: RequestInit): Promise<planningShiftsCreateResponse> => {
-
-  return kyMutator<planningShiftsCreateResponse>(getPlanningShiftsCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      shiftRequest,)
-  }
-);}
-
-
-
-
-export const getPlanningShiftsCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsCreate>>, TError,{data: ShiftRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof planningShiftsCreate>>, TError,{data: ShiftRequest}, TContext> => {
-
-const mutationKey = ['planningShiftsCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof planningShiftsCreate>>, {data: ShiftRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  planningShiftsCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PlanningShiftsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof planningShiftsCreate>>>
-    export type PlanningShiftsCreateMutationBody = ShiftRequest
-    export type PlanningShiftsCreateMutationError = unknown
-
-    export const usePlanningShiftsCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsCreate>>, TError,{data: ShiftRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof planningShiftsCreate>>,
-        TError,
-        {data: ShiftRequest},
-        TContext
-      > => {
-      return useMutation(getPlanningShiftsCreateMutationOptions(options), queryClient);
+export const planningShiftsCreate = async (
+  shiftRequest: ShiftRequest,
+  params?: PlanningShiftsCreateParams,
+  options?: RequestInit
+): Promise<planningShiftsCreateResponse> => {
+  return kyMutator<planningShiftsCreateResponse>(
+    getPlanningShiftsCreateUrl(params),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(shiftRequest),
     }
-    export type planningShiftsRetrieveResponse200 = {
+  )
+}
+
+export const getPlanningShiftsCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof planningShiftsCreate>>,
+    TError,
+    { data: ShiftRequest; params?: PlanningShiftsCreateParams },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof planningShiftsCreate>>,
+  TError,
+  { data: ShiftRequest; params?: PlanningShiftsCreateParams },
+  TContext
+> => {
+  const mutationKey = ["planningShiftsCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof planningShiftsCreate>>,
+    { data: ShiftRequest; params?: PlanningShiftsCreateParams }
+  > = (props) => {
+    const { data, params } = props ?? {}
+
+    return planningShiftsCreate(data, params)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type PlanningShiftsCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsCreate>>
+>
+export type PlanningShiftsCreateMutationBody = ShiftRequest
+export type PlanningShiftsCreateMutationError = unknown
+
+export const usePlanningShiftsCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof planningShiftsCreate>>,
+      TError,
+      { data: ShiftRequest; params?: PlanningShiftsCreateParams },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof planningShiftsCreate>>,
+  TError,
+  { data: ShiftRequest; params?: PlanningShiftsCreateParams },
+  TContext
+> => {
+  return useMutation(
+    getPlanningShiftsCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type planningShiftsRetrieveResponse200 = {
   data: Shift
   status: 200
 }
 
-export type planningShiftsRetrieveResponseSuccess = (planningShiftsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type planningShiftsRetrieveResponse = (planningShiftsRetrieveResponseSuccess)
-
-export const getPlanningShiftsRetrieveUrl = (id: number,) => {
-
-
-
-
-  return `/api/planning/shifts/${id}/`
-}
-
-export const planningShiftsRetrieve = async (id: number, options?: RequestInit): Promise<planningShiftsRetrieveResponse> => {
-
-  return kyMutator<planningShiftsRetrieveResponse>(getPlanningShiftsRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
+export type planningShiftsRetrieveResponseSuccess =
+  planningShiftsRetrieveResponse200 & {
+    headers: Headers
   }
-);}
+export type planningShiftsRetrieveResponse =
+  planningShiftsRetrieveResponseSuccess
 
-
-
-
-
-export const getPlanningShiftsRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/planning/shifts/${id}/`
-    ] as const;
-    }
-
-
-export const getPlanningShiftsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError, TData>>, }
+export const getPlanningShiftsRetrieveUrl = (
+  id: number,
+  params?: PlanningShiftsRetrieveParams
 ) => {
+  const normalizedParams = new URLSearchParams()
 
-const {query: queryOptions} = options ?? {};
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
-  const queryKey =  queryOptions?.queryKey ?? getPlanningShiftsRetrieveQueryKey(id);
+  const stringifiedParams = normalizedParams.toString()
 
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof planningShiftsRetrieve>>> = ({ signal }) => planningShiftsRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/${id}/?${stringifiedParams}`
+    : `/api/planning/shifts/${id}/`
 }
 
-export type PlanningShiftsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof planningShiftsRetrieve>>>
+export const planningShiftsRetrieve = async (
+  id: number,
+  params?: PlanningShiftsRetrieveParams,
+  options?: RequestInit
+): Promise<planningShiftsRetrieveResponse> => {
+  return kyMutator<planningShiftsRetrieveResponse>(
+    getPlanningShiftsRetrieveUrl(id, params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getPlanningShiftsRetrieveQueryKey = (
+  id: number,
+  params?: PlanningShiftsRetrieveParams
+) => {
+  return [`/api/planning/shifts/${id}/`, ...(params ? [params] : [])] as const
+}
+
+export const getPlanningShiftsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: PlanningShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPlanningShiftsRetrieveQueryKey(id, params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof planningShiftsRetrieve>>
+  > = ({ signal }) => planningShiftsRetrieve(id, params, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlanningShiftsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsRetrieve>>
+>
 export type PlanningShiftsRetrieveQueryError = unknown
 
-
-export function usePlanningShiftsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError, TData>> & Pick<
+export function usePlanningShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  params: undefined | PlanningShiftsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: PlanningShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function usePlanningShiftsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getPlanningShiftsRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: PlanningShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function usePlanningShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: PlanningShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getPlanningShiftsRetrieveQueryOptions(
+    id,
+    params,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type planningShiftsUpdateResponse200 = {
   data: Shift
   status: 200
 }
 
-export type planningShiftsUpdateResponseSuccess = (planningShiftsUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type planningShiftsUpdateResponseSuccess =
+  planningShiftsUpdateResponse200 & {
+    headers: Headers
+  }
+export type planningShiftsUpdateResponse = planningShiftsUpdateResponseSuccess
 
-export type planningShiftsUpdateResponse = (planningShiftsUpdateResponseSuccess)
+export const getPlanningShiftsUpdateUrl = (
+  id: number,
+  params?: PlanningShiftsUpdateParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
-export const getPlanningShiftsUpdateUrl = (id: number,) => {
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-
-
-  return `/api/planning/shifts/${id}/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/${id}/?${stringifiedParams}`
+    : `/api/planning/shifts/${id}/`
 }
 
-export const planningShiftsUpdate = async (id: number,
-    shiftRequest: ShiftRequest, options?: RequestInit): Promise<planningShiftsUpdateResponse> => {
-
-  return kyMutator<planningShiftsUpdateResponse>(getPlanningShiftsUpdateUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      shiftRequest,)
-  }
-);}
-
-
-
-
-export const getPlanningShiftsUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsUpdate>>, TError,{id: number;data: ShiftRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof planningShiftsUpdate>>, TError,{id: number;data: ShiftRequest}, TContext> => {
-
-const mutationKey = ['planningShiftsUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof planningShiftsUpdate>>, {id: number;data: ShiftRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  planningShiftsUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PlanningShiftsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof planningShiftsUpdate>>>
-    export type PlanningShiftsUpdateMutationBody = ShiftRequest
-    export type PlanningShiftsUpdateMutationError = unknown
-
-    export const usePlanningShiftsUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsUpdate>>, TError,{id: number;data: ShiftRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof planningShiftsUpdate>>,
-        TError,
-        {id: number;data: ShiftRequest},
-        TContext
-      > => {
-      return useMutation(getPlanningShiftsUpdateMutationOptions(options), queryClient);
+export const planningShiftsUpdate = async (
+  id: number,
+  shiftRequest: ShiftRequest,
+  params?: PlanningShiftsUpdateParams,
+  options?: RequestInit
+): Promise<planningShiftsUpdateResponse> => {
+  return kyMutator<planningShiftsUpdateResponse>(
+    getPlanningShiftsUpdateUrl(id, params),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(shiftRequest),
     }
-    export type planningShiftsPartialUpdateResponse200 = {
+  )
+}
+
+export const getPlanningShiftsUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof planningShiftsUpdate>>,
+    TError,
+    { id: number; data: ShiftRequest; params?: PlanningShiftsUpdateParams },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof planningShiftsUpdate>>,
+  TError,
+  { id: number; data: ShiftRequest; params?: PlanningShiftsUpdateParams },
+  TContext
+> => {
+  const mutationKey = ["planningShiftsUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof planningShiftsUpdate>>,
+    { id: number; data: ShiftRequest; params?: PlanningShiftsUpdateParams }
+  > = (props) => {
+    const { id, data, params } = props ?? {}
+
+    return planningShiftsUpdate(id, data, params)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type PlanningShiftsUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsUpdate>>
+>
+export type PlanningShiftsUpdateMutationBody = ShiftRequest
+export type PlanningShiftsUpdateMutationError = unknown
+
+export const usePlanningShiftsUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof planningShiftsUpdate>>,
+      TError,
+      { id: number; data: ShiftRequest; params?: PlanningShiftsUpdateParams },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof planningShiftsUpdate>>,
+  TError,
+  { id: number; data: ShiftRequest; params?: PlanningShiftsUpdateParams },
+  TContext
+> => {
+  return useMutation(
+    getPlanningShiftsUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type planningShiftsPartialUpdateResponse200 = {
   data: Shift
   status: 200
 }
 
-export type planningShiftsPartialUpdateResponseSuccess = (planningShiftsPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type planningShiftsPartialUpdateResponseSuccess =
+  planningShiftsPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type planningShiftsPartialUpdateResponse =
+  planningShiftsPartialUpdateResponseSuccess
 
-export type planningShiftsPartialUpdateResponse = (planningShiftsPartialUpdateResponseSuccess)
+export const getPlanningShiftsPartialUpdateUrl = (
+  id: number,
+  params?: PlanningShiftsPartialUpdateParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
-export const getPlanningShiftsPartialUpdateUrl = (id: number,) => {
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-
-
-  return `/api/planning/shifts/${id}/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/${id}/?${stringifiedParams}`
+    : `/api/planning/shifts/${id}/`
 }
 
-export const planningShiftsPartialUpdate = async (id: number,
-    patchedShiftRequest?: PatchedShiftRequest, options?: RequestInit): Promise<planningShiftsPartialUpdateResponse> => {
-
-  return kyMutator<planningShiftsPartialUpdateResponse>(getPlanningShiftsPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedShiftRequest,)
-  }
-);}
-
-
-
-
-export const getPlanningShiftsPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsPartialUpdate>>, TError,{id: number;data?: PatchedShiftRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof planningShiftsPartialUpdate>>, TError,{id: number;data?: PatchedShiftRequest}, TContext> => {
-
-const mutationKey = ['planningShiftsPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof planningShiftsPartialUpdate>>, {id: number;data?: PatchedShiftRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  planningShiftsPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PlanningShiftsPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof planningShiftsPartialUpdate>>>
-    export type PlanningShiftsPartialUpdateMutationBody = PatchedShiftRequest | undefined
-    export type PlanningShiftsPartialUpdateMutationError = unknown
-
-    export const usePlanningShiftsPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsPartialUpdate>>, TError,{id: number;data?: PatchedShiftRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof planningShiftsPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedShiftRequest},
-        TContext
-      > => {
-      return useMutation(getPlanningShiftsPartialUpdateMutationOptions(options), queryClient);
+export const planningShiftsPartialUpdate = async (
+  id: number,
+  patchedShiftRequest?: PatchedShiftRequest,
+  params?: PlanningShiftsPartialUpdateParams,
+  options?: RequestInit
+): Promise<planningShiftsPartialUpdateResponse> => {
+  return kyMutator<planningShiftsPartialUpdateResponse>(
+    getPlanningShiftsPartialUpdateUrl(id, params),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedShiftRequest),
     }
-    export type planningShiftsDestroyResponse204 = {
+  )
+}
+
+export const getPlanningShiftsPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof planningShiftsPartialUpdate>>,
+    TError,
+    {
+      id: number
+      data?: PatchedShiftRequest
+      params?: PlanningShiftsPartialUpdateParams
+    },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof planningShiftsPartialUpdate>>,
+  TError,
+  {
+    id: number
+    data?: PatchedShiftRequest
+    params?: PlanningShiftsPartialUpdateParams
+  },
+  TContext
+> => {
+  const mutationKey = ["planningShiftsPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof planningShiftsPartialUpdate>>,
+    {
+      id: number
+      data?: PatchedShiftRequest
+      params?: PlanningShiftsPartialUpdateParams
+    }
+  > = (props) => {
+    const { id, data, params } = props ?? {}
+
+    return planningShiftsPartialUpdate(id, data, params)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type PlanningShiftsPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsPartialUpdate>>
+>
+export type PlanningShiftsPartialUpdateMutationBody =
+  | PatchedShiftRequest
+  | undefined
+export type PlanningShiftsPartialUpdateMutationError = unknown
+
+export const usePlanningShiftsPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof planningShiftsPartialUpdate>>,
+      TError,
+      {
+        id: number
+        data?: PatchedShiftRequest
+        params?: PlanningShiftsPartialUpdateParams
+      },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof planningShiftsPartialUpdate>>,
+  TError,
+  {
+    id: number
+    data?: PatchedShiftRequest
+    params?: PlanningShiftsPartialUpdateParams
+  },
+  TContext
+> => {
+  return useMutation(
+    getPlanningShiftsPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type planningShiftsDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type planningShiftsDestroyResponseSuccess = (planningShiftsDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type planningShiftsDestroyResponseSuccess =
+  planningShiftsDestroyResponse204 & {
+    headers: Headers
+  }
+export type planningShiftsDestroyResponse = planningShiftsDestroyResponseSuccess
 
-export type planningShiftsDestroyResponse = (planningShiftsDestroyResponseSuccess)
+export const getPlanningShiftsDestroyUrl = (
+  id: number,
+  params?: PlanningShiftsDestroyParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
-export const getPlanningShiftsDestroyUrl = (id: number,) => {
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-
-
-  return `/api/planning/shifts/${id}/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/${id}/?${stringifiedParams}`
+    : `/api/planning/shifts/${id}/`
 }
 
-export const planningShiftsDestroy = async (id: number, options?: RequestInit): Promise<planningShiftsDestroyResponse> => {
-
-  return kyMutator<planningShiftsDestroyResponse>(getPlanningShiftsDestroyUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getPlanningShiftsDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof planningShiftsDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['planningShiftsDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof planningShiftsDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  planningShiftsDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PlanningShiftsDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof planningShiftsDestroy>>>
-
-    export type PlanningShiftsDestroyMutationError = unknown
-
-    export const usePlanningShiftsDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planningShiftsDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof planningShiftsDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getPlanningShiftsDestroyMutationOptions(options), queryClient);
+export const planningShiftsDestroy = async (
+  id: number,
+  params?: PlanningShiftsDestroyParams,
+  options?: RequestInit
+): Promise<planningShiftsDestroyResponse> => {
+  return kyMutator<planningShiftsDestroyResponse>(
+    getPlanningShiftsDestroyUrl(id, params),
+    {
+      ...options,
+      method: "DELETE",
     }
-    export type planningShiftsEmploiDuTempsRetrieveResponse200 = {
+  )
+}
+
+export const getPlanningShiftsDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof planningShiftsDestroy>>,
+    TError,
+    { id: number; params?: PlanningShiftsDestroyParams },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof planningShiftsDestroy>>,
+  TError,
+  { id: number; params?: PlanningShiftsDestroyParams },
+  TContext
+> => {
+  const mutationKey = ["planningShiftsDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof planningShiftsDestroy>>,
+    { id: number; params?: PlanningShiftsDestroyParams }
+  > = (props) => {
+    const { id, params } = props ?? {}
+
+    return planningShiftsDestroy(id, params)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type PlanningShiftsDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsDestroy>>
+>
+
+export type PlanningShiftsDestroyMutationError = unknown
+
+export const usePlanningShiftsDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof planningShiftsDestroy>>,
+      TError,
+      { id: number; params?: PlanningShiftsDestroyParams },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof planningShiftsDestroy>>,
+  TError,
+  { id: number; params?: PlanningShiftsDestroyParams },
+  TContext
+> => {
+  return useMutation(
+    getPlanningShiftsDestroyMutationOptions(options),
+    queryClient
+  )
+}
+export type planningShiftsEmploiDuTempsRetrieveResponse200 = {
   data: EmploiDuTempsResponse
   status: 200
 }
@@ -586,229 +913,427 @@ export type planningShiftsEmploiDuTempsRetrieveResponse404 = {
   status: 404
 }
 
-export type planningShiftsEmploiDuTempsRetrieveResponseSuccess = (planningShiftsEmploiDuTempsRetrieveResponse200) & {
-  headers: Headers;
-};
-export type planningShiftsEmploiDuTempsRetrieveResponseError = (planningShiftsEmploiDuTempsRetrieveResponse400 | planningShiftsEmploiDuTempsRetrieveResponse401 | planningShiftsEmploiDuTempsRetrieveResponse404) & {
-  headers: Headers;
-};
+export type planningShiftsEmploiDuTempsRetrieveResponseSuccess =
+  planningShiftsEmploiDuTempsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type planningShiftsEmploiDuTempsRetrieveResponseError = (
+  | planningShiftsEmploiDuTempsRetrieveResponse400
+  | planningShiftsEmploiDuTempsRetrieveResponse401
+  | planningShiftsEmploiDuTempsRetrieveResponse404
+) & {
+  headers: Headers
+}
 
-export type planningShiftsEmploiDuTempsRetrieveResponse = (planningShiftsEmploiDuTempsRetrieveResponseSuccess | planningShiftsEmploiDuTempsRetrieveResponseError)
+export type planningShiftsEmploiDuTempsRetrieveResponse =
+  | planningShiftsEmploiDuTempsRetrieveResponseSuccess
+  | planningShiftsEmploiDuTempsRetrieveResponseError
 
-export const getPlanningShiftsEmploiDuTempsRetrieveUrl = (params: PlanningShiftsEmploiDuTempsRetrieveParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getPlanningShiftsEmploiDuTempsRetrieveUrl = (
+  params: PlanningShiftsEmploiDuTempsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/planning/shifts/emploi-du-temps/?${stringifiedParams}` : `/api/planning/shifts/emploi-du-temps/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/emploi-du-temps/?${stringifiedParams}`
+    : `/api/planning/shifts/emploi-du-temps/`
 }
 
 /**
  * Retourne l'emploi du temps (créneaux par jour) pour un employé et une semaine donnée. Nécessite une authentification (Bearer token après login ou quick-login).
  * @summary Emploi du temps d'un employé pour une semaine
  */
-export const planningShiftsEmploiDuTempsRetrieve = async (params: PlanningShiftsEmploiDuTempsRetrieveParams, options?: RequestInit): Promise<planningShiftsEmploiDuTempsRetrieveResponse> => {
-
-  return kyMutator<planningShiftsEmploiDuTempsRetrieveResponse>(getPlanningShiftsEmploiDuTempsRetrieveUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getPlanningShiftsEmploiDuTempsRetrieveQueryKey = (params?: PlanningShiftsEmploiDuTempsRetrieveParams,) => {
-    return [
-    `/api/planning/shifts/emploi-du-temps/`, ...(params ? [params] : [])
-    ] as const;
+export const planningShiftsEmploiDuTempsRetrieve = async (
+  params: PlanningShiftsEmploiDuTempsRetrieveParams,
+  options?: RequestInit
+): Promise<planningShiftsEmploiDuTempsRetrieveResponse> => {
+  return kyMutator<planningShiftsEmploiDuTempsRetrieveResponse>(
+    getPlanningShiftsEmploiDuTempsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getPlanningShiftsEmploiDuTempsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError = EmploiDuTempsError | EmploiDuTempsUnauthorized | EmploiDuTempsNotFound>(params: PlanningShiftsEmploiDuTempsRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getPlanningShiftsEmploiDuTempsRetrieveQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>> = ({ signal }) => planningShiftsEmploiDuTempsRetrieve(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type PlanningShiftsEmploiDuTempsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>>
-export type PlanningShiftsEmploiDuTempsRetrieveQueryError = EmploiDuTempsError | EmploiDuTempsUnauthorized | EmploiDuTempsNotFound
+export const getPlanningShiftsEmploiDuTempsRetrieveQueryKey = (
+  params?: PlanningShiftsEmploiDuTempsRetrieveParams
+) => {
+  return [
+    `/api/planning/shifts/emploi-du-temps/`,
+    ...(params ? [params] : []),
+  ] as const
+}
 
+export const getPlanningShiftsEmploiDuTempsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+  TError =
+    | EmploiDuTempsError
+    | EmploiDuTempsUnauthorized
+    | EmploiDuTempsNotFound,
+>(
+  params: PlanningShiftsEmploiDuTempsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function usePlanningShiftsEmploiDuTempsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError = EmploiDuTempsError | EmploiDuTempsUnauthorized | EmploiDuTempsNotFound>(
- params: PlanningShiftsEmploiDuTempsRetrieveParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ??
+    getPlanningShiftsEmploiDuTempsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>
+  > = ({ signal }) => planningShiftsEmploiDuTempsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlanningShiftsEmploiDuTempsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>
+>
+export type PlanningShiftsEmploiDuTempsRetrieveQueryError =
+  | EmploiDuTempsError
+  | EmploiDuTempsUnauthorized
+  | EmploiDuTempsNotFound
+
+export function usePlanningShiftsEmploiDuTempsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+  TError =
+    | EmploiDuTempsError
+    | EmploiDuTempsUnauthorized
+    | EmploiDuTempsNotFound,
+>(
+  params: PlanningShiftsEmploiDuTempsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsEmploiDuTempsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError = EmploiDuTempsError | EmploiDuTempsUnauthorized | EmploiDuTempsNotFound>(
- params: PlanningShiftsEmploiDuTempsRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsEmploiDuTempsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+  TError =
+    | EmploiDuTempsError
+    | EmploiDuTempsUnauthorized
+    | EmploiDuTempsNotFound,
+>(
+  params: PlanningShiftsEmploiDuTempsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsEmploiDuTempsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError = EmploiDuTempsError | EmploiDuTempsUnauthorized | EmploiDuTempsNotFound>(
- params: PlanningShiftsEmploiDuTempsRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsEmploiDuTempsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+  TError =
+    | EmploiDuTempsError
+    | EmploiDuTempsUnauthorized
+    | EmploiDuTempsNotFound,
+>(
+  params: PlanningShiftsEmploiDuTempsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
 /**
  * @summary Emploi du temps d'un employé pour une semaine
  */
 
-export function usePlanningShiftsEmploiDuTempsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError = EmploiDuTempsError | EmploiDuTempsUnauthorized | EmploiDuTempsNotFound>(
- params: PlanningShiftsEmploiDuTempsRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function usePlanningShiftsEmploiDuTempsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+  TError =
+    | EmploiDuTempsError
+    | EmploiDuTempsUnauthorized
+    | EmploiDuTempsNotFound,
+>(
+  params: PlanningShiftsEmploiDuTempsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsEmploiDuTempsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getPlanningShiftsEmploiDuTempsRetrieveQueryOptions(
+    params,
+    options
+  )
 
-  const queryOptions = getPlanningShiftsEmploiDuTempsRetrieveQueryOptions(params,options)
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+  return { ...query, queryKey: queryOptions.queryKey }
 }
 
-
-
-
-
-
 export type planningShiftsStatsRetrieveResponse200 = {
-  data: Shift
+  data: PlanningStatsResponse
   status: 200
 }
 
-export type planningShiftsStatsRetrieveResponseSuccess = (planningShiftsStatsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type planningShiftsStatsRetrieveResponse400 = {
+  data: PlanningStatsError
+  status: 400
+}
 
-export type planningShiftsStatsRetrieveResponse = (planningShiftsStatsRetrieveResponseSuccess)
+export type planningShiftsStatsRetrieveResponseSuccess =
+  planningShiftsStatsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type planningShiftsStatsRetrieveResponseError =
+  planningShiftsStatsRetrieveResponse400 & {
+    headers: Headers
+  }
 
-export const getPlanningShiftsStatsRetrieveUrl = () => {
+export type planningShiftsStatsRetrieveResponse =
+  | planningShiftsStatsRetrieveResponseSuccess
+  | planningShiftsStatsRetrieveResponseError
 
+export const getPlanningShiftsStatsRetrieveUrl = (
+  params: PlanningShiftsStatsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-  return `/api/planning/shifts/stats/`
+  return stringifiedParams.length > 0
+    ? `/api/planning/shifts/stats/?${stringifiedParams}`
+    : `/api/planning/shifts/stats/`
 }
 
 /**
  * GET /api/planning/stats?week=YYYY-Www&restaurant_id=X
+ * @summary Statistiques de planning pour une semaine
  */
-export const planningShiftsStatsRetrieve = async ( options?: RequestInit): Promise<planningShiftsStatsRetrieveResponse> => {
-
-  return kyMutator<planningShiftsStatsRetrieveResponse>(getPlanningShiftsStatsRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getPlanningShiftsStatsRetrieveQueryKey = () => {
-    return [
-    `/api/planning/shifts/stats/`
-    ] as const;
+export const planningShiftsStatsRetrieve = async (
+  params: PlanningShiftsStatsRetrieveParams,
+  options?: RequestInit
+): Promise<planningShiftsStatsRetrieveResponse> => {
+  return kyMutator<planningShiftsStatsRetrieveResponse>(
+    getPlanningShiftsStatsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getPlanningShiftsStatsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getPlanningShiftsStatsRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>> = ({ signal }) => planningShiftsStatsRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type PlanningShiftsStatsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>>
-export type PlanningShiftsStatsRetrieveQueryError = unknown
+export const getPlanningShiftsStatsRetrieveQueryKey = (
+  params?: PlanningShiftsStatsRetrieveParams
+) => {
+  return [`/api/planning/shifts/stats/`, ...(params ? [params] : [])] as const
+}
 
+export const getPlanningShiftsStatsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+  TError = PlanningStatsError,
+>(
+  params: PlanningShiftsStatsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function usePlanningShiftsStatsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getPlanningShiftsStatsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>
+  > = ({ signal }) => planningShiftsStatsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlanningShiftsStatsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>
+>
+export type PlanningShiftsStatsRetrieveQueryError = PlanningStatsError
+
+export function usePlanningShiftsStatsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+  TError = PlanningStatsError,
+>(
+  params: PlanningShiftsStatsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsStatsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function usePlanningShiftsStatsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+  TError = PlanningStatsError,
+>(
+  params: PlanningShiftsStatsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePlanningShiftsStatsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function usePlanningShiftsStatsRetrieve<TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getPlanningShiftsStatsRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
+export function usePlanningShiftsStatsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+  TError = PlanningStatsError,
+>(
+  params: PlanningShiftsStatsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+/**
+ * @summary Statistiques de planning pour une semaine
+ */
 
+export function usePlanningShiftsStatsRetrieve<
+  TData = Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+  TError = PlanningStatsError,
+>(
+  params: PlanningShiftsStatsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof planningShiftsStatsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getPlanningShiftsStatsRetrieveQueryOptions(
+    params,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

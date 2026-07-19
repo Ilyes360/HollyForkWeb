@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,561 +20,748 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   PaginatedTypeEmployeList,
   PatchedTypeEmployeRequest,
   TypeEmploye,
   TypeEmployeRequest,
-  TypeEmployesListParams
-} from '../../schemas';
+  TypeEmployesListParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type typeEmployesListResponse200 = {
   data: PaginatedTypeEmployeList
   status: 200
 }
 
-export type typeEmployesListResponseSuccess = (typeEmployesListResponse200) & {
-  headers: Headers;
-};
-;
+export type typeEmployesListResponseSuccess = typeEmployesListResponse200 & {
+  headers: Headers
+}
+export type typeEmployesListResponse = typeEmployesListResponseSuccess
 
-export type typeEmployesListResponse = (typeEmployesListResponseSuccess)
-
-export const getTypeEmployesListUrl = (params?: TypeEmployesListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getTypeEmployesListUrl = (params?: TypeEmployesListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/type-employes/?${stringifiedParams}` : `/api/type-employes/`
+  return stringifiedParams.length > 0
+    ? `/api/type-employes/?${stringifiedParams}`
+    : `/api/type-employes/`
 }
 
 /**
  * ViewSet pour gérer les types d'employés.
  */
-export const typeEmployesList = async (params?: TypeEmployesListParams, options?: RequestInit): Promise<typeEmployesListResponse> => {
-
-  return kyMutator<typeEmployesListResponse>(getTypeEmployesListUrl(params),
-  {
+export const typeEmployesList = async (
+  params?: TypeEmployesListParams,
+  options?: RequestInit
+): Promise<typeEmployesListResponse> => {
+  return kyMutator<typeEmployesListResponse>(getTypeEmployesListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getTypeEmployesListQueryKey = (params?: TypeEmployesListParams,) => {
-    return [
-    `/api/type-employes/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getTypeEmployesListQueryOptions = <TData = Awaited<ReturnType<typeof typeEmployesList>>, TError = unknown>(params?: TypeEmployesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTypeEmployesListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof typeEmployesList>>> = ({ signal }) => typeEmployesList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof typeEmployesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type TypeEmployesListQueryResult = NonNullable<Awaited<ReturnType<typeof typeEmployesList>>>
+export const getTypeEmployesListQueryKey = (
+  params?: TypeEmployesListParams
+) => {
+  return [`/api/type-employes/`, ...(params ? [params] : [])] as const
+}
+
+export const getTypeEmployesListQueryOptions = <
+  TData = Awaited<ReturnType<typeof typeEmployesList>>,
+  TError = unknown,
+>(
+  params?: TypeEmployesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getTypeEmployesListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof typeEmployesList>>
+  > = ({ signal }) => typeEmployesList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof typeEmployesList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TypeEmployesListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof typeEmployesList>>
+>
 export type TypeEmployesListQueryError = unknown
 
-
-export function useTypeEmployesList<TData = Awaited<ReturnType<typeof typeEmployesList>>, TError = unknown>(
- params: undefined |  TypeEmployesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesList>>, TError, TData>> & Pick<
+export function useTypeEmployesList<
+  TData = Awaited<ReturnType<typeof typeEmployesList>>,
+  TError = unknown,
+>(
+  params: undefined | TypeEmployesListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof typeEmployesList>>,
           TError,
           Awaited<ReturnType<typeof typeEmployesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTypeEmployesList<TData = Awaited<ReturnType<typeof typeEmployesList>>, TError = unknown>(
- params?: TypeEmployesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTypeEmployesList<
+  TData = Awaited<ReturnType<typeof typeEmployesList>>,
+  TError = unknown,
+>(
+  params?: TypeEmployesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof typeEmployesList>>,
           TError,
           Awaited<ReturnType<typeof typeEmployesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTypeEmployesList<TData = Awaited<ReturnType<typeof typeEmployesList>>, TError = unknown>(
- params?: TypeEmployesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTypeEmployesList<TData = Awaited<ReturnType<typeof typeEmployesList>>, TError = unknown>(
- params?: TypeEmployesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTypeEmployesListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTypeEmployesList<
+  TData = Awaited<ReturnType<typeof typeEmployesList>>,
+  TError = unknown,
+>(
+  params?: TypeEmployesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useTypeEmployesList<
+  TData = Awaited<ReturnType<typeof typeEmployesList>>,
+  TError = unknown,
+>(
+  params?: TypeEmployesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getTypeEmployesListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type typeEmployesCreateResponse201 = {
   data: TypeEmploye
   status: 201
 }
 
-export type typeEmployesCreateResponseSuccess = (typeEmployesCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type typeEmployesCreateResponse = (typeEmployesCreateResponseSuccess)
+export type typeEmployesCreateResponseSuccess =
+  typeEmployesCreateResponse201 & {
+    headers: Headers
+  }
+export type typeEmployesCreateResponse = typeEmployesCreateResponseSuccess
 
 export const getTypeEmployesCreateUrl = () => {
-
-
-
-
   return `/api/type-employes/`
 }
 
 /**
  * ViewSet pour gérer les types d'employés.
  */
-export const typeEmployesCreate = async (typeEmployeRequest: TypeEmployeRequest, options?: RequestInit): Promise<typeEmployesCreateResponse> => {
-
-  return kyMutator<typeEmployesCreateResponse>(getTypeEmployesCreateUrl(),
-  {
+export const typeEmployesCreate = async (
+  typeEmployeRequest: TypeEmployeRequest,
+  options?: RequestInit
+): Promise<typeEmployesCreateResponse> => {
+  return kyMutator<typeEmployesCreateResponse>(getTypeEmployesCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      typeEmployeRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(typeEmployeRequest),
+  })
+}
+
+export const getTypeEmployesCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof typeEmployesCreate>>,
+    TError,
+    { data: TypeEmployeRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof typeEmployesCreate>>,
+  TError,
+  { data: TypeEmployeRequest },
+  TContext
+> => {
+  const mutationKey = ["typeEmployesCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof typeEmployesCreate>>,
+    { data: TypeEmployeRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return typeEmployesCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TypeEmployesCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof typeEmployesCreate>>
+>
+export type TypeEmployesCreateMutationBody = TypeEmployeRequest
+export type TypeEmployesCreateMutationError = unknown
 
-
-export const getTypeEmployesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesCreate>>, TError,{data: TypeEmployeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof typeEmployesCreate>>, TError,{data: TypeEmployeRequest}, TContext> => {
-
-const mutationKey = ['typeEmployesCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof typeEmployesCreate>>, {data: TypeEmployeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  typeEmployesCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TypeEmployesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof typeEmployesCreate>>>
-    export type TypeEmployesCreateMutationBody = TypeEmployeRequest
-    export type TypeEmployesCreateMutationError = unknown
-
-    export const useTypeEmployesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesCreate>>, TError,{data: TypeEmployeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof typeEmployesCreate>>,
-        TError,
-        {data: TypeEmployeRequest},
-        TContext
-      > => {
-      return useMutation(getTypeEmployesCreateMutationOptions(options), queryClient);
-    }
-    export type typeEmployesRetrieveResponse200 = {
+export const useTypeEmployesCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof typeEmployesCreate>>,
+      TError,
+      { data: TypeEmployeRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof typeEmployesCreate>>,
+  TError,
+  { data: TypeEmployeRequest },
+  TContext
+> => {
+  return useMutation(getTypeEmployesCreateMutationOptions(options), queryClient)
+}
+export type typeEmployesRetrieveResponse200 = {
   data: TypeEmploye
   status: 200
 }
 
-export type typeEmployesRetrieveResponseSuccess = (typeEmployesRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type typeEmployesRetrieveResponseSuccess =
+  typeEmployesRetrieveResponse200 & {
+    headers: Headers
+  }
+export type typeEmployesRetrieveResponse = typeEmployesRetrieveResponseSuccess
 
-export type typeEmployesRetrieveResponse = (typeEmployesRetrieveResponseSuccess)
-
-export const getTypeEmployesRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getTypeEmployesRetrieveUrl = (id: number) => {
   return `/api/type-employes/${id}/`
 }
 
 /**
  * ViewSet pour gérer les types d'employés.
  */
-export const typeEmployesRetrieve = async (id: number, options?: RequestInit): Promise<typeEmployesRetrieveResponse> => {
-
-  return kyMutator<typeEmployesRetrieveResponse>(getTypeEmployesRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getTypeEmployesRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/type-employes/${id}/`
-    ] as const;
+export const typeEmployesRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<typeEmployesRetrieveResponse> => {
+  return kyMutator<typeEmployesRetrieveResponse>(
+    getTypeEmployesRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getTypeEmployesRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTypeEmployesRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof typeEmployesRetrieve>>> = ({ signal }) => typeEmployesRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type TypeEmployesRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof typeEmployesRetrieve>>>
+export const getTypeEmployesRetrieveQueryKey = (id: number) => {
+  return [`/api/type-employes/${id}/`] as const
+}
+
+export const getTypeEmployesRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getTypeEmployesRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof typeEmployesRetrieve>>
+  > = ({ signal }) => typeEmployesRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TypeEmployesRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof typeEmployesRetrieve>>
+>
 export type TypeEmployesRetrieveQueryError = unknown
 
-
-export function useTypeEmployesRetrieve<TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError, TData>> & Pick<
+export function useTypeEmployesRetrieve<
+  TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof typeEmployesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof typeEmployesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTypeEmployesRetrieve<TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTypeEmployesRetrieve<
+  TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof typeEmployesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof typeEmployesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTypeEmployesRetrieve<TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTypeEmployesRetrieve<TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof typeEmployesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTypeEmployesRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTypeEmployesRetrieve<
+  TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useTypeEmployesRetrieve<
+  TData = Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof typeEmployesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getTypeEmployesRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type typeEmployesUpdateResponse200 = {
   data: TypeEmploye
   status: 200
 }
 
-export type typeEmployesUpdateResponseSuccess = (typeEmployesUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type typeEmployesUpdateResponseSuccess =
+  typeEmployesUpdateResponse200 & {
+    headers: Headers
+  }
+export type typeEmployesUpdateResponse = typeEmployesUpdateResponseSuccess
 
-export type typeEmployesUpdateResponse = (typeEmployesUpdateResponseSuccess)
-
-export const getTypeEmployesUpdateUrl = (id: number,) => {
-
-
-
-
+export const getTypeEmployesUpdateUrl = (id: number) => {
   return `/api/type-employes/${id}/`
 }
 
 /**
  * ViewSet pour gérer les types d'employés.
  */
-export const typeEmployesUpdate = async (id: number,
-    typeEmployeRequest: TypeEmployeRequest, options?: RequestInit): Promise<typeEmployesUpdateResponse> => {
-
-  return kyMutator<typeEmployesUpdateResponse>(getTypeEmployesUpdateUrl(id),
-  {
+export const typeEmployesUpdate = async (
+  id: number,
+  typeEmployeRequest: TypeEmployeRequest,
+  options?: RequestInit
+): Promise<typeEmployesUpdateResponse> => {
+  return kyMutator<typeEmployesUpdateResponse>(getTypeEmployesUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      typeEmployeRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(typeEmployeRequest),
+  })
+}
+
+export const getTypeEmployesUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof typeEmployesUpdate>>,
+    TError,
+    { id: number; data: TypeEmployeRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof typeEmployesUpdate>>,
+  TError,
+  { id: number; data: TypeEmployeRequest },
+  TContext
+> => {
+  const mutationKey = ["typeEmployesUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof typeEmployesUpdate>>,
+    { id: number; data: TypeEmployeRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return typeEmployesUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TypeEmployesUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof typeEmployesUpdate>>
+>
+export type TypeEmployesUpdateMutationBody = TypeEmployeRequest
+export type TypeEmployesUpdateMutationError = unknown
 
-
-export const getTypeEmployesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesUpdate>>, TError,{id: number;data: TypeEmployeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof typeEmployesUpdate>>, TError,{id: number;data: TypeEmployeRequest}, TContext> => {
-
-const mutationKey = ['typeEmployesUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof typeEmployesUpdate>>, {id: number;data: TypeEmployeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  typeEmployesUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TypeEmployesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof typeEmployesUpdate>>>
-    export type TypeEmployesUpdateMutationBody = TypeEmployeRequest
-    export type TypeEmployesUpdateMutationError = unknown
-
-    export const useTypeEmployesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesUpdate>>, TError,{id: number;data: TypeEmployeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof typeEmployesUpdate>>,
-        TError,
-        {id: number;data: TypeEmployeRequest},
-        TContext
-      > => {
-      return useMutation(getTypeEmployesUpdateMutationOptions(options), queryClient);
-    }
-    export type typeEmployesPartialUpdateResponse200 = {
+export const useTypeEmployesUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof typeEmployesUpdate>>,
+      TError,
+      { id: number; data: TypeEmployeRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof typeEmployesUpdate>>,
+  TError,
+  { id: number; data: TypeEmployeRequest },
+  TContext
+> => {
+  return useMutation(getTypeEmployesUpdateMutationOptions(options), queryClient)
+}
+export type typeEmployesPartialUpdateResponse200 = {
   data: TypeEmploye
   status: 200
 }
 
-export type typeEmployesPartialUpdateResponseSuccess = (typeEmployesPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type typeEmployesPartialUpdateResponseSuccess =
+  typeEmployesPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type typeEmployesPartialUpdateResponse =
+  typeEmployesPartialUpdateResponseSuccess
 
-export type typeEmployesPartialUpdateResponse = (typeEmployesPartialUpdateResponseSuccess)
-
-export const getTypeEmployesPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getTypeEmployesPartialUpdateUrl = (id: number) => {
   return `/api/type-employes/${id}/`
 }
 
 /**
  * ViewSet pour gérer les types d'employés.
  */
-export const typeEmployesPartialUpdate = async (id: number,
-    patchedTypeEmployeRequest?: PatchedTypeEmployeRequest, options?: RequestInit): Promise<typeEmployesPartialUpdateResponse> => {
-
-  return kyMutator<typeEmployesPartialUpdateResponse>(getTypeEmployesPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedTypeEmployeRequest,)
-  }
-);}
-
-
-
-
-export const getTypeEmployesPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesPartialUpdate>>, TError,{id: number;data?: PatchedTypeEmployeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof typeEmployesPartialUpdate>>, TError,{id: number;data?: PatchedTypeEmployeRequest}, TContext> => {
-
-const mutationKey = ['typeEmployesPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof typeEmployesPartialUpdate>>, {id: number;data?: PatchedTypeEmployeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  typeEmployesPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TypeEmployesPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof typeEmployesPartialUpdate>>>
-    export type TypeEmployesPartialUpdateMutationBody = PatchedTypeEmployeRequest | undefined
-    export type TypeEmployesPartialUpdateMutationError = unknown
-
-    export const useTypeEmployesPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesPartialUpdate>>, TError,{id: number;data?: PatchedTypeEmployeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof typeEmployesPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedTypeEmployeRequest},
-        TContext
-      > => {
-      return useMutation(getTypeEmployesPartialUpdateMutationOptions(options), queryClient);
+export const typeEmployesPartialUpdate = async (
+  id: number,
+  patchedTypeEmployeRequest?: PatchedTypeEmployeRequest,
+  options?: RequestInit
+): Promise<typeEmployesPartialUpdateResponse> => {
+  return kyMutator<typeEmployesPartialUpdateResponse>(
+    getTypeEmployesPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedTypeEmployeRequest),
     }
-    export type typeEmployesDestroyResponse204 = {
+  )
+}
+
+export const getTypeEmployesPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof typeEmployesPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedTypeEmployeRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof typeEmployesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedTypeEmployeRequest },
+  TContext
+> => {
+  const mutationKey = ["typeEmployesPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof typeEmployesPartialUpdate>>,
+    { id: number; data?: PatchedTypeEmployeRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return typeEmployesPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type TypeEmployesPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof typeEmployesPartialUpdate>>
+>
+export type TypeEmployesPartialUpdateMutationBody =
+  | PatchedTypeEmployeRequest
+  | undefined
+export type TypeEmployesPartialUpdateMutationError = unknown
+
+export const useTypeEmployesPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof typeEmployesPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedTypeEmployeRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof typeEmployesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedTypeEmployeRequest },
+  TContext
+> => {
+  return useMutation(
+    getTypeEmployesPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type typeEmployesDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type typeEmployesDestroyResponseSuccess = (typeEmployesDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type typeEmployesDestroyResponseSuccess =
+  typeEmployesDestroyResponse204 & {
+    headers: Headers
+  }
+export type typeEmployesDestroyResponse = typeEmployesDestroyResponseSuccess
 
-export type typeEmployesDestroyResponse = (typeEmployesDestroyResponseSuccess)
-
-export const getTypeEmployesDestroyUrl = (id: number,) => {
-
-
-
-
+export const getTypeEmployesDestroyUrl = (id: number) => {
   return `/api/type-employes/${id}/`
 }
 
 /**
  * ViewSet pour gérer les types d'employés.
  */
-export const typeEmployesDestroy = async (id: number, options?: RequestInit): Promise<typeEmployesDestroyResponse> => {
-
-  return kyMutator<typeEmployesDestroyResponse>(getTypeEmployesDestroyUrl(id),
-  {
+export const typeEmployesDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<typeEmployesDestroyResponse> => {
+  return kyMutator<typeEmployesDestroyResponse>(getTypeEmployesDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getTypeEmployesDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof typeEmployesDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof typeEmployesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["typeEmployesDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof typeEmployesDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return typeEmployesDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TypeEmployesDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof typeEmployesDestroy>>
+>
 
+export type TypeEmployesDestroyMutationError = unknown
 
-export const getTypeEmployesDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof typeEmployesDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['typeEmployesDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof typeEmployesDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  typeEmployesDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TypeEmployesDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof typeEmployesDestroy>>>
-
-    export type TypeEmployesDestroyMutationError = unknown
-
-    export const useTypeEmployesDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof typeEmployesDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof typeEmployesDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getTypeEmployesDestroyMutationOptions(options), queryClient);
-    }
+export const useTypeEmployesDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof typeEmployesDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof typeEmployesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getTypeEmployesDestroyMutationOptions(options),
+    queryClient
+  )
+}

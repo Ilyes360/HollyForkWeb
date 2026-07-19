@@ -3,36 +3,38 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
 
 export type ReservationsListParams = {
-/**
- * Date au format YYYY-MM-DD
- */
-date?: string;
-/**
- * ID de la réservation
- */
-id?: number;
-/**
- * A page number within the paginated result set.
- */
-page?: number;
-/**
- * ID du restaurant
- */
-restaurant_id?: number;
-/**
- * ID de la salle
- */
-salle_id?: number;
-/**
- * Service : 'midi' (heure < 15h) ou 'soir' (heure >= 15h)
- */
-service?: string;
-/**
- * ID de la table réservée
- */
-table_id?: number;
-};
+  /**
+   * Date au format YYYY-MM-DD
+   */
+  date?: string
+  /**
+   * ID de la réservation
+   */
+  id?: number
+  /**
+   * A page number within the paginated result set.
+   */
+  page?: number
+  /**
+   * ID du restaurant
+   */
+  restaurant_id?: number
+  /**
+   * ID de la salle
+   */
+  salle_id?: number
+  /**
+   * Service : 'midi' (heure < 15h) ou 'soir' (heure >= 15h)
+   */
+  service?: string
+  /**
+   * ID de la table réservée
+   */
+  table_id?: number
+}

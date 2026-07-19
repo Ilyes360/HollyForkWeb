@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,543 +20,669 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   PaginatedSalleList,
   PatchedSalleRequest,
   Salle,
   SalleRequest,
-  SallesListParams
-} from '../../schemas';
+  SallesListParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type sallesListResponse200 = {
   data: PaginatedSalleList
   status: 200
 }
 
-export type sallesListResponseSuccess = (sallesListResponse200) & {
-  headers: Headers;
-};
-;
+export type sallesListResponseSuccess = sallesListResponse200 & {
+  headers: Headers
+}
+export type sallesListResponse = sallesListResponseSuccess
 
-export type sallesListResponse = (sallesListResponseSuccess)
-
-export const getSallesListUrl = (params?: SallesListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSallesListUrl = (params?: SallesListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/salles/?${stringifiedParams}` : `/api/salles/`
+  return stringifiedParams.length > 0
+    ? `/api/salles/?${stringifiedParams}`
+    : `/api/salles/`
 }
 
-export const sallesList = async (params?: SallesListParams, options?: RequestInit): Promise<sallesListResponse> => {
-
-  return kyMutator<sallesListResponse>(getSallesListUrl(params),
-  {
+export const sallesList = async (
+  params?: SallesListParams,
+  options?: RequestInit
+): Promise<sallesListResponse> => {
+  return kyMutator<sallesListResponse>(getSallesListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSallesListQueryKey = (params?: SallesListParams,) => {
-    return [
-    `/api/salles/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSallesListQueryOptions = <TData = Awaited<ReturnType<typeof sallesList>>, TError = unknown>(params?: SallesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSallesListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sallesList>>> = ({ signal }) => sallesList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type SallesListQueryResult = NonNullable<Awaited<ReturnType<typeof sallesList>>>
+export const getSallesListQueryKey = (params?: SallesListParams) => {
+  return [`/api/salles/`, ...(params ? [params] : [])] as const
+}
+
+export const getSallesListQueryOptions = <
+  TData = Awaited<ReturnType<typeof sallesList>>,
+  TError = unknown,
+>(
+  params?: SallesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getSallesListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof sallesList>>> = ({
+    signal,
+  }) => sallesList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof sallesList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SallesListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof sallesList>>
+>
 export type SallesListQueryError = unknown
 
-
-export function useSallesList<TData = Awaited<ReturnType<typeof sallesList>>, TError = unknown>(
- params: undefined |  SallesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>> & Pick<
+export function useSallesList<
+  TData = Awaited<ReturnType<typeof sallesList>>,
+  TError = unknown,
+>(
+  params: undefined | SallesListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof sallesList>>,
           TError,
           Awaited<ReturnType<typeof sallesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSallesList<TData = Awaited<ReturnType<typeof sallesList>>, TError = unknown>(
- params?: SallesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSallesList<
+  TData = Awaited<ReturnType<typeof sallesList>>,
+  TError = unknown,
+>(
+  params?: SallesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof sallesList>>,
           TError,
           Awaited<ReturnType<typeof sallesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSallesList<TData = Awaited<ReturnType<typeof sallesList>>, TError = unknown>(
- params?: SallesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSallesList<TData = Awaited<ReturnType<typeof sallesList>>, TError = unknown>(
- params?: SallesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSallesListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSallesList<
+  TData = Awaited<ReturnType<typeof sallesList>>,
+  TError = unknown,
+>(
+  params?: SallesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSallesList<
+  TData = Awaited<ReturnType<typeof sallesList>>,
+  TError = unknown,
+>(
+  params?: SallesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSallesListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type sallesCreateResponse201 = {
   data: Salle
   status: 201
 }
 
-export type sallesCreateResponseSuccess = (sallesCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type sallesCreateResponse = (sallesCreateResponseSuccess)
+export type sallesCreateResponseSuccess = sallesCreateResponse201 & {
+  headers: Headers
+}
+export type sallesCreateResponse = sallesCreateResponseSuccess
 
 export const getSallesCreateUrl = () => {
-
-
-
-
   return `/api/salles/`
 }
 
-export const sallesCreate = async (salleRequest: SalleRequest, options?: RequestInit): Promise<sallesCreateResponse> => {
-
-  return kyMutator<sallesCreateResponse>(getSallesCreateUrl(),
-  {
+export const sallesCreate = async (
+  salleRequest: SalleRequest,
+  options?: RequestInit
+): Promise<sallesCreateResponse> => {
+  return kyMutator<sallesCreateResponse>(getSallesCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      salleRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(salleRequest),
+  })
+}
+
+export const getSallesCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sallesCreate>>,
+    TError,
+    { data: SalleRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sallesCreate>>,
+  TError,
+  { data: SalleRequest },
+  TContext
+> => {
+  const mutationKey = ["sallesCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sallesCreate>>,
+    { data: SalleRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return sallesCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SallesCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sallesCreate>>
+>
+export type SallesCreateMutationBody = SalleRequest
+export type SallesCreateMutationError = unknown
 
-
-export const getSallesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesCreate>>, TError,{data: SalleRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sallesCreate>>, TError,{data: SalleRequest}, TContext> => {
-
-const mutationKey = ['sallesCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sallesCreate>>, {data: SalleRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  sallesCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SallesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof sallesCreate>>>
-    export type SallesCreateMutationBody = SalleRequest
-    export type SallesCreateMutationError = unknown
-
-    export const useSallesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesCreate>>, TError,{data: SalleRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sallesCreate>>,
-        TError,
-        {data: SalleRequest},
-        TContext
-      > => {
-      return useMutation(getSallesCreateMutationOptions(options), queryClient);
-    }
-    export type sallesRetrieveResponse200 = {
+export const useSallesCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sallesCreate>>,
+      TError,
+      { data: SalleRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof sallesCreate>>,
+  TError,
+  { data: SalleRequest },
+  TContext
+> => {
+  return useMutation(getSallesCreateMutationOptions(options), queryClient)
+}
+export type sallesRetrieveResponse200 = {
   data: Salle
   status: 200
 }
 
-export type sallesRetrieveResponseSuccess = (sallesRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type sallesRetrieveResponseSuccess = sallesRetrieveResponse200 & {
+  headers: Headers
+}
+export type sallesRetrieveResponse = sallesRetrieveResponseSuccess
 
-export type sallesRetrieveResponse = (sallesRetrieveResponseSuccess)
-
-export const getSallesRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getSallesRetrieveUrl = (id: number) => {
   return `/api/salles/${id}/`
 }
 
-export const sallesRetrieve = async (id: number, options?: RequestInit): Promise<sallesRetrieveResponse> => {
-
-  return kyMutator<sallesRetrieveResponse>(getSallesRetrieveUrl(id),
-  {
+export const sallesRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<sallesRetrieveResponse> => {
+  return kyMutator<sallesRetrieveResponse>(getSallesRetrieveUrl(id), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSallesRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/salles/${id}/`
-    ] as const;
-    }
-
-
-export const getSallesRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof sallesRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSallesRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sallesRetrieve>>> = ({ signal }) => sallesRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type SallesRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof sallesRetrieve>>>
+export const getSallesRetrieveQueryKey = (id: number) => {
+  return [`/api/salles/${id}/`] as const
+}
+
+export const getSallesRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof sallesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getSallesRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof sallesRetrieve>>> = ({
+    signal,
+  }) => sallesRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof sallesRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SallesRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof sallesRetrieve>>
+>
 export type SallesRetrieveQueryError = unknown
 
-
-export function useSallesRetrieve<TData = Awaited<ReturnType<typeof sallesRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>> & Pick<
+export function useSallesRetrieve<
+  TData = Awaited<ReturnType<typeof sallesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof sallesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof sallesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSallesRetrieve<TData = Awaited<ReturnType<typeof sallesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSallesRetrieve<
+  TData = Awaited<ReturnType<typeof sallesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof sallesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof sallesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSallesRetrieve<TData = Awaited<ReturnType<typeof sallesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSallesRetrieve<TData = Awaited<ReturnType<typeof sallesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSallesRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSallesRetrieve<
+  TData = Awaited<ReturnType<typeof sallesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSallesRetrieve<
+  TData = Awaited<ReturnType<typeof sallesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof sallesRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSallesRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type sallesUpdateResponse200 = {
   data: Salle
   status: 200
 }
 
-export type sallesUpdateResponseSuccess = (sallesUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type sallesUpdateResponseSuccess = sallesUpdateResponse200 & {
+  headers: Headers
+}
+export type sallesUpdateResponse = sallesUpdateResponseSuccess
 
-export type sallesUpdateResponse = (sallesUpdateResponseSuccess)
-
-export const getSallesUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSallesUpdateUrl = (id: number) => {
   return `/api/salles/${id}/`
 }
 
-export const sallesUpdate = async (id: number,
-    salleRequest: SalleRequest, options?: RequestInit): Promise<sallesUpdateResponse> => {
-
-  return kyMutator<sallesUpdateResponse>(getSallesUpdateUrl(id),
-  {
+export const sallesUpdate = async (
+  id: number,
+  salleRequest: SalleRequest,
+  options?: RequestInit
+): Promise<sallesUpdateResponse> => {
+  return kyMutator<sallesUpdateResponse>(getSallesUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      salleRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(salleRequest),
+  })
+}
+
+export const getSallesUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sallesUpdate>>,
+    TError,
+    { id: number; data: SalleRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sallesUpdate>>,
+  TError,
+  { id: number; data: SalleRequest },
+  TContext
+> => {
+  const mutationKey = ["sallesUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sallesUpdate>>,
+    { id: number; data: SalleRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return sallesUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SallesUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sallesUpdate>>
+>
+export type SallesUpdateMutationBody = SalleRequest
+export type SallesUpdateMutationError = unknown
 
-
-export const getSallesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesUpdate>>, TError,{id: number;data: SalleRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sallesUpdate>>, TError,{id: number;data: SalleRequest}, TContext> => {
-
-const mutationKey = ['sallesUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sallesUpdate>>, {id: number;data: SalleRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  sallesUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SallesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof sallesUpdate>>>
-    export type SallesUpdateMutationBody = SalleRequest
-    export type SallesUpdateMutationError = unknown
-
-    export const useSallesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesUpdate>>, TError,{id: number;data: SalleRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sallesUpdate>>,
-        TError,
-        {id: number;data: SalleRequest},
-        TContext
-      > => {
-      return useMutation(getSallesUpdateMutationOptions(options), queryClient);
-    }
-    export type sallesPartialUpdateResponse200 = {
+export const useSallesUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sallesUpdate>>,
+      TError,
+      { id: number; data: SalleRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof sallesUpdate>>,
+  TError,
+  { id: number; data: SalleRequest },
+  TContext
+> => {
+  return useMutation(getSallesUpdateMutationOptions(options), queryClient)
+}
+export type sallesPartialUpdateResponse200 = {
   data: Salle
   status: 200
 }
 
-export type sallesPartialUpdateResponseSuccess = (sallesPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type sallesPartialUpdateResponseSuccess =
+  sallesPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type sallesPartialUpdateResponse = sallesPartialUpdateResponseSuccess
 
-export type sallesPartialUpdateResponse = (sallesPartialUpdateResponseSuccess)
-
-export const getSallesPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSallesPartialUpdateUrl = (id: number) => {
   return `/api/salles/${id}/`
 }
 
-export const sallesPartialUpdate = async (id: number,
-    patchedSalleRequest?: PatchedSalleRequest, options?: RequestInit): Promise<sallesPartialUpdateResponse> => {
-
-  return kyMutator<sallesPartialUpdateResponse>(getSallesPartialUpdateUrl(id),
-  {
+export const sallesPartialUpdate = async (
+  id: number,
+  patchedSalleRequest?: PatchedSalleRequest,
+  options?: RequestInit
+): Promise<sallesPartialUpdateResponse> => {
+  return kyMutator<sallesPartialUpdateResponse>(getSallesPartialUpdateUrl(id), {
     ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedSalleRequest,)
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(patchedSalleRequest),
+  })
+}
+
+export const getSallesPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sallesPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedSalleRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sallesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedSalleRequest },
+  TContext
+> => {
+  const mutationKey = ["sallesPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sallesPartialUpdate>>,
+    { id: number; data?: PatchedSalleRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return sallesPartialUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SallesPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sallesPartialUpdate>>
+>
+export type SallesPartialUpdateMutationBody = PatchedSalleRequest | undefined
+export type SallesPartialUpdateMutationError = unknown
 
-
-export const getSallesPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesPartialUpdate>>, TError,{id: number;data?: PatchedSalleRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sallesPartialUpdate>>, TError,{id: number;data?: PatchedSalleRequest}, TContext> => {
-
-const mutationKey = ['sallesPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sallesPartialUpdate>>, {id: number;data?: PatchedSalleRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  sallesPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SallesPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof sallesPartialUpdate>>>
-    export type SallesPartialUpdateMutationBody = PatchedSalleRequest | undefined
-    export type SallesPartialUpdateMutationError = unknown
-
-    export const useSallesPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesPartialUpdate>>, TError,{id: number;data?: PatchedSalleRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sallesPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedSalleRequest},
-        TContext
-      > => {
-      return useMutation(getSallesPartialUpdateMutationOptions(options), queryClient);
-    }
-    export type sallesDestroyResponse204 = {
+export const useSallesPartialUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sallesPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedSalleRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof sallesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedSalleRequest },
+  TContext
+> => {
+  return useMutation(
+    getSallesPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type sallesDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type sallesDestroyResponseSuccess = (sallesDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type sallesDestroyResponseSuccess = sallesDestroyResponse204 & {
+  headers: Headers
+}
+export type sallesDestroyResponse = sallesDestroyResponseSuccess
 
-export type sallesDestroyResponse = (sallesDestroyResponseSuccess)
-
-export const getSallesDestroyUrl = (id: number,) => {
-
-
-
-
+export const getSallesDestroyUrl = (id: number) => {
   return `/api/salles/${id}/`
 }
 
-export const sallesDestroy = async (id: number, options?: RequestInit): Promise<sallesDestroyResponse> => {
-
-  return kyMutator<sallesDestroyResponse>(getSallesDestroyUrl(id),
-  {
+export const sallesDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<sallesDestroyResponse> => {
+  return kyMutator<sallesDestroyResponse>(getSallesDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getSallesDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sallesDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sallesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["sallesDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sallesDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return sallesDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SallesDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sallesDestroy>>
+>
 
+export type SallesDestroyMutationError = unknown
 
-export const getSallesDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sallesDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['sallesDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sallesDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  sallesDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SallesDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof sallesDestroy>>>
-
-    export type SallesDestroyMutationError = unknown
-
-    export const useSallesDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sallesDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sallesDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getSallesDestroyMutationOptions(options), queryClient);
-    }
+export const useSallesDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sallesDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof sallesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getSallesDestroyMutationOptions(options), queryClient)
+}

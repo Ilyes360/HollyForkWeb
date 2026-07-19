@@ -3,41 +3,57 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  EmployeesStatusResponse
-} from '../../schemas';
+import type { EmployeesStatusResponse } from "../../schemas"
 
+export const getEmployeesStatusListResponseMock =
+  (): EmployeesStatusResponse[] =>
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      date: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      restaurant_id: faker.helpers.arrayElement([
+        faker.helpers.arrayElement([faker.number.int(), null]),
+        null,
+      ]),
+      employees: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1
+      ).map(() => ({
+        [faker.string.alphanumeric(5)]: {},
+      })),
+    }))
 
-export const getEmployeesStatusListResponseMock = (): EmployeesStatusResponse[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.string.alpha({length: {min: 10, max: 20}}), restaurant_id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), null]), employees: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({
-        [faker.string.alphanumeric(5)]: {}
-      }))})))
-
-
-export const getEmployeesStatusListMockHandler = (overrideResponse?: EmployeesStatusResponse[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<EmployeesStatusResponse[]> | EmployeesStatusResponse[]), options?: RequestHandlerOptions) => {
-  return http.get('*/api/employees/status/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getEmployeesStatusListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getEmployeesStatusListMockHandler = (
+  overrideResponse?:
+    | EmployeesStatusResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<EmployeesStatusResponse[]> | EmployeesStatusResponse[]),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/employees/status/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmployeesStatusListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
-export const getEmployeesMock = () => [
-  getEmployeesStatusListMockHandler()
-]
+export const getEmployeesMock = () => [getEmployeesStatusListMockHandler()]

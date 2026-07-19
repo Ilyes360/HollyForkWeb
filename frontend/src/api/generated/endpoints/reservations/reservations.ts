@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,159 +20,214 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   PaginatedReservationList,
   PatchedReservationRequest,
   Reservation,
   ReservationRequest,
-  ReservationsListParams
-} from '../../schemas';
+  ReservationsListParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type reservationsListResponse200 = {
   data: PaginatedReservationList
   status: 200
 }
 
-export type reservationsListResponseSuccess = (reservationsListResponse200) & {
-  headers: Headers;
-};
-;
+export type reservationsListResponseSuccess = reservationsListResponse200 & {
+  headers: Headers
+}
+export type reservationsListResponse = reservationsListResponseSuccess
 
-export type reservationsListResponse = (reservationsListResponseSuccess)
-
-export const getReservationsListUrl = (params?: ReservationsListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getReservationsListUrl = (params?: ReservationsListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/reservations/?${stringifiedParams}` : `/api/reservations/`
+  return stringifiedParams.length > 0
+    ? `/api/reservations/?${stringifiedParams}`
+    : `/api/reservations/`
 }
 
 /**
  * Liste des réservations avec filtres optionnels : id, restaurant_id, salle_id, table_id, date (YYYY-MM-DD), service (midi|soir).
  * @summary Liste des réservations
  */
-export const reservationsList = async (params?: ReservationsListParams, options?: RequestInit): Promise<reservationsListResponse> => {
-
-  return kyMutator<reservationsListResponse>(getReservationsListUrl(params),
-  {
+export const reservationsList = async (
+  params?: ReservationsListParams,
+  options?: RequestInit
+): Promise<reservationsListResponse> => {
+  return kyMutator<reservationsListResponse>(getReservationsListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getReservationsListQueryKey = (params?: ReservationsListParams,) => {
-    return [
-    `/api/reservations/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getReservationsListQueryOptions = <TData = Awaited<ReturnType<typeof reservationsList>>, TError = unknown>(params?: ReservationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReservationsListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reservationsList>>> = ({ signal }) => reservationsList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reservationsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type ReservationsListQueryResult = NonNullable<Awaited<ReturnType<typeof reservationsList>>>
+export const getReservationsListQueryKey = (
+  params?: ReservationsListParams
+) => {
+  return [`/api/reservations/`, ...(params ? [params] : [])] as const
+}
+
+export const getReservationsListQueryOptions = <
+  TData = Awaited<ReturnType<typeof reservationsList>>,
+  TError = unknown,
+>(
+  params?: ReservationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getReservationsListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reservationsList>>
+  > = ({ signal }) => reservationsList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof reservationsList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReservationsListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reservationsList>>
+>
 export type ReservationsListQueryError = unknown
 
-
-export function useReservationsList<TData = Awaited<ReturnType<typeof reservationsList>>, TError = unknown>(
- params: undefined |  ReservationsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsList>>, TError, TData>> & Pick<
+export function useReservationsList<
+  TData = Awaited<ReturnType<typeof reservationsList>>,
+  TError = unknown,
+>(
+  params: undefined | ReservationsListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof reservationsList>>,
           TError,
           Awaited<ReturnType<typeof reservationsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReservationsList<TData = Awaited<ReturnType<typeof reservationsList>>, TError = unknown>(
- params?: ReservationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReservationsList<
+  TData = Awaited<ReturnType<typeof reservationsList>>,
+  TError = unknown,
+>(
+  params?: ReservationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof reservationsList>>,
           TError,
           Awaited<ReturnType<typeof reservationsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReservationsList<TData = Awaited<ReturnType<typeof reservationsList>>, TError = unknown>(
- params?: ReservationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReservationsList<
+  TData = Awaited<ReturnType<typeof reservationsList>>,
+  TError = unknown,
+>(
+  params?: ReservationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
 /**
  * @summary Liste des réservations
  */
 
-export function useReservationsList<TData = Awaited<ReturnType<typeof reservationsList>>, TError = unknown>(
- params?: ReservationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useReservationsList<
+  TData = Awaited<ReturnType<typeof reservationsList>>,
+  TError = unknown,
+>(
+  params?: ReservationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getReservationsListQueryOptions(params, options)
 
-  const queryOptions = getReservationsListQueryOptions(params,options)
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+  return { ...query, queryKey: queryOptions.queryKey }
 }
-
-
-
-
-
 
 export type reservationsCreateResponse201 = {
   data: Reservation
   status: 201
 }
 
-export type reservationsCreateResponseSuccess = (reservationsCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type reservationsCreateResponse = (reservationsCreateResponseSuccess)
+export type reservationsCreateResponseSuccess =
+  reservationsCreateResponse201 & {
+    headers: Headers
+  }
+export type reservationsCreateResponse = reservationsCreateResponseSuccess
 
 export const getReservationsCreateUrl = () => {
-
-
-
-
   return `/api/reservations/`
 }
 
@@ -181,421 +235,553 @@ export const getReservationsCreateUrl = () => {
  * Créer une réservation. Optionnellement associer une table (table_id) ; la table doit appartenir à la salle et être libre au créneau.
  * @summary Créer une réservation
  */
-export const reservationsCreate = async (reservationRequest: ReservationRequest, options?: RequestInit): Promise<reservationsCreateResponse> => {
-
-  return kyMutator<reservationsCreateResponse>(getReservationsCreateUrl(),
-  {
+export const reservationsCreate = async (
+  reservationRequest: ReservationRequest,
+  options?: RequestInit
+): Promise<reservationsCreateResponse> => {
+  return kyMutator<reservationsCreateResponse>(getReservationsCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      reservationRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reservationRequest),
+  })
+}
+
+export const getReservationsCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reservationsCreate>>,
+    TError,
+    { data: ReservationRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reservationsCreate>>,
+  TError,
+  { data: ReservationRequest },
+  TContext
+> => {
+  const mutationKey = ["reservationsCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reservationsCreate>>,
+    { data: ReservationRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return reservationsCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type ReservationsCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reservationsCreate>>
+>
+export type ReservationsCreateMutationBody = ReservationRequest
+export type ReservationsCreateMutationError = unknown
 
-
-export const getReservationsCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsCreate>>, TError,{data: ReservationRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reservationsCreate>>, TError,{data: ReservationRequest}, TContext> => {
-
-const mutationKey = ['reservationsCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reservationsCreate>>, {data: ReservationRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  reservationsCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReservationsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof reservationsCreate>>>
-    export type ReservationsCreateMutationBody = ReservationRequest
-    export type ReservationsCreateMutationError = unknown
-
-    /**
+/**
  * @summary Créer une réservation
  */
-export const useReservationsCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsCreate>>, TError,{data: ReservationRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reservationsCreate>>,
-        TError,
-        {data: ReservationRequest},
-        TContext
-      > => {
-      return useMutation(getReservationsCreateMutationOptions(options), queryClient);
-    }
-    export type reservationsRetrieveResponse200 = {
+export const useReservationsCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reservationsCreate>>,
+      TError,
+      { data: ReservationRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reservationsCreate>>,
+  TError,
+  { data: ReservationRequest },
+  TContext
+> => {
+  return useMutation(getReservationsCreateMutationOptions(options), queryClient)
+}
+export type reservationsRetrieveResponse200 = {
   data: Reservation
   status: 200
 }
 
-export type reservationsRetrieveResponseSuccess = (reservationsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type reservationsRetrieveResponseSuccess =
+  reservationsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type reservationsRetrieveResponse = reservationsRetrieveResponseSuccess
 
-export type reservationsRetrieveResponse = (reservationsRetrieveResponseSuccess)
-
-export const getReservationsRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getReservationsRetrieveUrl = (id: number) => {
   return `/api/reservations/${id}/`
 }
 
 /**
  * @summary Détail d'une réservation
  */
-export const reservationsRetrieve = async (id: number, options?: RequestInit): Promise<reservationsRetrieveResponse> => {
-
-  return kyMutator<reservationsRetrieveResponse>(getReservationsRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getReservationsRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/reservations/${id}/`
-    ] as const;
+export const reservationsRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<reservationsRetrieveResponse> => {
+  return kyMutator<reservationsRetrieveResponse>(
+    getReservationsRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getReservationsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof reservationsRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReservationsRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reservationsRetrieve>>> = ({ signal }) => reservationsRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reservationsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type ReservationsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof reservationsRetrieve>>>
+export const getReservationsRetrieveQueryKey = (id: number) => {
+  return [`/api/reservations/${id}/`] as const
+}
+
+export const getReservationsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof reservationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getReservationsRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reservationsRetrieve>>
+  > = ({ signal }) => reservationsRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof reservationsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReservationsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reservationsRetrieve>>
+>
 export type ReservationsRetrieveQueryError = unknown
 
-
-export function useReservationsRetrieve<TData = Awaited<ReturnType<typeof reservationsRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsRetrieve>>, TError, TData>> & Pick<
+export function useReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof reservationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof reservationsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof reservationsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReservationsRetrieve<TData = Awaited<ReturnType<typeof reservationsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof reservationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof reservationsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof reservationsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReservationsRetrieve<TData = Awaited<ReturnType<typeof reservationsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof reservationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
 /**
  * @summary Détail d'une réservation
  */
 
-export function useReservationsRetrieve<TData = Awaited<ReturnType<typeof reservationsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reservationsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof reservationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reservationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getReservationsRetrieveQueryOptions(id, options)
 
-  const queryOptions = getReservationsRetrieveQueryOptions(id,options)
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+  return { ...query, queryKey: queryOptions.queryKey }
 }
-
-
-
-
-
 
 export type reservationsUpdateResponse200 = {
   data: Reservation
   status: 200
 }
 
-export type reservationsUpdateResponseSuccess = (reservationsUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type reservationsUpdateResponseSuccess =
+  reservationsUpdateResponse200 & {
+    headers: Headers
+  }
+export type reservationsUpdateResponse = reservationsUpdateResponseSuccess
 
-export type reservationsUpdateResponse = (reservationsUpdateResponseSuccess)
-
-export const getReservationsUpdateUrl = (id: number,) => {
-
-
-
-
+export const getReservationsUpdateUrl = (id: number) => {
   return `/api/reservations/${id}/`
 }
 
 /**
  * @summary Modifier une réservation
  */
-export const reservationsUpdate = async (id: number,
-    reservationRequest: ReservationRequest, options?: RequestInit): Promise<reservationsUpdateResponse> => {
-
-  return kyMutator<reservationsUpdateResponse>(getReservationsUpdateUrl(id),
-  {
+export const reservationsUpdate = async (
+  id: number,
+  reservationRequest: ReservationRequest,
+  options?: RequestInit
+): Promise<reservationsUpdateResponse> => {
+  return kyMutator<reservationsUpdateResponse>(getReservationsUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      reservationRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reservationRequest),
+  })
+}
+
+export const getReservationsUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reservationsUpdate>>,
+    TError,
+    { id: number; data: ReservationRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reservationsUpdate>>,
+  TError,
+  { id: number; data: ReservationRequest },
+  TContext
+> => {
+  const mutationKey = ["reservationsUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reservationsUpdate>>,
+    { id: number; data: ReservationRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return reservationsUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type ReservationsUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reservationsUpdate>>
+>
+export type ReservationsUpdateMutationBody = ReservationRequest
+export type ReservationsUpdateMutationError = unknown
 
-
-export const getReservationsUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsUpdate>>, TError,{id: number;data: ReservationRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reservationsUpdate>>, TError,{id: number;data: ReservationRequest}, TContext> => {
-
-const mutationKey = ['reservationsUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reservationsUpdate>>, {id: number;data: ReservationRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  reservationsUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReservationsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof reservationsUpdate>>>
-    export type ReservationsUpdateMutationBody = ReservationRequest
-    export type ReservationsUpdateMutationError = unknown
-
-    /**
+/**
  * @summary Modifier une réservation
  */
-export const useReservationsUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsUpdate>>, TError,{id: number;data: ReservationRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reservationsUpdate>>,
-        TError,
-        {id: number;data: ReservationRequest},
-        TContext
-      > => {
-      return useMutation(getReservationsUpdateMutationOptions(options), queryClient);
-    }
-    export type reservationsPartialUpdateResponse200 = {
+export const useReservationsUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reservationsUpdate>>,
+      TError,
+      { id: number; data: ReservationRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reservationsUpdate>>,
+  TError,
+  { id: number; data: ReservationRequest },
+  TContext
+> => {
+  return useMutation(getReservationsUpdateMutationOptions(options), queryClient)
+}
+export type reservationsPartialUpdateResponse200 = {
   data: Reservation
   status: 200
 }
 
-export type reservationsPartialUpdateResponseSuccess = (reservationsPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type reservationsPartialUpdateResponseSuccess =
+  reservationsPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type reservationsPartialUpdateResponse =
+  reservationsPartialUpdateResponseSuccess
 
-export type reservationsPartialUpdateResponse = (reservationsPartialUpdateResponseSuccess)
-
-export const getReservationsPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getReservationsPartialUpdateUrl = (id: number) => {
   return `/api/reservations/${id}/`
 }
 
 /**
  * @summary Modifier partiellement une réservation
  */
-export const reservationsPartialUpdate = async (id: number,
-    patchedReservationRequest?: PatchedReservationRequest, options?: RequestInit): Promise<reservationsPartialUpdateResponse> => {
+export const reservationsPartialUpdate = async (
+  id: number,
+  patchedReservationRequest?: PatchedReservationRequest,
+  options?: RequestInit
+): Promise<reservationsPartialUpdateResponse> => {
+  return kyMutator<reservationsPartialUpdateResponse>(
+    getReservationsPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedReservationRequest),
+    }
+  )
+}
 
-  return kyMutator<reservationsPartialUpdateResponse>(getReservationsPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedReservationRequest,)
+export const getReservationsPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reservationsPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedReservationRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reservationsPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedReservationRequest },
+  TContext
+> => {
+  const mutationKey = ["reservationsPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reservationsPartialUpdate>>,
+    { id: number; data?: PatchedReservationRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return reservationsPartialUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type ReservationsPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reservationsPartialUpdate>>
+>
+export type ReservationsPartialUpdateMutationBody =
+  | PatchedReservationRequest
+  | undefined
+export type ReservationsPartialUpdateMutationError = unknown
 
-
-export const getReservationsPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsPartialUpdate>>, TError,{id: number;data?: PatchedReservationRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reservationsPartialUpdate>>, TError,{id: number;data?: PatchedReservationRequest}, TContext> => {
-
-const mutationKey = ['reservationsPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reservationsPartialUpdate>>, {id: number;data?: PatchedReservationRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  reservationsPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReservationsPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof reservationsPartialUpdate>>>
-    export type ReservationsPartialUpdateMutationBody = PatchedReservationRequest | undefined
-    export type ReservationsPartialUpdateMutationError = unknown
-
-    /**
+/**
  * @summary Modifier partiellement une réservation
  */
-export const useReservationsPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsPartialUpdate>>, TError,{id: number;data?: PatchedReservationRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reservationsPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedReservationRequest},
-        TContext
-      > => {
-      return useMutation(getReservationsPartialUpdateMutationOptions(options), queryClient);
-    }
-    export type reservationsDestroyResponse204 = {
+export const useReservationsPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reservationsPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedReservationRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reservationsPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedReservationRequest },
+  TContext
+> => {
+  return useMutation(
+    getReservationsPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type reservationsDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type reservationsDestroyResponseSuccess = (reservationsDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type reservationsDestroyResponseSuccess =
+  reservationsDestroyResponse204 & {
+    headers: Headers
+  }
+export type reservationsDestroyResponse = reservationsDestroyResponseSuccess
 
-export type reservationsDestroyResponse = (reservationsDestroyResponseSuccess)
-
-export const getReservationsDestroyUrl = (id: number,) => {
-
-
-
-
+export const getReservationsDestroyUrl = (id: number) => {
   return `/api/reservations/${id}/`
 }
 
 /**
  * @summary Supprimer une réservation
  */
-export const reservationsDestroy = async (id: number, options?: RequestInit): Promise<reservationsDestroyResponse> => {
-
-  return kyMutator<reservationsDestroyResponse>(getReservationsDestroyUrl(id),
-  {
+export const reservationsDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<reservationsDestroyResponse> => {
+  return kyMutator<reservationsDestroyResponse>(getReservationsDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getReservationsDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reservationsDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reservationsDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["reservationsDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reservationsDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return reservationsDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type ReservationsDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reservationsDestroy>>
+>
 
+export type ReservationsDestroyMutationError = unknown
 
-export const getReservationsDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reservationsDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['reservationsDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reservationsDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  reservationsDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReservationsDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof reservationsDestroy>>>
-
-    export type ReservationsDestroyMutationError = unknown
-
-    /**
+/**
  * @summary Supprimer une réservation
  */
-export const useReservationsDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reservationsDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reservationsDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getReservationsDestroyMutationOptions(options), queryClient);
-    }
+export const useReservationsDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reservationsDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reservationsDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getReservationsDestroyMutationOptions(options),
+    queryClient
+  )
+}

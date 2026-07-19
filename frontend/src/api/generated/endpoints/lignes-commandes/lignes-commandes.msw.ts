@@ -3,147 +3,376 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  LigneCommande,
-  PaginatedLigneCommandeList
-} from '../../schemas';
+import type { LigneCommande, PaginatedLigneCommandeList } from "../../schemas"
 
+export const getLignesCommandesListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedLigneCommandeList, object>> = {}
+): PaginatedLigneCommandeList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    quantity: faker.number.int(),
+    unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+    article_id: faker.number.int(),
+    article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    cost_of_goods_sold: faker.helpers.fromRegExp(
+      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+    ),
+    awaiting_service: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+  })),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesListResponseMock = (overrideResponse: Partial<Extract<PaginatedLigneCommandeList, object>> = {}): PaginatedLigneCommandeList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined])})), ...overrideResponse})
+export const getLignesCommandesCreateResponseMock = (
+  overrideResponse: Partial<Extract<LigneCommande, object>> = {}
+): LigneCommande => ({
+  id: faker.number.int(),
+  quantity: faker.number.int(),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  article_id: faker.number.int(),
+  article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesCreateResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
+export const getLignesCommandesRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<LigneCommande, object>> = {}
+): LigneCommande => ({
+  id: faker.number.int(),
+  quantity: faker.number.int(),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  article_id: faker.number.int(),
+  article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesRetrieveResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
+export const getLignesCommandesUpdateResponseMock = (
+  overrideResponse: Partial<Extract<LigneCommande, object>> = {}
+): LigneCommande => ({
+  id: faker.number.int(),
+  quantity: faker.number.int(),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  article_id: faker.number.int(),
+  article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesUpdateResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
+export const getLignesCommandesPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<LigneCommande, object>> = {}
+): LigneCommande => ({
+  id: faker.number.int(),
+  quantity: faker.number.int(),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  article_id: faker.number.int(),
+  article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesPartialUpdateResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
+export const getLignesCommandesDeplacerCreateResponseMock = (
+  overrideResponse: Partial<Extract<LigneCommande, object>> = {}
+): LigneCommande => ({
+  id: faker.number.int(),
+  quantity: faker.number.int(),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  article_id: faker.number.int(),
+  article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesDeplacerCreateResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
+export const getLignesCommandesReclamerCreateResponseMock = (
+  overrideResponse: Partial<Extract<LigneCommande, object>> = {}
+): LigneCommande => ({
+  id: faker.number.int(),
+  quantity: faker.number.int(),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  article_id: faker.number.int(),
+  article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getLignesCommandesReclamerCreateResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
+export const getLignesCommandesDeplacerSelectionCreateResponseMock =
+  (): LigneCommande[] =>
+    Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      id: faker.number.int(),
+      quantity: faker.number.int(),
+      unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+      article_id: faker.number.int(),
+      article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cost_of_goods_sold: faker.helpers.fromRegExp(
+        "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+      ),
+      awaiting_service: faker.helpers.arrayElement([
+        faker.datatype.boolean(),
+        undefined,
+      ]),
+    }))
 
-export const getLignesCommandesDeplacerSelectionCreateResponseMock = (overrideResponse: Partial<Extract<LigneCommande, object>> = {}): LigneCommande => ({id: faker.number.int(), commande: faker.internet.url(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))},}, quantity: faker.number.int(), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), article_id: faker.number.int(), cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), awaiting_service: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), ...overrideResponse})
-
-
-export const getLignesCommandesListMockHandler = (overrideResponse?: PaginatedLigneCommandeList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedLigneCommandeList> | PaginatedLigneCommandeList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/lignes-commandes/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesListMockHandler = (
+  overrideResponse?:
+    | PaginatedLigneCommandeList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedLigneCommandeList> | PaginatedLigneCommandeList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/lignes-commandes/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesCreateMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.post('*/api/lignes-commandes/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getLignesCommandesCreateMockHandler = (
+  overrideResponse?:
+    | LigneCommande
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<LigneCommande> | LigneCommande),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/lignes-commandes/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesRetrieveMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.get('*/api/lignes-commandes/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesRetrieveMockHandler = (
+  overrideResponse?:
+    | LigneCommande
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<LigneCommande> | LigneCommande),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/lignes-commandes/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesUpdateMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.put('*/api/lignes-commandes/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesUpdateMockHandler = (
+  overrideResponse?:
+    | LigneCommande
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<LigneCommande> | LigneCommande),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/lignes-commandes/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesPartialUpdateMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/lignes-commandes/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesPartialUpdateMockHandler = (
+  overrideResponse?:
+    | LigneCommande
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<LigneCommande> | LigneCommande),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/lignes-commandes/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/lignes-commandes/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getLignesCommandesDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/lignes-commandes/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 
-export const getLignesCommandesDeplacerCreateMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.post('*/api/lignes-commandes/:id/deplacer/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesDeplacerCreateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesDeplacerCreateMockHandler = (
+  overrideResponse?:
+    | LigneCommande
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<LigneCommande> | LigneCommande),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/lignes-commandes/:id/deplacer/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesDeplacerCreateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesReclamerCreateMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.post('*/api/lignes-commandes/:id/reclamer/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesReclamerCreateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesReclamerCreateMockHandler = (
+  overrideResponse?:
+    | LigneCommande
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<LigneCommande> | LigneCommande),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/lignes-commandes/:id/reclamer/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesReclamerCreateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getLignesCommandesDeplacerSelectionCreateMockHandler = (overrideResponse?: LigneCommande | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LigneCommande> | LigneCommande), options?: RequestHandlerOptions) => {
-  return http.post('*/api/lignes-commandes/deplacer-selection/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getLignesCommandesDeplacerSelectionCreateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getLignesCommandesDeplacerSelectionCreateMockHandler = (
+  overrideResponse?:
+    | LigneCommande[]
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<LigneCommande[]> | LigneCommande[]),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/lignes-commandes/deplacer-selection/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesDeplacerSelectionCreateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 export const getLignesCommandesMock = () => [
   getLignesCommandesListMockHandler(),
@@ -154,5 +383,5 @@ export const getLignesCommandesMock = () => [
   getLignesCommandesDestroyMockHandler(),
   getLignesCommandesDeplacerCreateMockHandler(),
   getLignesCommandesReclamerCreateMockHandler(),
-  getLignesCommandesDeplacerSelectionCreateMockHandler()
+  getLignesCommandesDeplacerSelectionCreateMockHandler(),
 ]

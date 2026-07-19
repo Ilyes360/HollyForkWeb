@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,543 +20,767 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   PaginatedReapprovisionnementList,
   PatchedReapprovisionnementRequest,
   Reapprovisionnement,
   ReapprovisionnementRequest,
-  ReapprovisionnementsListParams
-} from '../../schemas';
+  ReapprovisionnementsListParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type reapprovisionnementsListResponse200 = {
   data: PaginatedReapprovisionnementList
   status: 200
 }
 
-export type reapprovisionnementsListResponseSuccess = (reapprovisionnementsListResponse200) & {
-  headers: Headers;
-};
-;
+export type reapprovisionnementsListResponseSuccess =
+  reapprovisionnementsListResponse200 & {
+    headers: Headers
+  }
+export type reapprovisionnementsListResponse =
+  reapprovisionnementsListResponseSuccess
 
-export type reapprovisionnementsListResponse = (reapprovisionnementsListResponseSuccess)
-
-export const getReapprovisionnementsListUrl = (params?: ReapprovisionnementsListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getReapprovisionnementsListUrl = (
+  params?: ReapprovisionnementsListParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/reapprovisionnements/?${stringifiedParams}` : `/api/reapprovisionnements/`
+  return stringifiedParams.length > 0
+    ? `/api/reapprovisionnements/?${stringifiedParams}`
+    : `/api/reapprovisionnements/`
 }
 
-export const reapprovisionnementsList = async (params?: ReapprovisionnementsListParams, options?: RequestInit): Promise<reapprovisionnementsListResponse> => {
-
-  return kyMutator<reapprovisionnementsListResponse>(getReapprovisionnementsListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getReapprovisionnementsListQueryKey = (params?: ReapprovisionnementsListParams,) => {
-    return [
-    `/api/reapprovisionnements/`, ...(params ? [params] : [])
-    ] as const;
+export const reapprovisionnementsList = async (
+  params?: ReapprovisionnementsListParams,
+  options?: RequestInit
+): Promise<reapprovisionnementsListResponse> => {
+  return kyMutator<reapprovisionnementsListResponse>(
+    getReapprovisionnementsListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
+  )
+}
 
-
-export const getReapprovisionnementsListQueryOptions = <TData = Awaited<ReturnType<typeof reapprovisionnementsList>>, TError = unknown>(params?: ReapprovisionnementsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsList>>, TError, TData>>, }
+export const getReapprovisionnementsListQueryKey = (
+  params?: ReapprovisionnementsListParams
 ) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReapprovisionnementsListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reapprovisionnementsList>>> = ({ signal }) => reapprovisionnementsList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return [`/api/reapprovisionnements/`, ...(params ? [params] : [])] as const
 }
 
-export type ReapprovisionnementsListQueryResult = NonNullable<Awaited<ReturnType<typeof reapprovisionnementsList>>>
+export const getReapprovisionnementsListQueryOptions = <
+  TData = Awaited<ReturnType<typeof reapprovisionnementsList>>,
+  TError = unknown,
+>(
+  params?: ReapprovisionnementsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getReapprovisionnementsListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reapprovisionnementsList>>
+  > = ({ signal }) => reapprovisionnementsList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof reapprovisionnementsList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReapprovisionnementsListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reapprovisionnementsList>>
+>
 export type ReapprovisionnementsListQueryError = unknown
 
-
-export function useReapprovisionnementsList<TData = Awaited<ReturnType<typeof reapprovisionnementsList>>, TError = unknown>(
- params: undefined |  ReapprovisionnementsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsList>>, TError, TData>> & Pick<
+export function useReapprovisionnementsList<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsList>>,
+  TError = unknown,
+>(
+  params: undefined | ReapprovisionnementsListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof reapprovisionnementsList>>,
           TError,
           Awaited<ReturnType<typeof reapprovisionnementsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReapprovisionnementsList<TData = Awaited<ReturnType<typeof reapprovisionnementsList>>, TError = unknown>(
- params?: ReapprovisionnementsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReapprovisionnementsList<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsList>>,
+  TError = unknown,
+>(
+  params?: ReapprovisionnementsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof reapprovisionnementsList>>,
           TError,
           Awaited<ReturnType<typeof reapprovisionnementsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReapprovisionnementsList<TData = Awaited<ReturnType<typeof reapprovisionnementsList>>, TError = unknown>(
- params?: ReapprovisionnementsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useReapprovisionnementsList<TData = Awaited<ReturnType<typeof reapprovisionnementsList>>, TError = unknown>(
- params?: ReapprovisionnementsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReapprovisionnementsListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReapprovisionnementsList<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsList>>,
+  TError = unknown,
+>(
+  params?: ReapprovisionnementsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useReapprovisionnementsList<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsList>>,
+  TError = unknown,
+>(
+  params?: ReapprovisionnementsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getReapprovisionnementsListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type reapprovisionnementsCreateResponse201 = {
   data: Reapprovisionnement
   status: 201
 }
 
-export type reapprovisionnementsCreateResponseSuccess = (reapprovisionnementsCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type reapprovisionnementsCreateResponse = (reapprovisionnementsCreateResponseSuccess)
+export type reapprovisionnementsCreateResponseSuccess =
+  reapprovisionnementsCreateResponse201 & {
+    headers: Headers
+  }
+export type reapprovisionnementsCreateResponse =
+  reapprovisionnementsCreateResponseSuccess
 
 export const getReapprovisionnementsCreateUrl = () => {
-
-
-
-
   return `/api/reapprovisionnements/`
 }
 
-export const reapprovisionnementsCreate = async (reapprovisionnementRequest: ReapprovisionnementRequest, options?: RequestInit): Promise<reapprovisionnementsCreateResponse> => {
-
-  return kyMutator<reapprovisionnementsCreateResponse>(getReapprovisionnementsCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      reapprovisionnementRequest,)
-  }
-);}
-
-
-
-
-export const getReapprovisionnementsCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsCreate>>, TError,{data: ReapprovisionnementRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsCreate>>, TError,{data: ReapprovisionnementRequest}, TContext> => {
-
-const mutationKey = ['reapprovisionnementsCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reapprovisionnementsCreate>>, {data: ReapprovisionnementRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  reapprovisionnementsCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReapprovisionnementsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof reapprovisionnementsCreate>>>
-    export type ReapprovisionnementsCreateMutationBody = ReapprovisionnementRequest
-    export type ReapprovisionnementsCreateMutationError = unknown
-
-    export const useReapprovisionnementsCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsCreate>>, TError,{data: ReapprovisionnementRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reapprovisionnementsCreate>>,
-        TError,
-        {data: ReapprovisionnementRequest},
-        TContext
-      > => {
-      return useMutation(getReapprovisionnementsCreateMutationOptions(options), queryClient);
+export const reapprovisionnementsCreate = async (
+  reapprovisionnementRequest: ReapprovisionnementRequest,
+  options?: RequestInit
+): Promise<reapprovisionnementsCreateResponse> => {
+  return kyMutator<reapprovisionnementsCreateResponse>(
+    getReapprovisionnementsCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(reapprovisionnementRequest),
     }
-    export type reapprovisionnementsRetrieveResponse200 = {
+  )
+}
+
+export const getReapprovisionnementsCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reapprovisionnementsCreate>>,
+    TError,
+    { data: ReapprovisionnementRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reapprovisionnementsCreate>>,
+  TError,
+  { data: ReapprovisionnementRequest },
+  TContext
+> => {
+  const mutationKey = ["reapprovisionnementsCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reapprovisionnementsCreate>>,
+    { data: ReapprovisionnementRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return reapprovisionnementsCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ReapprovisionnementsCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reapprovisionnementsCreate>>
+>
+export type ReapprovisionnementsCreateMutationBody = ReapprovisionnementRequest
+export type ReapprovisionnementsCreateMutationError = unknown
+
+export const useReapprovisionnementsCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reapprovisionnementsCreate>>,
+      TError,
+      { data: ReapprovisionnementRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reapprovisionnementsCreate>>,
+  TError,
+  { data: ReapprovisionnementRequest },
+  TContext
+> => {
+  return useMutation(
+    getReapprovisionnementsCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type reapprovisionnementsRetrieveResponse200 = {
   data: Reapprovisionnement
   status: 200
 }
 
-export type reapprovisionnementsRetrieveResponseSuccess = (reapprovisionnementsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type reapprovisionnementsRetrieveResponseSuccess =
+  reapprovisionnementsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type reapprovisionnementsRetrieveResponse =
+  reapprovisionnementsRetrieveResponseSuccess
 
-export type reapprovisionnementsRetrieveResponse = (reapprovisionnementsRetrieveResponseSuccess)
-
-export const getReapprovisionnementsRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getReapprovisionnementsRetrieveUrl = (id: number) => {
   return `/api/reapprovisionnements/${id}/`
 }
 
-export const reapprovisionnementsRetrieve = async (id: number, options?: RequestInit): Promise<reapprovisionnementsRetrieveResponse> => {
-
-  return kyMutator<reapprovisionnementsRetrieveResponse>(getReapprovisionnementsRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getReapprovisionnementsRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/reapprovisionnements/${id}/`
-    ] as const;
+export const reapprovisionnementsRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<reapprovisionnementsRetrieveResponse> => {
+  return kyMutator<reapprovisionnementsRetrieveResponse>(
+    getReapprovisionnementsRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getReapprovisionnementsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReapprovisionnementsRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>> = ({ signal }) => reapprovisionnementsRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type ReapprovisionnementsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>>
+export const getReapprovisionnementsRetrieveQueryKey = (id: number) => {
+  return [`/api/reapprovisionnements/${id}/`] as const
+}
+
+export const getReapprovisionnementsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getReapprovisionnementsRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>
+  > = ({ signal }) => reapprovisionnementsRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReapprovisionnementsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>
+>
 export type ReapprovisionnementsRetrieveQueryError = unknown
 
-
-export function useReapprovisionnementsRetrieve<TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError, TData>> & Pick<
+export function useReapprovisionnementsRetrieve<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReapprovisionnementsRetrieve<TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReapprovisionnementsRetrieve<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReapprovisionnementsRetrieve<TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useReapprovisionnementsRetrieve<TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReapprovisionnementsRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useReapprovisionnementsRetrieve<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useReapprovisionnementsRetrieve<
+  TData = Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof reapprovisionnementsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getReapprovisionnementsRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type reapprovisionnementsUpdateResponse200 = {
   data: Reapprovisionnement
   status: 200
 }
 
-export type reapprovisionnementsUpdateResponseSuccess = (reapprovisionnementsUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type reapprovisionnementsUpdateResponseSuccess =
+  reapprovisionnementsUpdateResponse200 & {
+    headers: Headers
+  }
+export type reapprovisionnementsUpdateResponse =
+  reapprovisionnementsUpdateResponseSuccess
 
-export type reapprovisionnementsUpdateResponse = (reapprovisionnementsUpdateResponseSuccess)
-
-export const getReapprovisionnementsUpdateUrl = (id: number,) => {
-
-
-
-
+export const getReapprovisionnementsUpdateUrl = (id: number) => {
   return `/api/reapprovisionnements/${id}/`
 }
 
-export const reapprovisionnementsUpdate = async (id: number,
-    reapprovisionnementRequest: ReapprovisionnementRequest, options?: RequestInit): Promise<reapprovisionnementsUpdateResponse> => {
-
-  return kyMutator<reapprovisionnementsUpdateResponse>(getReapprovisionnementsUpdateUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      reapprovisionnementRequest,)
-  }
-);}
-
-
-
-
-export const getReapprovisionnementsUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsUpdate>>, TError,{id: number;data: ReapprovisionnementRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsUpdate>>, TError,{id: number;data: ReapprovisionnementRequest}, TContext> => {
-
-const mutationKey = ['reapprovisionnementsUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reapprovisionnementsUpdate>>, {id: number;data: ReapprovisionnementRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  reapprovisionnementsUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReapprovisionnementsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof reapprovisionnementsUpdate>>>
-    export type ReapprovisionnementsUpdateMutationBody = ReapprovisionnementRequest
-    export type ReapprovisionnementsUpdateMutationError = unknown
-
-    export const useReapprovisionnementsUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsUpdate>>, TError,{id: number;data: ReapprovisionnementRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reapprovisionnementsUpdate>>,
-        TError,
-        {id: number;data: ReapprovisionnementRequest},
-        TContext
-      > => {
-      return useMutation(getReapprovisionnementsUpdateMutationOptions(options), queryClient);
+export const reapprovisionnementsUpdate = async (
+  id: number,
+  reapprovisionnementRequest: ReapprovisionnementRequest,
+  options?: RequestInit
+): Promise<reapprovisionnementsUpdateResponse> => {
+  return kyMutator<reapprovisionnementsUpdateResponse>(
+    getReapprovisionnementsUpdateUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(reapprovisionnementRequest),
     }
-    export type reapprovisionnementsPartialUpdateResponse200 = {
+  )
+}
+
+export const getReapprovisionnementsUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reapprovisionnementsUpdate>>,
+    TError,
+    { id: number; data: ReapprovisionnementRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reapprovisionnementsUpdate>>,
+  TError,
+  { id: number; data: ReapprovisionnementRequest },
+  TContext
+> => {
+  const mutationKey = ["reapprovisionnementsUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reapprovisionnementsUpdate>>,
+    { id: number; data: ReapprovisionnementRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return reapprovisionnementsUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ReapprovisionnementsUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reapprovisionnementsUpdate>>
+>
+export type ReapprovisionnementsUpdateMutationBody = ReapprovisionnementRequest
+export type ReapprovisionnementsUpdateMutationError = unknown
+
+export const useReapprovisionnementsUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reapprovisionnementsUpdate>>,
+      TError,
+      { id: number; data: ReapprovisionnementRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reapprovisionnementsUpdate>>,
+  TError,
+  { id: number; data: ReapprovisionnementRequest },
+  TContext
+> => {
+  return useMutation(
+    getReapprovisionnementsUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type reapprovisionnementsPartialUpdateResponse200 = {
   data: Reapprovisionnement
   status: 200
 }
 
-export type reapprovisionnementsPartialUpdateResponseSuccess = (reapprovisionnementsPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type reapprovisionnementsPartialUpdateResponseSuccess =
+  reapprovisionnementsPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type reapprovisionnementsPartialUpdateResponse =
+  reapprovisionnementsPartialUpdateResponseSuccess
 
-export type reapprovisionnementsPartialUpdateResponse = (reapprovisionnementsPartialUpdateResponseSuccess)
-
-export const getReapprovisionnementsPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getReapprovisionnementsPartialUpdateUrl = (id: number) => {
   return `/api/reapprovisionnements/${id}/`
 }
 
-export const reapprovisionnementsPartialUpdate = async (id: number,
-    patchedReapprovisionnementRequest?: PatchedReapprovisionnementRequest, options?: RequestInit): Promise<reapprovisionnementsPartialUpdateResponse> => {
-
-  return kyMutator<reapprovisionnementsPartialUpdateResponse>(getReapprovisionnementsPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedReapprovisionnementRequest,)
-  }
-);}
-
-
-
-
-export const getReapprovisionnementsPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>, TError,{id: number;data?: PatchedReapprovisionnementRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>, TError,{id: number;data?: PatchedReapprovisionnementRequest}, TContext> => {
-
-const mutationKey = ['reapprovisionnementsPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>, {id: number;data?: PatchedReapprovisionnementRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  reapprovisionnementsPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReapprovisionnementsPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>>
-    export type ReapprovisionnementsPartialUpdateMutationBody = PatchedReapprovisionnementRequest | undefined
-    export type ReapprovisionnementsPartialUpdateMutationError = unknown
-
-    export const useReapprovisionnementsPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>, TError,{id: number;data?: PatchedReapprovisionnementRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedReapprovisionnementRequest},
-        TContext
-      > => {
-      return useMutation(getReapprovisionnementsPartialUpdateMutationOptions(options), queryClient);
+export const reapprovisionnementsPartialUpdate = async (
+  id: number,
+  patchedReapprovisionnementRequest?: PatchedReapprovisionnementRequest,
+  options?: RequestInit
+): Promise<reapprovisionnementsPartialUpdateResponse> => {
+  return kyMutator<reapprovisionnementsPartialUpdateResponse>(
+    getReapprovisionnementsPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedReapprovisionnementRequest),
     }
-    export type reapprovisionnementsDestroyResponse204 = {
+  )
+}
+
+export const getReapprovisionnementsPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedReapprovisionnementRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedReapprovisionnementRequest },
+  TContext
+> => {
+  const mutationKey = ["reapprovisionnementsPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>,
+    { id: number; data?: PatchedReapprovisionnementRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return reapprovisionnementsPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ReapprovisionnementsPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>
+>
+export type ReapprovisionnementsPartialUpdateMutationBody =
+  | PatchedReapprovisionnementRequest
+  | undefined
+export type ReapprovisionnementsPartialUpdateMutationError = unknown
+
+export const useReapprovisionnementsPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedReapprovisionnementRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reapprovisionnementsPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedReapprovisionnementRequest },
+  TContext
+> => {
+  return useMutation(
+    getReapprovisionnementsPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type reapprovisionnementsDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type reapprovisionnementsDestroyResponseSuccess = (reapprovisionnementsDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type reapprovisionnementsDestroyResponseSuccess =
+  reapprovisionnementsDestroyResponse204 & {
+    headers: Headers
+  }
+export type reapprovisionnementsDestroyResponse =
+  reapprovisionnementsDestroyResponseSuccess
 
-export type reapprovisionnementsDestroyResponse = (reapprovisionnementsDestroyResponseSuccess)
-
-export const getReapprovisionnementsDestroyUrl = (id: number,) => {
-
-
-
-
+export const getReapprovisionnementsDestroyUrl = (id: number) => {
   return `/api/reapprovisionnements/${id}/`
 }
 
-export const reapprovisionnementsDestroy = async (id: number, options?: RequestInit): Promise<reapprovisionnementsDestroyResponse> => {
-
-  return kyMutator<reapprovisionnementsDestroyResponse>(getReapprovisionnementsDestroyUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getReapprovisionnementsDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['reapprovisionnementsDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reapprovisionnementsDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  reapprovisionnementsDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReapprovisionnementsDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof reapprovisionnementsDestroy>>>
-
-    export type ReapprovisionnementsDestroyMutationError = unknown
-
-    export const useReapprovisionnementsDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reapprovisionnementsDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reapprovisionnementsDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getReapprovisionnementsDestroyMutationOptions(options), queryClient);
+export const reapprovisionnementsDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<reapprovisionnementsDestroyResponse> => {
+  return kyMutator<reapprovisionnementsDestroyResponse>(
+    getReapprovisionnementsDestroyUrl(id),
+    {
+      ...options,
+      method: "DELETE",
     }
+  )
+}
+
+export const getReapprovisionnementsDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reapprovisionnementsDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reapprovisionnementsDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["reapprovisionnementsDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reapprovisionnementsDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return reapprovisionnementsDestroy(id)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ReapprovisionnementsDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reapprovisionnementsDestroy>>
+>
+
+export type ReapprovisionnementsDestroyMutationError = unknown
+
+export const useReapprovisionnementsDestroy = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reapprovisionnementsDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reapprovisionnementsDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getReapprovisionnementsDestroyMutationOptions(options),
+    queryClient
+  )
+}

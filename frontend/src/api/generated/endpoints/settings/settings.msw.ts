@@ -3,19 +3,14 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
 import type {
   BillingSettings,
@@ -23,253 +18,853 @@ import type {
   PaginatedBillingSettingsList,
   PaginatedNotificationSettingsList,
   Restaurant,
-  UserProfile
-} from '../../schemas';
+  UserProfile,
+} from "../../schemas"
 
+export const getSettingsBillingListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedBillingSettingsList, object>> = {}
+): PaginatedBillingSettingsList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+    default_vat_rate: faker.helpers.arrayElement([
+      faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"),
+      undefined,
+    ]),
+    currency: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 10 } }),
+      undefined,
+    ]),
+    auto_invoice: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  })),
+  ...overrideResponse,
+})
 
-export const getSettingsBillingListResponseMock = (overrideResponse: Partial<Extract<PaginatedBillingSettingsList, object>> = {}): PaginatedBillingSettingsList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, default_vat_rate: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"), undefined]), currency: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), undefined]), auto_invoice: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z'})), ...overrideResponse})
+export const getSettingsBillingCreateResponseMock = (
+  overrideResponse: Partial<Extract<BillingSettings, object>> = {}
+): BillingSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  default_vat_rate: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"),
+    undefined,
+  ]),
+  currency: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 10 } }),
+    undefined,
+  ]),
+  auto_invoice: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsBillingCreateResponseMock = (overrideResponse: Partial<Extract<BillingSettings, object>> = {}): BillingSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, default_vat_rate: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"), undefined]), currency: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), undefined]), auto_invoice: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsBillingRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<BillingSettings, object>> = {}
+): BillingSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  default_vat_rate: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"),
+    undefined,
+  ]),
+  currency: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 10 } }),
+    undefined,
+  ]),
+  auto_invoice: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsBillingRetrieveResponseMock = (overrideResponse: Partial<Extract<BillingSettings, object>> = {}): BillingSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, default_vat_rate: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"), undefined]), currency: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), undefined]), auto_invoice: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsBillingUpdateResponseMock = (
+  overrideResponse: Partial<Extract<BillingSettings, object>> = {}
+): BillingSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  default_vat_rate: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"),
+    undefined,
+  ]),
+  currency: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 10 } }),
+    undefined,
+  ]),
+  auto_invoice: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsBillingUpdateResponseMock = (overrideResponse: Partial<Extract<BillingSettings, object>> = {}): BillingSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, default_vat_rate: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"), undefined]), currency: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), undefined]), auto_invoice: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsBillingPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<BillingSettings, object>> = {}
+): BillingSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  default_vat_rate: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"),
+    undefined,
+  ]),
+  currency: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 10 } }),
+    undefined,
+  ]),
+  auto_invoice: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsBillingPartialUpdateResponseMock = (overrideResponse: Partial<Extract<BillingSettings, object>> = {}): BillingSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, default_vat_rate: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,3}(?:\\.\\d{0,2})?$"), undefined]), currency: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), undefined]), auto_invoice: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsNotificationsListResponseMock = (
+  overrideResponse: Partial<
+    Extract<PaginatedNotificationSettingsList, object>
+  > = {}
+): PaginatedNotificationSettingsList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+    email_notifications: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    sms_notifications: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    stock_alerts: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    reservation_alerts: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    command_alerts: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  })),
+  ...overrideResponse,
+})
 
-export const getSettingsNotificationsListResponseMock = (overrideResponse: Partial<Extract<PaginatedNotificationSettingsList, object>> = {}): PaginatedNotificationSettingsList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, email_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), sms_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), stock_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), reservation_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), command_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z'})), ...overrideResponse})
+export const getSettingsNotificationsCreateResponseMock = (
+  overrideResponse: Partial<Extract<NotificationSettings, object>> = {}
+): NotificationSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  email_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  sms_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  stock_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  reservation_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  command_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsNotificationsCreateResponseMock = (overrideResponse: Partial<Extract<NotificationSettings, object>> = {}): NotificationSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, email_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), sms_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), stock_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), reservation_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), command_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsNotificationsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<NotificationSettings, object>> = {}
+): NotificationSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  email_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  sms_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  stock_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  reservation_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  command_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsNotificationsRetrieveResponseMock = (overrideResponse: Partial<Extract<NotificationSettings, object>> = {}): NotificationSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, email_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), sms_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), stock_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), reservation_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), command_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsNotificationsUpdateResponseMock = (
+  overrideResponse: Partial<Extract<NotificationSettings, object>> = {}
+): NotificationSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  email_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  sms_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  stock_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  reservation_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  command_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsNotificationsUpdateResponseMock = (overrideResponse: Partial<Extract<NotificationSettings, object>> = {}): NotificationSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, email_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), sms_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), stock_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), reservation_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), command_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsNotificationsPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<NotificationSettings, object>> = {}
+): NotificationSettings => ({
+  id: faker.number.int(),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  email_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  sms_notifications: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  stock_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  reservation_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  command_alerts: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+})
 
-export const getSettingsNotificationsPartialUpdateResponseMock = (overrideResponse: Partial<Extract<NotificationSettings, object>> = {}): NotificationSettings => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, email_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), sms_notifications: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), stock_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), reservation_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), command_alerts: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), created_at: faker.date.past().toISOString().slice(0, 19) + 'Z', updated_at: faker.date.past().toISOString().slice(0, 19) + 'Z', ...overrideResponse})
+export const getSettingsRestaurantRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Restaurant, object>> = {}
+): Restaurant => ({
+  restaurant_id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 255 } }),
+  postal_code: faker.string.alpha({ length: { min: 10, max: 10 } }),
+  city: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  phone_number: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  siret: faker.helpers.fromRegExp("^\\d{14}$"),
+  naf_code: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 10 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
+  logo_url: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getSettingsRestaurantRetrieveResponseMock = (overrideResponse: Partial<Extract<Restaurant, object>> = {}): Restaurant => ({restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), ...overrideResponse})
+export const getSettingsRestaurantPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Restaurant, object>> = {}
+): Restaurant => ({
+  restaurant_id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 255 } }),
+  postal_code: faker.string.alpha({ length: { min: 10, max: 10 } }),
+  city: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  phone_number: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  siret: faker.helpers.fromRegExp("^\\d{14}$"),
+  naf_code: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 10 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
+  logo_url: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getSettingsRestaurantPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Restaurant, object>> = {}): Restaurant => ({restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), ...overrideResponse})
+export const getSettingsUsersListResponseMock = (
+  overrideResponse: Partial<Extract<UserProfile, object>> = {}
+): UserProfile => ({
+  id: faker.number.int(),
+  username: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.helpers.arrayElement([faker.internet.email(), undefined]),
+  first_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  last_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  date_joined: faker.date.past().toISOString().slice(0, 19) + "Z",
+  is_active: faker.datatype.boolean(),
+  ...overrideResponse,
+})
 
-export const getSettingsUsersListResponseMock = (overrideResponse: Partial<Extract<UserProfile, object>> = {}): UserProfile => ({id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), date_joined: faker.date.past().toISOString().slice(0, 19) + 'Z', is_active: faker.datatype.boolean(), ...overrideResponse})
+export const getSettingsUsersCreateResponseMock = (
+  overrideResponse: Partial<Extract<UserProfile, object>> = {}
+): UserProfile => ({
+  id: faker.number.int(),
+  username: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.helpers.arrayElement([faker.internet.email(), undefined]),
+  first_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  last_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  date_joined: faker.date.past().toISOString().slice(0, 19) + "Z",
+  is_active: faker.datatype.boolean(),
+  ...overrideResponse,
+})
 
-export const getSettingsUsersCreateResponseMock = (overrideResponse: Partial<Extract<UserProfile, object>> = {}): UserProfile => ({id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), date_joined: faker.date.past().toISOString().slice(0, 19) + 'Z', is_active: faker.datatype.boolean(), ...overrideResponse})
+export const getSettingsUserRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<UserProfile, object>> = {}
+): UserProfile => ({
+  id: faker.number.int(),
+  username: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.helpers.arrayElement([faker.internet.email(), undefined]),
+  first_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  last_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  date_joined: faker.date.past().toISOString().slice(0, 19) + "Z",
+  is_active: faker.datatype.boolean(),
+  ...overrideResponse,
+})
 
-export const getSettingsUserRetrieveResponseMock = (overrideResponse: Partial<Extract<UserProfile, object>> = {}): UserProfile => ({id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), date_joined: faker.date.past().toISOString().slice(0, 19) + 'Z', is_active: faker.datatype.boolean(), ...overrideResponse})
+export const getSettingsUserPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<UserProfile, object>> = {}
+): UserProfile => ({
+  id: faker.number.int(),
+  username: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.helpers.arrayElement([faker.internet.email(), undefined]),
+  first_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  last_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 150 } }),
+    undefined,
+  ]),
+  date_joined: faker.date.past().toISOString().slice(0, 19) + "Z",
+  is_active: faker.datatype.boolean(),
+  ...overrideResponse,
+})
 
-export const getSettingsUserPartialUpdateResponseMock = (overrideResponse: Partial<Extract<UserProfile, object>> = {}): UserProfile => ({id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.helpers.arrayElement([faker.internet.email(), undefined]), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), date_joined: faker.date.past().toISOString().slice(0, 19) + 'Z', is_active: faker.datatype.boolean(), ...overrideResponse})
-
-
-export const getSettingsBillingListMockHandler = (overrideResponse?: PaginatedBillingSettingsList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedBillingSettingsList> | PaginatedBillingSettingsList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/billing/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsBillingListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsBillingListMockHandler = (
+  overrideResponse?:
+    | PaginatedBillingSettingsList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) =>
+        | Promise<PaginatedBillingSettingsList>
+        | PaginatedBillingSettingsList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/billing/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsBillingListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsBillingCreateMockHandler = (overrideResponse?: BillingSettings | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<BillingSettings> | BillingSettings), options?: RequestHandlerOptions) => {
-  return http.post('*/api/settings/billing/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsBillingCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getSettingsBillingCreateMockHandler = (
+  overrideResponse?:
+    | BillingSettings
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<BillingSettings> | BillingSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/settings/billing/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsBillingCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsBillingRetrieveMockHandler = (overrideResponse?: BillingSettings | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<BillingSettings> | BillingSettings), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/billing/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsBillingRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsBillingRetrieveMockHandler = (
+  overrideResponse?:
+    | BillingSettings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<BillingSettings> | BillingSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/billing/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsBillingRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsBillingUpdateMockHandler = (overrideResponse?: BillingSettings | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<BillingSettings> | BillingSettings), options?: RequestHandlerOptions) => {
-  return http.put('*/api/settings/billing/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsBillingUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsBillingUpdateMockHandler = (
+  overrideResponse?:
+    | BillingSettings
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<BillingSettings> | BillingSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/settings/billing/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsBillingUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsBillingPartialUpdateMockHandler = (overrideResponse?: BillingSettings | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<BillingSettings> | BillingSettings), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/settings/billing/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsBillingPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsBillingPartialUpdateMockHandler = (
+  overrideResponse?:
+    | BillingSettings
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<BillingSettings> | BillingSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/settings/billing/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsBillingPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsBillingDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/settings/billing/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getSettingsBillingDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/settings/billing/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 
-export const getSettingsNotificationsListMockHandler = (overrideResponse?: PaginatedNotificationSettingsList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedNotificationSettingsList> | PaginatedNotificationSettingsList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/notifications/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsNotificationsListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsNotificationsListMockHandler = (
+  overrideResponse?:
+    | PaginatedNotificationSettingsList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) =>
+        | Promise<PaginatedNotificationSettingsList>
+        | PaginatedNotificationSettingsList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/notifications/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsNotificationsListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsNotificationsCreateMockHandler = (overrideResponse?: NotificationSettings | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<NotificationSettings> | NotificationSettings), options?: RequestHandlerOptions) => {
-  return http.post('*/api/settings/notifications/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsNotificationsCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getSettingsNotificationsCreateMockHandler = (
+  overrideResponse?:
+    | NotificationSettings
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<NotificationSettings> | NotificationSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/settings/notifications/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsNotificationsCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsNotificationsRetrieveMockHandler = (overrideResponse?: NotificationSettings | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<NotificationSettings> | NotificationSettings), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/notifications/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsNotificationsRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsNotificationsRetrieveMockHandler = (
+  overrideResponse?:
+    | NotificationSettings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<NotificationSettings> | NotificationSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/notifications/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsNotificationsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsNotificationsUpdateMockHandler = (overrideResponse?: NotificationSettings | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<NotificationSettings> | NotificationSettings), options?: RequestHandlerOptions) => {
-  return http.put('*/api/settings/notifications/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsNotificationsUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsNotificationsUpdateMockHandler = (
+  overrideResponse?:
+    | NotificationSettings
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<NotificationSettings> | NotificationSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/settings/notifications/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsNotificationsUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsNotificationsPartialUpdateMockHandler = (overrideResponse?: NotificationSettings | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<NotificationSettings> | NotificationSettings), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/settings/notifications/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsNotificationsPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsNotificationsPartialUpdateMockHandler = (
+  overrideResponse?:
+    | NotificationSettings
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<NotificationSettings> | NotificationSettings),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/settings/notifications/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsNotificationsPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsNotificationsDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/settings/notifications/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getSettingsNotificationsDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/settings/notifications/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 
-export const getSettingsRestaurantRetrieveMockHandler = (overrideResponse?: Restaurant | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Restaurant> | Restaurant), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/restaurant/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsRestaurantRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsRestaurantRetrieveMockHandler = (
+  overrideResponse?:
+    | Restaurant
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Restaurant> | Restaurant),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/restaurant/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsRestaurantRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsRestaurantPartialUpdateMockHandler = (overrideResponse?: Restaurant | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Restaurant> | Restaurant), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/settings/restaurant/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsRestaurantPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsRestaurantPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Restaurant
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Restaurant> | Restaurant),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/settings/restaurant/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsRestaurantPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsUsersListMockHandler = (overrideResponse?: UserProfile | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UserProfile> | UserProfile), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/users/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsUsersListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsUsersListMockHandler = (
+  overrideResponse?:
+    | UserProfile
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<UserProfile> | UserProfile),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/users/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsUsersListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsUsersCreateMockHandler = (overrideResponse?: UserProfile | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<UserProfile> | UserProfile), options?: RequestHandlerOptions) => {
-  return http.post('*/api/settings/users/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsUsersCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getSettingsUsersCreateMockHandler = (
+  overrideResponse?:
+    | UserProfile
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<UserProfile> | UserProfile),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/settings/users/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsUsersCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsUserRetrieveMockHandler = (overrideResponse?: UserProfile | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UserProfile> | UserProfile), options?: RequestHandlerOptions) => {
-  return http.get('*/api/settings/users/:userId/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsUserRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsUserRetrieveMockHandler = (
+  overrideResponse?:
+    | UserProfile
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<UserProfile> | UserProfile),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/settings/users/:userId/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsUserRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getSettingsUserPartialUpdateMockHandler = (overrideResponse?: UserProfile | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<UserProfile> | UserProfile), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/settings/users/:userId/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSettingsUserPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getSettingsUserPartialUpdateMockHandler = (
+  overrideResponse?:
+    | UserProfile
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<UserProfile> | UserProfile),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/settings/users/:userId/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettingsUserPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 export const getSettingsMock = () => [
   getSettingsBillingListMockHandler(),
@@ -289,5 +884,5 @@ export const getSettingsMock = () => [
   getSettingsUsersListMockHandler(),
   getSettingsUsersCreateMockHandler(),
   getSettingsUserRetrieveMockHandler(),
-  getSettingsUserPartialUpdateMockHandler()
+  getSettingsUserPartialUpdateMockHandler(),
 ]

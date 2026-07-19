@@ -3,6 +3,8 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
 
@@ -11,38 +13,38 @@
  */
 export interface UserRegistrationRequest {
   /**
-     * Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-     * @minLength 1
-     * @maxLength 150
-     * @pattern ^[\w.@+-]+$
-     */
-  username: string;
+   * Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+   * @minLength 1
+   * @maxLength 150
+   * @pattern ^[\w.@+-]+$
+   */
+  username: string
   /** @minLength 1 */
-  email: string;
+  email: string
   /** @minLength 1 */
-  password: string;
+  password: string
   /** @minLength 1 */
-  password2: string;
+  password2: string
   /** @maxLength 150 */
-  first_name?: string;
+  first_name?: string
   /** @maxLength 150 */
-  last_name?: string;
+  last_name?: string
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  employee_first_name: string;
+   * @minLength 1
+   * @maxLength 100
+   */
+  employee_first_name: string
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  employee_last_name: string;
+   * @minLength 1
+   * @maxLength 100
+   */
+  employee_last_name: string
   /**
-     * @minLength 4
-     * @maxLength 4
-     * @pattern ^\d{4}$
-     */
-  pin_code: string;
-  type_employe_id: number;
-  restaurant_id: number;
+   * @minLength 4
+   * @maxLength 4
+   * @pattern ^\d{4}$
+   */
+  pin_code: string
+  type_employe_id: number
+  restaurant_id: number
 }

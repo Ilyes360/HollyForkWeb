@@ -3,41 +3,45 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
 
 export interface FournisseurRequest {
   /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  name: string;
+   * @minLength 1
+   * @maxLength 200
+   */
+  name: string
   /** @maxLength 200 */
-  contact_name?: string;
+  contact_name?: string
   /**
-     * @maxLength 254
-     * @nullable
-     */
-  email?: string | null;
+   * @maxLength 254
+   * @nullable
+   */
+  email?: string | null
   /**
-     * @maxLength 20
-     * @nullable
-     */
-  telephone?: string | null;
-  address?: string;
-  city?: string;
-  postal_code?: string;
+   * @maxLength 20
+   * @nullable
+   */
+  telephone?: string | null
+  address?: string
+  city?: string
+  postal_code?: string
   /**
-     * @nullable
-     * @pattern ^-?\d{0,3}(?:\.\d{0,6})?$
-     */
-  latitude?: string | null;
+   * @nullable
+   * @pattern ^-?\d{0,3}(?:\.\d{0,6})?$
+   */
+  latitude?: string | null
   /**
-     * @nullable
-     * @pattern ^-?\d{0,3}(?:\.\d{0,6})?$
-     */
-  longitude?: string | null;
+   * @nullable
+   * @pattern ^-?\d{0,3}(?:\.\d{0,6})?$
+   */
+  longitude?: string | null
   /** @nullable */
-  notes?: string | null;
-  is_active?: boolean;
+  notes?: string | null
+  is_active?: boolean
+  /** @nullable */
+  category_id?: number | null
 }

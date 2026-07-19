@@ -3,38 +3,41 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
 
 export interface PatchedTableRequest {
   /**
-     * @minimum 0
-     * @maximum 4294967295
-     */
-  numero?: number;
+   * @minimum 0
+   * @maximum 4294967295
+   */
+  numero?: number
   /**
-     * @minimum 0
-     * @maximum 4294967295
-     */
-  capacity?: number;
+   * @minimum 0
+   * @maximum 4294967295
+   */
+  capacity?: number
   /**
-     * @minimum 0
-     * @maximum 4294967295
-     */
-  reserved_seats?: number;
-  is_occupied?: boolean;
-  salle_id?: number;
-  employee_in_charge_id?: number;
+   * @minimum 0
+   * @maximum 4294967295
+   */
+  reserved_seats?: number
+  is_occupied?: boolean
+  salle_id?: number
+  /** @nullable */
+  employee_in_charge_id?: number | null
   /**
-     * Position X de la table dans la salle
-     * @minimum -2147483648
-     * @maximum 2147483647
-     */
-  position_x?: number;
+   * Position X de la table dans la salle
+   * @minimum -2147483648
+   * @maximum 2147483647
+   */
+  position_x?: number
   /**
-     * Position Y de la table dans la salle
-     * @minimum -2147483648
-     * @maximum 2147483647
-     */
-  position_y?: number;
+   * Position Y de la table dans la salle
+   * @minimum -2147483648
+   * @maximum 2147483647
+   */
+  position_y?: number
 }

@@ -3,119 +3,418 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
 import type {
   PaginatedTableList,
-  Table
-} from '../../schemas';
+  Table,
+  TablesStatusResponse,
+} from "../../schemas"
 
+export const getTablesListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedTableList, object>> = {}
+): PaginatedTableList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    numero: faker.helpers.arrayElement([
+      faker.number.int({ min: 0, max: 4294967295 }),
+      undefined,
+    ]),
+    capacity: faker.helpers.arrayElement([
+      faker.number.int({ min: 0, max: 4294967295 }),
+      undefined,
+    ]),
+    reserved_seats: faker.helpers.arrayElement([
+      faker.number.int({ min: 0, max: 4294967295 }),
+      undefined,
+    ]),
+    is_occupied: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    salle_id: faker.number.int(),
+    employee_in_charge_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      undefined,
+    ]),
+    position_x: faker.helpers.arrayElement([
+      faker.number.int({ min: -2147483648, max: 2147483647 }),
+      undefined,
+    ]),
+    position_y: faker.helpers.arrayElement([
+      faker.number.int({ min: -2147483648, max: 2147483647 }),
+      undefined,
+    ]),
+  })),
+  ...overrideResponse,
+})
 
-export const getTablesListResponseMock = (overrideResponse: Partial<Extract<PaginatedTableList, object>> = {}): PaginatedTableList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined])})), ...overrideResponse})
+export const getTablesCreateResponseMock = (
+  overrideResponse: Partial<Extract<Table, object>> = {}
+): Table => ({
+  id: faker.number.int(),
+  numero: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  capacity: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  reserved_seats: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  is_occupied: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  employee_in_charge_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  position_x: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  position_y: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getTablesCreateResponseMock = (overrideResponse: Partial<Extract<Table, object>> = {}): Table => ({id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), ...overrideResponse})
+export const getTablesRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Table, object>> = {}
+): Table => ({
+  id: faker.number.int(),
+  numero: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  capacity: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  reserved_seats: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  is_occupied: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  employee_in_charge_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  position_x: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  position_y: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getTablesRetrieveResponseMock = (overrideResponse: Partial<Extract<Table, object>> = {}): Table => ({id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), ...overrideResponse})
+export const getTablesUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Table, object>> = {}
+): Table => ({
+  id: faker.number.int(),
+  numero: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  capacity: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  reserved_seats: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  is_occupied: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  employee_in_charge_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  position_x: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  position_y: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getTablesUpdateResponseMock = (overrideResponse: Partial<Extract<Table, object>> = {}): Table => ({id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), ...overrideResponse})
+export const getTablesPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Table, object>> = {}
+): Table => ({
+  id: faker.number.int(),
+  numero: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  capacity: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  reserved_seats: faker.helpers.arrayElement([
+    faker.number.int({ min: 0, max: 4294967295 }),
+    undefined,
+  ]),
+  is_occupied: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  salle_id: faker.number.int(),
+  employee_in_charge_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  position_x: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  position_y: faker.helpers.arrayElement([
+    faker.number.int({ min: -2147483648, max: 2147483647 }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getTablesPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Table, object>> = {}): Table => ({id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), ...overrideResponse})
+export const getTablesStatusRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<TablesStatusResponse, object>> = {}
+): TablesStatusResponse => ({
+  date: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  service: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  restaurant_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  tables: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    table_id: faker.number.int(),
+    numero: faker.number.int(),
+    salle: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    capacity: faker.number.int(),
+    is_occupied: faker.datatype.boolean(),
+    employee_in_charge: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
+    reservations_count: faker.number.int(),
+    commandes_count: faker.number.int(),
+  })),
+  ...overrideResponse,
+})
 
-export const getTablesStatusRetrieveResponseMock = (overrideResponse: Partial<Extract<Table, object>> = {}): Table => ({id: faker.number.int(), numero: faker.number.int({min: 0, max: 4294967295}), capacity: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), reserved_seats: faker.helpers.arrayElement([faker.number.int({min: 0, max: 4294967295}), undefined]), is_occupied: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), salle: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, capacity: faker.number.int(), floor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, employee_in_charge: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, salle_id: faker.number.int(), employee_in_charge_id: faker.number.int(), position_x: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), position_y: faker.helpers.arrayElement([faker.number.int({min: -2147483648, max: 2147483647}), undefined]), ...overrideResponse})
-
-
-export const getTablesListMockHandler = (overrideResponse?: PaginatedTableList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedTableList> | PaginatedTableList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/tables/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTablesListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getTablesListMockHandler = (
+  overrideResponse?:
+    | PaginatedTableList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedTableList> | PaginatedTableList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/tables/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTablesListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getTablesCreateMockHandler = (overrideResponse?: Table | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Table> | Table), options?: RequestHandlerOptions) => {
-  return http.post('*/api/tables/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTablesCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getTablesCreateMockHandler = (
+  overrideResponse?:
+    | Table
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<Table> | Table),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/tables/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTablesCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getTablesRetrieveMockHandler = (overrideResponse?: Table | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Table> | Table), options?: RequestHandlerOptions) => {
-  return http.get('*/api/tables/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTablesRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getTablesRetrieveMockHandler = (
+  overrideResponse?:
+    | Table
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Table> | Table),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/tables/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTablesRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getTablesUpdateMockHandler = (overrideResponse?: Table | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Table> | Table), options?: RequestHandlerOptions) => {
-  return http.put('*/api/tables/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTablesUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getTablesUpdateMockHandler = (
+  overrideResponse?:
+    | Table
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<Table> | Table),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/tables/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTablesUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getTablesPartialUpdateMockHandler = (overrideResponse?: Table | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Table> | Table), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/tables/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTablesPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getTablesPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Table
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Table> | Table),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/tables/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTablesPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getTablesDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/tables/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getTablesDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/tables/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 
-export const getTablesStatusRetrieveMockHandler = (overrideResponse?: Table | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Table> | Table), options?: RequestHandlerOptions) => {
-  return http.get('*/api/tables/status/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getTablesStatusRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getTablesStatusRetrieveMockHandler = (
+  overrideResponse?:
+    | TablesStatusResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<TablesStatusResponse> | TablesStatusResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/tables/status/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTablesStatusRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 export const getTablesMock = () => [
   getTablesListMockHandler(),
@@ -124,5 +423,5 @@ export const getTablesMock = () => [
   getTablesUpdateMockHandler(),
   getTablesPartialUpdateMockHandler(),
   getTablesDestroyMockHandler(),
-  getTablesStatusRetrieveMockHandler()
+  getTablesStatusRetrieveMockHandler(),
 ]

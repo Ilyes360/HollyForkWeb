@@ -3,147 +3,429 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
 import type {
   PaginatedStockList,
-  Stock
-} from '../../schemas';
+  Stock,
+  StockAdjustResponse,
+  StockAlertsResponse,
+  StockReportsResponse,
+} from "../../schemas"
 
+export const getStocksListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedStockList, object>> = {}
+): PaginatedStockList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    restaurant_id: faker.number.int(),
+    ingredient_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ingredient_unit_price: faker.helpers.fromRegExp(
+      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+    ),
+    quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+    alert_threshold: faker.helpers.arrayElement([
+      faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+      undefined,
+    ]),
+    weighted_average_cost: faker.helpers.fromRegExp(
+      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+    ),
+  })),
+  ...overrideResponse,
+})
 
-export const getStocksListResponseMock = (overrideResponse: Partial<Extract<PaginatedStockList, object>> = {}): PaginatedStockList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")})), ...overrideResponse})
+export const getStocksCreateResponseMock = (
+  overrideResponse: Partial<Extract<Stock, object>> = {}
+): Stock => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  ingredient_id: faker.number.int(),
+  ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit_price: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+  alert_threshold: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+    undefined,
+  ]),
+  weighted_average_cost: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  ...overrideResponse,
+})
 
-export const getStocksCreateResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getStocksRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Stock, object>> = {}
+): Stock => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  ingredient_id: faker.number.int(),
+  ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit_price: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+  alert_threshold: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+    undefined,
+  ]),
+  weighted_average_cost: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  ...overrideResponse,
+})
 
-export const getStocksRetrieveResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getStocksUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Stock, object>> = {}
+): Stock => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  ingredient_id: faker.number.int(),
+  ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit_price: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+  alert_threshold: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+    undefined,
+  ]),
+  weighted_average_cost: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  ...overrideResponse,
+})
 
-export const getStocksUpdateResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getStocksPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Stock, object>> = {}
+): Stock => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  ingredient_id: faker.number.int(),
+  ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ingredient_unit_price: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+  alert_threshold: faker.helpers.arrayElement([
+    faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+    undefined,
+  ]),
+  weighted_average_cost: faker.helpers.fromRegExp(
+    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+  ),
+  ...overrideResponse,
+})
 
-export const getStocksPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getStocksAdjustCreateResponseMock = (
+  overrideResponse: Partial<Extract<StockAdjustResponse, object>> = {}
+): StockAdjustResponse => ({
+  message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  stock: {
+    id: faker.number.int(),
+    restaurant_id: faker.number.int(),
+    ingredient_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ingredient_unit_price: faker.helpers.fromRegExp(
+      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+    ),
+    quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+    alert_threshold: faker.helpers.arrayElement([
+      faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
+      undefined,
+    ]),
+    weighted_average_cost: faker.helpers.fromRegExp(
+      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+    ),
+  },
+  ...overrideResponse,
+})
 
-export const getStocksAdjustCreateResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getStocksAlertsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<StockAlertsResponse, object>> = {}
+): StockAlertsResponse => ({
+  restaurant_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  alerts_count: faker.number.int(),
+  alerts: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    stock_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    quantity_in_stock: faker.number.float({ fractionDigits: 2 }),
+    alert_threshold: faker.number.float({ fractionDigits: 2 }),
+    unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getStocksAlertsRetrieveResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getStocksReportsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<StockReportsResponse, object>> = {}
+): StockReportsResponse => ({
+  period: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  restaurant_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  start_date: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  end_date: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  stats: {
+    total_replenishments: faker.number.int(),
+    total_amount: faker.number.float({ fractionDigits: 2 }),
+    current_stock_value: faker.number.float({ fractionDigits: 2 }),
+  },
+  ...overrideResponse,
+})
 
-export const getStocksReportsRetrieveResponseMock = (overrideResponse: Partial<Extract<Stock, object>> = {}): Stock => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), alert_threshold: faker.helpers.arrayElement([faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"), undefined]), weighted_average_cost: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
-
-
-export const getStocksListMockHandler = (overrideResponse?: PaginatedStockList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedStockList> | PaginatedStockList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/stocks/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksListMockHandler = (
+  overrideResponse?:
+    | PaginatedStockList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedStockList> | PaginatedStockList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/stocks/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksCreateMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.post('*/api/stocks/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getStocksCreateMockHandler = (
+  overrideResponse?:
+    | Stock
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<Stock> | Stock),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/stocks/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksRetrieveMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.get('*/api/stocks/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksRetrieveMockHandler = (
+  overrideResponse?:
+    | Stock
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Stock> | Stock),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/stocks/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksUpdateMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.put('*/api/stocks/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksUpdateMockHandler = (
+  overrideResponse?:
+    | Stock
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<Stock> | Stock),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/stocks/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksPartialUpdateMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/stocks/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Stock
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Stock> | Stock),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/stocks/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/stocks/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getStocksDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/stocks/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 
-export const getStocksAdjustCreateMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.post('*/api/stocks/:id/adjust/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksAdjustCreateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksAdjustCreateMockHandler = (
+  overrideResponse?:
+    | StockAdjustResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<StockAdjustResponse> | StockAdjustResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/stocks/:id/adjust/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksAdjustCreateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksAlertsRetrieveMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.get('*/api/stocks/alerts/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksAlertsRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksAlertsRetrieveMockHandler = (
+  overrideResponse?:
+    | StockAlertsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<StockAlertsResponse> | StockAlertsResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/stocks/alerts/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksAlertsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getStocksReportsRetrieveMockHandler = (overrideResponse?: Stock | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Stock> | Stock), options?: RequestHandlerOptions) => {
-  return http.get('*/api/stocks/reports/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStocksReportsRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getStocksReportsRetrieveMockHandler = (
+  overrideResponse?:
+    | StockReportsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<StockReportsResponse> | StockReportsResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/stocks/reports/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStocksReportsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 export const getStocksMock = () => [
   getStocksListMockHandler(),
@@ -154,5 +436,5 @@ export const getStocksMock = () => [
   getStocksDestroyMockHandler(),
   getStocksAdjustCreateMockHandler(),
   getStocksAlertsRetrieveMockHandler(),
-  getStocksReportsRetrieveMockHandler()
+  getStocksReportsRetrieveMockHandler(),
 ]

@@ -3,14 +3,26 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
 
 export type PaiementsListParams = {
-facture?: number;
-methode_paiement?: number;
-/**
- * A page number within the paginated result set.
- */
-page?: number;
-};
+  /**
+   * ID de la commande — retourne tous les paiements de la facture associée
+   */
+  commande_id?: number
+  /**
+   * Filtre par ID de facture
+   */
+  facture?: number
+  /**
+   * Filtre par ID de méthode de paiement
+   */
+  methode_paiement?: number
+  /**
+   * A page number within the paginated result set.
+   */
+  page?: number
+}

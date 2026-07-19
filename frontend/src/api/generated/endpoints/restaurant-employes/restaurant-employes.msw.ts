@@ -3,105 +3,222 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
 import type {
   PaginatedRestaurantEmployeList,
-  RestaurantEmploye
-} from '../../schemas';
+  RestaurantEmploye,
+} from "../../schemas"
 
+export const getRestaurantEmployesListResponseMock = (
+  overrideResponse: Partial<
+    Extract<PaginatedRestaurantEmployeList, object>
+  > = {}
+): PaginatedRestaurantEmployeList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    restaurant_id: faker.number.int(),
+    employe_id: faker.number.int(),
+  })),
+  ...overrideResponse,
+})
 
-export const getRestaurantEmployesListResponseMock = (overrideResponse: Partial<Extract<PaginatedRestaurantEmployeList, object>> = {}): PaginatedRestaurantEmployeList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, employe: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}})), ...overrideResponse})
+export const getRestaurantEmployesCreateResponseMock = (
+  overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}
+): RestaurantEmploye => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  employe_id: faker.number.int(),
+  ...overrideResponse,
+})
 
-export const getRestaurantEmployesCreateResponseMock = (overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}): RestaurantEmploye => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, employe: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, ...overrideResponse})
+export const getRestaurantEmployesRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}
+): RestaurantEmploye => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  employe_id: faker.number.int(),
+  ...overrideResponse,
+})
 
-export const getRestaurantEmployesRetrieveResponseMock = (overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}): RestaurantEmploye => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, employe: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, ...overrideResponse})
+export const getRestaurantEmployesUpdateResponseMock = (
+  overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}
+): RestaurantEmploye => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  employe_id: faker.number.int(),
+  ...overrideResponse,
+})
 
-export const getRestaurantEmployesUpdateResponseMock = (overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}): RestaurantEmploye => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, employe: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, ...overrideResponse})
+export const getRestaurantEmployesPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}
+): RestaurantEmploye => ({
+  id: faker.number.int(),
+  restaurant_id: faker.number.int(),
+  employe_id: faker.number.int(),
+  ...overrideResponse,
+})
 
-export const getRestaurantEmployesPartialUpdateResponseMock = (overrideResponse: Partial<Extract<RestaurantEmploye, object>> = {}): RestaurantEmploye => ({id: faker.number.int(), restaurant: {...{restaurant_id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), address: faker.string.alpha({length: {min: 10, max: 255}}), postal_code: faker.string.alpha({length: {min: 10, max: 10}}), city: faker.string.alpha({length: {min: 10, max: 100}}), phone_number: faker.string.alpha({length: {min: 10, max: 20}}), siret: faker.helpers.fromRegExp("^\\d{14}$"), naf_code: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 10}}), null]), undefined]), pin: faker.string.alpha({length: {min: 10, max: 6}}), logo_url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined])},}, employe: {...{id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])},}, ...overrideResponse})
-
-
-export const getRestaurantEmployesListMockHandler = (overrideResponse?: PaginatedRestaurantEmployeList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedRestaurantEmployeList> | PaginatedRestaurantEmployeList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/restaurant-employes/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getRestaurantEmployesListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getRestaurantEmployesListMockHandler = (
+  overrideResponse?:
+    | PaginatedRestaurantEmployeList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) =>
+        | Promise<PaginatedRestaurantEmployeList>
+        | PaginatedRestaurantEmployeList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/restaurant-employes/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRestaurantEmployesListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getRestaurantEmployesCreateMockHandler = (overrideResponse?: RestaurantEmploye | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<RestaurantEmploye> | RestaurantEmploye), options?: RequestHandlerOptions) => {
-  return http.post('*/api/restaurant-employes/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getRestaurantEmployesCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getRestaurantEmployesCreateMockHandler = (
+  overrideResponse?:
+    | RestaurantEmploye
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<RestaurantEmploye> | RestaurantEmploye),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/restaurant-employes/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRestaurantEmployesCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getRestaurantEmployesRetrieveMockHandler = (overrideResponse?: RestaurantEmploye | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<RestaurantEmploye> | RestaurantEmploye), options?: RequestHandlerOptions) => {
-  return http.get('*/api/restaurant-employes/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getRestaurantEmployesRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getRestaurantEmployesRetrieveMockHandler = (
+  overrideResponse?:
+    | RestaurantEmploye
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<RestaurantEmploye> | RestaurantEmploye),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/restaurant-employes/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRestaurantEmployesRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getRestaurantEmployesUpdateMockHandler = (overrideResponse?: RestaurantEmploye | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<RestaurantEmploye> | RestaurantEmploye), options?: RequestHandlerOptions) => {
-  return http.put('*/api/restaurant-employes/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getRestaurantEmployesUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getRestaurantEmployesUpdateMockHandler = (
+  overrideResponse?:
+    | RestaurantEmploye
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<RestaurantEmploye> | RestaurantEmploye),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/restaurant-employes/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRestaurantEmployesUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getRestaurantEmployesPartialUpdateMockHandler = (overrideResponse?: RestaurantEmploye | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<RestaurantEmploye> | RestaurantEmploye), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/restaurant-employes/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getRestaurantEmployesPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getRestaurantEmployesPartialUpdateMockHandler = (
+  overrideResponse?:
+    | RestaurantEmploye
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<RestaurantEmploye> | RestaurantEmploye),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/restaurant-employes/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRestaurantEmployesPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getRestaurantEmployesDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/restaurant-employes/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getRestaurantEmployesDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/restaurant-employes/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getRestaurantEmployesMock = () => [
   getRestaurantEmployesListMockHandler(),
@@ -109,5 +226,5 @@ export const getRestaurantEmployesMock = () => [
   getRestaurantEmployesRetrieveMockHandler(),
   getRestaurantEmployesUpdateMockHandler(),
   getRestaurantEmployesPartialUpdateMockHandler(),
-  getRestaurantEmployesDestroyMockHandler()
+  getRestaurantEmployesDestroyMockHandler(),
 ]

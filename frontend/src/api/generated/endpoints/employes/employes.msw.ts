@@ -3,105 +3,275 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  Employe,
-  PaginatedEmployeList
-} from '../../schemas';
+import type { Employe, PaginatedEmployeList } from "../../schemas"
 
+export const getEmployesListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedEmployeList, object>> = {}
+): PaginatedEmployeList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    user_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+    last_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+    first_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+    type_employe_id: faker.number.int(),
+    type_employe_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+    hire_date: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 10),
+      undefined,
+    ]),
+    phone_number: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      undefined,
+    ]),
+  })),
+  ...overrideResponse,
+})
 
-export const getEmployesListResponseMock = (overrideResponse: Partial<Extract<PaginatedEmployeList, object>> = {}): PaginatedEmployeList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), ...overrideResponse})
+export const getEmployesCreateResponseMock = (
+  overrideResponse: Partial<Extract<Employe, object>> = {}
+): Employe => ({
+  id: faker.number.int(),
+  user_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  last_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  first_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  type_employe_id: faker.number.int(),
+  type_employe_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  hire_date: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 10),
+    undefined,
+  ]),
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getEmployesCreateResponseMock = (overrideResponse: Partial<Extract<Employe, object>> = {}): Employe => ({id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), ...overrideResponse})
+export const getEmployesRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Employe, object>> = {}
+): Employe => ({
+  id: faker.number.int(),
+  user_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  last_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  first_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  type_employe_id: faker.number.int(),
+  type_employe_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  hire_date: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 10),
+    undefined,
+  ]),
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getEmployesRetrieveResponseMock = (overrideResponse: Partial<Extract<Employe, object>> = {}): Employe => ({id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), ...overrideResponse})
+export const getEmployesUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Employe, object>> = {}
+): Employe => ({
+  id: faker.number.int(),
+  user_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  last_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  first_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  type_employe_id: faker.number.int(),
+  type_employe_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  hire_date: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 10),
+    undefined,
+  ]),
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getEmployesUpdateResponseMock = (overrideResponse: Partial<Extract<Employe, object>> = {}): Employe => ({id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), ...overrideResponse})
+export const getEmployesPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Employe, object>> = {}
+): Employe => ({
+  id: faker.number.int(),
+  user_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  last_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  first_name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  type_employe_id: faker.number.int(),
+  type_employe_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  hire_date: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 10),
+    undefined,
+  ]),
+  phone_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getEmployesPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Employe, object>> = {}): Employe => ({id: faker.number.int(), user: {...{id: faker.number.int(), username: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.internet.email(), first_name: faker.string.alpha({length: {min: 10, max: 20}}), last_name: faker.string.alpha({length: {min: 10, max: 20}})},}, last_name: faker.string.alpha({length: {min: 10, max: 100}}), first_name: faker.string.alpha({length: {min: 10, max: 100}}), type_employe: {...{id: faker.number.int(), type_name: faker.string.alpha({length: {min: 10, max: 50}}), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, salary: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), hire_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), phone_number: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), ...overrideResponse})
-
-
-export const getEmployesListMockHandler = (overrideResponse?: PaginatedEmployeList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedEmployeList> | PaginatedEmployeList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/employes/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getEmployesListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getEmployesListMockHandler = (
+  overrideResponse?:
+    | PaginatedEmployeList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedEmployeList> | PaginatedEmployeList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/employes/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmployesListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getEmployesCreateMockHandler = (overrideResponse?: Employe | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Employe> | Employe), options?: RequestHandlerOptions) => {
-  return http.post('*/api/employes/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getEmployesCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getEmployesCreateMockHandler = (
+  overrideResponse?:
+    | Employe
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<Employe> | Employe),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/employes/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmployesCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getEmployesRetrieveMockHandler = (overrideResponse?: Employe | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Employe> | Employe), options?: RequestHandlerOptions) => {
-  return http.get('*/api/employes/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getEmployesRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getEmployesRetrieveMockHandler = (
+  overrideResponse?:
+    | Employe
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Employe> | Employe),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/employes/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmployesRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getEmployesUpdateMockHandler = (overrideResponse?: Employe | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Employe> | Employe), options?: RequestHandlerOptions) => {
-  return http.put('*/api/employes/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getEmployesUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getEmployesUpdateMockHandler = (
+  overrideResponse?:
+    | Employe
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<Employe> | Employe),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/employes/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmployesUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getEmployesPartialUpdateMockHandler = (overrideResponse?: Employe | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Employe> | Employe), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/employes/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getEmployesPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getEmployesPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Employe
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Employe> | Employe),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/employes/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmployesPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getEmployesDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/employes/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getEmployesDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/employes/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getEmployesMock = () => [
   getEmployesListMockHandler(),
@@ -109,5 +279,5 @@ export const getEmployesMock = () => [
   getEmployesRetrieveMockHandler(),
   getEmployesUpdateMockHandler(),
   getEmployesPartialUpdateMockHandler(),
-  getEmployesDestroyMockHandler()
+  getEmployesDestroyMockHandler(),
 ]

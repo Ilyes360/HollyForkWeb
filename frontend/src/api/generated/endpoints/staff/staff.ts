@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,8 +20,8 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   AllPermissionsResponse,
@@ -46,13 +45,10 @@ import type {
   PermissionRolesResponse,
   RoleHierarchyResponse,
   RolePermissionsError,
-  RolePermissionsResponse
-} from '../../schemas';
+  RolePermissionsResponse,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type staffPermissionRolesByNameResponse200 = {
   data: PermissionRolesResponse
@@ -64,20 +60,20 @@ export type staffPermissionRolesByNameResponse400 = {
   status: 400
 }
 
-export type staffPermissionRolesByNameResponseSuccess = (staffPermissionRolesByNameResponse200) & {
-  headers: Headers;
-};
-export type staffPermissionRolesByNameResponseError = (staffPermissionRolesByNameResponse400) & {
-  headers: Headers;
-};
+export type staffPermissionRolesByNameResponseSuccess =
+  staffPermissionRolesByNameResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionRolesByNameResponseError =
+  staffPermissionRolesByNameResponse400 & {
+    headers: Headers
+  }
 
-export type staffPermissionRolesByNameResponse = (staffPermissionRolesByNameResponseSuccess | staffPermissionRolesByNameResponseError)
+export type staffPermissionRolesByNameResponse =
+  | staffPermissionRolesByNameResponseSuccess
+  | staffPermissionRolesByNameResponseError
 
-export const getStaffPermissionRolesByNameUrl = (permissionName: string,) => {
-
-
-
-
+export const getStaffPermissionRolesByNameUrl = (permissionName: string) => {
   return `/api/staff/permissions/${permissionName}/roles/`
 }
 
@@ -99,91 +95,168 @@ Returns:
         ]
     }
  */
-export const staffPermissionRolesByName = async (permissionName: string, options?: RequestInit): Promise<staffPermissionRolesByNameResponse> => {
-
-  return kyMutator<staffPermissionRolesByNameResponse>(getStaffPermissionRolesByNameUrl(permissionName),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionRolesByNameQueryKey = (permissionName: string,) => {
-    return [
-    `/api/staff/permissions/${permissionName}/roles/`
-    ] as const;
+export const staffPermissionRolesByName = async (
+  permissionName: string,
+  options?: RequestInit
+): Promise<staffPermissionRolesByNameResponse> => {
+  return kyMutator<staffPermissionRolesByNameResponse>(
+    getStaffPermissionRolesByNameUrl(permissionName),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionRolesByNameQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError = PermissionRolesError>(permissionName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionRolesByNameQueryKey(permissionName);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionRolesByName>>> = ({ signal }) => staffPermissionRolesByName(permissionName, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(permissionName), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionRolesByNameQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionRolesByName>>>
+export const getStaffPermissionRolesByNameQueryKey = (
+  permissionName: string
+) => {
+  return [`/api/staff/permissions/${permissionName}/roles/`] as const
+}
+
+export const getStaffPermissionRolesByNameQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+  TError = PermissionRolesError,
+>(
+  permissionName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getStaffPermissionRolesByNameQueryKey(permissionName)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionRolesByName>>
+  > = ({ signal }) => staffPermissionRolesByName(permissionName, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!permissionName,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionRolesByNameQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionRolesByName>>
+>
 export type StaffPermissionRolesByNameQueryError = PermissionRolesError
 
-
-export function useStaffPermissionRolesByName<TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError = PermissionRolesError>(
- permissionName: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError, TData>> & Pick<
+export function useStaffPermissionRolesByName<
+  TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+  TError = PermissionRolesError,
+>(
+  permissionName: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionRolesByName>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionRolesByName>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionRolesByName<TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError = PermissionRolesError>(
- permissionName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionRolesByName<
+  TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+  TError = PermissionRolesError,
+>(
+  permissionName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionRolesByName>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionRolesByName>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionRolesByName<TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError = PermissionRolesError>(
- permissionName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionRolesByName<TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError = PermissionRolesError>(
- permissionName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionRolesByName>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionRolesByNameQueryOptions(permissionName,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionRolesByName<
+  TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+  TError = PermissionRolesError,
+>(
+  permissionName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionRolesByName<
+  TData = Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+  TError = PermissionRolesError,
+>(
+  permissionName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionRolesByName>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionRolesByNameQueryOptions(
+    permissionName,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type staffPermissionsCheckCreateResponse200 = {
   data: CheckPermissionResponse
@@ -200,20 +273,22 @@ export type staffPermissionsCheckCreateResponse500 = {
   status: 500
 }
 
-export type staffPermissionsCheckCreateResponseSuccess = (staffPermissionsCheckCreateResponse200) & {
-  headers: Headers;
-};
-export type staffPermissionsCheckCreateResponseError = (staffPermissionsCheckCreateResponse400 | staffPermissionsCheckCreateResponse500) & {
-  headers: Headers;
-};
+export type staffPermissionsCheckCreateResponseSuccess =
+  staffPermissionsCheckCreateResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsCheckCreateResponseError = (
+  | staffPermissionsCheckCreateResponse400
+  | staffPermissionsCheckCreateResponse500
+) & {
+  headers: Headers
+}
 
-export type staffPermissionsCheckCreateResponse = (staffPermissionsCheckCreateResponseSuccess | staffPermissionsCheckCreateResponseError)
+export type staffPermissionsCheckCreateResponse =
+  | staffPermissionsCheckCreateResponseSuccess
+  | staffPermissionsCheckCreateResponseError
 
 export const getStaffPermissionsCheckCreateUrl = () => {
-
-
-
-
   return `/api/staff/permissions/check/`
 }
 
@@ -233,63 +308,92 @@ Returns:
         "role": "Admin Établissement"
     }
  */
-export const staffPermissionsCheckCreate = async (checkPermissionRequestRequest: CheckPermissionRequestRequest, options?: RequestInit): Promise<staffPermissionsCheckCreateResponse> => {
-
-  return kyMutator<staffPermissionsCheckCreateResponse>(getStaffPermissionsCheckCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      checkPermissionRequestRequest,)
-  }
-);}
-
-
-
-
-export const getStaffPermissionsCheckCreateMutationOptions = <TError = CheckPermissionError | CheckPermissionServerError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCheckCreate>>, TError,{data: CheckPermissionRequestRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCheckCreate>>, TError,{data: CheckPermissionRequestRequest}, TContext> => {
-
-const mutationKey = ['staffPermissionsCheckCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof staffPermissionsCheckCreate>>, {data: CheckPermissionRequestRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  staffPermissionsCheckCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StaffPermissionsCheckCreateMutationResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsCheckCreate>>>
-    export type StaffPermissionsCheckCreateMutationBody = CheckPermissionRequestRequest
-    export type StaffPermissionsCheckCreateMutationError = CheckPermissionError | CheckPermissionServerError
-
-    export const useStaffPermissionsCheckCreate = <TError = CheckPermissionError | CheckPermissionServerError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCheckCreate>>, TError,{data: CheckPermissionRequestRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof staffPermissionsCheckCreate>>,
-        TError,
-        {data: CheckPermissionRequestRequest},
-        TContext
-      > => {
-      return useMutation(getStaffPermissionsCheckCreateMutationOptions(options), queryClient);
+export const staffPermissionsCheckCreate = async (
+  checkPermissionRequestRequest: CheckPermissionRequestRequest,
+  options?: RequestInit
+): Promise<staffPermissionsCheckCreateResponse> => {
+  return kyMutator<staffPermissionsCheckCreateResponse>(
+    getStaffPermissionsCheckCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(checkPermissionRequestRequest),
     }
-    export type staffPermissionsCheckMultipleCreateResponse200 = {
+  )
+}
+
+export const getStaffPermissionsCheckCreateMutationOptions = <
+  TError = CheckPermissionError | CheckPermissionServerError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof staffPermissionsCheckCreate>>,
+    TError,
+    { data: CheckPermissionRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof staffPermissionsCheckCreate>>,
+  TError,
+  { data: CheckPermissionRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["staffPermissionsCheckCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof staffPermissionsCheckCreate>>,
+    { data: CheckPermissionRequestRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return staffPermissionsCheckCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type StaffPermissionsCheckCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsCheckCreate>>
+>
+export type StaffPermissionsCheckCreateMutationBody =
+  CheckPermissionRequestRequest
+export type StaffPermissionsCheckCreateMutationError =
+  | CheckPermissionError
+  | CheckPermissionServerError
+
+export const useStaffPermissionsCheckCreate = <
+  TError = CheckPermissionError | CheckPermissionServerError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof staffPermissionsCheckCreate>>,
+      TError,
+      { data: CheckPermissionRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof staffPermissionsCheckCreate>>,
+  TError,
+  { data: CheckPermissionRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getStaffPermissionsCheckCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type staffPermissionsCheckMultipleCreateResponse200 = {
   data: CheckMultiplePermissionsResponse
   status: 200
 }
@@ -304,20 +408,22 @@ export type staffPermissionsCheckMultipleCreateResponse500 = {
   status: 500
 }
 
-export type staffPermissionsCheckMultipleCreateResponseSuccess = (staffPermissionsCheckMultipleCreateResponse200) & {
-  headers: Headers;
-};
-export type staffPermissionsCheckMultipleCreateResponseError = (staffPermissionsCheckMultipleCreateResponse400 | staffPermissionsCheckMultipleCreateResponse500) & {
-  headers: Headers;
-};
+export type staffPermissionsCheckMultipleCreateResponseSuccess =
+  staffPermissionsCheckMultipleCreateResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsCheckMultipleCreateResponseError = (
+  | staffPermissionsCheckMultipleCreateResponse400
+  | staffPermissionsCheckMultipleCreateResponse500
+) & {
+  headers: Headers
+}
 
-export type staffPermissionsCheckMultipleCreateResponse = (staffPermissionsCheckMultipleCreateResponseSuccess | staffPermissionsCheckMultipleCreateResponseError)
+export type staffPermissionsCheckMultipleCreateResponse =
+  | staffPermissionsCheckMultipleCreateResponseSuccess
+  | staffPermissionsCheckMultipleCreateResponseError
 
 export const getStaffPermissionsCheckMultipleCreateUrl = () => {
-
-
-
-
   return `/api/staff/permissions/check-multiple/`
 }
 
@@ -341,63 +447,92 @@ Returns:
         }
     }
  */
-export const staffPermissionsCheckMultipleCreate = async (checkMultiplePermissionsRequestRequest: CheckMultiplePermissionsRequestRequest, options?: RequestInit): Promise<staffPermissionsCheckMultipleCreateResponse> => {
-
-  return kyMutator<staffPermissionsCheckMultipleCreateResponse>(getStaffPermissionsCheckMultipleCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      checkMultiplePermissionsRequestRequest,)
-  }
-);}
-
-
-
-
-export const getStaffPermissionsCheckMultipleCreateMutationOptions = <TError = CheckMultiplePermissionsError | CheckMultiplePermissionsServerError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>, TError,{data: CheckMultiplePermissionsRequestRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>, TError,{data: CheckMultiplePermissionsRequestRequest}, TContext> => {
-
-const mutationKey = ['staffPermissionsCheckMultipleCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>, {data: CheckMultiplePermissionsRequestRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  staffPermissionsCheckMultipleCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StaffPermissionsCheckMultipleCreateMutationResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>>
-    export type StaffPermissionsCheckMultipleCreateMutationBody = CheckMultiplePermissionsRequestRequest
-    export type StaffPermissionsCheckMultipleCreateMutationError = CheckMultiplePermissionsError | CheckMultiplePermissionsServerError
-
-    export const useStaffPermissionsCheckMultipleCreate = <TError = CheckMultiplePermissionsError | CheckMultiplePermissionsServerError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>, TError,{data: CheckMultiplePermissionsRequestRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>,
-        TError,
-        {data: CheckMultiplePermissionsRequestRequest},
-        TContext
-      > => {
-      return useMutation(getStaffPermissionsCheckMultipleCreateMutationOptions(options), queryClient);
+export const staffPermissionsCheckMultipleCreate = async (
+  checkMultiplePermissionsRequestRequest: CheckMultiplePermissionsRequestRequest,
+  options?: RequestInit
+): Promise<staffPermissionsCheckMultipleCreateResponse> => {
+  return kyMutator<staffPermissionsCheckMultipleCreateResponse>(
+    getStaffPermissionsCheckMultipleCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(checkMultiplePermissionsRequestRequest),
     }
-    export type staffPermissionsCompareRolesCreateResponse200 = {
+  )
+}
+
+export const getStaffPermissionsCheckMultipleCreateMutationOptions = <
+  TError = CheckMultiplePermissionsError | CheckMultiplePermissionsServerError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>,
+    TError,
+    { data: CheckMultiplePermissionsRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>,
+  TError,
+  { data: CheckMultiplePermissionsRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["staffPermissionsCheckMultipleCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>,
+    { data: CheckMultiplePermissionsRequestRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return staffPermissionsCheckMultipleCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type StaffPermissionsCheckMultipleCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>
+>
+export type StaffPermissionsCheckMultipleCreateMutationBody =
+  CheckMultiplePermissionsRequestRequest
+export type StaffPermissionsCheckMultipleCreateMutationError =
+  | CheckMultiplePermissionsError
+  | CheckMultiplePermissionsServerError
+
+export const useStaffPermissionsCheckMultipleCreate = <
+  TError = CheckMultiplePermissionsError | CheckMultiplePermissionsServerError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>,
+      TError,
+      { data: CheckMultiplePermissionsRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof staffPermissionsCheckMultipleCreate>>,
+  TError,
+  { data: CheckMultiplePermissionsRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getStaffPermissionsCheckMultipleCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type staffPermissionsCompareRolesCreateResponse200 = {
   data: CompareRolesResponse
   status: 200
 }
@@ -407,20 +542,20 @@ export type staffPermissionsCompareRolesCreateResponse400 = {
   status: 400
 }
 
-export type staffPermissionsCompareRolesCreateResponseSuccess = (staffPermissionsCompareRolesCreateResponse200) & {
-  headers: Headers;
-};
-export type staffPermissionsCompareRolesCreateResponseError = (staffPermissionsCompareRolesCreateResponse400) & {
-  headers: Headers;
-};
+export type staffPermissionsCompareRolesCreateResponseSuccess =
+  staffPermissionsCompareRolesCreateResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsCompareRolesCreateResponseError =
+  staffPermissionsCompareRolesCreateResponse400 & {
+    headers: Headers
+  }
 
-export type staffPermissionsCompareRolesCreateResponse = (staffPermissionsCompareRolesCreateResponseSuccess | staffPermissionsCompareRolesCreateResponseError)
+export type staffPermissionsCompareRolesCreateResponse =
+  | staffPermissionsCompareRolesCreateResponseSuccess
+  | staffPermissionsCompareRolesCreateResponseError
 
 export const getStaffPermissionsCompareRolesCreateUrl = () => {
-
-
-
-
   return `/api/staff/permissions/compare-roles/`
 }
 
@@ -442,79 +577,102 @@ Returns:
         "hierarchy_difference": 8
     }
  */
-export const staffPermissionsCompareRolesCreate = async (compareRolesRequestRequest: CompareRolesRequestRequest, options?: RequestInit): Promise<staffPermissionsCompareRolesCreateResponse> => {
-
-  return kyMutator<staffPermissionsCompareRolesCreateResponse>(getStaffPermissionsCompareRolesCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      compareRolesRequestRequest,)
-  }
-);}
-
-
-
-
-export const getStaffPermissionsCompareRolesCreateMutationOptions = <TError = CompareRolesError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>, TError,{data: CompareRolesRequestRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>, TError,{data: CompareRolesRequestRequest}, TContext> => {
-
-const mutationKey = ['staffPermissionsCompareRolesCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>, {data: CompareRolesRequestRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  staffPermissionsCompareRolesCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StaffPermissionsCompareRolesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>>
-    export type StaffPermissionsCompareRolesCreateMutationBody = CompareRolesRequestRequest
-    export type StaffPermissionsCompareRolesCreateMutationError = CompareRolesError
-
-    export const useStaffPermissionsCompareRolesCreate = <TError = CompareRolesError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>, TError,{data: CompareRolesRequestRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>,
-        TError,
-        {data: CompareRolesRequestRequest},
-        TContext
-      > => {
-      return useMutation(getStaffPermissionsCompareRolesCreateMutationOptions(options), queryClient);
+export const staffPermissionsCompareRolesCreate = async (
+  compareRolesRequestRequest: CompareRolesRequestRequest,
+  options?: RequestInit
+): Promise<staffPermissionsCompareRolesCreateResponse> => {
+  return kyMutator<staffPermissionsCompareRolesCreateResponse>(
+    getStaffPermissionsCompareRolesCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(compareRolesRequestRequest),
     }
-    export type staffPermissionsHierarchyRetrieveResponse200 = {
+  )
+}
+
+export const getStaffPermissionsCompareRolesCreateMutationOptions = <
+  TError = CompareRolesError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>,
+    TError,
+    { data: CompareRolesRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>,
+  TError,
+  { data: CompareRolesRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["staffPermissionsCompareRolesCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>,
+    { data: CompareRolesRequestRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return staffPermissionsCompareRolesCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type StaffPermissionsCompareRolesCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>
+>
+export type StaffPermissionsCompareRolesCreateMutationBody =
+  CompareRolesRequestRequest
+export type StaffPermissionsCompareRolesCreateMutationError = CompareRolesError
+
+export const useStaffPermissionsCompareRolesCreate = <
+  TError = CompareRolesError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>,
+      TError,
+      { data: CompareRolesRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof staffPermissionsCompareRolesCreate>>,
+  TError,
+  { data: CompareRolesRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getStaffPermissionsCompareRolesCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type staffPermissionsHierarchyRetrieveResponse200 = {
   data: RoleHierarchyResponse
   status: 200
 }
 
-export type staffPermissionsHierarchyRetrieveResponseSuccess = (staffPermissionsHierarchyRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type staffPermissionsHierarchyRetrieveResponse = (staffPermissionsHierarchyRetrieveResponseSuccess)
+export type staffPermissionsHierarchyRetrieveResponseSuccess =
+  staffPermissionsHierarchyRetrieveResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsHierarchyRetrieveResponse =
+  staffPermissionsHierarchyRetrieveResponseSuccess
 
 export const getStaffPermissionsHierarchyRetrieveUrl = () => {
-
-
-
-
   return `/api/staff/permissions/hierarchy/`
 }
 
@@ -536,109 +694,163 @@ Returns:
         ]
     }
  */
-export const staffPermissionsHierarchyRetrieve = async ( options?: RequestInit): Promise<staffPermissionsHierarchyRetrieveResponse> => {
-
-  return kyMutator<staffPermissionsHierarchyRetrieveResponse>(getStaffPermissionsHierarchyRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionsHierarchyRetrieveQueryKey = () => {
-    return [
-    `/api/staff/permissions/hierarchy/`
-    ] as const;
+export const staffPermissionsHierarchyRetrieve = async (
+  options?: RequestInit
+): Promise<staffPermissionsHierarchyRetrieveResponse> => {
+  return kyMutator<staffPermissionsHierarchyRetrieveResponse>(
+    getStaffPermissionsHierarchyRetrieveUrl(),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionsHierarchyRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionsHierarchyRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>> = ({ signal }) => staffPermissionsHierarchyRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionsHierarchyRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>>
+export const getStaffPermissionsHierarchyRetrieveQueryKey = () => {
+  return [`/api/staff/permissions/hierarchy/`] as const
+}
+
+export const getStaffPermissionsHierarchyRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getStaffPermissionsHierarchyRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>
+  > = ({ signal }) => staffPermissionsHierarchyRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionsHierarchyRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>
+>
 export type StaffPermissionsHierarchyRetrieveQueryError = unknown
 
-
-export function useStaffPermissionsHierarchyRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError, TData>> & Pick<
+export function useStaffPermissionsHierarchyRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsHierarchyRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsHierarchyRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsHierarchyRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionsHierarchyRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionsHierarchyRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsHierarchyRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionsHierarchyRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsHierarchyRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionsHierarchyRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type staffPermissionsListRetrieveResponse200 = {
   data: AllPermissionsResponse
   status: 200
 }
 
-export type staffPermissionsListRetrieveResponseSuccess = (staffPermissionsListRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type staffPermissionsListRetrieveResponse = (staffPermissionsListRetrieveResponseSuccess)
+export type staffPermissionsListRetrieveResponseSuccess =
+  staffPermissionsListRetrieveResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsListRetrieveResponse =
+  staffPermissionsListRetrieveResponseSuccess
 
 export const getStaffPermissionsListRetrieveUrl = () => {
-
-
-
-
   return `/api/staff/permissions/list/`
 }
 
@@ -658,109 +870,163 @@ Returns:
         ]
     }
  */
-export const staffPermissionsListRetrieve = async ( options?: RequestInit): Promise<staffPermissionsListRetrieveResponse> => {
-
-  return kyMutator<staffPermissionsListRetrieveResponse>(getStaffPermissionsListRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionsListRetrieveQueryKey = () => {
-    return [
-    `/api/staff/permissions/list/`
-    ] as const;
+export const staffPermissionsListRetrieve = async (
+  options?: RequestInit
+): Promise<staffPermissionsListRetrieveResponse> => {
+  return kyMutator<staffPermissionsListRetrieveResponse>(
+    getStaffPermissionsListRetrieveUrl(),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionsListRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionsListRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>> = ({ signal }) => staffPermissionsListRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionsListRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>>
+export const getStaffPermissionsListRetrieveQueryKey = () => {
+  return [`/api/staff/permissions/list/`] as const
+}
+
+export const getStaffPermissionsListRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getStaffPermissionsListRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionsListRetrieve>>
+  > = ({ signal }) => staffPermissionsListRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionsListRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsListRetrieve>>
+>
 export type StaffPermissionsListRetrieveQueryError = unknown
 
-
-export function useStaffPermissionsListRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError, TData>> & Pick<
+export function useStaffPermissionsListRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsListRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsListRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsListRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsListRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsListRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionsListRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsListRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionsListRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsListRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionsListRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsListRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionsListRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type staffPermissionsMatrixRetrieveResponse200 = {
   data: PermissionMatrixResponse
   status: 200
 }
 
-export type staffPermissionsMatrixRetrieveResponseSuccess = (staffPermissionsMatrixRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type staffPermissionsMatrixRetrieveResponse = (staffPermissionsMatrixRetrieveResponseSuccess)
+export type staffPermissionsMatrixRetrieveResponseSuccess =
+  staffPermissionsMatrixRetrieveResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsMatrixRetrieveResponse =
+  staffPermissionsMatrixRetrieveResponseSuccess
 
 export const getStaffPermissionsMatrixRetrieveUrl = () => {
-
-
-
-
   return `/api/staff/permissions/matrix/`
 }
 
@@ -779,91 +1045,149 @@ Returns:
         }
     }
  */
-export const staffPermissionsMatrixRetrieve = async ( options?: RequestInit): Promise<staffPermissionsMatrixRetrieveResponse> => {
-
-  return kyMutator<staffPermissionsMatrixRetrieveResponse>(getStaffPermissionsMatrixRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionsMatrixRetrieveQueryKey = () => {
-    return [
-    `/api/staff/permissions/matrix/`
-    ] as const;
+export const staffPermissionsMatrixRetrieve = async (
+  options?: RequestInit
+): Promise<staffPermissionsMatrixRetrieveResponse> => {
+  return kyMutator<staffPermissionsMatrixRetrieveResponse>(
+    getStaffPermissionsMatrixRetrieveUrl(),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionsMatrixRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionsMatrixRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>> = ({ signal }) => staffPermissionsMatrixRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionsMatrixRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>>
+export const getStaffPermissionsMatrixRetrieveQueryKey = () => {
+  return [`/api/staff/permissions/matrix/`] as const
+}
+
+export const getStaffPermissionsMatrixRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getStaffPermissionsMatrixRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>
+  > = ({ signal }) => staffPermissionsMatrixRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionsMatrixRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>
+>
 export type StaffPermissionsMatrixRetrieveQueryError = unknown
 
-
-export function useStaffPermissionsMatrixRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError, TData>> & Pick<
+export function useStaffPermissionsMatrixRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsMatrixRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsMatrixRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsMatrixRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionsMatrixRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionsMatrixRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsMatrixRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionsMatrixRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMatrixRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionsMatrixRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type staffPermissionsMeRetrieveResponse200 = {
   data: MyPermissionsResponse
@@ -880,20 +1204,22 @@ export type staffPermissionsMeRetrieveResponse500 = {
   status: 500
 }
 
-export type staffPermissionsMeRetrieveResponseSuccess = (staffPermissionsMeRetrieveResponse200) & {
-  headers: Headers;
-};
-export type staffPermissionsMeRetrieveResponseError = (staffPermissionsMeRetrieveResponse404 | staffPermissionsMeRetrieveResponse500) & {
-  headers: Headers;
-};
+export type staffPermissionsMeRetrieveResponseSuccess =
+  staffPermissionsMeRetrieveResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsMeRetrieveResponseError = (
+  | staffPermissionsMeRetrieveResponse404
+  | staffPermissionsMeRetrieveResponse500
+) & {
+  headers: Headers
+}
 
-export type staffPermissionsMeRetrieveResponse = (staffPermissionsMeRetrieveResponseSuccess | staffPermissionsMeRetrieveResponseError)
+export type staffPermissionsMeRetrieveResponse =
+  | staffPermissionsMeRetrieveResponseSuccess
+  | staffPermissionsMeRetrieveResponseError
 
 export const getStaffPermissionsMeRetrieveUrl = () => {
-
-
-
-
   return `/api/staff/permissions/me/`
 }
 
@@ -927,109 +1253,165 @@ Returns:
         ]
     }
  */
-export const staffPermissionsMeRetrieve = async ( options?: RequestInit): Promise<staffPermissionsMeRetrieveResponse> => {
-
-  return kyMutator<staffPermissionsMeRetrieveResponse>(getStaffPermissionsMeRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionsMeRetrieveQueryKey = () => {
-    return [
-    `/api/staff/permissions/me/`
-    ] as const;
+export const staffPermissionsMeRetrieve = async (
+  options?: RequestInit
+): Promise<staffPermissionsMeRetrieveResponse> => {
+  return kyMutator<staffPermissionsMeRetrieveResponse>(
+    getStaffPermissionsMeRetrieveUrl(),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionsMeRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError = MyPermissionsNotFound | MyPermissionsServerError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionsMeRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>> = ({ signal }) => staffPermissionsMeRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionsMeRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>>
-export type StaffPermissionsMeRetrieveQueryError = MyPermissionsNotFound | MyPermissionsServerError
+export const getStaffPermissionsMeRetrieveQueryKey = () => {
+  return [`/api/staff/permissions/me/`] as const
+}
 
+export const getStaffPermissionsMeRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+  TError = MyPermissionsNotFound | MyPermissionsServerError,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useStaffPermissionsMeRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError = MyPermissionsNotFound | MyPermissionsServerError>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getStaffPermissionsMeRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>
+  > = ({ signal }) => staffPermissionsMeRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionsMeRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>
+>
+export type StaffPermissionsMeRetrieveQueryError =
+  | MyPermissionsNotFound
+  | MyPermissionsServerError
+
+export function useStaffPermissionsMeRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+  TError = MyPermissionsNotFound | MyPermissionsServerError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsMeRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError = MyPermissionsNotFound | MyPermissionsServerError>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsMeRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+  TError = MyPermissionsNotFound | MyPermissionsServerError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsMeRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError = MyPermissionsNotFound | MyPermissionsServerError>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionsMeRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError = MyPermissionsNotFound | MyPermissionsServerError>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionsMeRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsMeRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+  TError = MyPermissionsNotFound | MyPermissionsServerError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionsMeRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+  TError = MyPermissionsNotFound | MyPermissionsServerError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsMeRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionsMeRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type staffPermissionsRolesListResponse200 = {
   data: AllRolesResponse
   status: 200
 }
 
-export type staffPermissionsRolesListResponseSuccess = (staffPermissionsRolesListResponse200) & {
-  headers: Headers;
-};
-;
-
-export type staffPermissionsRolesListResponse = (staffPermissionsRolesListResponseSuccess)
+export type staffPermissionsRolesListResponseSuccess =
+  staffPermissionsRolesListResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsRolesListResponse =
+  staffPermissionsRolesListResponseSuccess
 
 export const getStaffPermissionsRolesListUrl = () => {
-
-
-
-
   return `/api/staff/permissions/roles/`
 }
 
@@ -1050,91 +1432,149 @@ Returns:
         ]
     }
  */
-export const staffPermissionsRolesList = async ( options?: RequestInit): Promise<staffPermissionsRolesListResponse> => {
-
-  return kyMutator<staffPermissionsRolesListResponse>(getStaffPermissionsRolesListUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionsRolesListQueryKey = () => {
-    return [
-    `/api/staff/permissions/roles/`
-    ] as const;
+export const staffPermissionsRolesList = async (
+  options?: RequestInit
+): Promise<staffPermissionsRolesListResponse> => {
+  return kyMutator<staffPermissionsRolesListResponse>(
+    getStaffPermissionsRolesListUrl(),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionsRolesListQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionsRolesListQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionsRolesList>>> = ({ signal }) => staffPermissionsRolesList({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionsRolesListQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsRolesList>>>
+export const getStaffPermissionsRolesListQueryKey = () => {
+  return [`/api/staff/permissions/roles/`] as const
+}
+
+export const getStaffPermissionsRolesListQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getStaffPermissionsRolesListQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionsRolesList>>
+  > = ({ signal }) => staffPermissionsRolesList({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionsRolesListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsRolesList>>
+>
 export type StaffPermissionsRolesListQueryError = unknown
 
-
-export function useStaffPermissionsRolesList<TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError, TData>> & Pick<
+export function useStaffPermissionsRolesList<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsRolesList>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsRolesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsRolesList<TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsRolesList<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsRolesList>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsRolesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsRolesList<TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionsRolesList<TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionsRolesListQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsRolesList<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionsRolesList<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionsRolesListQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type staffPermissionsRolesPermissionsRetrieveResponse200 = {
   data: RolePermissionsResponse
@@ -1146,20 +1586,22 @@ export type staffPermissionsRolesPermissionsRetrieveResponse400 = {
   status: 400
 }
 
-export type staffPermissionsRolesPermissionsRetrieveResponseSuccess = (staffPermissionsRolesPermissionsRetrieveResponse200) & {
-  headers: Headers;
-};
-export type staffPermissionsRolesPermissionsRetrieveResponseError = (staffPermissionsRolesPermissionsRetrieveResponse400) & {
-  headers: Headers;
-};
+export type staffPermissionsRolesPermissionsRetrieveResponseSuccess =
+  staffPermissionsRolesPermissionsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type staffPermissionsRolesPermissionsRetrieveResponseError =
+  staffPermissionsRolesPermissionsRetrieveResponse400 & {
+    headers: Headers
+  }
 
-export type staffPermissionsRolesPermissionsRetrieveResponse = (staffPermissionsRolesPermissionsRetrieveResponseSuccess | staffPermissionsRolesPermissionsRetrieveResponseError)
+export type staffPermissionsRolesPermissionsRetrieveResponse =
+  | staffPermissionsRolesPermissionsRetrieveResponseSuccess
+  | staffPermissionsRolesPermissionsRetrieveResponseError
 
-export const getStaffPermissionsRolesPermissionsRetrieveUrl = (roleName: string,) => {
-
-
-
-
+export const getStaffPermissionsRolesPermissionsRetrieveUrl = (
+  roleName: string
+) => {
   return `/api/staff/permissions/roles/${roleName}/permissions/`
 }
 
@@ -1181,89 +1623,167 @@ Returns:
         ]
     }
  */
-export const staffPermissionsRolesPermissionsRetrieve = async (roleName: string, options?: RequestInit): Promise<staffPermissionsRolesPermissionsRetrieveResponse> => {
-
-  return kyMutator<staffPermissionsRolesPermissionsRetrieveResponse>(getStaffPermissionsRolesPermissionsRetrieveUrl(roleName),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStaffPermissionsRolesPermissionsRetrieveQueryKey = (roleName: string,) => {
-    return [
-    `/api/staff/permissions/roles/${roleName}/permissions/`
-    ] as const;
+export const staffPermissionsRolesPermissionsRetrieve = async (
+  roleName: string,
+  options?: RequestInit
+): Promise<staffPermissionsRolesPermissionsRetrieveResponse> => {
+  return kyMutator<staffPermissionsRolesPermissionsRetrieveResponse>(
+    getStaffPermissionsRolesPermissionsRetrieveUrl(roleName),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStaffPermissionsRolesPermissionsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError = RolePermissionsError>(roleName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStaffPermissionsRolesPermissionsRetrieveQueryKey(roleName);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>> = ({ signal }) => staffPermissionsRolesPermissionsRetrieve(roleName, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(roleName), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StaffPermissionsRolesPermissionsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>>
-export type StaffPermissionsRolesPermissionsRetrieveQueryError = RolePermissionsError
+export const getStaffPermissionsRolesPermissionsRetrieveQueryKey = (
+  roleName: string
+) => {
+  return [`/api/staff/permissions/roles/${roleName}/permissions/`] as const
+}
 
+export const getStaffPermissionsRolesPermissionsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+  TError = RolePermissionsError,
+>(
+  roleName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useStaffPermissionsRolesPermissionsRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError = RolePermissionsError>(
- roleName: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ??
+    getStaffPermissionsRolesPermissionsRetrieveQueryKey(roleName)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>
+  > = ({ signal }) =>
+    staffPermissionsRolesPermissionsRetrieve(roleName, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!roleName,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StaffPermissionsRolesPermissionsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>
+>
+export type StaffPermissionsRolesPermissionsRetrieveQueryError =
+  RolePermissionsError
+
+export function useStaffPermissionsRolesPermissionsRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+  TError = RolePermissionsError,
+>(
+  roleName: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsRolesPermissionsRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError = RolePermissionsError>(
- roleName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsRolesPermissionsRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+  TError = RolePermissionsError,
+>(
+  roleName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStaffPermissionsRolesPermissionsRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError = RolePermissionsError>(
- roleName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStaffPermissionsRolesPermissionsRetrieve<TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError = RolePermissionsError>(
- roleName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStaffPermissionsRolesPermissionsRetrieveQueryOptions(roleName,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStaffPermissionsRolesPermissionsRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+  TError = RolePermissionsError,
+>(
+  roleName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStaffPermissionsRolesPermissionsRetrieve<
+  TData = Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+  TError = RolePermissionsError,
+>(
+  roleName: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof staffPermissionsRolesPermissionsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStaffPermissionsRolesPermissionsRetrieveQueryOptions(
+    roleName,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

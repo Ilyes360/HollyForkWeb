@@ -3,54 +3,56 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
 
 export interface RestaurantRequest {
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  name: string;
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string
   /**
-     * @minLength 1
-     * @maxLength 255
-     */
-  address: string;
+   * @minLength 1
+   * @maxLength 255
+   */
+  address: string
   /**
-     * @minLength 1
-     * @maxLength 10
-     */
-  postal_code: string;
+   * @minLength 1
+   * @maxLength 10
+   */
+  postal_code: string
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  city: string;
+   * @minLength 1
+   * @maxLength 100
+   */
+  city: string
   /**
-     * @minLength 1
-     * @maxLength 20
-     */
-  phone_number: string;
+   * @minLength 1
+   * @maxLength 20
+   */
+  phone_number: string
   /**
-     * @minLength 1
-     * @maxLength 14
-     * @pattern ^\d{14}$
-     */
-  siret: string;
+   * @minLength 1
+   * @maxLength 14
+   * @pattern ^\d{14}$
+   */
+  siret: string
   /**
-     * @maxLength 10
-     * @nullable
-     */
-  naf_code?: string | null;
+   * @maxLength 10
+   * @nullable
+   */
+  naf_code?: string | null
   /**
-     * @minLength 1
-     * @maxLength 6
-     */
-  pin: string;
+   * @minLength 1
+   * @maxLength 6
+   */
+  pin: string
   /**
-     * @maxLength 500
-     * @nullable
-     */
-  logo_url?: string | null;
+   * @maxLength 500
+   * @nullable
+   */
+  logo_url?: string | null
 }

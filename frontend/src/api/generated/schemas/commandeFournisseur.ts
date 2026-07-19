@@ -3,23 +3,24 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import type { Fournisseur } from './fournisseur';
-import type { Restaurant } from './restaurant';
 
 export interface CommandeFournisseur {
-  readonly id: number;
-  readonly fournisseur: Fournisseur;
-  readonly restaurant: Restaurant;
-  order_number?: string;
-  order_date?: string;
-  expected_delivery_date?: string;
-  status?: string;
+  readonly id: number
+  fournisseur_id?: number
+  readonly fournisseur_name: string
+  restaurant_id?: number
+  order_number?: string
+  order_date?: string
+  expected_delivery_date?: string
+  status?: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  total_amount?: string;
+  total_amount?: string
   /** @nullable */
-  notes?: string | null;
-  readonly created_at: string;
-  readonly updated_at: string;
+  notes?: string | null
+  readonly created_at: string
+  readonly updated_at: string
 }

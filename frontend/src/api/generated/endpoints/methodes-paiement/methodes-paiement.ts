@@ -3,11 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -17,154 +17,217 @@ import type {
   QueryKey,
   UndefinedInitialDataOptions,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   MethodePaiement,
   MethodesPaiementListParams,
-  PaginatedMethodePaiementList
-} from '../../schemas';
+  PaginatedMethodePaiementList,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type methodesPaiementListResponse200 = {
   data: PaginatedMethodePaiementList
   status: 200
 }
 
-export type methodesPaiementListResponseSuccess = (methodesPaiementListResponse200) & {
-  headers: Headers;
-};
-;
+export type methodesPaiementListResponseSuccess =
+  methodesPaiementListResponse200 & {
+    headers: Headers
+  }
+export type methodesPaiementListResponse = methodesPaiementListResponseSuccess
 
-export type methodesPaiementListResponse = (methodesPaiementListResponseSuccess)
-
-export const getMethodesPaiementListUrl = (params?: MethodesPaiementListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getMethodesPaiementListUrl = (
+  params?: MethodesPaiementListParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/methodes-paiement/?${stringifiedParams}` : `/api/methodes-paiement/`
+  return stringifiedParams.length > 0
+    ? `/api/methodes-paiement/?${stringifiedParams}`
+    : `/api/methodes-paiement/`
 }
 
 /**
  * Liste des méthodes de paiement disponibles (lecture seule).
 Accessible à tous les utilisateurs authentifiés.
  */
-export const methodesPaiementList = async (params?: MethodesPaiementListParams, options?: RequestInit): Promise<methodesPaiementListResponse> => {
-
-  return kyMutator<methodesPaiementListResponse>(getMethodesPaiementListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getMethodesPaiementListQueryKey = (params?: MethodesPaiementListParams,) => {
-    return [
-    `/api/methodes-paiement/`, ...(params ? [params] : [])
-    ] as const;
+export const methodesPaiementList = async (
+  params?: MethodesPaiementListParams,
+  options?: RequestInit
+): Promise<methodesPaiementListResponse> => {
+  return kyMutator<methodesPaiementListResponse>(
+    getMethodesPaiementListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getMethodesPaiementListQueryOptions = <TData = Awaited<ReturnType<typeof methodesPaiementList>>, TError = unknown>(params?: MethodesPaiementListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getMethodesPaiementListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof methodesPaiementList>>> = ({ signal }) => methodesPaiementList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type MethodesPaiementListQueryResult = NonNullable<Awaited<ReturnType<typeof methodesPaiementList>>>
+export const getMethodesPaiementListQueryKey = (
+  params?: MethodesPaiementListParams
+) => {
+  return [`/api/methodes-paiement/`, ...(params ? [params] : [])] as const
+}
+
+export const getMethodesPaiementListQueryOptions = <
+  TData = Awaited<ReturnType<typeof methodesPaiementList>>,
+  TError = unknown,
+>(
+  params?: MethodesPaiementListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getMethodesPaiementListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof methodesPaiementList>>
+  > = ({ signal }) => methodesPaiementList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof methodesPaiementList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MethodesPaiementListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof methodesPaiementList>>
+>
 export type MethodesPaiementListQueryError = unknown
 
-
-export function useMethodesPaiementList<TData = Awaited<ReturnType<typeof methodesPaiementList>>, TError = unknown>(
- params: undefined |  MethodesPaiementListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementList>>, TError, TData>> & Pick<
+export function useMethodesPaiementList<
+  TData = Awaited<ReturnType<typeof methodesPaiementList>>,
+  TError = unknown,
+>(
+  params: undefined | MethodesPaiementListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof methodesPaiementList>>,
           TError,
           Awaited<ReturnType<typeof methodesPaiementList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMethodesPaiementList<TData = Awaited<ReturnType<typeof methodesPaiementList>>, TError = unknown>(
- params?: MethodesPaiementListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useMethodesPaiementList<
+  TData = Awaited<ReturnType<typeof methodesPaiementList>>,
+  TError = unknown,
+>(
+  params?: MethodesPaiementListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof methodesPaiementList>>,
           TError,
           Awaited<ReturnType<typeof methodesPaiementList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMethodesPaiementList<TData = Awaited<ReturnType<typeof methodesPaiementList>>, TError = unknown>(
- params?: MethodesPaiementListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useMethodesPaiementList<TData = Awaited<ReturnType<typeof methodesPaiementList>>, TError = unknown>(
- params?: MethodesPaiementListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getMethodesPaiementListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useMethodesPaiementList<
+  TData = Awaited<ReturnType<typeof methodesPaiementList>>,
+  TError = unknown,
+>(
+  params?: MethodesPaiementListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useMethodesPaiementList<
+  TData = Awaited<ReturnType<typeof methodesPaiementList>>,
+  TError = unknown,
+>(
+  params?: MethodesPaiementListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getMethodesPaiementListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type methodesPaiementRetrieveResponse200 = {
   data: MethodePaiement
   status: 200
 }
 
-export type methodesPaiementRetrieveResponseSuccess = (methodesPaiementRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type methodesPaiementRetrieveResponseSuccess =
+  methodesPaiementRetrieveResponse200 & {
+    headers: Headers
+  }
+export type methodesPaiementRetrieveResponse =
+  methodesPaiementRetrieveResponseSuccess
 
-export type methodesPaiementRetrieveResponse = (methodesPaiementRetrieveResponseSuccess)
-
-export const getMethodesPaiementRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getMethodesPaiementRetrieveUrl = (id: number) => {
   return `/api/methodes-paiement/${id}/`
 }
 
@@ -172,89 +235,159 @@ export const getMethodesPaiementRetrieveUrl = (id: number,) => {
  * Liste des méthodes de paiement disponibles (lecture seule).
 Accessible à tous les utilisateurs authentifiés.
  */
-export const methodesPaiementRetrieve = async (id: number, options?: RequestInit): Promise<methodesPaiementRetrieveResponse> => {
-
-  return kyMutator<methodesPaiementRetrieveResponse>(getMethodesPaiementRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getMethodesPaiementRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/methodes-paiement/${id}/`
-    ] as const;
+export const methodesPaiementRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<methodesPaiementRetrieveResponse> => {
+  return kyMutator<methodesPaiementRetrieveResponse>(
+    getMethodesPaiementRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getMethodesPaiementRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getMethodesPaiementRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof methodesPaiementRetrieve>>> = ({ signal }) => methodesPaiementRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type MethodesPaiementRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof methodesPaiementRetrieve>>>
+export const getMethodesPaiementRetrieveQueryKey = (id: number) => {
+  return [`/api/methodes-paiement/${id}/`] as const
+}
+
+export const getMethodesPaiementRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getMethodesPaiementRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof methodesPaiementRetrieve>>
+  > = ({ signal }) => methodesPaiementRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MethodesPaiementRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof methodesPaiementRetrieve>>
+>
 export type MethodesPaiementRetrieveQueryError = unknown
 
-
-export function useMethodesPaiementRetrieve<TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError, TData>> & Pick<
+export function useMethodesPaiementRetrieve<
+  TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
           TError,
           Awaited<ReturnType<typeof methodesPaiementRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMethodesPaiementRetrieve<TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useMethodesPaiementRetrieve<
+  TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
           TError,
           Awaited<ReturnType<typeof methodesPaiementRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMethodesPaiementRetrieve<TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useMethodesPaiementRetrieve<TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof methodesPaiementRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getMethodesPaiementRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useMethodesPaiementRetrieve<
+  TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useMethodesPaiementRetrieve<
+  TData = Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof methodesPaiementRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getMethodesPaiementRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

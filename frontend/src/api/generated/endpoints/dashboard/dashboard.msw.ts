@@ -3,61 +3,592 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
 import type {
-  DashboardKPIsResponse,
-  DashboardMapResponse
-} from '../../schemas';
+  DashboardFinanceResponse,
+  DashboardMapResponse,
+  DashboardOperationsResponse,
+  DashboardOverviewResponse,
+  DashboardReservationsResponse,
+  DashboardStaffResponse,
+  DashboardStaffShiftResponse,
+  DashboardSuppliersResponse,
+} from "../../schemas"
 
+export const getDashboardFinanceRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardFinanceResponse, object>> = {}
+): DashboardFinanceResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    daily_revenue_ht: faker.number.float({ fractionDigits: 2 }),
+    daily_revenue_ttc: faker.number.float({ fractionDigits: 2 }),
+    daily_tva: faker.number.float({ fractionDigits: 2 }),
+    monthly_revenue_ht: faker.number.float({ fractionDigits: 2 }),
+    monthly_revenue_ttc: faker.number.float({ fractionDigits: 2 }),
+    monthly_tva: faker.number.float({ fractionDigits: 2 }),
+    invoices_today: faker.number.int(),
+    invoices_month: faker.number.int(),
+    average_invoice_today: faker.number.float({ fractionDigits: 2 }),
+    payments_collected_today: faker.number.float({ fractionDigits: 2 }),
+    cancelled_orders_rate: faker.number.float({ fractionDigits: 2 }),
+    gross_margin_day: faker.number.float({ fractionDigits: 2 }),
+    gross_margin_rate_day: faker.number.float({ fractionDigits: 2 }),
+  },
+  ...overrideResponse,
+})
 
-export const getDashboardKpisRetrieveResponseMock = (overrideResponse: Partial<Extract<DashboardKPIsResponse, object>> = {}): DashboardKPIsResponse => ({restaurant_id: faker.number.int(), restaurant_name: faker.string.alpha({length: {min: 10, max: 20}}), date: faker.string.alpha({length: {min: 10, max: 20}}), kpis: {
-        [faker.string.alphanumeric(5)]: {}
-      }, ...overrideResponse})
+export const getDashboardKpisRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardOverviewResponse, object>> = {}
+): DashboardOverviewResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    daily_revenue: faker.number.float({ fractionDigits: 2 }),
+    weekly_revenue: faker.number.float({ fractionDigits: 2 }),
+    monthly_revenue: faker.number.float({ fractionDigits: 2 }),
+    validated_orders: faker.number.int(),
+    average_ticket: faker.number.float({ fractionDigits: 2 }),
+    gross_margin: faker.number.float({ fractionDigits: 2 }),
+    food_cost_rate: faker.number.float({ fractionDigits: 2 }),
+    occupancy_rate: faker.number.float({ fractionDigits: 2 }),
+    covers: faker.number.int(),
+    stock_alerts: faker.number.int(),
+    scheduled_staff_today: faker.number.int(),
+  },
+  ...overrideResponse,
+})
 
-export const getDashboardMapRetrieveResponseMock = (overrideResponse: Partial<Extract<DashboardMapResponse, object>> = {}): DashboardMapResponse => ({restaurants: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({
-        [faker.string.alphanumeric(5)]: {}
-      })), suppliers: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({
-        [faker.string.alphanumeric(5)]: {}
-      })), ...overrideResponse})
+export const getDashboardMapRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardMapResponse, object>> = {}
+): DashboardMapResponse => ({
+  restaurants: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    restaurant_id: faker.number.int(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    lat: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.number.float({ fractionDigits: 2 }),
+        null,
+      ]),
+      null,
+    ]),
+    lng: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.number.float({ fractionDigits: 2 }),
+        null,
+      ]),
+      null,
+    ]),
+    city: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  suppliers: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    supplier_id: faker.number.int(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    lat: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.number.float({ fractionDigits: 2 }),
+        null,
+      ]),
+      null,
+    ]),
+    lng: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.number.float({ fractionDigits: 2 }),
+        null,
+      ]),
+      null,
+    ]),
+    city: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    category_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+    restaurant_orders: faker.number.int(),
+    delivery_days: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+  })),
+  ...overrideResponse,
+})
 
+export const getDashboardOperationsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardOperationsResponse, object>> = {}
+): DashboardOperationsResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    total_tables: faker.number.int(),
+    occupied_tables: faker.number.int(),
+    available_tables: faker.number.int(),
+    occupancy_rate: faker.number.float({ fractionDigits: 2 }),
+    seating_capacity: faker.number.int(),
+    reserved_seats: faker.number.int(),
+    reserved_seats_rate: faker.number.float({ fractionDigits: 2 }),
+    open_orders: faker.number.int(),
+    kitchen_pending: faker.number.int(),
+    kitchen_in_progress: faker.number.int(),
+    kitchen_ready: faker.number.int(),
+    stock_alerts_count: faker.number.int(),
+    inventory_stock_value: faker.number.float({ fractionDigits: 2 }),
+    critical_stock_items: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      ingredient: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      current_stock: faker.number.float({ fractionDigits: 2 }),
+      alert_threshold: faker.number.float({ fractionDigits: 2 }),
+      gap: faker.number.float({ fractionDigits: 2 }),
+    })),
+  },
+  ...overrideResponse,
+})
 
-export const getDashboardKpisRetrieveMockHandler = (overrideResponse?: DashboardKPIsResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<DashboardKPIsResponse> | DashboardKPIsResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/dashboard/kpis/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+export const getDashboardOverviewRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardOverviewResponse, object>> = {}
+): DashboardOverviewResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    daily_revenue: faker.number.float({ fractionDigits: 2 }),
+    weekly_revenue: faker.number.float({ fractionDigits: 2 }),
+    monthly_revenue: faker.number.float({ fractionDigits: 2 }),
+    validated_orders: faker.number.int(),
+    average_ticket: faker.number.float({ fractionDigits: 2 }),
+    gross_margin: faker.number.float({ fractionDigits: 2 }),
+    food_cost_rate: faker.number.float({ fractionDigits: 2 }),
+    occupancy_rate: faker.number.float({ fractionDigits: 2 }),
+    covers: faker.number.int(),
+    stock_alerts: faker.number.int(),
+    scheduled_staff_today: faker.number.int(),
+  },
+  ...overrideResponse,
+})
 
+export const getDashboardReservationsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardReservationsResponse, object>> = {}
+): DashboardReservationsResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    reservations_today: faker.number.int(),
+    reservations_week: faker.number.int(),
+    covers_today: faker.number.int(),
+    covers_week: faker.number.int(),
+    assigned_tables_rate: faker.number.float({ fractionDigits: 2 }),
+    average_party_size: faker.number.float({ fractionDigits: 2 }),
+    lunch_reservations: faker.number.int(),
+    dinner_reservations: faker.number.int(),
+    reserved_capacity_rate: faker.number.float({ fractionDigits: 2 }),
+  },
+  ...overrideResponse,
+})
 
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDashboardKpisRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getDashboardStaffRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardStaffResponse, object>> = {}
+): DashboardStaffResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    employees_count: faker.number.int(),
+    scheduled_today: faker.number.int(),
+    scheduled_this_week: faker.number.int(),
+    planned_hours_today: faker.number.float({ fractionDigits: 2 }),
+    planned_hours_week: faker.number.float({ fractionDigits: 2 }),
+    tables_per_assigned_staff: faker.number.float({ fractionDigits: 2 }),
+    employees_by_type: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      count: faker.number.int(),
+    })),
+  },
+  ...overrideResponse,
+})
+
+export const getDashboardStaffShiftsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardStaffShiftResponse, object>> = {}
+): DashboardStaffShiftResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  summary: {
+    employees_count: faker.number.int(),
+    scheduled_today: faker.number.int(),
+    total_hours_today: faker.number.float({ fractionDigits: 2 }),
+    total_hours_week: faker.number.float({ fractionDigits: 2 }),
+  },
+  employees: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    employee_id: faker.number.int(),
+    full_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    employee_type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    salary: faker.number.float({ fractionDigits: 2 }),
+    hire_date: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    assigned_tables_count: faker.number.int(),
+    is_scheduled_today: faker.datatype.boolean(),
+    hours_today: faker.number.float({ fractionDigits: 2 }),
+    hours_week: faker.number.float({ fractionDigits: 2 }),
+    shifts_today: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      shift_id: faker.number.int(),
+      type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      duration_hours: faker.number.float({ fractionDigits: 2 }),
+    })),
+    shifts_week: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      shift_id: faker.number.int(),
+      type: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      duration_hours: faker.number.float({ fractionDigits: 2 }),
+    })),
+  })),
+  ...overrideResponse,
+})
+
+export const getDashboardSuppliersRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<DashboardSuppliersResponse, object>> = {}
+): DashboardSuppliersResponse => ({
+  restaurant_id: faker.number.int(),
+  restaurant_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  date: faker.date.past().toISOString().slice(0, 10),
+  period: {
+    day: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    week_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_start: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    month_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  kpis: {
+    active_suppliers_count: faker.number.int(),
+    orders_this_month: faker.number.int(),
+    purchases_amount_month: faker.number.float({ fractionDigits: 2 }),
+    upcoming_deliveries_this_week: faker.number.int(),
+    suppliers_without_delivery_days_count: faker.number.int(),
+    average_lead_time_days: faker.number.float({ fractionDigits: 2 }),
+    status_breakdown: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      status: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      count: faker.number.int(),
+      amount: faker.number.float({ fractionDigits: 2 }),
+    })),
+  },
+  ...overrideResponse,
+})
+
+export const getDashboardFinanceRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardFinanceResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardFinanceResponse> | DashboardFinanceResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/finance/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardFinanceRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getDashboardMapRetrieveMockHandler = (overrideResponse?: DashboardMapResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<DashboardMapResponse> | DashboardMapResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/dashboard/map/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+export const getDashboardKpisRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardOverviewResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardOverviewResponse> | DashboardOverviewResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/kpis/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardKpisRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
 
+export const getDashboardMapRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardMapResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardMapResponse> | DashboardMapResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/map/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardMapRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
 
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDashboardMapRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getDashboardOperationsRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardOperationsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardOperationsResponse> | DashboardOperationsResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/operations/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardOperationsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
+
+export const getDashboardOverviewRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardOverviewResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardOverviewResponse> | DashboardOverviewResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/overview/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardOverviewRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
+
+export const getDashboardReservationsRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardReservationsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) =>
+        | Promise<DashboardReservationsResponse>
+        | DashboardReservationsResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/reservations/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardReservationsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
+
+export const getDashboardStaffRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardStaffResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardStaffResponse> | DashboardStaffResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/staff/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardStaffRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
+
+export const getDashboardStaffShiftsRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardStaffShiftResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardStaffShiftResponse> | DashboardStaffShiftResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/staff/shifts/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardStaffShiftsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
+
+export const getDashboardSuppliersRetrieveMockHandler = (
+  overrideResponse?:
+    | DashboardSuppliersResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<DashboardSuppliersResponse> | DashboardSuppliersResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/dashboard/suppliers/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDashboardSuppliersRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 export const getDashboardMock = () => [
+  getDashboardFinanceRetrieveMockHandler(),
   getDashboardKpisRetrieveMockHandler(),
-  getDashboardMapRetrieveMockHandler()
+  getDashboardMapRetrieveMockHandler(),
+  getDashboardOperationsRetrieveMockHandler(),
+  getDashboardOverviewRetrieveMockHandler(),
+  getDashboardReservationsRetrieveMockHandler(),
+  getDashboardStaffRetrieveMockHandler(),
+  getDashboardStaffShiftsRetrieveMockHandler(),
+  getDashboardSuppliersRetrieveMockHandler(),
 ]

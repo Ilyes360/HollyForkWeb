@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,652 +20,873 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   PaginatedTableList,
   PatchedTableRequest,
   Table,
   TableRequest,
-  TablesListParams
-} from '../../schemas';
+  TablesListParams,
+  TablesStatusError,
+  TablesStatusResponse,
+  TablesStatusRetrieveParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type tablesListResponse200 = {
   data: PaginatedTableList
   status: 200
 }
 
-export type tablesListResponseSuccess = (tablesListResponse200) & {
-  headers: Headers;
-};
-;
+export type tablesListResponseSuccess = tablesListResponse200 & {
+  headers: Headers
+}
+export type tablesListResponse = tablesListResponseSuccess
 
-export type tablesListResponse = (tablesListResponseSuccess)
-
-export const getTablesListUrl = (params?: TablesListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getTablesListUrl = (params?: TablesListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/tables/?${stringifiedParams}` : `/api/tables/`
+  return stringifiedParams.length > 0
+    ? `/api/tables/?${stringifiedParams}`
+    : `/api/tables/`
 }
 
-export const tablesList = async (params?: TablesListParams, options?: RequestInit): Promise<tablesListResponse> => {
-
-  return kyMutator<tablesListResponse>(getTablesListUrl(params),
-  {
+export const tablesList = async (
+  params?: TablesListParams,
+  options?: RequestInit
+): Promise<tablesListResponse> => {
+  return kyMutator<tablesListResponse>(getTablesListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getTablesListQueryKey = (params?: TablesListParams,) => {
-    return [
-    `/api/tables/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getTablesListQueryOptions = <TData = Awaited<ReturnType<typeof tablesList>>, TError = unknown>(params?: TablesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTablesListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof tablesList>>> = ({ signal }) => tablesList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type TablesListQueryResult = NonNullable<Awaited<ReturnType<typeof tablesList>>>
+export const getTablesListQueryKey = (params?: TablesListParams) => {
+  return [`/api/tables/`, ...(params ? [params] : [])] as const
+}
+
+export const getTablesListQueryOptions = <
+  TData = Awaited<ReturnType<typeof tablesList>>,
+  TError = unknown,
+>(
+  params?: TablesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getTablesListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof tablesList>>> = ({
+    signal,
+  }) => tablesList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof tablesList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TablesListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof tablesList>>
+>
 export type TablesListQueryError = unknown
 
-
-export function useTablesList<TData = Awaited<ReturnType<typeof tablesList>>, TError = unknown>(
- params: undefined |  TablesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>> & Pick<
+export function useTablesList<
+  TData = Awaited<ReturnType<typeof tablesList>>,
+  TError = unknown,
+>(
+  params: undefined | TablesListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof tablesList>>,
           TError,
           Awaited<ReturnType<typeof tablesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTablesList<TData = Awaited<ReturnType<typeof tablesList>>, TError = unknown>(
- params?: TablesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTablesList<
+  TData = Awaited<ReturnType<typeof tablesList>>,
+  TError = unknown,
+>(
+  params?: TablesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof tablesList>>,
           TError,
           Awaited<ReturnType<typeof tablesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTablesList<TData = Awaited<ReturnType<typeof tablesList>>, TError = unknown>(
- params?: TablesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTablesList<TData = Awaited<ReturnType<typeof tablesList>>, TError = unknown>(
- params?: TablesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTablesListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTablesList<
+  TData = Awaited<ReturnType<typeof tablesList>>,
+  TError = unknown,
+>(
+  params?: TablesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useTablesList<
+  TData = Awaited<ReturnType<typeof tablesList>>,
+  TError = unknown,
+>(
+  params?: TablesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getTablesListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type tablesCreateResponse201 = {
   data: Table
   status: 201
 }
 
-export type tablesCreateResponseSuccess = (tablesCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type tablesCreateResponse = (tablesCreateResponseSuccess)
+export type tablesCreateResponseSuccess = tablesCreateResponse201 & {
+  headers: Headers
+}
+export type tablesCreateResponse = tablesCreateResponseSuccess
 
 export const getTablesCreateUrl = () => {
-
-
-
-
   return `/api/tables/`
 }
 
-export const tablesCreate = async (tableRequest: TableRequest, options?: RequestInit): Promise<tablesCreateResponse> => {
-
-  return kyMutator<tablesCreateResponse>(getTablesCreateUrl(),
-  {
+export const tablesCreate = async (
+  tableRequest: TableRequest,
+  options?: RequestInit
+): Promise<tablesCreateResponse> => {
+  return kyMutator<tablesCreateResponse>(getTablesCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      tableRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(tableRequest),
+  })
+}
+
+export const getTablesCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof tablesCreate>>,
+    TError,
+    { data: TableRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof tablesCreate>>,
+  TError,
+  { data: TableRequest },
+  TContext
+> => {
+  const mutationKey = ["tablesCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof tablesCreate>>,
+    { data: TableRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return tablesCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TablesCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof tablesCreate>>
+>
+export type TablesCreateMutationBody = TableRequest
+export type TablesCreateMutationError = unknown
 
-
-export const getTablesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesCreate>>, TError,{data: TableRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof tablesCreate>>, TError,{data: TableRequest}, TContext> => {
-
-const mutationKey = ['tablesCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tablesCreate>>, {data: TableRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  tablesCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TablesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof tablesCreate>>>
-    export type TablesCreateMutationBody = TableRequest
-    export type TablesCreateMutationError = unknown
-
-    export const useTablesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesCreate>>, TError,{data: TableRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof tablesCreate>>,
-        TError,
-        {data: TableRequest},
-        TContext
-      > => {
-      return useMutation(getTablesCreateMutationOptions(options), queryClient);
-    }
-    export type tablesRetrieveResponse200 = {
+export const useTablesCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof tablesCreate>>,
+      TError,
+      { data: TableRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof tablesCreate>>,
+  TError,
+  { data: TableRequest },
+  TContext
+> => {
+  return useMutation(getTablesCreateMutationOptions(options), queryClient)
+}
+export type tablesRetrieveResponse200 = {
   data: Table
   status: 200
 }
 
-export type tablesRetrieveResponseSuccess = (tablesRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type tablesRetrieveResponseSuccess = tablesRetrieveResponse200 & {
+  headers: Headers
+}
+export type tablesRetrieveResponse = tablesRetrieveResponseSuccess
 
-export type tablesRetrieveResponse = (tablesRetrieveResponseSuccess)
-
-export const getTablesRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getTablesRetrieveUrl = (id: number) => {
   return `/api/tables/${id}/`
 }
 
-export const tablesRetrieve = async (id: number, options?: RequestInit): Promise<tablesRetrieveResponse> => {
-
-  return kyMutator<tablesRetrieveResponse>(getTablesRetrieveUrl(id),
-  {
+export const tablesRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<tablesRetrieveResponse> => {
+  return kyMutator<tablesRetrieveResponse>(getTablesRetrieveUrl(id), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getTablesRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/tables/${id}/`
-    ] as const;
-    }
-
-
-export const getTablesRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof tablesRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTablesRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof tablesRetrieve>>> = ({ signal }) => tablesRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type TablesRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof tablesRetrieve>>>
+export const getTablesRetrieveQueryKey = (id: number) => {
+  return [`/api/tables/${id}/`] as const
+}
+
+export const getTablesRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof tablesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getTablesRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof tablesRetrieve>>> = ({
+    signal,
+  }) => tablesRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof tablesRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TablesRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof tablesRetrieve>>
+>
 export type TablesRetrieveQueryError = unknown
 
-
-export function useTablesRetrieve<TData = Awaited<ReturnType<typeof tablesRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>> & Pick<
+export function useTablesRetrieve<
+  TData = Awaited<ReturnType<typeof tablesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof tablesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof tablesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTablesRetrieve<TData = Awaited<ReturnType<typeof tablesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTablesRetrieve<
+  TData = Awaited<ReturnType<typeof tablesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof tablesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof tablesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTablesRetrieve<TData = Awaited<ReturnType<typeof tablesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTablesRetrieve<TData = Awaited<ReturnType<typeof tablesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTablesRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTablesRetrieve<
+  TData = Awaited<ReturnType<typeof tablesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useTablesRetrieve<
+  TData = Awaited<ReturnType<typeof tablesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof tablesRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getTablesRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type tablesUpdateResponse200 = {
   data: Table
   status: 200
 }
 
-export type tablesUpdateResponseSuccess = (tablesUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type tablesUpdateResponseSuccess = tablesUpdateResponse200 & {
+  headers: Headers
+}
+export type tablesUpdateResponse = tablesUpdateResponseSuccess
 
-export type tablesUpdateResponse = (tablesUpdateResponseSuccess)
-
-export const getTablesUpdateUrl = (id: number,) => {
-
-
-
-
+export const getTablesUpdateUrl = (id: number) => {
   return `/api/tables/${id}/`
 }
 
-export const tablesUpdate = async (id: number,
-    tableRequest: TableRequest, options?: RequestInit): Promise<tablesUpdateResponse> => {
-
-  return kyMutator<tablesUpdateResponse>(getTablesUpdateUrl(id),
-  {
+export const tablesUpdate = async (
+  id: number,
+  tableRequest: TableRequest,
+  options?: RequestInit
+): Promise<tablesUpdateResponse> => {
+  return kyMutator<tablesUpdateResponse>(getTablesUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      tableRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(tableRequest),
+  })
+}
+
+export const getTablesUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof tablesUpdate>>,
+    TError,
+    { id: number; data: TableRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof tablesUpdate>>,
+  TError,
+  { id: number; data: TableRequest },
+  TContext
+> => {
+  const mutationKey = ["tablesUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof tablesUpdate>>,
+    { id: number; data: TableRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return tablesUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TablesUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof tablesUpdate>>
+>
+export type TablesUpdateMutationBody = TableRequest
+export type TablesUpdateMutationError = unknown
 
-
-export const getTablesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesUpdate>>, TError,{id: number;data: TableRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof tablesUpdate>>, TError,{id: number;data: TableRequest}, TContext> => {
-
-const mutationKey = ['tablesUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tablesUpdate>>, {id: number;data: TableRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  tablesUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TablesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof tablesUpdate>>>
-    export type TablesUpdateMutationBody = TableRequest
-    export type TablesUpdateMutationError = unknown
-
-    export const useTablesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesUpdate>>, TError,{id: number;data: TableRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof tablesUpdate>>,
-        TError,
-        {id: number;data: TableRequest},
-        TContext
-      > => {
-      return useMutation(getTablesUpdateMutationOptions(options), queryClient);
-    }
-    export type tablesPartialUpdateResponse200 = {
+export const useTablesUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof tablesUpdate>>,
+      TError,
+      { id: number; data: TableRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof tablesUpdate>>,
+  TError,
+  { id: number; data: TableRequest },
+  TContext
+> => {
+  return useMutation(getTablesUpdateMutationOptions(options), queryClient)
+}
+export type tablesPartialUpdateResponse200 = {
   data: Table
   status: 200
 }
 
-export type tablesPartialUpdateResponseSuccess = (tablesPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type tablesPartialUpdateResponseSuccess =
+  tablesPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type tablesPartialUpdateResponse = tablesPartialUpdateResponseSuccess
 
-export type tablesPartialUpdateResponse = (tablesPartialUpdateResponseSuccess)
-
-export const getTablesPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getTablesPartialUpdateUrl = (id: number) => {
   return `/api/tables/${id}/`
 }
 
-export const tablesPartialUpdate = async (id: number,
-    patchedTableRequest?: PatchedTableRequest, options?: RequestInit): Promise<tablesPartialUpdateResponse> => {
-
-  return kyMutator<tablesPartialUpdateResponse>(getTablesPartialUpdateUrl(id),
-  {
+export const tablesPartialUpdate = async (
+  id: number,
+  patchedTableRequest?: PatchedTableRequest,
+  options?: RequestInit
+): Promise<tablesPartialUpdateResponse> => {
+  return kyMutator<tablesPartialUpdateResponse>(getTablesPartialUpdateUrl(id), {
     ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedTableRequest,)
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(patchedTableRequest),
+  })
+}
+
+export const getTablesPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof tablesPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedTableRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof tablesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedTableRequest },
+  TContext
+> => {
+  const mutationKey = ["tablesPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof tablesPartialUpdate>>,
+    { id: number; data?: PatchedTableRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return tablesPartialUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TablesPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof tablesPartialUpdate>>
+>
+export type TablesPartialUpdateMutationBody = PatchedTableRequest | undefined
+export type TablesPartialUpdateMutationError = unknown
 
-
-export const getTablesPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesPartialUpdate>>, TError,{id: number;data?: PatchedTableRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof tablesPartialUpdate>>, TError,{id: number;data?: PatchedTableRequest}, TContext> => {
-
-const mutationKey = ['tablesPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tablesPartialUpdate>>, {id: number;data?: PatchedTableRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  tablesPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TablesPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof tablesPartialUpdate>>>
-    export type TablesPartialUpdateMutationBody = PatchedTableRequest | undefined
-    export type TablesPartialUpdateMutationError = unknown
-
-    export const useTablesPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesPartialUpdate>>, TError,{id: number;data?: PatchedTableRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof tablesPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedTableRequest},
-        TContext
-      > => {
-      return useMutation(getTablesPartialUpdateMutationOptions(options), queryClient);
-    }
-    export type tablesDestroyResponse204 = {
+export const useTablesPartialUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof tablesPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedTableRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof tablesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedTableRequest },
+  TContext
+> => {
+  return useMutation(
+    getTablesPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type tablesDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type tablesDestroyResponseSuccess = (tablesDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type tablesDestroyResponseSuccess = tablesDestroyResponse204 & {
+  headers: Headers
+}
+export type tablesDestroyResponse = tablesDestroyResponseSuccess
 
-export type tablesDestroyResponse = (tablesDestroyResponseSuccess)
-
-export const getTablesDestroyUrl = (id: number,) => {
-
-
-
-
+export const getTablesDestroyUrl = (id: number) => {
   return `/api/tables/${id}/`
 }
 
-export const tablesDestroy = async (id: number, options?: RequestInit): Promise<tablesDestroyResponse> => {
-
-  return kyMutator<tablesDestroyResponse>(getTablesDestroyUrl(id),
-  {
+export const tablesDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<tablesDestroyResponse> => {
+  return kyMutator<tablesDestroyResponse>(getTablesDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getTablesDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof tablesDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof tablesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["tablesDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof tablesDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return tablesDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type TablesDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof tablesDestroy>>
+>
 
+export type TablesDestroyMutationError = unknown
 
-export const getTablesDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof tablesDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['tablesDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tablesDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  tablesDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TablesDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof tablesDestroy>>>
-
-    export type TablesDestroyMutationError = unknown
-
-    export const useTablesDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tablesDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof tablesDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getTablesDestroyMutationOptions(options), queryClient);
-    }
-    export type tablesStatusRetrieveResponse200 = {
-  data: Table
+export const useTablesDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof tablesDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof tablesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getTablesDestroyMutationOptions(options), queryClient)
+}
+export type tablesStatusRetrieveResponse200 = {
+  data: TablesStatusResponse
   status: 200
 }
 
-export type tablesStatusRetrieveResponseSuccess = (tablesStatusRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type tablesStatusRetrieveResponse400 = {
+  data: TablesStatusError
+  status: 400
+}
 
-export type tablesStatusRetrieveResponse = (tablesStatusRetrieveResponseSuccess)
+export type tablesStatusRetrieveResponseSuccess =
+  tablesStatusRetrieveResponse200 & {
+    headers: Headers
+  }
+export type tablesStatusRetrieveResponseError =
+  tablesStatusRetrieveResponse400 & {
+    headers: Headers
+  }
 
-export const getTablesStatusRetrieveUrl = () => {
+export type tablesStatusRetrieveResponse =
+  | tablesStatusRetrieveResponseSuccess
+  | tablesStatusRetrieveResponseError
 
+export const getTablesStatusRetrieveUrl = (
+  params: TablesStatusRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-  return `/api/tables/status/`
+  return stringifiedParams.length > 0
+    ? `/api/tables/status/?${stringifiedParams}`
+    : `/api/tables/status/`
 }
 
 /**
  * GET /api/tables/status?date=YYYY-MM-DD&service=midi|soir&restaurant_id=X
+ * @summary Statut des tables pour un service
  */
-export const tablesStatusRetrieve = async ( options?: RequestInit): Promise<tablesStatusRetrieveResponse> => {
-
-  return kyMutator<tablesStatusRetrieveResponse>(getTablesStatusRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getTablesStatusRetrieveQueryKey = () => {
-    return [
-    `/api/tables/status/`
-    ] as const;
+export const tablesStatusRetrieve = async (
+  params: TablesStatusRetrieveParams,
+  options?: RequestInit
+): Promise<tablesStatusRetrieveResponse> => {
+  return kyMutator<tablesStatusRetrieveResponse>(
+    getTablesStatusRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getTablesStatusRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTablesStatusRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof tablesStatusRetrieve>>> = ({ signal }) => tablesStatusRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type TablesStatusRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof tablesStatusRetrieve>>>
-export type TablesStatusRetrieveQueryError = unknown
+export const getTablesStatusRetrieveQueryKey = (
+  params?: TablesStatusRetrieveParams
+) => {
+  return [`/api/tables/status/`, ...(params ? [params] : [])] as const
+}
 
+export const getTablesStatusRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+  TError = TablesStatusError,
+>(
+  params: TablesStatusRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useTablesStatusRetrieve<TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getTablesStatusRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof tablesStatusRetrieve>>
+  > = ({ signal }) => tablesStatusRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TablesStatusRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof tablesStatusRetrieve>>
+>
+export type TablesStatusRetrieveQueryError = TablesStatusError
+
+export function useTablesStatusRetrieve<
+  TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+  TError = TablesStatusError,
+>(
+  params: TablesStatusRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof tablesStatusRetrieve>>,
           TError,
           Awaited<ReturnType<typeof tablesStatusRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTablesStatusRetrieve<TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useTablesStatusRetrieve<
+  TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+  TError = TablesStatusError,
+>(
+  params: TablesStatusRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof tablesStatusRetrieve>>,
           TError,
           Awaited<ReturnType<typeof tablesStatusRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTablesStatusRetrieve<TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTablesStatusRetrieve<TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tablesStatusRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTablesStatusRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
+export function useTablesStatusRetrieve<
+  TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+  TError = TablesStatusError,
+>(
+  params: TablesStatusRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+/**
+ * @summary Statut des tables pour un service
+ */
 
+export function useTablesStatusRetrieve<
+  TData = Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+  TError = TablesStatusError,
+>(
+  params: TablesStatusRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof tablesStatusRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getTablesStatusRetrieveQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

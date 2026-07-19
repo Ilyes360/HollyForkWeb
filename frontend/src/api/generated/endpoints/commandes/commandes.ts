@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,334 +20,447 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   Commande,
+  CommandeAnnulerError,
+  CommandeAnnulerResponse,
+  CommandeDeplacerError,
+  CommandeDeplacerNotFound,
+  CommandeDeplacerRequestRequest,
   CommandeRequest,
+  CommandesKitchenOrdersRetrieveParams,
   CommandesListParams,
+  KitchenOrdersError,
+  KitchenUpdateStatusError,
   PaginatedCommandeList,
-  PatchedCommandeRequest
-} from '../../schemas';
+  PatchedCommandeRequest,
+  PatchedKitchenUpdateStatusRequestRequest,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type commandesListResponse200 = {
   data: PaginatedCommandeList
   status: 200
 }
 
-export type commandesListResponseSuccess = (commandesListResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesListResponseSuccess = commandesListResponse200 & {
+  headers: Headers
+}
+export type commandesListResponse = commandesListResponseSuccess
 
-export type commandesListResponse = (commandesListResponseSuccess)
-
-export const getCommandesListUrl = (params?: CommandesListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getCommandesListUrl = (params?: CommandesListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/commandes/?${stringifiedParams}` : `/api/commandes/`
+  return stringifiedParams.length > 0
+    ? `/api/commandes/?${stringifiedParams}`
+    : `/api/commandes/`
 }
 
-export const commandesList = async (params?: CommandesListParams, options?: RequestInit): Promise<commandesListResponse> => {
-
-  return kyMutator<commandesListResponse>(getCommandesListUrl(params),
-  {
+export const commandesList = async (
+  params?: CommandesListParams,
+  options?: RequestInit
+): Promise<commandesListResponse> => {
+  return kyMutator<commandesListResponse>(getCommandesListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getCommandesListQueryKey = (params?: CommandesListParams,) => {
-    return [
-    `/api/commandes/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getCommandesListQueryOptions = <TData = Awaited<ReturnType<typeof commandesList>>, TError = unknown>(params?: CommandesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCommandesListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof commandesList>>> = ({ signal }) => commandesList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type CommandesListQueryResult = NonNullable<Awaited<ReturnType<typeof commandesList>>>
+export const getCommandesListQueryKey = (params?: CommandesListParams) => {
+  return [`/api/commandes/`, ...(params ? [params] : [])] as const
+}
+
+export const getCommandesListQueryOptions = <
+  TData = Awaited<ReturnType<typeof commandesList>>,
+  TError = unknown,
+>(
+  params?: CommandesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getCommandesListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof commandesList>>> = ({
+    signal,
+  }) => commandesList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof commandesList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CommandesListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof commandesList>>
+>
 export type CommandesListQueryError = unknown
 
-
-export function useCommandesList<TData = Awaited<ReturnType<typeof commandesList>>, TError = unknown>(
- params: undefined |  CommandesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>> & Pick<
+export function useCommandesList<
+  TData = Awaited<ReturnType<typeof commandesList>>,
+  TError = unknown,
+>(
+  params: undefined | CommandesListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof commandesList>>,
           TError,
           Awaited<ReturnType<typeof commandesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCommandesList<TData = Awaited<ReturnType<typeof commandesList>>, TError = unknown>(
- params?: CommandesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCommandesList<
+  TData = Awaited<ReturnType<typeof commandesList>>,
+  TError = unknown,
+>(
+  params?: CommandesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof commandesList>>,
           TError,
           Awaited<ReturnType<typeof commandesList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCommandesList<TData = Awaited<ReturnType<typeof commandesList>>, TError = unknown>(
- params?: CommandesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useCommandesList<TData = Awaited<ReturnType<typeof commandesList>>, TError = unknown>(
- params?: CommandesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCommandesListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCommandesList<
+  TData = Awaited<ReturnType<typeof commandesList>>,
+  TError = unknown,
+>(
+  params?: CommandesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useCommandesList<
+  TData = Awaited<ReturnType<typeof commandesList>>,
+  TError = unknown,
+>(
+  params?: CommandesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof commandesList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getCommandesListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type commandesCreateResponse201 = {
   data: Commande
   status: 201
 }
 
-export type commandesCreateResponseSuccess = (commandesCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type commandesCreateResponse = (commandesCreateResponseSuccess)
+export type commandesCreateResponseSuccess = commandesCreateResponse201 & {
+  headers: Headers
+}
+export type commandesCreateResponse = commandesCreateResponseSuccess
 
 export const getCommandesCreateUrl = () => {
-
-
-
-
   return `/api/commandes/`
 }
 
-export const commandesCreate = async (commandeRequest: CommandeRequest, options?: RequestInit): Promise<commandesCreateResponse> => {
-
-  return kyMutator<commandesCreateResponse>(getCommandesCreateUrl(),
-  {
+export const commandesCreate = async (
+  commandeRequest: CommandeRequest,
+  options?: RequestInit
+): Promise<commandesCreateResponse> => {
+  return kyMutator<commandesCreateResponse>(getCommandesCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(commandeRequest),
+  })
+}
+
+export const getCommandesCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesCreate>>,
+    TError,
+    { data: CommandeRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesCreate>>,
+  TError,
+  { data: CommandeRequest },
+  TContext
+> => {
+  const mutationKey = ["commandesCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesCreate>>,
+    { data: CommandeRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return commandesCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type CommandesCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesCreate>>
+>
+export type CommandesCreateMutationBody = CommandeRequest
+export type CommandesCreateMutationError = unknown
 
-
-export const getCommandesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesCreate>>, TError,{data: CommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesCreate>>, TError,{data: CommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesCreate>>, {data: CommandeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  commandesCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesCreate>>>
-    export type CommandesCreateMutationBody = CommandeRequest
-    export type CommandesCreateMutationError = unknown
-
-    export const useCommandesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesCreate>>, TError,{data: CommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesCreate>>,
-        TError,
-        {data: CommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesCreateMutationOptions(options), queryClient);
-    }
-    export type commandesRetrieveResponse200 = {
+export const useCommandesCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesCreate>>,
+      TError,
+      { data: CommandeRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesCreate>>,
+  TError,
+  { data: CommandeRequest },
+  TContext
+> => {
+  return useMutation(getCommandesCreateMutationOptions(options), queryClient)
+}
+export type commandesRetrieveResponse200 = {
   data: Commande
   status: 200
 }
 
-export type commandesRetrieveResponseSuccess = (commandesRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesRetrieveResponseSuccess = commandesRetrieveResponse200 & {
+  headers: Headers
+}
+export type commandesRetrieveResponse = commandesRetrieveResponseSuccess
 
-export type commandesRetrieveResponse = (commandesRetrieveResponseSuccess)
-
-export const getCommandesRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getCommandesRetrieveUrl = (id: number) => {
   return `/api/commandes/${id}/`
 }
 
-export const commandesRetrieve = async (id: number, options?: RequestInit): Promise<commandesRetrieveResponse> => {
-
-  return kyMutator<commandesRetrieveResponse>(getCommandesRetrieveUrl(id),
-  {
+export const commandesRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<commandesRetrieveResponse> => {
+  return kyMutator<commandesRetrieveResponse>(getCommandesRetrieveUrl(id), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getCommandesRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/commandes/${id}/`
-    ] as const;
-    }
-
-
-export const getCommandesRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof commandesRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCommandesRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof commandesRetrieve>>> = ({ signal }) => commandesRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof commandesRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type CommandesRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof commandesRetrieve>>>
+export const getCommandesRetrieveQueryKey = (id: number) => {
+  return [`/api/commandes/${id}/`] as const
+}
+
+export const getCommandesRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof commandesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getCommandesRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof commandesRetrieve>>
+  > = ({ signal }) => commandesRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof commandesRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CommandesRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof commandesRetrieve>>
+>
 export type CommandesRetrieveQueryError = unknown
 
-
-export function useCommandesRetrieve<TData = Awaited<ReturnType<typeof commandesRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesRetrieve>>, TError, TData>> & Pick<
+export function useCommandesRetrieve<
+  TData = Awaited<ReturnType<typeof commandesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof commandesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof commandesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCommandesRetrieve<TData = Awaited<ReturnType<typeof commandesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCommandesRetrieve<
+  TData = Awaited<ReturnType<typeof commandesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof commandesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof commandesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCommandesRetrieve<TData = Awaited<ReturnType<typeof commandesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useCommandesRetrieve<TData = Awaited<ReturnType<typeof commandesRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCommandesRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCommandesRetrieve<
+  TData = Awaited<ReturnType<typeof commandesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useCommandesRetrieve<
+  TData = Awaited<ReturnType<typeof commandesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getCommandesRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type commandesUpdateResponse200 = {
   data: Commande
   status: 200
 }
 
-export type commandesUpdateResponseSuccess = (commandesUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesUpdateResponseSuccess = commandesUpdateResponse200 & {
+  headers: Headers
+}
+export type commandesUpdateResponse = commandesUpdateResponseSuccess
 
-export type commandesUpdateResponse = (commandesUpdateResponseSuccess)
-
-export const getCommandesUpdateUrl = (id: number,) => {
-
-
-
-
+export const getCommandesUpdateUrl = (id: number) => {
   return `/api/commandes/${id}/`
 }
 
@@ -357,312 +469,410 @@ export const getCommandesUpdateUrl = (id: number,) => {
 Quand une commande passe en statut VALIDEE ou ANNULEE, elle est archivée
 dans CommandeHistoric et supprimée de la table Commande.
  */
-export const commandesUpdate = async (id: number,
-    commandeRequest: CommandeRequest, options?: RequestInit): Promise<commandesUpdateResponse> => {
-
-  return kyMutator<commandesUpdateResponse>(getCommandesUpdateUrl(id),
-  {
+export const commandesUpdate = async (
+  id: number,
+  commandeRequest: CommandeRequest,
+  options?: RequestInit
+): Promise<commandesUpdateResponse> => {
+  return kyMutator<commandesUpdateResponse>(getCommandesUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(commandeRequest),
+  })
+}
+
+export const getCommandesUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesUpdate>>,
+    TError,
+    { id: number; data: CommandeRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesUpdate>>,
+  TError,
+  { id: number; data: CommandeRequest },
+  TContext
+> => {
+  const mutationKey = ["commandesUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesUpdate>>,
+    { id: number; data: CommandeRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return commandesUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type CommandesUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesUpdate>>
+>
+export type CommandesUpdateMutationBody = CommandeRequest
+export type CommandesUpdateMutationError = unknown
 
-
-export const getCommandesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesUpdate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesUpdate>>, TError,{id: number;data: CommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesUpdate>>, {id: number;data: CommandeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  commandesUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesUpdate>>>
-    export type CommandesUpdateMutationBody = CommandeRequest
-    export type CommandesUpdateMutationError = unknown
-
-    export const useCommandesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesUpdate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesUpdate>>,
-        TError,
-        {id: number;data: CommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesUpdateMutationOptions(options), queryClient);
-    }
-    export type commandesPartialUpdateResponse200 = {
+export const useCommandesUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesUpdate>>,
+      TError,
+      { id: number; data: CommandeRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesUpdate>>,
+  TError,
+  { id: number; data: CommandeRequest },
+  TContext
+> => {
+  return useMutation(getCommandesUpdateMutationOptions(options), queryClient)
+}
+export type commandesPartialUpdateResponse200 = {
   data: Commande
   status: 200
 }
 
-export type commandesPartialUpdateResponseSuccess = (commandesPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesPartialUpdateResponseSuccess =
+  commandesPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type commandesPartialUpdateResponse =
+  commandesPartialUpdateResponseSuccess
 
-export type commandesPartialUpdateResponse = (commandesPartialUpdateResponseSuccess)
-
-export const getCommandesPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getCommandesPartialUpdateUrl = (id: number) => {
   return `/api/commandes/${id}/`
 }
 
 /**
  * PATCH utilise la même logique que PUT.
  */
-export const commandesPartialUpdate = async (id: number,
-    patchedCommandeRequest?: PatchedCommandeRequest, options?: RequestInit): Promise<commandesPartialUpdateResponse> => {
-
-  return kyMutator<commandesPartialUpdateResponse>(getCommandesPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedCommandeRequest,)
-  }
-);}
-
-
-
-
-export const getCommandesPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesPartialUpdate>>, TError,{id: number;data?: PatchedCommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesPartialUpdate>>, TError,{id: number;data?: PatchedCommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesPartialUpdate>>, {id: number;data?: PatchedCommandeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  commandesPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesPartialUpdate>>>
-    export type CommandesPartialUpdateMutationBody = PatchedCommandeRequest | undefined
-    export type CommandesPartialUpdateMutationError = unknown
-
-    export const useCommandesPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesPartialUpdate>>, TError,{id: number;data?: PatchedCommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedCommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesPartialUpdateMutationOptions(options), queryClient);
+export const commandesPartialUpdate = async (
+  id: number,
+  patchedCommandeRequest?: PatchedCommandeRequest,
+  options?: RequestInit
+): Promise<commandesPartialUpdateResponse> => {
+  return kyMutator<commandesPartialUpdateResponse>(
+    getCommandesPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedCommandeRequest),
     }
-    export type commandesDestroyResponse204 = {
+  )
+}
+
+export const getCommandesPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedCommandeRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedCommandeRequest },
+  TContext
+> => {
+  const mutationKey = ["commandesPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesPartialUpdate>>,
+    { id: number; data?: PatchedCommandeRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return commandesPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CommandesPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesPartialUpdate>>
+>
+export type CommandesPartialUpdateMutationBody =
+  | PatchedCommandeRequest
+  | undefined
+export type CommandesPartialUpdateMutationError = unknown
+
+export const useCommandesPartialUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedCommandeRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedCommandeRequest },
+  TContext
+> => {
+  return useMutation(
+    getCommandesPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type commandesDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type commandesDestroyResponseSuccess = (commandesDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type commandesDestroyResponseSuccess = commandesDestroyResponse204 & {
+  headers: Headers
+}
+export type commandesDestroyResponse = commandesDestroyResponseSuccess
 
-export type commandesDestroyResponse = (commandesDestroyResponseSuccess)
-
-export const getCommandesDestroyUrl = (id: number,) => {
-
-
-
-
+export const getCommandesDestroyUrl = (id: number) => {
   return `/api/commandes/${id}/`
 }
 
-export const commandesDestroy = async (id: number, options?: RequestInit): Promise<commandesDestroyResponse> => {
-
-  return kyMutator<commandesDestroyResponse>(getCommandesDestroyUrl(id),
-  {
+export const commandesDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<commandesDestroyResponse> => {
+  return kyMutator<commandesDestroyResponse>(getCommandesDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getCommandesDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["commandesDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return commandesDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type CommandesDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesDestroy>>
+>
 
+export type CommandesDestroyMutationError = unknown
 
-export const getCommandesDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['commandesDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  commandesDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof commandesDestroy>>>
-
-    export type CommandesDestroyMutationError = unknown
-
-    export const useCommandesDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getCommandesDestroyMutationOptions(options), queryClient);
-    }
-    export type commandesAnnulerCreateResponse200 = {
-  data: Commande
+export const useCommandesDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getCommandesDestroyMutationOptions(options), queryClient)
+}
+export type commandesAnnulerCreateResponse200 = {
+  data: CommandeAnnulerResponse
   status: 200
 }
 
-export type commandesAnnulerCreateResponseSuccess = (commandesAnnulerCreateResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesAnnulerCreateResponse400 = {
+  data: CommandeAnnulerError
+  status: 400
+}
 
-export type commandesAnnulerCreateResponse = (commandesAnnulerCreateResponseSuccess)
+export type commandesAnnulerCreateResponseSuccess =
+  commandesAnnulerCreateResponse200 & {
+    headers: Headers
+  }
+export type commandesAnnulerCreateResponseError =
+  commandesAnnulerCreateResponse400 & {
+    headers: Headers
+  }
 
-export const getCommandesAnnulerCreateUrl = (id: number,) => {
+export type commandesAnnulerCreateResponse =
+  | commandesAnnulerCreateResponseSuccess
+  | commandesAnnulerCreateResponseError
 
-
-
-
+export const getCommandesAnnulerCreateUrl = (id: number) => {
   return `/api/commandes/${id}/annuler/`
 }
 
-export const commandesAnnulerCreate = async (id: number,
-    commandeRequest: CommandeRequest, options?: RequestInit): Promise<commandesAnnulerCreateResponse> => {
-
-  return kyMutator<commandesAnnulerCreateResponse>(getCommandesAnnulerCreateUrl(id),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeRequest,)
-  }
-);}
-
-
-
-
-export const getCommandesAnnulerCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesAnnulerCreate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesAnnulerCreate>>, TError,{id: number;data: CommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesAnnulerCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesAnnulerCreate>>, {id: number;data: CommandeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  commandesAnnulerCreate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesAnnulerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesAnnulerCreate>>>
-    export type CommandesAnnulerCreateMutationBody = CommandeRequest
-    export type CommandesAnnulerCreateMutationError = unknown
-
-    export const useCommandesAnnulerCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesAnnulerCreate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesAnnulerCreate>>,
-        TError,
-        {id: number;data: CommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesAnnulerCreateMutationOptions(options), queryClient);
+/**
+ * @summary Annuler une commande
+ */
+export const commandesAnnulerCreate = async (
+  id: number,
+  options?: RequestInit
+): Promise<commandesAnnulerCreateResponse> => {
+  return kyMutator<commandesAnnulerCreateResponse>(
+    getCommandesAnnulerCreateUrl(id),
+    {
+      ...options,
+      method: "POST",
     }
-    export type commandesDeplacerCreateResponse200 = {
+  )
+}
+
+export const getCommandesAnnulerCreateMutationOptions = <
+  TError = CommandeAnnulerError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesAnnulerCreate>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesAnnulerCreate>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["commandesAnnulerCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesAnnulerCreate>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return commandesAnnulerCreate(id)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CommandesAnnulerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesAnnulerCreate>>
+>
+
+export type CommandesAnnulerCreateMutationError = CommandeAnnulerError
+
+/**
+ * @summary Annuler une commande
+ */
+export const useCommandesAnnulerCreate = <
+  TError = CommandeAnnulerError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesAnnulerCreate>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesAnnulerCreate>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getCommandesAnnulerCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type commandesDeplacerCreateResponse200 = {
   data: Commande
   status: 200
 }
 
-export type commandesDeplacerCreateResponseSuccess = (commandesDeplacerCreateResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesDeplacerCreateResponse400 = {
+  data: CommandeDeplacerError
+  status: 400
+}
 
-export type commandesDeplacerCreateResponse = (commandesDeplacerCreateResponseSuccess)
+export type commandesDeplacerCreateResponse404 = {
+  data: CommandeDeplacerNotFound
+  status: 404
+}
 
-export const getCommandesDeplacerCreateUrl = (id: number,) => {
+export type commandesDeplacerCreateResponseSuccess =
+  commandesDeplacerCreateResponse200 & {
+    headers: Headers
+  }
+export type commandesDeplacerCreateResponseError = (
+  | commandesDeplacerCreateResponse400
+  | commandesDeplacerCreateResponse404
+) & {
+  headers: Headers
+}
 
+export type commandesDeplacerCreateResponse =
+  | commandesDeplacerCreateResponseSuccess
+  | commandesDeplacerCreateResponseError
 
-
-
+export const getCommandesDeplacerCreateUrl = (id: number) => {
   return `/api/commandes/${id}/deplacer/`
 }
 
@@ -670,330 +880,421 @@ export const getCommandesDeplacerCreateUrl = (id: number,) => {
  * Déplace la commande vers une autre table.
 Body: {"table_id": <id>}
 Retourne 400 avec "La table est occupée." si une commande EN_COURS existe déjà sur cette table.
+ * @summary Déplacer une commande vers une autre table
  */
-export const commandesDeplacerCreate = async (id: number,
-    commandeRequest: CommandeRequest, options?: RequestInit): Promise<commandesDeplacerCreateResponse> => {
-
-  return kyMutator<commandesDeplacerCreateResponse>(getCommandesDeplacerCreateUrl(id),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeRequest,)
-  }
-);}
-
-
-
-
-export const getCommandesDeplacerCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesDeplacerCreate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesDeplacerCreate>>, TError,{id: number;data: CommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesDeplacerCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesDeplacerCreate>>, {id: number;data: CommandeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  commandesDeplacerCreate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesDeplacerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesDeplacerCreate>>>
-    export type CommandesDeplacerCreateMutationBody = CommandeRequest
-    export type CommandesDeplacerCreateMutationError = unknown
-
-    export const useCommandesDeplacerCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesDeplacerCreate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesDeplacerCreate>>,
-        TError,
-        {id: number;data: CommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesDeplacerCreateMutationOptions(options), queryClient);
+export const commandesDeplacerCreate = async (
+  id: number,
+  commandeDeplacerRequestRequest: CommandeDeplacerRequestRequest,
+  options?: RequestInit
+): Promise<commandesDeplacerCreateResponse> => {
+  return kyMutator<commandesDeplacerCreateResponse>(
+    getCommandesDeplacerCreateUrl(id),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(commandeDeplacerRequestRequest),
     }
-    export type commandesKitchenPrintCreateResponse200 = {
-  data: Commande
-  status: 200
+  )
 }
 
-export type commandesKitchenPrintCreateResponseSuccess = (commandesKitchenPrintCreateResponse200) & {
-  headers: Headers;
-};
-;
+export const getCommandesDeplacerCreateMutationOptions = <
+  TError = CommandeDeplacerError | CommandeDeplacerNotFound,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesDeplacerCreate>>,
+    TError,
+    { id: number; data: CommandeDeplacerRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesDeplacerCreate>>,
+  TError,
+  { id: number; data: CommandeDeplacerRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["commandesDeplacerCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
-export type commandesKitchenPrintCreateResponse = (commandesKitchenPrintCreateResponseSuccess)
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesDeplacerCreate>>,
+    { id: number; data: CommandeDeplacerRequestRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
 
-export const getCommandesKitchenPrintCreateUrl = (id: number,) => {
+    return commandesDeplacerCreate(id, data)
+  }
 
-
-
-
-  return `/api/commandes/${id}/kitchen/print/`
+  return { mutationFn, ...mutationOptions }
 }
+
+export type CommandesDeplacerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesDeplacerCreate>>
+>
+export type CommandesDeplacerCreateMutationBody = CommandeDeplacerRequestRequest
+export type CommandesDeplacerCreateMutationError =
+  | CommandeDeplacerError
+  | CommandeDeplacerNotFound
 
 /**
- * Endpoint pour imprimer un ticket de cuisine (optionnel).
+ * @summary Déplacer une commande vers une autre table
  */
-export const commandesKitchenPrintCreate = async (id: number,
-    commandeRequest: CommandeRequest, options?: RequestInit): Promise<commandesKitchenPrintCreateResponse> => {
-
-  return kyMutator<commandesKitchenPrintCreateResponse>(getCommandesKitchenPrintCreateUrl(id),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeRequest,)
-  }
-);}
-
-
-
-
-export const getCommandesKitchenPrintCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesKitchenPrintCreate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesKitchenPrintCreate>>, TError,{id: number;data: CommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesKitchenPrintCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesKitchenPrintCreate>>, {id: number;data: CommandeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  commandesKitchenPrintCreate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesKitchenPrintCreateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesKitchenPrintCreate>>>
-    export type CommandesKitchenPrintCreateMutationBody = CommandeRequest
-    export type CommandesKitchenPrintCreateMutationError = unknown
-
-    export const useCommandesKitchenPrintCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesKitchenPrintCreate>>, TError,{id: number;data: CommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesKitchenPrintCreate>>,
-        TError,
-        {id: number;data: CommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesKitchenPrintCreateMutationOptions(options), queryClient);
-    }
-    export type commandesKitchenUpdateStatusPartialUpdateResponse200 = {
+export const useCommandesDeplacerCreate = <
+  TError = CommandeDeplacerError | CommandeDeplacerNotFound,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesDeplacerCreate>>,
+      TError,
+      { id: number; data: CommandeDeplacerRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesDeplacerCreate>>,
+  TError,
+  { id: number; data: CommandeDeplacerRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getCommandesDeplacerCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type commandesKitchenUpdateStatusPartialUpdateResponse200 = {
   data: Commande
   status: 200
 }
 
-export type commandesKitchenUpdateStatusPartialUpdateResponseSuccess = (commandesKitchenUpdateStatusPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesKitchenUpdateStatusPartialUpdateResponse400 = {
+  data: KitchenUpdateStatusError
+  status: 400
+}
 
-export type commandesKitchenUpdateStatusPartialUpdateResponse = (commandesKitchenUpdateStatusPartialUpdateResponseSuccess)
+export type commandesKitchenUpdateStatusPartialUpdateResponseSuccess =
+  commandesKitchenUpdateStatusPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type commandesKitchenUpdateStatusPartialUpdateResponseError =
+  commandesKitchenUpdateStatusPartialUpdateResponse400 & {
+    headers: Headers
+  }
 
-export const getCommandesKitchenUpdateStatusPartialUpdateUrl = (id: number,) => {
+export type commandesKitchenUpdateStatusPartialUpdateResponse =
+  | commandesKitchenUpdateStatusPartialUpdateResponseSuccess
+  | commandesKitchenUpdateStatusPartialUpdateResponseError
 
-
-
-
+export const getCommandesKitchenUpdateStatusPartialUpdateUrl = (id: number) => {
   return `/api/commandes/${id}/kitchen/update-status/`
 }
 
 /**
  * Met à jour le statut cuisine et/ou la priorité d'une commande.
+ * @summary Mettre à jour le statut cuisine d'une commande
  */
-export const commandesKitchenUpdateStatusPartialUpdate = async (id: number,
-    patchedCommandeRequest?: PatchedCommandeRequest, options?: RequestInit): Promise<commandesKitchenUpdateStatusPartialUpdateResponse> => {
-
-  return kyMutator<commandesKitchenUpdateStatusPartialUpdateResponse>(getCommandesKitchenUpdateStatusPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedCommandeRequest,)
-  }
-);}
-
-
-
-
-export const getCommandesKitchenUpdateStatusPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>, TError,{id: number;data?: PatchedCommandeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>, TError,{id: number;data?: PatchedCommandeRequest}, TContext> => {
-
-const mutationKey = ['commandesKitchenUpdateStatusPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>, {id: number;data?: PatchedCommandeRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  commandesKitchenUpdateStatusPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CommandesKitchenUpdateStatusPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>>
-    export type CommandesKitchenUpdateStatusPartialUpdateMutationBody = PatchedCommandeRequest | undefined
-    export type CommandesKitchenUpdateStatusPartialUpdateMutationError = unknown
-
-    export const useCommandesKitchenUpdateStatusPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>, TError,{id: number;data?: PatchedCommandeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedCommandeRequest},
-        TContext
-      > => {
-      return useMutation(getCommandesKitchenUpdateStatusPartialUpdateMutationOptions(options), queryClient);
+export const commandesKitchenUpdateStatusPartialUpdate = async (
+  id: number,
+  patchedKitchenUpdateStatusRequestRequest?: PatchedKitchenUpdateStatusRequestRequest,
+  options?: RequestInit
+): Promise<commandesKitchenUpdateStatusPartialUpdateResponse> => {
+  return kyMutator<commandesKitchenUpdateStatusPartialUpdateResponse>(
+    getCommandesKitchenUpdateStatusPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedKitchenUpdateStatusRequestRequest),
     }
-    export type commandesKitchenOrdersRetrieveResponse200 = {
-  data: Commande
+  )
+}
+
+export const getCommandesKitchenUpdateStatusPartialUpdateMutationOptions = <
+  TError = KitchenUpdateStatusError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedKitchenUpdateStatusRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedKitchenUpdateStatusRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["commandesKitchenUpdateStatusPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>,
+    { id: number; data?: PatchedKitchenUpdateStatusRequestRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return commandesKitchenUpdateStatusPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CommandesKitchenUpdateStatusPartialUpdateMutationResult =
+  NonNullable<
+    Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>
+  >
+export type CommandesKitchenUpdateStatusPartialUpdateMutationBody =
+  | PatchedKitchenUpdateStatusRequestRequest
+  | undefined
+export type CommandesKitchenUpdateStatusPartialUpdateMutationError =
+  KitchenUpdateStatusError
+
+/**
+ * @summary Mettre à jour le statut cuisine d'une commande
+ */
+export const useCommandesKitchenUpdateStatusPartialUpdate = <
+  TError = KitchenUpdateStatusError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedKitchenUpdateStatusRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesKitchenUpdateStatusPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedKitchenUpdateStatusRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getCommandesKitchenUpdateStatusPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type commandesKitchenOrdersRetrieveResponse200 = {
+  data: Commande[]
   status: 200
 }
 
-export type commandesKitchenOrdersRetrieveResponseSuccess = (commandesKitchenOrdersRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type commandesKitchenOrdersRetrieveResponse400 = {
+  data: KitchenOrdersError
+  status: 400
+}
 
-export type commandesKitchenOrdersRetrieveResponse = (commandesKitchenOrdersRetrieveResponseSuccess)
+export type commandesKitchenOrdersRetrieveResponseSuccess =
+  commandesKitchenOrdersRetrieveResponse200 & {
+    headers: Headers
+  }
+export type commandesKitchenOrdersRetrieveResponseError =
+  commandesKitchenOrdersRetrieveResponse400 & {
+    headers: Headers
+  }
 
-export const getCommandesKitchenOrdersRetrieveUrl = () => {
+export type commandesKitchenOrdersRetrieveResponse =
+  | commandesKitchenOrdersRetrieveResponseSuccess
+  | commandesKitchenOrdersRetrieveResponseError
 
+export const getCommandesKitchenOrdersRetrieveUrl = (
+  params?: CommandesKitchenOrdersRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-  return `/api/commandes/kitchen/orders/`
+  return stringifiedParams.length > 0
+    ? `/api/commandes/kitchen/orders/?${stringifiedParams}`
+    : `/api/commandes/kitchen/orders/`
 }
 
 /**
  * Endpoint spécifique pour la cuisine : récupère les commandes avec filtres date/service.
+ * @summary Commandes en cours pour la cuisine
  */
-export const commandesKitchenOrdersRetrieve = async ( options?: RequestInit): Promise<commandesKitchenOrdersRetrieveResponse> => {
-
-  return kyMutator<commandesKitchenOrdersRetrieveResponse>(getCommandesKitchenOrdersRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getCommandesKitchenOrdersRetrieveQueryKey = () => {
-    return [
-    `/api/commandes/kitchen/orders/`
-    ] as const;
+export const commandesKitchenOrdersRetrieve = async (
+  params?: CommandesKitchenOrdersRetrieveParams,
+  options?: RequestInit
+): Promise<commandesKitchenOrdersRetrieveResponse> => {
+  return kyMutator<commandesKitchenOrdersRetrieveResponse>(
+    getCommandesKitchenOrdersRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getCommandesKitchenOrdersRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCommandesKitchenOrdersRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>> = ({ signal }) => commandesKitchenOrdersRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type CommandesKitchenOrdersRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>>
-export type CommandesKitchenOrdersRetrieveQueryError = unknown
+export const getCommandesKitchenOrdersRetrieveQueryKey = (
+  params?: CommandesKitchenOrdersRetrieveParams
+) => {
+  return [
+    `/api/commandes/kitchen/orders/`,
+    ...(params ? [params] : []),
+  ] as const
+}
 
+export const getCommandesKitchenOrdersRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+  TError = KitchenOrdersError,
+>(
+  params?: CommandesKitchenOrdersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useCommandesKitchenOrdersRetrieve<TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getCommandesKitchenOrdersRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>
+  > = ({ signal }) => commandesKitchenOrdersRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CommandesKitchenOrdersRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>
+>
+export type CommandesKitchenOrdersRetrieveQueryError = KitchenOrdersError
+
+export function useCommandesKitchenOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+  TError = KitchenOrdersError,
+>(
+  params: undefined | CommandesKitchenOrdersRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
           TError,
           Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCommandesKitchenOrdersRetrieve<TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCommandesKitchenOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+  TError = KitchenOrdersError,
+>(
+  params?: CommandesKitchenOrdersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
           TError,
           Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCommandesKitchenOrdersRetrieve<TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useCommandesKitchenOrdersRetrieve<TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCommandesKitchenOrdersRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
+export function useCommandesKitchenOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+  TError = KitchenOrdersError,
+>(
+  params?: CommandesKitchenOrdersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+/**
+ * @summary Commandes en cours pour la cuisine
+ */
 
+export function useCommandesKitchenOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+  TError = KitchenOrdersError,
+>(
+  params?: CommandesKitchenOrdersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof commandesKitchenOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getCommandesKitchenOrdersRetrieveQueryOptions(
+    params,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

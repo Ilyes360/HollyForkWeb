@@ -3,105 +3,220 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  Ingredient,
-  PaginatedIngredientList
-} from '../../schemas';
+import type { Ingredient, PaginatedIngredientList } from "../../schemas"
 
+export const getIngredientsListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedIngredientList, object>> = {}
+): PaginatedIngredientList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+    unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  })),
+  ...overrideResponse,
+})
 
-export const getIngredientsListResponseMock = (overrideResponse: Partial<Extract<PaginatedIngredientList, object>> = {}): PaginatedIngredientList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")})), ...overrideResponse})
+export const getIngredientsCreateResponseMock = (
+  overrideResponse: Partial<Extract<Ingredient, object>> = {}
+): Ingredient => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  ...overrideResponse,
+})
 
-export const getIngredientsCreateResponseMock = (overrideResponse: Partial<Extract<Ingredient, object>> = {}): Ingredient => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getIngredientsRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<Ingredient, object>> = {}
+): Ingredient => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  ...overrideResponse,
+})
 
-export const getIngredientsRetrieveResponseMock = (overrideResponse: Partial<Extract<Ingredient, object>> = {}): Ingredient => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getIngredientsUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Ingredient, object>> = {}
+): Ingredient => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  ...overrideResponse,
+})
 
-export const getIngredientsUpdateResponseMock = (overrideResponse: Partial<Extract<Ingredient, object>> = {}): Ingredient => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
+export const getIngredientsPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<Ingredient, object>> = {}
+): Ingredient => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 200 } }),
+  unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  ...overrideResponse,
+})
 
-export const getIngredientsPartialUpdateResponseMock = (overrideResponse: Partial<Extract<Ingredient, object>> = {}): Ingredient => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), ...overrideResponse})
-
-
-export const getIngredientsListMockHandler = (overrideResponse?: PaginatedIngredientList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedIngredientList> | PaginatedIngredientList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/ingredients/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getIngredientsListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getIngredientsListMockHandler = (
+  overrideResponse?:
+    | PaginatedIngredientList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedIngredientList> | PaginatedIngredientList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/ingredients/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getIngredientsListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getIngredientsCreateMockHandler = (overrideResponse?: Ingredient | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Ingredient> | Ingredient), options?: RequestHandlerOptions) => {
-  return http.post('*/api/ingredients/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getIngredientsCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getIngredientsCreateMockHandler = (
+  overrideResponse?:
+    | Ingredient
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<Ingredient> | Ingredient),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/ingredients/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getIngredientsCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getIngredientsRetrieveMockHandler = (overrideResponse?: Ingredient | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Ingredient> | Ingredient), options?: RequestHandlerOptions) => {
-  return http.get('*/api/ingredients/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getIngredientsRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getIngredientsRetrieveMockHandler = (
+  overrideResponse?:
+    | Ingredient
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<Ingredient> | Ingredient),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/ingredients/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getIngredientsRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getIngredientsUpdateMockHandler = (overrideResponse?: Ingredient | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Ingredient> | Ingredient), options?: RequestHandlerOptions) => {
-  return http.put('*/api/ingredients/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getIngredientsUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getIngredientsUpdateMockHandler = (
+  overrideResponse?:
+    | Ingredient
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<Ingredient> | Ingredient),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/ingredients/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getIngredientsUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getIngredientsPartialUpdateMockHandler = (overrideResponse?: Ingredient | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<Ingredient> | Ingredient), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/ingredients/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getIngredientsPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getIngredientsPartialUpdateMockHandler = (
+  overrideResponse?:
+    | Ingredient
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<Ingredient> | Ingredient),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/ingredients/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getIngredientsPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getIngredientsDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/ingredients/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getIngredientsDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/ingredients/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getIngredientsMock = () => [
   getIngredientsListMockHandler(),
@@ -109,5 +224,5 @@ export const getIngredientsMock = () => [
   getIngredientsRetrieveMockHandler(),
   getIngredientsUpdateMockHandler(),
   getIngredientsPartialUpdateMockHandler(),
-  getIngredientsDestroyMockHandler()
+  getIngredientsDestroyMockHandler(),
 ]

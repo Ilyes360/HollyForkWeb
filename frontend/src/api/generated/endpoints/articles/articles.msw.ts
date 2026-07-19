@@ -3,105 +3,392 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
-import type {
-  ArticleDetail,
-  PaginatedArticleDetailList
-} from '../../schemas';
+import type { ArticleDetail, PaginatedArticleDetailList } from "../../schemas"
 
+export const getArticlesListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedArticleDetailList, object>> = {}
+): PaginatedArticleDetailList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+    restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+    categorie_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+    categorie_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+    description: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+    available: faker.datatype.boolean(),
+    ingredients: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      id: faker.number.int(),
+      required_quantity: faker.helpers.fromRegExp(
+        "^-?\\d{0,6}(?:\\.\\d{0,4})?$"
+      ),
+      article_id: faker.number.int(),
+      ingredient_id: faker.number.int(),
+      ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    allergens: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    dietTypes: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1
+    ).map(() => ({
+      id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+  })),
+  ...overrideResponse,
+})
 
-export const getArticlesListResponseMock = (overrideResponse: Partial<Extract<PaginatedArticleDetailList, object>> = {}): PaginatedArticleDetailList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()}))})), ...overrideResponse})
+export const getArticlesCreateResponseMock = (
+  overrideResponse: Partial<Extract<ArticleDetail, object>> = {}
+): ArticleDetail => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  available: faker.datatype.boolean(),
+  ingredients: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"),
+    article_id: faker.number.int(),
+    ingredient_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  allergens: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  dietTypes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getArticlesCreateResponseMock = (overrideResponse: Partial<Extract<ArticleDetail, object>> = {}): ArticleDetail => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()})), ...overrideResponse})
+export const getArticlesRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<ArticleDetail, object>> = {}
+): ArticleDetail => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  available: faker.datatype.boolean(),
+  ingredients: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"),
+    article_id: faker.number.int(),
+    ingredient_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  allergens: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  dietTypes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getArticlesRetrieveResponseMock = (overrideResponse: Partial<Extract<ArticleDetail, object>> = {}): ArticleDetail => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()})), ...overrideResponse})
+export const getArticlesUpdateResponseMock = (
+  overrideResponse: Partial<Extract<ArticleDetail, object>> = {}
+): ArticleDetail => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  available: faker.datatype.boolean(),
+  ingredients: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"),
+    article_id: faker.number.int(),
+    ingredient_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  allergens: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  dietTypes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getArticlesUpdateResponseMock = (overrideResponse: Partial<Extract<ArticleDetail, object>> = {}): ArticleDetail => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()})), ...overrideResponse})
+export const getArticlesPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<ArticleDetail, object>> = {}
+): ArticleDetail => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 100 } }),
+  restaurant_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_id: faker.helpers.arrayElement([faker.number.int(), undefined]),
+  categorie_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  available: faker.datatype.boolean(),
+  ingredients: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"),
+    article_id: faker.number.int(),
+    ingredient_id: faker.number.int(),
+    ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  allergens: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  dietTypes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  ...overrideResponse,
+})
 
-export const getArticlesPartialUpdateResponseMock = (overrideResponse: Partial<Extract<ArticleDetail, object>> = {}): ArticleDetail => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean(), ingredients: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), article: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 100}}), categorie: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])},}, price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), available: faker.datatype.boolean()},}, ingredient: {...{id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 200}}), unit: faker.string.alpha({length: {min: 10, max: 20}}), unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$")},}, required_quantity: faker.helpers.fromRegExp("^-?\\d{0,6}(?:\\.\\d{0,4})?$"), article_id: faker.number.int(), ingredient_id: faker.number.int()})), ...overrideResponse})
-
-
-export const getArticlesListMockHandler = (overrideResponse?: PaginatedArticleDetailList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedArticleDetailList> | PaginatedArticleDetailList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/articles/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getArticlesListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getArticlesListMockHandler = (
+  overrideResponse?:
+    | PaginatedArticleDetailList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<PaginatedArticleDetailList> | PaginatedArticleDetailList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/articles/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getArticlesListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getArticlesCreateMockHandler = (overrideResponse?: ArticleDetail | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<ArticleDetail> | ArticleDetail), options?: RequestHandlerOptions) => {
-  return http.post('*/api/articles/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getArticlesCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getArticlesCreateMockHandler = (
+  overrideResponse?:
+    | ArticleDetail
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<ArticleDetail> | ArticleDetail),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/articles/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getArticlesCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getArticlesRetrieveMockHandler = (overrideResponse?: ArticleDetail | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ArticleDetail> | ArticleDetail), options?: RequestHandlerOptions) => {
-  return http.get('*/api/articles/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getArticlesRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getArticlesRetrieveMockHandler = (
+  overrideResponse?:
+    | ArticleDetail
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<ArticleDetail> | ArticleDetail),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/articles/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getArticlesRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getArticlesUpdateMockHandler = (overrideResponse?: ArticleDetail | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<ArticleDetail> | ArticleDetail), options?: RequestHandlerOptions) => {
-  return http.put('*/api/articles/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getArticlesUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getArticlesUpdateMockHandler = (
+  overrideResponse?:
+    | ArticleDetail
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<ArticleDetail> | ArticleDetail),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/articles/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getArticlesUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getArticlesPartialUpdateMockHandler = (overrideResponse?: ArticleDetail | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<ArticleDetail> | ArticleDetail), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/articles/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getArticlesPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getArticlesPartialUpdateMockHandler = (
+  overrideResponse?:
+    | ArticleDetail
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<ArticleDetail> | ArticleDetail),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/articles/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getArticlesPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getArticlesDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/articles/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getArticlesDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/articles/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getArticlesMock = () => [
   getArticlesListMockHandler(),
@@ -109,5 +396,5 @@ export const getArticlesMock = () => [
   getArticlesRetrieveMockHandler(),
   getArticlesUpdateMockHandler(),
   getArticlesPartialUpdateMockHandler(),
-  getArticlesDestroyMockHandler()
+  getArticlesDestroyMockHandler(),
 ]

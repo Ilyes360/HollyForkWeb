@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,842 +20,1192 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   PaginatedStockList,
   PatchedStockRequest,
   Stock,
+  StockAdjustError,
+  StockAdjustRequestRequest,
+  StockAdjustResponse,
+  StockAlertsError,
+  StockAlertsResponse,
+  StockReportsError,
+  StockReportsResponse,
   StockRequest,
-  StocksListParams
-} from '../../schemas';
+  StocksAlertsRetrieveParams,
+  StocksListParams,
+  StocksReportsRetrieveParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type stocksListResponse200 = {
   data: PaginatedStockList
   status: 200
 }
 
-export type stocksListResponseSuccess = (stocksListResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksListResponseSuccess = stocksListResponse200 & {
+  headers: Headers
+}
+export type stocksListResponse = stocksListResponseSuccess
 
-export type stocksListResponse = (stocksListResponseSuccess)
-
-export const getStocksListUrl = (params?: StocksListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getStocksListUrl = (params?: StocksListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/stocks/?${stringifiedParams}` : `/api/stocks/`
+  return stringifiedParams.length > 0
+    ? `/api/stocks/?${stringifiedParams}`
+    : `/api/stocks/`
 }
 
-export const stocksList = async (params?: StocksListParams, options?: RequestInit): Promise<stocksListResponse> => {
-
-  return kyMutator<stocksListResponse>(getStocksListUrl(params),
-  {
+export const stocksList = async (
+  params?: StocksListParams,
+  options?: RequestInit
+): Promise<stocksListResponse> => {
+  return kyMutator<stocksListResponse>(getStocksListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStocksListQueryKey = (params?: StocksListParams,) => {
-    return [
-    `/api/stocks/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getStocksListQueryOptions = <TData = Awaited<ReturnType<typeof stocksList>>, TError = unknown>(params?: StocksListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStocksListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof stocksList>>> = ({ signal }) => stocksList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type StocksListQueryResult = NonNullable<Awaited<ReturnType<typeof stocksList>>>
+export const getStocksListQueryKey = (params?: StocksListParams) => {
+  return [`/api/stocks/`, ...(params ? [params] : [])] as const
+}
+
+export const getStocksListQueryOptions = <
+  TData = Awaited<ReturnType<typeof stocksList>>,
+  TError = unknown,
+>(
+  params?: StocksListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getStocksListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof stocksList>>> = ({
+    signal,
+  }) => stocksList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof stocksList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StocksListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof stocksList>>
+>
 export type StocksListQueryError = unknown
 
-
-export function useStocksList<TData = Awaited<ReturnType<typeof stocksList>>, TError = unknown>(
- params: undefined |  StocksListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>> & Pick<
+export function useStocksList<
+  TData = Awaited<ReturnType<typeof stocksList>>,
+  TError = unknown,
+>(
+  params: undefined | StocksListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksList>>,
           TError,
           Awaited<ReturnType<typeof stocksList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksList<TData = Awaited<ReturnType<typeof stocksList>>, TError = unknown>(
- params?: StocksListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksList<
+  TData = Awaited<ReturnType<typeof stocksList>>,
+  TError = unknown,
+>(
+  params?: StocksListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksList>>,
           TError,
           Awaited<ReturnType<typeof stocksList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksList<TData = Awaited<ReturnType<typeof stocksList>>, TError = unknown>(
- params?: StocksListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStocksList<TData = Awaited<ReturnType<typeof stocksList>>, TError = unknown>(
- params?: StocksListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStocksListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksList<
+  TData = Awaited<ReturnType<typeof stocksList>>,
+  TError = unknown,
+>(
+  params?: StocksListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStocksList<
+  TData = Awaited<ReturnType<typeof stocksList>>,
+  TError = unknown,
+>(
+  params?: StocksListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStocksListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type stocksCreateResponse201 = {
   data: Stock
   status: 201
 }
 
-export type stocksCreateResponseSuccess = (stocksCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type stocksCreateResponse = (stocksCreateResponseSuccess)
+export type stocksCreateResponseSuccess = stocksCreateResponse201 & {
+  headers: Headers
+}
+export type stocksCreateResponse = stocksCreateResponseSuccess
 
 export const getStocksCreateUrl = () => {
-
-
-
-
   return `/api/stocks/`
 }
 
-export const stocksCreate = async (stockRequest: StockRequest, options?: RequestInit): Promise<stocksCreateResponse> => {
-
-  return kyMutator<stocksCreateResponse>(getStocksCreateUrl(),
-  {
+export const stocksCreate = async (
+  stockRequest: StockRequest,
+  options?: RequestInit
+): Promise<stocksCreateResponse> => {
+  return kyMutator<stocksCreateResponse>(getStocksCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      stockRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(stockRequest),
+  })
+}
+
+export const getStocksCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stocksCreate>>,
+    TError,
+    { data: StockRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stocksCreate>>,
+  TError,
+  { data: StockRequest },
+  TContext
+> => {
+  const mutationKey = ["stocksCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stocksCreate>>,
+    { data: StockRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return stocksCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type StocksCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stocksCreate>>
+>
+export type StocksCreateMutationBody = StockRequest
+export type StocksCreateMutationError = unknown
 
-
-export const getStocksCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksCreate>>, TError,{data: StockRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof stocksCreate>>, TError,{data: StockRequest}, TContext> => {
-
-const mutationKey = ['stocksCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stocksCreate>>, {data: StockRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  stocksCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StocksCreateMutationResult = NonNullable<Awaited<ReturnType<typeof stocksCreate>>>
-    export type StocksCreateMutationBody = StockRequest
-    export type StocksCreateMutationError = unknown
-
-    export const useStocksCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksCreate>>, TError,{data: StockRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof stocksCreate>>,
-        TError,
-        {data: StockRequest},
-        TContext
-      > => {
-      return useMutation(getStocksCreateMutationOptions(options), queryClient);
-    }
-    export type stocksRetrieveResponse200 = {
+export const useStocksCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof stocksCreate>>,
+      TError,
+      { data: StockRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof stocksCreate>>,
+  TError,
+  { data: StockRequest },
+  TContext
+> => {
+  return useMutation(getStocksCreateMutationOptions(options), queryClient)
+}
+export type stocksRetrieveResponse200 = {
   data: Stock
   status: 200
 }
 
-export type stocksRetrieveResponseSuccess = (stocksRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksRetrieveResponseSuccess = stocksRetrieveResponse200 & {
+  headers: Headers
+}
+export type stocksRetrieveResponse = stocksRetrieveResponseSuccess
 
-export type stocksRetrieveResponse = (stocksRetrieveResponseSuccess)
-
-export const getStocksRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getStocksRetrieveUrl = (id: number) => {
   return `/api/stocks/${id}/`
 }
 
-export const stocksRetrieve = async (id: number, options?: RequestInit): Promise<stocksRetrieveResponse> => {
-
-  return kyMutator<stocksRetrieveResponse>(getStocksRetrieveUrl(id),
-  {
+export const stocksRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<stocksRetrieveResponse> => {
+  return kyMutator<stocksRetrieveResponse>(getStocksRetrieveUrl(id), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStocksRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/stocks/${id}/`
-    ] as const;
-    }
-
-
-export const getStocksRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof stocksRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStocksRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof stocksRetrieve>>> = ({ signal }) => stocksRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type StocksRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof stocksRetrieve>>>
+export const getStocksRetrieveQueryKey = (id: number) => {
+  return [`/api/stocks/${id}/`] as const
+}
+
+export const getStocksRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof stocksRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getStocksRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof stocksRetrieve>>> = ({
+    signal,
+  }) => stocksRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof stocksRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StocksRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof stocksRetrieve>>
+>
 export type StocksRetrieveQueryError = unknown
 
-
-export function useStocksRetrieve<TData = Awaited<ReturnType<typeof stocksRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>> & Pick<
+export function useStocksRetrieve<
+  TData = Awaited<ReturnType<typeof stocksRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksRetrieve>>,
           TError,
           Awaited<ReturnType<typeof stocksRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksRetrieve<TData = Awaited<ReturnType<typeof stocksRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksRetrieve<
+  TData = Awaited<ReturnType<typeof stocksRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksRetrieve>>,
           TError,
           Awaited<ReturnType<typeof stocksRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksRetrieve<TData = Awaited<ReturnType<typeof stocksRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStocksRetrieve<TData = Awaited<ReturnType<typeof stocksRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStocksRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksRetrieve<
+  TData = Awaited<ReturnType<typeof stocksRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useStocksRetrieve<
+  TData = Awaited<ReturnType<typeof stocksRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof stocksRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStocksRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type stocksUpdateResponse200 = {
   data: Stock
   status: 200
 }
 
-export type stocksUpdateResponseSuccess = (stocksUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksUpdateResponseSuccess = stocksUpdateResponse200 & {
+  headers: Headers
+}
+export type stocksUpdateResponse = stocksUpdateResponseSuccess
 
-export type stocksUpdateResponse = (stocksUpdateResponseSuccess)
-
-export const getStocksUpdateUrl = (id: number,) => {
-
-
-
-
+export const getStocksUpdateUrl = (id: number) => {
   return `/api/stocks/${id}/`
 }
 
-export const stocksUpdate = async (id: number,
-    stockRequest: StockRequest, options?: RequestInit): Promise<stocksUpdateResponse> => {
-
-  return kyMutator<stocksUpdateResponse>(getStocksUpdateUrl(id),
-  {
+export const stocksUpdate = async (
+  id: number,
+  stockRequest: StockRequest,
+  options?: RequestInit
+): Promise<stocksUpdateResponse> => {
+  return kyMutator<stocksUpdateResponse>(getStocksUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      stockRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(stockRequest),
+  })
+}
+
+export const getStocksUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stocksUpdate>>,
+    TError,
+    { id: number; data: StockRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stocksUpdate>>,
+  TError,
+  { id: number; data: StockRequest },
+  TContext
+> => {
+  const mutationKey = ["stocksUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stocksUpdate>>,
+    { id: number; data: StockRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return stocksUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type StocksUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stocksUpdate>>
+>
+export type StocksUpdateMutationBody = StockRequest
+export type StocksUpdateMutationError = unknown
 
-
-export const getStocksUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksUpdate>>, TError,{id: number;data: StockRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof stocksUpdate>>, TError,{id: number;data: StockRequest}, TContext> => {
-
-const mutationKey = ['stocksUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stocksUpdate>>, {id: number;data: StockRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  stocksUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StocksUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof stocksUpdate>>>
-    export type StocksUpdateMutationBody = StockRequest
-    export type StocksUpdateMutationError = unknown
-
-    export const useStocksUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksUpdate>>, TError,{id: number;data: StockRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof stocksUpdate>>,
-        TError,
-        {id: number;data: StockRequest},
-        TContext
-      > => {
-      return useMutation(getStocksUpdateMutationOptions(options), queryClient);
-    }
-    export type stocksPartialUpdateResponse200 = {
+export const useStocksUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof stocksUpdate>>,
+      TError,
+      { id: number; data: StockRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof stocksUpdate>>,
+  TError,
+  { id: number; data: StockRequest },
+  TContext
+> => {
+  return useMutation(getStocksUpdateMutationOptions(options), queryClient)
+}
+export type stocksPartialUpdateResponse200 = {
   data: Stock
   status: 200
 }
 
-export type stocksPartialUpdateResponseSuccess = (stocksPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksPartialUpdateResponseSuccess =
+  stocksPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type stocksPartialUpdateResponse = stocksPartialUpdateResponseSuccess
 
-export type stocksPartialUpdateResponse = (stocksPartialUpdateResponseSuccess)
-
-export const getStocksPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getStocksPartialUpdateUrl = (id: number) => {
   return `/api/stocks/${id}/`
 }
 
-export const stocksPartialUpdate = async (id: number,
-    patchedStockRequest?: PatchedStockRequest, options?: RequestInit): Promise<stocksPartialUpdateResponse> => {
-
-  return kyMutator<stocksPartialUpdateResponse>(getStocksPartialUpdateUrl(id),
-  {
+export const stocksPartialUpdate = async (
+  id: number,
+  patchedStockRequest?: PatchedStockRequest,
+  options?: RequestInit
+): Promise<stocksPartialUpdateResponse> => {
+  return kyMutator<stocksPartialUpdateResponse>(getStocksPartialUpdateUrl(id), {
     ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedStockRequest,)
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(patchedStockRequest),
+  })
+}
+
+export const getStocksPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stocksPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedStockRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stocksPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedStockRequest },
+  TContext
+> => {
+  const mutationKey = ["stocksPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stocksPartialUpdate>>,
+    { id: number; data?: PatchedStockRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return stocksPartialUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type StocksPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stocksPartialUpdate>>
+>
+export type StocksPartialUpdateMutationBody = PatchedStockRequest | undefined
+export type StocksPartialUpdateMutationError = unknown
 
-
-export const getStocksPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksPartialUpdate>>, TError,{id: number;data?: PatchedStockRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof stocksPartialUpdate>>, TError,{id: number;data?: PatchedStockRequest}, TContext> => {
-
-const mutationKey = ['stocksPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stocksPartialUpdate>>, {id: number;data?: PatchedStockRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  stocksPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StocksPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof stocksPartialUpdate>>>
-    export type StocksPartialUpdateMutationBody = PatchedStockRequest | undefined
-    export type StocksPartialUpdateMutationError = unknown
-
-    export const useStocksPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksPartialUpdate>>, TError,{id: number;data?: PatchedStockRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof stocksPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedStockRequest},
-        TContext
-      > => {
-      return useMutation(getStocksPartialUpdateMutationOptions(options), queryClient);
-    }
-    export type stocksDestroyResponse204 = {
+export const useStocksPartialUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof stocksPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedStockRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof stocksPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedStockRequest },
+  TContext
+> => {
+  return useMutation(
+    getStocksPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type stocksDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type stocksDestroyResponseSuccess = (stocksDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type stocksDestroyResponseSuccess = stocksDestroyResponse204 & {
+  headers: Headers
+}
+export type stocksDestroyResponse = stocksDestroyResponseSuccess
 
-export type stocksDestroyResponse = (stocksDestroyResponseSuccess)
-
-export const getStocksDestroyUrl = (id: number,) => {
-
-
-
-
+export const getStocksDestroyUrl = (id: number) => {
   return `/api/stocks/${id}/`
 }
 
-export const stocksDestroy = async (id: number, options?: RequestInit): Promise<stocksDestroyResponse> => {
-
-  return kyMutator<stocksDestroyResponse>(getStocksDestroyUrl(id),
-  {
+export const stocksDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<stocksDestroyResponse> => {
+  return kyMutator<stocksDestroyResponse>(getStocksDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getStocksDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stocksDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stocksDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["stocksDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stocksDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return stocksDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type StocksDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stocksDestroy>>
+>
 
+export type StocksDestroyMutationError = unknown
 
-export const getStocksDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof stocksDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['stocksDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stocksDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  stocksDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StocksDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof stocksDestroy>>>
-
-    export type StocksDestroyMutationError = unknown
-
-    export const useStocksDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof stocksDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getStocksDestroyMutationOptions(options), queryClient);
-    }
-    export type stocksAdjustCreateResponse200 = {
-  data: Stock
+export const useStocksDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof stocksDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof stocksDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getStocksDestroyMutationOptions(options), queryClient)
+}
+export type stocksAdjustCreateResponse200 = {
+  data: StockAdjustResponse
   status: 200
 }
 
-export type stocksAdjustCreateResponseSuccess = (stocksAdjustCreateResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksAdjustCreateResponse400 = {
+  data: StockAdjustError
+  status: 400
+}
 
-export type stocksAdjustCreateResponse = (stocksAdjustCreateResponseSuccess)
+export type stocksAdjustCreateResponseSuccess =
+  stocksAdjustCreateResponse200 & {
+    headers: Headers
+  }
+export type stocksAdjustCreateResponseError = stocksAdjustCreateResponse400 & {
+  headers: Headers
+}
 
-export const getStocksAdjustCreateUrl = (id: number,) => {
+export type stocksAdjustCreateResponse =
+  | stocksAdjustCreateResponseSuccess
+  | stocksAdjustCreateResponseError
 
-
-
-
+export const getStocksAdjustCreateUrl = (id: number) => {
   return `/api/stocks/${id}/adjust/`
 }
 
 /**
  * POST /api/stocks/{id}/adjust
 Body: {"quantite": 10.5, "raison": "Inventaire", "type": "ajout|retrait"}
+ * @summary Ajuster le stock
  */
-export const stocksAdjustCreate = async (id: number,
-    stockRequest: StockRequest, options?: RequestInit): Promise<stocksAdjustCreateResponse> => {
-
-  return kyMutator<stocksAdjustCreateResponse>(getStocksAdjustCreateUrl(id),
-  {
+export const stocksAdjustCreate = async (
+  id: number,
+  stockAdjustRequestRequest: StockAdjustRequestRequest,
+  options?: RequestInit
+): Promise<stocksAdjustCreateResponse> => {
+  return kyMutator<stocksAdjustCreateResponse>(getStocksAdjustCreateUrl(id), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      stockRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(stockAdjustRequestRequest),
+  })
+}
+
+export const getStocksAdjustCreateMutationOptions = <
+  TError = StockAdjustError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stocksAdjustCreate>>,
+    TError,
+    { id: number; data: StockAdjustRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stocksAdjustCreate>>,
+  TError,
+  { id: number; data: StockAdjustRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["stocksAdjustCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stocksAdjustCreate>>,
+    { id: number; data: StockAdjustRequestRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return stocksAdjustCreate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type StocksAdjustCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stocksAdjustCreate>>
+>
+export type StocksAdjustCreateMutationBody = StockAdjustRequestRequest
+export type StocksAdjustCreateMutationError = StockAdjustError
 
-
-export const getStocksAdjustCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksAdjustCreate>>, TError,{id: number;data: StockRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof stocksAdjustCreate>>, TError,{id: number;data: StockRequest}, TContext> => {
-
-const mutationKey = ['stocksAdjustCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stocksAdjustCreate>>, {id: number;data: StockRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  stocksAdjustCreate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StocksAdjustCreateMutationResult = NonNullable<Awaited<ReturnType<typeof stocksAdjustCreate>>>
-    export type StocksAdjustCreateMutationBody = StockRequest
-    export type StocksAdjustCreateMutationError = unknown
-
-    export const useStocksAdjustCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stocksAdjustCreate>>, TError,{id: number;data: StockRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof stocksAdjustCreate>>,
-        TError,
-        {id: number;data: StockRequest},
-        TContext
-      > => {
-      return useMutation(getStocksAdjustCreateMutationOptions(options), queryClient);
-    }
-    export type stocksAlertsRetrieveResponse200 = {
-  data: Stock
+/**
+ * @summary Ajuster le stock
+ */
+export const useStocksAdjustCreate = <
+  TError = StockAdjustError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof stocksAdjustCreate>>,
+      TError,
+      { id: number; data: StockAdjustRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof stocksAdjustCreate>>,
+  TError,
+  { id: number; data: StockAdjustRequestRequest },
+  TContext
+> => {
+  return useMutation(getStocksAdjustCreateMutationOptions(options), queryClient)
+}
+export type stocksAlertsRetrieveResponse200 = {
+  data: StockAlertsResponse
   status: 200
 }
 
-export type stocksAlertsRetrieveResponseSuccess = (stocksAlertsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksAlertsRetrieveResponse400 = {
+  data: StockAlertsError
+  status: 400
+}
 
-export type stocksAlertsRetrieveResponse = (stocksAlertsRetrieveResponseSuccess)
+export type stocksAlertsRetrieveResponseSuccess =
+  stocksAlertsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type stocksAlertsRetrieveResponseError =
+  stocksAlertsRetrieveResponse400 & {
+    headers: Headers
+  }
 
-export const getStocksAlertsRetrieveUrl = () => {
+export type stocksAlertsRetrieveResponse =
+  | stocksAlertsRetrieveResponseSuccess
+  | stocksAlertsRetrieveResponseError
 
+export const getStocksAlertsRetrieveUrl = (
+  params?: StocksAlertsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-  return `/api/stocks/alerts/`
+  return stringifiedParams.length > 0
+    ? `/api/stocks/alerts/?${stringifiedParams}`
+    : `/api/stocks/alerts/`
 }
 
 /**
  * GET /api/stocks/alerts?restaurant_id=X
+ * @summary Stocks en alerte
  */
-export const stocksAlertsRetrieve = async ( options?: RequestInit): Promise<stocksAlertsRetrieveResponse> => {
-
-  return kyMutator<stocksAlertsRetrieveResponse>(getStocksAlertsRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStocksAlertsRetrieveQueryKey = () => {
-    return [
-    `/api/stocks/alerts/`
-    ] as const;
+export const stocksAlertsRetrieve = async (
+  params?: StocksAlertsRetrieveParams,
+  options?: RequestInit
+): Promise<stocksAlertsRetrieveResponse> => {
+  return kyMutator<stocksAlertsRetrieveResponse>(
+    getStocksAlertsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStocksAlertsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStocksAlertsRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof stocksAlertsRetrieve>>> = ({ signal }) => stocksAlertsRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StocksAlertsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof stocksAlertsRetrieve>>>
-export type StocksAlertsRetrieveQueryError = unknown
+export const getStocksAlertsRetrieveQueryKey = (
+  params?: StocksAlertsRetrieveParams
+) => {
+  return [`/api/stocks/alerts/`, ...(params ? [params] : [])] as const
+}
 
+export const getStocksAlertsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+  TError = StockAlertsError,
+>(
+  params?: StocksAlertsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useStocksAlertsRetrieve<TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getStocksAlertsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof stocksAlertsRetrieve>>
+  > = ({ signal }) => stocksAlertsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StocksAlertsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof stocksAlertsRetrieve>>
+>
+export type StocksAlertsRetrieveQueryError = StockAlertsError
+
+export function useStocksAlertsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+  TError = StockAlertsError,
+>(
+  params: undefined | StocksAlertsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof stocksAlertsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksAlertsRetrieve<TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksAlertsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+  TError = StockAlertsError,
+>(
+  params?: StocksAlertsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof stocksAlertsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksAlertsRetrieve<TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksAlertsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+  TError = StockAlertsError,
+>(
+  params?: StocksAlertsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+/**
+ * @summary Stocks en alerte
+ */
 
-export function useStocksAlertsRetrieve<TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksAlertsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useStocksAlertsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+  TError = StockAlertsError,
+>(
+  params?: StocksAlertsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksAlertsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStocksAlertsRetrieveQueryOptions(params, options)
 
-  const queryOptions = getStocksAlertsRetrieveQueryOptions(options)
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+  return { ...query, queryKey: queryOptions.queryKey }
 }
 
-
-
-
-
-
 export type stocksReportsRetrieveResponse200 = {
-  data: Stock
+  data: StockReportsResponse
   status: 200
 }
 
-export type stocksReportsRetrieveResponseSuccess = (stocksReportsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type stocksReportsRetrieveResponse400 = {
+  data: StockReportsError
+  status: 400
+}
 
-export type stocksReportsRetrieveResponse = (stocksReportsRetrieveResponseSuccess)
+export type stocksReportsRetrieveResponseSuccess =
+  stocksReportsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type stocksReportsRetrieveResponseError =
+  stocksReportsRetrieveResponse400 & {
+    headers: Headers
+  }
 
-export const getStocksReportsRetrieveUrl = () => {
+export type stocksReportsRetrieveResponse =
+  | stocksReportsRetrieveResponseSuccess
+  | stocksReportsRetrieveResponseError
 
+export const getStocksReportsRetrieveUrl = (
+  params?: StocksReportsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
 
+  const stringifiedParams = normalizedParams.toString()
 
-  return `/api/stocks/reports/`
+  return stringifiedParams.length > 0
+    ? `/api/stocks/reports/?${stringifiedParams}`
+    : `/api/stocks/reports/`
 }
 
 /**
  * GET /api/stocks/reports?period=day|week|month|year&restaurant_id=X
+ * @summary Rapport de stock
  */
-export const stocksReportsRetrieve = async ( options?: RequestInit): Promise<stocksReportsRetrieveResponse> => {
-
-  return kyMutator<stocksReportsRetrieveResponse>(getStocksReportsRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getStocksReportsRetrieveQueryKey = () => {
-    return [
-    `/api/stocks/reports/`
-    ] as const;
+export const stocksReportsRetrieve = async (
+  params?: StocksReportsRetrieveParams,
+  options?: RequestInit
+): Promise<stocksReportsRetrieveResponse> => {
+  return kyMutator<stocksReportsRetrieveResponse>(
+    getStocksReportsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getStocksReportsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStocksReportsRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof stocksReportsRetrieve>>> = ({ signal }) => stocksReportsRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type StocksReportsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof stocksReportsRetrieve>>>
-export type StocksReportsRetrieveQueryError = unknown
+export const getStocksReportsRetrieveQueryKey = (
+  params?: StocksReportsRetrieveParams
+) => {
+  return [`/api/stocks/reports/`, ...(params ? [params] : [])] as const
+}
 
+export const getStocksReportsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+  TError = StockReportsError,
+>(
+  params?: StocksReportsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useStocksReportsRetrieve<TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getStocksReportsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof stocksReportsRetrieve>>
+  > = ({ signal }) => stocksReportsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StocksReportsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof stocksReportsRetrieve>>
+>
+export type StocksReportsRetrieveQueryError = StockReportsError
+
+export function useStocksReportsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+  TError = StockReportsError,
+>(
+  params: undefined | StocksReportsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksReportsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof stocksReportsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksReportsRetrieve<TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useStocksReportsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+  TError = StockReportsError,
+>(
+  params?: StocksReportsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof stocksReportsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof stocksReportsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStocksReportsRetrieve<TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStocksReportsRetrieve<TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof stocksReportsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStocksReportsRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
+export function useStocksReportsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+  TError = StockReportsError,
+>(
+  params?: StocksReportsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+/**
+ * @summary Rapport de stock
+ */
 
+export function useStocksReportsRetrieve<
+  TData = Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+  TError = StockReportsError,
+>(
+  params?: StocksReportsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof stocksReportsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getStocksReportsRetrieveQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

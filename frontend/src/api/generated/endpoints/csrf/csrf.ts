@@ -3,11 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -17,35 +17,24 @@ import type {
   QueryKey,
   UndefinedInitialDataOptions,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
-import type {
-  CsrfTokenResponse
-} from '../../schemas';
+import type { CsrfTokenResponse } from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type csrfRetrieveResponse200 = {
   data: CsrfTokenResponse
   status: 200
 }
 
-export type csrfRetrieveResponseSuccess = (csrfRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type csrfRetrieveResponse = (csrfRetrieveResponseSuccess)
+export type csrfRetrieveResponseSuccess = csrfRetrieveResponse200 & {
+  headers: Headers
+}
+export type csrfRetrieveResponse = csrfRetrieveResponseSuccess
 
 export const getCsrfRetrieveUrl = () => {
-
-
-
-
   return `/csrf/`
 }
 
@@ -53,89 +42,122 @@ export const getCsrfRetrieveUrl = () => {
  * Récupération du token CSRF.
 Aucune authentification utilisateur requise.
  */
-export const csrfRetrieve = async ( options?: RequestInit): Promise<csrfRetrieveResponse> => {
-
-  return kyMutator<csrfRetrieveResponse>(getCsrfRetrieveUrl(),
-  {
+export const csrfRetrieve = async (
+  options?: RequestInit
+): Promise<csrfRetrieveResponse> => {
+  return kyMutator<csrfRetrieveResponse>(getCsrfRetrieveUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getCsrfRetrieveQueryKey = () => {
-    return [
-    `/csrf/`
-    ] as const;
-    }
-
-
-export const getCsrfRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof csrfRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCsrfRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof csrfRetrieve>>> = ({ signal }) => csrfRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type CsrfRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof csrfRetrieve>>>
+export const getCsrfRetrieveQueryKey = () => {
+  return [`/csrf/`] as const
+}
+
+export const getCsrfRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof csrfRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getCsrfRetrieveQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof csrfRetrieve>>> = ({
+    signal,
+  }) => csrfRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof csrfRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CsrfRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof csrfRetrieve>>
+>
 export type CsrfRetrieveQueryError = unknown
 
-
-export function useCsrfRetrieve<TData = Awaited<ReturnType<typeof csrfRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>> & Pick<
+export function useCsrfRetrieve<
+  TData = Awaited<ReturnType<typeof csrfRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof csrfRetrieve>>,
           TError,
           Awaited<ReturnType<typeof csrfRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCsrfRetrieve<TData = Awaited<ReturnType<typeof csrfRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCsrfRetrieve<
+  TData = Awaited<ReturnType<typeof csrfRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof csrfRetrieve>>,
           TError,
           Awaited<ReturnType<typeof csrfRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCsrfRetrieve<TData = Awaited<ReturnType<typeof csrfRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useCsrfRetrieve<TData = Awaited<ReturnType<typeof csrfRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCsrfRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useCsrfRetrieve<
+  TData = Awaited<ReturnType<typeof csrfRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useCsrfRetrieve<
+  TData = Awaited<ReturnType<typeof csrfRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof csrfRetrieve>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getCsrfRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

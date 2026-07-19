@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,1181 +20,2375 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
+  CategorieFournisseur,
+  CategorieFournisseurRequest,
   CommandeFournisseur,
   CommandeFournisseurRequest,
   Fournisseur,
   FournisseurRequest,
+  PaginatedCategorieFournisseurList,
   PaginatedCommandeFournisseurList,
   PaginatedFournisseurList,
+  PatchedCategorieFournisseurRequest,
   PatchedCommandeFournisseurRequest,
   PatchedFournisseurRequest,
+  SuppliersCategoriesListParams,
   SuppliersListParams,
-  SuppliersOrdersListParams
-} from '../../schemas';
+  SuppliersOrdersListParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type suppliersListResponse200 = {
   data: PaginatedFournisseurList
   status: 200
 }
 
-export type suppliersListResponseSuccess = (suppliersListResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersListResponseSuccess = suppliersListResponse200 & {
+  headers: Headers
+}
+export type suppliersListResponse = suppliersListResponseSuccess
 
-export type suppliersListResponse = (suppliersListResponseSuccess)
-
-export const getSuppliersListUrl = (params?: SuppliersListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSuppliersListUrl = (params?: SuppliersListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/suppliers/?${stringifiedParams}` : `/api/suppliers/`
+  return stringifiedParams.length > 0
+    ? `/api/suppliers/?${stringifiedParams}`
+    : `/api/suppliers/`
 }
 
-export const suppliersList = async (params?: SuppliersListParams, options?: RequestInit): Promise<suppliersListResponse> => {
-
-  return kyMutator<suppliersListResponse>(getSuppliersListUrl(params),
-  {
+export const suppliersList = async (
+  params?: SuppliersListParams,
+  options?: RequestInit
+): Promise<suppliersListResponse> => {
+  return kyMutator<suppliersListResponse>(getSuppliersListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSuppliersListQueryKey = (params?: SuppliersListParams,) => {
-    return [
-    `/api/suppliers/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSuppliersListQueryOptions = <TData = Awaited<ReturnType<typeof suppliersList>>, TError = unknown>(params?: SuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuppliersListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof suppliersList>>> = ({ signal }) => suppliersList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type SuppliersListQueryResult = NonNullable<Awaited<ReturnType<typeof suppliersList>>>
+export const getSuppliersListQueryKey = (params?: SuppliersListParams) => {
+  return [`/api/suppliers/`, ...(params ? [params] : [])] as const
+}
+
+export const getSuppliersListQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getSuppliersListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof suppliersList>>> = ({
+    signal,
+  }) => suppliersList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersList>>
+>
 export type SuppliersListQueryError = unknown
 
-
-export function useSuppliersList<TData = Awaited<ReturnType<typeof suppliersList>>, TError = unknown>(
- params: undefined |  SuppliersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>> & Pick<
+export function useSuppliersList<
+  TData = Awaited<ReturnType<typeof suppliersList>>,
+  TError = unknown,
+>(
+  params: undefined | SuppliersListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersList>>,
           TError,
           Awaited<ReturnType<typeof suppliersList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersList<TData = Awaited<ReturnType<typeof suppliersList>>, TError = unknown>(
- params?: SuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersList<
+  TData = Awaited<ReturnType<typeof suppliersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersList>>,
           TError,
           Awaited<ReturnType<typeof suppliersList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersList<TData = Awaited<ReturnType<typeof suppliersList>>, TError = unknown>(
- params?: SuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSuppliersList<TData = Awaited<ReturnType<typeof suppliersList>>, TError = unknown>(
- params?: SuppliersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuppliersListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersList<
+  TData = Awaited<ReturnType<typeof suppliersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSuppliersList<
+  TData = Awaited<ReturnType<typeof suppliersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof suppliersList>>, TError, TData>
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type suppliersCreateResponse201 = {
   data: Fournisseur
   status: 201
 }
 
-export type suppliersCreateResponseSuccess = (suppliersCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type suppliersCreateResponse = (suppliersCreateResponseSuccess)
+export type suppliersCreateResponseSuccess = suppliersCreateResponse201 & {
+  headers: Headers
+}
+export type suppliersCreateResponse = suppliersCreateResponseSuccess
 
 export const getSuppliersCreateUrl = () => {
-
-
-
-
   return `/api/suppliers/`
 }
 
-export const suppliersCreate = async (fournisseurRequest: FournisseurRequest, options?: RequestInit): Promise<suppliersCreateResponse> => {
-
-  return kyMutator<suppliersCreateResponse>(getSuppliersCreateUrl(),
-  {
+export const suppliersCreate = async (
+  fournisseurRequest: FournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersCreateResponse> => {
+  return kyMutator<suppliersCreateResponse>(getSuppliersCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      fournisseurRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(fournisseurRequest),
+  })
+}
+
+export const getSuppliersCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersCreate>>,
+    TError,
+    { data: FournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersCreate>>,
+  TError,
+  { data: FournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersCreate>>,
+    { data: FournisseurRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return suppliersCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SuppliersCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCreate>>
+>
+export type SuppliersCreateMutationBody = FournisseurRequest
+export type SuppliersCreateMutationError = unknown
 
-
-export const getSuppliersCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersCreate>>, TError,{data: FournisseurRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersCreate>>, TError,{data: FournisseurRequest}, TContext> => {
-
-const mutationKey = ['suppliersCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersCreate>>, {data: FournisseurRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  suppliersCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersCreate>>>
-    export type SuppliersCreateMutationBody = FournisseurRequest
-    export type SuppliersCreateMutationError = unknown
-
-    export const useSuppliersCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersCreate>>, TError,{data: FournisseurRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersCreate>>,
-        TError,
-        {data: FournisseurRequest},
-        TContext
-      > => {
-      return useMutation(getSuppliersCreateMutationOptions(options), queryClient);
-    }
-    export type suppliersRetrieveResponse200 = {
+export const useSuppliersCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersCreate>>,
+      TError,
+      { data: FournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersCreate>>,
+  TError,
+  { data: FournisseurRequest },
+  TContext
+> => {
+  return useMutation(getSuppliersCreateMutationOptions(options), queryClient)
+}
+export type suppliersRetrieveResponse200 = {
   data: Fournisseur
   status: 200
 }
 
-export type suppliersRetrieveResponseSuccess = (suppliersRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersRetrieveResponseSuccess = suppliersRetrieveResponse200 & {
+  headers: Headers
+}
+export type suppliersRetrieveResponse = suppliersRetrieveResponseSuccess
 
-export type suppliersRetrieveResponse = (suppliersRetrieveResponseSuccess)
-
-export const getSuppliersRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersRetrieveUrl = (id: number) => {
   return `/api/suppliers/${id}/`
 }
 
-export const suppliersRetrieve = async (id: number, options?: RequestInit): Promise<suppliersRetrieveResponse> => {
-
-  return kyMutator<suppliersRetrieveResponse>(getSuppliersRetrieveUrl(id),
-  {
+export const suppliersRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersRetrieveResponse> => {
+  return kyMutator<suppliersRetrieveResponse>(getSuppliersRetrieveUrl(id), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSuppliersRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/suppliers/${id}/`
-    ] as const;
-    }
-
-
-export const getSuppliersRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof suppliersRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuppliersRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof suppliersRetrieve>>> = ({ signal }) => suppliersRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suppliersRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type SuppliersRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof suppliersRetrieve>>>
+export const getSuppliersRetrieveQueryKey = (id: number) => {
+  return [`/api/suppliers/${id}/`] as const
+}
+
+export const getSuppliersRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getSuppliersRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof suppliersRetrieve>>
+  > = ({ signal }) => suppliersRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersRetrieve>>
+>
 export type SuppliersRetrieveQueryError = unknown
 
-
-export function useSuppliersRetrieve<TData = Awaited<ReturnType<typeof suppliersRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersRetrieve>>, TError, TData>> & Pick<
+export function useSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersRetrieve>>,
           TError,
           Awaited<ReturnType<typeof suppliersRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersRetrieve<TData = Awaited<ReturnType<typeof suppliersRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersRetrieve>>,
           TError,
           Awaited<ReturnType<typeof suppliersRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersRetrieve<TData = Awaited<ReturnType<typeof suppliersRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSuppliersRetrieve<TData = Awaited<ReturnType<typeof suppliersRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuppliersRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type suppliersUpdateResponse200 = {
   data: Fournisseur
   status: 200
 }
 
-export type suppliersUpdateResponseSuccess = (suppliersUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersUpdateResponseSuccess = suppliersUpdateResponse200 & {
+  headers: Headers
+}
+export type suppliersUpdateResponse = suppliersUpdateResponseSuccess
 
-export type suppliersUpdateResponse = (suppliersUpdateResponseSuccess)
-
-export const getSuppliersUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersUpdateUrl = (id: number) => {
   return `/api/suppliers/${id}/`
 }
 
-export const suppliersUpdate = async (id: number,
-    fournisseurRequest: FournisseurRequest, options?: RequestInit): Promise<suppliersUpdateResponse> => {
-
-  return kyMutator<suppliersUpdateResponse>(getSuppliersUpdateUrl(id),
-  {
+export const suppliersUpdate = async (
+  id: number,
+  fournisseurRequest: FournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersUpdateResponse> => {
+  return kyMutator<suppliersUpdateResponse>(getSuppliersUpdateUrl(id), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      fournisseurRequest,)
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(fournisseurRequest),
+  })
+}
+
+export const getSuppliersUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersUpdate>>,
+    TError,
+    { id: number; data: FournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersUpdate>>,
+  TError,
+  { id: number; data: FournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersUpdate>>,
+    { id: number; data: FournisseurRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return suppliersUpdate(id, data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SuppliersUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersUpdate>>
+>
+export type SuppliersUpdateMutationBody = FournisseurRequest
+export type SuppliersUpdateMutationError = unknown
 
-
-export const getSuppliersUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersUpdate>>, TError,{id: number;data: FournisseurRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersUpdate>>, TError,{id: number;data: FournisseurRequest}, TContext> => {
-
-const mutationKey = ['suppliersUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersUpdate>>, {id: number;data: FournisseurRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  suppliersUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersUpdate>>>
-    export type SuppliersUpdateMutationBody = FournisseurRequest
-    export type SuppliersUpdateMutationError = unknown
-
-    export const useSuppliersUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersUpdate>>, TError,{id: number;data: FournisseurRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersUpdate>>,
-        TError,
-        {id: number;data: FournisseurRequest},
-        TContext
-      > => {
-      return useMutation(getSuppliersUpdateMutationOptions(options), queryClient);
-    }
-    export type suppliersPartialUpdateResponse200 = {
+export const useSuppliersUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersUpdate>>,
+      TError,
+      { id: number; data: FournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersUpdate>>,
+  TError,
+  { id: number; data: FournisseurRequest },
+  TContext
+> => {
+  return useMutation(getSuppliersUpdateMutationOptions(options), queryClient)
+}
+export type suppliersPartialUpdateResponse200 = {
   data: Fournisseur
   status: 200
 }
 
-export type suppliersPartialUpdateResponseSuccess = (suppliersPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersPartialUpdateResponseSuccess =
+  suppliersPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type suppliersPartialUpdateResponse =
+  suppliersPartialUpdateResponseSuccess
 
-export type suppliersPartialUpdateResponse = (suppliersPartialUpdateResponseSuccess)
-
-export const getSuppliersPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersPartialUpdateUrl = (id: number) => {
   return `/api/suppliers/${id}/`
 }
 
-export const suppliersPartialUpdate = async (id: number,
-    patchedFournisseurRequest?: PatchedFournisseurRequest, options?: RequestInit): Promise<suppliersPartialUpdateResponse> => {
-
-  return kyMutator<suppliersPartialUpdateResponse>(getSuppliersPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedFournisseurRequest,)
-  }
-);}
-
-
-
-
-export const getSuppliersPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersPartialUpdate>>, TError,{id: number;data?: PatchedFournisseurRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersPartialUpdate>>, TError,{id: number;data?: PatchedFournisseurRequest}, TContext> => {
-
-const mutationKey = ['suppliersPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersPartialUpdate>>, {id: number;data?: PatchedFournisseurRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  suppliersPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersPartialUpdate>>>
-    export type SuppliersPartialUpdateMutationBody = PatchedFournisseurRequest | undefined
-    export type SuppliersPartialUpdateMutationError = unknown
-
-    export const useSuppliersPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersPartialUpdate>>, TError,{id: number;data?: PatchedFournisseurRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedFournisseurRequest},
-        TContext
-      > => {
-      return useMutation(getSuppliersPartialUpdateMutationOptions(options), queryClient);
+export const suppliersPartialUpdate = async (
+  id: number,
+  patchedFournisseurRequest?: PatchedFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersPartialUpdateResponse> => {
+  return kyMutator<suppliersPartialUpdateResponse>(
+    getSuppliersPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedFournisseurRequest),
     }
-    export type suppliersDestroyResponse204 = {
+  )
+}
+
+export const getSuppliersPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersPartialUpdate>>,
+    { id: number; data?: PatchedFournisseurRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return suppliersPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersPartialUpdate>>
+>
+export type SuppliersPartialUpdateMutationBody =
+  | PatchedFournisseurRequest
+  | undefined
+export type SuppliersPartialUpdateMutationError = unknown
+
+export const useSuppliersPartialUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type suppliersDestroyResponseSuccess = (suppliersDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type suppliersDestroyResponseSuccess = suppliersDestroyResponse204 & {
+  headers: Headers
+}
+export type suppliersDestroyResponse = suppliersDestroyResponseSuccess
 
-export type suppliersDestroyResponse = (suppliersDestroyResponseSuccess)
-
-export const getSuppliersDestroyUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersDestroyUrl = (id: number) => {
   return `/api/suppliers/${id}/`
 }
 
-export const suppliersDestroy = async (id: number, options?: RequestInit): Promise<suppliersDestroyResponse> => {
-
-  return kyMutator<suppliersDestroyResponse>(getSuppliersDestroyUrl(id),
-  {
+export const suppliersDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersDestroyResponse> => {
+  return kyMutator<suppliersDestroyResponse>(getSuppliersDestroyUrl(id), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getSuppliersDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["suppliersDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return suppliersDestroy(id)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SuppliersDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersDestroy>>
+>
 
+export type SuppliersDestroyMutationError = unknown
 
-export const getSuppliersDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['suppliersDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  suppliersDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersDestroy>>>
-
-    export type SuppliersDestroyMutationError = unknown
-
-    export const useSuppliersDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getSuppliersDestroyMutationOptions(options), queryClient);
-    }
-    export type suppliersDeliveryDaysRetrieveResponse200 = {
+export const useSuppliersDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getSuppliersDestroyMutationOptions(options), queryClient)
+}
+export type suppliersDeliveryDaysRetrieveResponse200 = {
   data: Fournisseur
   status: 200
 }
 
-export type suppliersDeliveryDaysRetrieveResponseSuccess = (suppliersDeliveryDaysRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersDeliveryDaysRetrieveResponseSuccess =
+  suppliersDeliveryDaysRetrieveResponse200 & {
+    headers: Headers
+  }
+export type suppliersDeliveryDaysRetrieveResponse =
+  suppliersDeliveryDaysRetrieveResponseSuccess
 
-export type suppliersDeliveryDaysRetrieveResponse = (suppliersDeliveryDaysRetrieveResponseSuccess)
-
-export const getSuppliersDeliveryDaysRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersDeliveryDaysRetrieveUrl = (id: number) => {
   return `/api/suppliers/${id}/delivery-days/`
 }
 
 /**
  * GET /api/suppliers/{id}/delivery-days
  */
-export const suppliersDeliveryDaysRetrieve = async (id: number, options?: RequestInit): Promise<suppliersDeliveryDaysRetrieveResponse> => {
-
-  return kyMutator<suppliersDeliveryDaysRetrieveResponse>(getSuppliersDeliveryDaysRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSuppliersDeliveryDaysRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/suppliers/${id}/delivery-days/`
-    ] as const;
+export const suppliersDeliveryDaysRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersDeliveryDaysRetrieveResponse> => {
+  return kyMutator<suppliersDeliveryDaysRetrieveResponse>(
+    getSuppliersDeliveryDaysRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getSuppliersDeliveryDaysRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuppliersDeliveryDaysRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>> = ({ signal }) => suppliersDeliveryDaysRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type SuppliersDeliveryDaysRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>>
+export const getSuppliersDeliveryDaysRetrieveQueryKey = (id: number) => {
+  return [`/api/suppliers/${id}/delivery-days/`] as const
+}
+
+export const getSuppliersDeliveryDaysRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSuppliersDeliveryDaysRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>
+  > = ({ signal }) => suppliersDeliveryDaysRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersDeliveryDaysRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>
+>
 export type SuppliersDeliveryDaysRetrieveQueryError = unknown
 
-
-export function useSuppliersDeliveryDaysRetrieve<TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError, TData>> & Pick<
+export function useSuppliersDeliveryDaysRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
           TError,
           Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersDeliveryDaysRetrieve<TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersDeliveryDaysRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
           TError,
           Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersDeliveryDaysRetrieve<TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSuppliersDeliveryDaysRetrieve<TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuppliersDeliveryDaysRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersDeliveryDaysRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSuppliersDeliveryDaysRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersDeliveryDaysRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersDeliveryDaysRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
+export type suppliersCategoriesListResponse200 = {
+  data: PaginatedCategorieFournisseurList
+  status: 200
+}
 
+export type suppliersCategoriesListResponseSuccess =
+  suppliersCategoriesListResponse200 & {
+    headers: Headers
+  }
+export type suppliersCategoriesListResponse =
+  suppliersCategoriesListResponseSuccess
 
+export const getSuppliersCategoriesListUrl = (
+  params?: SuppliersCategoriesListParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/suppliers/categories/?${stringifiedParams}`
+    : `/api/suppliers/categories/`
+}
+
+export const suppliersCategoriesList = async (
+  params?: SuppliersCategoriesListParams,
+  options?: RequestInit
+): Promise<suppliersCategoriesListResponse> => {
+  return kyMutator<suppliersCategoriesListResponse>(
+    getSuppliersCategoriesListUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getSuppliersCategoriesListQueryKey = (
+  params?: SuppliersCategoriesListParams
+) => {
+  return [`/api/suppliers/categories/`, ...(params ? [params] : [])] as const
+}
+
+export const getSuppliersCategoriesListQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersCategoriesList>>,
+  TError = unknown,
+>(
+  params?: SuppliersCategoriesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSuppliersCategoriesListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof suppliersCategoriesList>>
+  > = ({ signal }) => suppliersCategoriesList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersCategoriesList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersCategoriesListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCategoriesList>>
+>
+export type SuppliersCategoriesListQueryError = unknown
+
+export function useSuppliersCategoriesList<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesList>>,
+  TError = unknown,
+>(
+  params: undefined | SuppliersCategoriesListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suppliersCategoriesList>>,
+          TError,
+          Awaited<ReturnType<typeof suppliersCategoriesList>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersCategoriesList<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesList>>,
+  TError = unknown,
+>(
+  params?: SuppliersCategoriesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suppliersCategoriesList>>,
+          TError,
+          Awaited<ReturnType<typeof suppliersCategoriesList>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersCategoriesList<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesList>>,
+  TError = unknown,
+>(
+  params?: SuppliersCategoriesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useSuppliersCategoriesList<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesList>>,
+  TError = unknown,
+>(
+  params?: SuppliersCategoriesListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersCategoriesListQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type suppliersCategoriesCreateResponse201 = {
+  data: CategorieFournisseur
+  status: 201
+}
+
+export type suppliersCategoriesCreateResponseSuccess =
+  suppliersCategoriesCreateResponse201 & {
+    headers: Headers
+  }
+export type suppliersCategoriesCreateResponse =
+  suppliersCategoriesCreateResponseSuccess
+
+export const getSuppliersCategoriesCreateUrl = () => {
+  return `/api/suppliers/categories/`
+}
+
+export const suppliersCategoriesCreate = async (
+  categorieFournisseurRequest: CategorieFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersCategoriesCreateResponse> => {
+  return kyMutator<suppliersCategoriesCreateResponse>(
+    getSuppliersCategoriesCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(categorieFournisseurRequest),
+    }
+  )
+}
+
+export const getSuppliersCategoriesCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersCategoriesCreate>>,
+    TError,
+    { data: CategorieFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersCategoriesCreate>>,
+  TError,
+  { data: CategorieFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersCategoriesCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersCategoriesCreate>>,
+    { data: CategorieFournisseurRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return suppliersCategoriesCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersCategoriesCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCategoriesCreate>>
+>
+export type SuppliersCategoriesCreateMutationBody = CategorieFournisseurRequest
+export type SuppliersCategoriesCreateMutationError = unknown
+
+export const useSuppliersCategoriesCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersCategoriesCreate>>,
+      TError,
+      { data: CategorieFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersCategoriesCreate>>,
+  TError,
+  { data: CategorieFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersCategoriesCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersCategoriesRetrieveResponse200 = {
+  data: CategorieFournisseur
+  status: 200
+}
+
+export type suppliersCategoriesRetrieveResponseSuccess =
+  suppliersCategoriesRetrieveResponse200 & {
+    headers: Headers
+  }
+export type suppliersCategoriesRetrieveResponse =
+  suppliersCategoriesRetrieveResponseSuccess
+
+export const getSuppliersCategoriesRetrieveUrl = (id: number) => {
+  return `/api/suppliers/categories/${id}/`
+}
+
+export const suppliersCategoriesRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersCategoriesRetrieveResponse> => {
+  return kyMutator<suppliersCategoriesRetrieveResponse>(
+    getSuppliersCategoriesRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getSuppliersCategoriesRetrieveQueryKey = (id: number) => {
+  return [`/api/suppliers/categories/${id}/`] as const
+}
+
+export const getSuppliersCategoriesRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSuppliersCategoriesRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>
+  > = ({ signal }) => suppliersCategoriesRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersCategoriesRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>
+>
+export type SuppliersCategoriesRetrieveQueryError = unknown
+
+export function useSuppliersCategoriesRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersCategoriesRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersCategoriesRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useSuppliersCategoriesRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersCategoriesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersCategoriesRetrieveQueryOptions(id, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type suppliersCategoriesUpdateResponse200 = {
+  data: CategorieFournisseur
+  status: 200
+}
+
+export type suppliersCategoriesUpdateResponseSuccess =
+  suppliersCategoriesUpdateResponse200 & {
+    headers: Headers
+  }
+export type suppliersCategoriesUpdateResponse =
+  suppliersCategoriesUpdateResponseSuccess
+
+export const getSuppliersCategoriesUpdateUrl = (id: number) => {
+  return `/api/suppliers/categories/${id}/`
+}
+
+export const suppliersCategoriesUpdate = async (
+  id: number,
+  categorieFournisseurRequest: CategorieFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersCategoriesUpdateResponse> => {
+  return kyMutator<suppliersCategoriesUpdateResponse>(
+    getSuppliersCategoriesUpdateUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(categorieFournisseurRequest),
+    }
+  )
+}
+
+export const getSuppliersCategoriesUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersCategoriesUpdate>>,
+    TError,
+    { id: number; data: CategorieFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersCategoriesUpdate>>,
+  TError,
+  { id: number; data: CategorieFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersCategoriesUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersCategoriesUpdate>>,
+    { id: number; data: CategorieFournisseurRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return suppliersCategoriesUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersCategoriesUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCategoriesUpdate>>
+>
+export type SuppliersCategoriesUpdateMutationBody = CategorieFournisseurRequest
+export type SuppliersCategoriesUpdateMutationError = unknown
+
+export const useSuppliersCategoriesUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersCategoriesUpdate>>,
+      TError,
+      { id: number; data: CategorieFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersCategoriesUpdate>>,
+  TError,
+  { id: number; data: CategorieFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersCategoriesUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersCategoriesPartialUpdateResponse200 = {
+  data: CategorieFournisseur
+  status: 200
+}
+
+export type suppliersCategoriesPartialUpdateResponseSuccess =
+  suppliersCategoriesPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type suppliersCategoriesPartialUpdateResponse =
+  suppliersCategoriesPartialUpdateResponseSuccess
+
+export const getSuppliersCategoriesPartialUpdateUrl = (id: number) => {
+  return `/api/suppliers/categories/${id}/`
+}
+
+export const suppliersCategoriesPartialUpdate = async (
+  id: number,
+  patchedCategorieFournisseurRequest?: PatchedCategorieFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersCategoriesPartialUpdateResponse> => {
+  return kyMutator<suppliersCategoriesPartialUpdateResponse>(
+    getSuppliersCategoriesPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedCategorieFournisseurRequest),
+    }
+  )
+}
+
+export const getSuppliersCategoriesPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersCategoriesPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedCategorieFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersCategoriesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedCategorieFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersCategoriesPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersCategoriesPartialUpdate>>,
+    { id: number; data?: PatchedCategorieFournisseurRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return suppliersCategoriesPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersCategoriesPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCategoriesPartialUpdate>>
+>
+export type SuppliersCategoriesPartialUpdateMutationBody =
+  | PatchedCategorieFournisseurRequest
+  | undefined
+export type SuppliersCategoriesPartialUpdateMutationError = unknown
+
+export const useSuppliersCategoriesPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersCategoriesPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedCategorieFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersCategoriesPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedCategorieFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersCategoriesPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersCategoriesDestroyResponse204 = {
+  data: void
+  status: 204
+}
+
+export type suppliersCategoriesDestroyResponseSuccess =
+  suppliersCategoriesDestroyResponse204 & {
+    headers: Headers
+  }
+export type suppliersCategoriesDestroyResponse =
+  suppliersCategoriesDestroyResponseSuccess
+
+export const getSuppliersCategoriesDestroyUrl = (id: number) => {
+  return `/api/suppliers/categories/${id}/`
+}
+
+export const suppliersCategoriesDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersCategoriesDestroyResponse> => {
+  return kyMutator<suppliersCategoriesDestroyResponse>(
+    getSuppliersCategoriesDestroyUrl(id),
+    {
+      ...options,
+      method: "DELETE",
+    }
+  )
+}
+
+export const getSuppliersCategoriesDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersCategoriesDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersCategoriesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["suppliersCategoriesDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersCategoriesDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return suppliersCategoriesDestroy(id)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersCategoriesDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersCategoriesDestroy>>
+>
+
+export type SuppliersCategoriesDestroyMutationError = unknown
+
+export const useSuppliersCategoriesDestroy = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersCategoriesDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersCategoriesDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersCategoriesDestroyMutationOptions(options),
+    queryClient
+  )
+}
 export type suppliersOrdersListResponse200 = {
   data: PaginatedCommandeFournisseurList
   status: 200
 }
 
-export type suppliersOrdersListResponseSuccess = (suppliersOrdersListResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersOrdersListResponseSuccess =
+  suppliersOrdersListResponse200 & {
+    headers: Headers
+  }
+export type suppliersOrdersListResponse = suppliersOrdersListResponseSuccess
 
-export type suppliersOrdersListResponse = (suppliersOrdersListResponseSuccess)
-
-export const getSuppliersOrdersListUrl = (params?: SuppliersOrdersListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSuppliersOrdersListUrl = (
+  params?: SuppliersOrdersListParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/suppliers/orders/?${stringifiedParams}` : `/api/suppliers/orders/`
+  return stringifiedParams.length > 0
+    ? `/api/suppliers/orders/?${stringifiedParams}`
+    : `/api/suppliers/orders/`
 }
 
-export const suppliersOrdersList = async (params?: SuppliersOrdersListParams, options?: RequestInit): Promise<suppliersOrdersListResponse> => {
-
-  return kyMutator<suppliersOrdersListResponse>(getSuppliersOrdersListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSuppliersOrdersListQueryKey = (params?: SuppliersOrdersListParams,) => {
-    return [
-    `/api/suppliers/orders/`, ...(params ? [params] : [])
-    ] as const;
+export const suppliersOrdersList = async (
+  params?: SuppliersOrdersListParams,
+  options?: RequestInit
+): Promise<suppliersOrdersListResponse> => {
+  return kyMutator<suppliersOrdersListResponse>(
+    getSuppliersOrdersListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
+  )
+}
 
-
-export const getSuppliersOrdersListQueryOptions = <TData = Awaited<ReturnType<typeof suppliersOrdersList>>, TError = unknown>(params?: SuppliersOrdersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersList>>, TError, TData>>, }
+export const getSuppliersOrdersListQueryKey = (
+  params?: SuppliersOrdersListParams
 ) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuppliersOrdersListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof suppliersOrdersList>>> = ({ signal }) => suppliersOrdersList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return [`/api/suppliers/orders/`, ...(params ? [params] : [])] as const
 }
 
-export type SuppliersOrdersListQueryResult = NonNullable<Awaited<ReturnType<typeof suppliersOrdersList>>>
+export const getSuppliersOrdersListQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersOrdersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersOrdersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSuppliersOrdersListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof suppliersOrdersList>>
+  > = ({ signal }) => suppliersOrdersList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersOrdersList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersOrdersListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersOrdersList>>
+>
 export type SuppliersOrdersListQueryError = unknown
 
-
-export function useSuppliersOrdersList<TData = Awaited<ReturnType<typeof suppliersOrdersList>>, TError = unknown>(
- params: undefined |  SuppliersOrdersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersList>>, TError, TData>> & Pick<
+export function useSuppliersOrdersList<
+  TData = Awaited<ReturnType<typeof suppliersOrdersList>>,
+  TError = unknown,
+>(
+  params: undefined | SuppliersOrdersListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersOrdersList>>,
           TError,
           Awaited<ReturnType<typeof suppliersOrdersList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersOrdersList<TData = Awaited<ReturnType<typeof suppliersOrdersList>>, TError = unknown>(
- params?: SuppliersOrdersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersOrdersList<
+  TData = Awaited<ReturnType<typeof suppliersOrdersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersOrdersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersOrdersList>>,
           TError,
           Awaited<ReturnType<typeof suppliersOrdersList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersOrdersList<TData = Awaited<ReturnType<typeof suppliersOrdersList>>, TError = unknown>(
- params?: SuppliersOrdersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSuppliersOrdersList<TData = Awaited<ReturnType<typeof suppliersOrdersList>>, TError = unknown>(
- params?: SuppliersOrdersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuppliersOrdersListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersOrdersList<
+  TData = Awaited<ReturnType<typeof suppliersOrdersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersOrdersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSuppliersOrdersList<
+  TData = Awaited<ReturnType<typeof suppliersOrdersList>>,
+  TError = unknown,
+>(
+  params?: SuppliersOrdersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersOrdersListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type suppliersOrdersCreateResponse201 = {
   data: CommandeFournisseur
   status: 201
 }
 
-export type suppliersOrdersCreateResponseSuccess = (suppliersOrdersCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type suppliersOrdersCreateResponse = (suppliersOrdersCreateResponseSuccess)
+export type suppliersOrdersCreateResponseSuccess =
+  suppliersOrdersCreateResponse201 & {
+    headers: Headers
+  }
+export type suppliersOrdersCreateResponse = suppliersOrdersCreateResponseSuccess
 
 export const getSuppliersOrdersCreateUrl = () => {
-
-
-
-
   return `/api/suppliers/orders/`
 }
 
-export const suppliersOrdersCreate = async (commandeFournisseurRequest?: CommandeFournisseurRequest, options?: RequestInit): Promise<suppliersOrdersCreateResponse> => {
-
-  return kyMutator<suppliersOrdersCreateResponse>(getSuppliersOrdersCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeFournisseurRequest,)
-  }
-);}
-
-
-
-
-export const getSuppliersOrdersCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersCreate>>, TError,{data?: CommandeFournisseurRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersCreate>>, TError,{data?: CommandeFournisseurRequest}, TContext> => {
-
-const mutationKey = ['suppliersOrdersCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersOrdersCreate>>, {data?: CommandeFournisseurRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  suppliersOrdersCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersOrdersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersOrdersCreate>>>
-    export type SuppliersOrdersCreateMutationBody = CommandeFournisseurRequest | undefined
-    export type SuppliersOrdersCreateMutationError = unknown
-
-    export const useSuppliersOrdersCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersCreate>>, TError,{data?: CommandeFournisseurRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersOrdersCreate>>,
-        TError,
-        {data?: CommandeFournisseurRequest},
-        TContext
-      > => {
-      return useMutation(getSuppliersOrdersCreateMutationOptions(options), queryClient);
+export const suppliersOrdersCreate = async (
+  commandeFournisseurRequest?: CommandeFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersOrdersCreateResponse> => {
+  return kyMutator<suppliersOrdersCreateResponse>(
+    getSuppliersOrdersCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(commandeFournisseurRequest),
     }
-    export type suppliersOrdersRetrieveResponse200 = {
+  )
+}
+
+export const getSuppliersOrdersCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersOrdersCreate>>,
+    TError,
+    { data?: CommandeFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersOrdersCreate>>,
+  TError,
+  { data?: CommandeFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersOrdersCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersOrdersCreate>>,
+    { data?: CommandeFournisseurRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return suppliersOrdersCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersOrdersCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersOrdersCreate>>
+>
+export type SuppliersOrdersCreateMutationBody =
+  | CommandeFournisseurRequest
+  | undefined
+export type SuppliersOrdersCreateMutationError = unknown
+
+export const useSuppliersOrdersCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersOrdersCreate>>,
+      TError,
+      { data?: CommandeFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersOrdersCreate>>,
+  TError,
+  { data?: CommandeFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersOrdersCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersOrdersRetrieveResponse200 = {
   data: CommandeFournisseur
   status: 200
 }
 
-export type suppliersOrdersRetrieveResponseSuccess = (suppliersOrdersRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersOrdersRetrieveResponseSuccess =
+  suppliersOrdersRetrieveResponse200 & {
+    headers: Headers
+  }
+export type suppliersOrdersRetrieveResponse =
+  suppliersOrdersRetrieveResponseSuccess
 
-export type suppliersOrdersRetrieveResponse = (suppliersOrdersRetrieveResponseSuccess)
-
-export const getSuppliersOrdersRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersOrdersRetrieveUrl = (id: number) => {
   return `/api/suppliers/orders/${id}/`
 }
 
-export const suppliersOrdersRetrieve = async (id: number, options?: RequestInit): Promise<suppliersOrdersRetrieveResponse> => {
-
-  return kyMutator<suppliersOrdersRetrieveResponse>(getSuppliersOrdersRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSuppliersOrdersRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/suppliers/orders/${id}/`
-    ] as const;
+export const suppliersOrdersRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersOrdersRetrieveResponse> => {
+  return kyMutator<suppliersOrdersRetrieveResponse>(
+    getSuppliersOrdersRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getSuppliersOrdersRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuppliersOrdersRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>> = ({ signal }) => suppliersOrdersRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type SuppliersOrdersRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>>
+export const getSuppliersOrdersRetrieveQueryKey = (id: number) => {
+  return [`/api/suppliers/orders/${id}/`] as const
+}
+
+export const getSuppliersOrdersRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSuppliersOrdersRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof suppliersOrdersRetrieve>>
+  > = ({ signal }) => suppliersOrdersRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuppliersOrdersRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersOrdersRetrieve>>
+>
 export type SuppliersOrdersRetrieveQueryError = unknown
 
-
-export function useSuppliersOrdersRetrieve<TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError, TData>> & Pick<
+export function useSuppliersOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
           TError,
           Awaited<ReturnType<typeof suppliersOrdersRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersOrdersRetrieve<TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
           TError,
           Awaited<ReturnType<typeof suppliersOrdersRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuppliersOrdersRetrieve<TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSuppliersOrdersRetrieve<TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suppliersOrdersRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuppliersOrdersRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSuppliersOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSuppliersOrdersRetrieve<
+  TData = Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof suppliersOrdersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSuppliersOrdersRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type suppliersOrdersUpdateResponse200 = {
   data: CommandeFournisseur
   status: 200
 }
 
-export type suppliersOrdersUpdateResponseSuccess = (suppliersOrdersUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersOrdersUpdateResponseSuccess =
+  suppliersOrdersUpdateResponse200 & {
+    headers: Headers
+  }
+export type suppliersOrdersUpdateResponse = suppliersOrdersUpdateResponseSuccess
 
-export type suppliersOrdersUpdateResponse = (suppliersOrdersUpdateResponseSuccess)
-
-export const getSuppliersOrdersUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersOrdersUpdateUrl = (id: number) => {
   return `/api/suppliers/orders/${id}/`
 }
 
-export const suppliersOrdersUpdate = async (id: number,
-    commandeFournisseurRequest?: CommandeFournisseurRequest, options?: RequestInit): Promise<suppliersOrdersUpdateResponse> => {
-
-  return kyMutator<suppliersOrdersUpdateResponse>(getSuppliersOrdersUpdateUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      commandeFournisseurRequest,)
-  }
-);}
-
-
-
-
-export const getSuppliersOrdersUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersUpdate>>, TError,{id: number;data?: CommandeFournisseurRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersUpdate>>, TError,{id: number;data?: CommandeFournisseurRequest}, TContext> => {
-
-const mutationKey = ['suppliersOrdersUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersOrdersUpdate>>, {id: number;data?: CommandeFournisseurRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  suppliersOrdersUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersOrdersUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersOrdersUpdate>>>
-    export type SuppliersOrdersUpdateMutationBody = CommandeFournisseurRequest | undefined
-    export type SuppliersOrdersUpdateMutationError = unknown
-
-    export const useSuppliersOrdersUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersUpdate>>, TError,{id: number;data?: CommandeFournisseurRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersOrdersUpdate>>,
-        TError,
-        {id: number;data?: CommandeFournisseurRequest},
-        TContext
-      > => {
-      return useMutation(getSuppliersOrdersUpdateMutationOptions(options), queryClient);
+export const suppliersOrdersUpdate = async (
+  id: number,
+  commandeFournisseurRequest?: CommandeFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersOrdersUpdateResponse> => {
+  return kyMutator<suppliersOrdersUpdateResponse>(
+    getSuppliersOrdersUpdateUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(commandeFournisseurRequest),
     }
-    export type suppliersOrdersPartialUpdateResponse200 = {
+  )
+}
+
+export const getSuppliersOrdersUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersOrdersUpdate>>,
+    TError,
+    { id: number; data?: CommandeFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersOrdersUpdate>>,
+  TError,
+  { id: number; data?: CommandeFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersOrdersUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersOrdersUpdate>>,
+    { id: number; data?: CommandeFournisseurRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return suppliersOrdersUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersOrdersUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersOrdersUpdate>>
+>
+export type SuppliersOrdersUpdateMutationBody =
+  | CommandeFournisseurRequest
+  | undefined
+export type SuppliersOrdersUpdateMutationError = unknown
+
+export const useSuppliersOrdersUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersOrdersUpdate>>,
+      TError,
+      { id: number; data?: CommandeFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersOrdersUpdate>>,
+  TError,
+  { id: number; data?: CommandeFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersOrdersUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersOrdersPartialUpdateResponse200 = {
   data: CommandeFournisseur
   status: 200
 }
 
-export type suppliersOrdersPartialUpdateResponseSuccess = (suppliersOrdersPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type suppliersOrdersPartialUpdateResponseSuccess =
+  suppliersOrdersPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type suppliersOrdersPartialUpdateResponse =
+  suppliersOrdersPartialUpdateResponseSuccess
 
-export type suppliersOrdersPartialUpdateResponse = (suppliersOrdersPartialUpdateResponseSuccess)
-
-export const getSuppliersOrdersPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersOrdersPartialUpdateUrl = (id: number) => {
   return `/api/suppliers/orders/${id}/`
 }
 
-export const suppliersOrdersPartialUpdate = async (id: number,
-    patchedCommandeFournisseurRequest?: PatchedCommandeFournisseurRequest, options?: RequestInit): Promise<suppliersOrdersPartialUpdateResponse> => {
-
-  return kyMutator<suppliersOrdersPartialUpdateResponse>(getSuppliersOrdersPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedCommandeFournisseurRequest,)
-  }
-);}
-
-
-
-
-export const getSuppliersOrdersPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>, TError,{id: number;data?: PatchedCommandeFournisseurRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>, TError,{id: number;data?: PatchedCommandeFournisseurRequest}, TContext> => {
-
-const mutationKey = ['suppliersOrdersPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>, {id: number;data?: PatchedCommandeFournisseurRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  suppliersOrdersPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersOrdersPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>>
-    export type SuppliersOrdersPartialUpdateMutationBody = PatchedCommandeFournisseurRequest | undefined
-    export type SuppliersOrdersPartialUpdateMutationError = unknown
-
-    export const useSuppliersOrdersPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>, TError,{id: number;data?: PatchedCommandeFournisseurRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedCommandeFournisseurRequest},
-        TContext
-      > => {
-      return useMutation(getSuppliersOrdersPartialUpdateMutationOptions(options), queryClient);
+export const suppliersOrdersPartialUpdate = async (
+  id: number,
+  patchedCommandeFournisseurRequest?: PatchedCommandeFournisseurRequest,
+  options?: RequestInit
+): Promise<suppliersOrdersPartialUpdateResponse> => {
+  return kyMutator<suppliersOrdersPartialUpdateResponse>(
+    getSuppliersOrdersPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedCommandeFournisseurRequest),
     }
-    export type suppliersOrdersDestroyResponse204 = {
+  )
+}
+
+export const getSuppliersOrdersPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedCommandeFournisseurRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedCommandeFournisseurRequest },
+  TContext
+> => {
+  const mutationKey = ["suppliersOrdersPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>,
+    { id: number; data?: PatchedCommandeFournisseurRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return suppliersOrdersPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersOrdersPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>
+>
+export type SuppliersOrdersPartialUpdateMutationBody =
+  | PatchedCommandeFournisseurRequest
+  | undefined
+export type SuppliersOrdersPartialUpdateMutationError = unknown
+
+export const useSuppliersOrdersPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedCommandeFournisseurRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersOrdersPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedCommandeFournisseurRequest },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersOrdersPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type suppliersOrdersDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type suppliersOrdersDestroyResponseSuccess = (suppliersOrdersDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type suppliersOrdersDestroyResponseSuccess =
+  suppliersOrdersDestroyResponse204 & {
+    headers: Headers
+  }
+export type suppliersOrdersDestroyResponse =
+  suppliersOrdersDestroyResponseSuccess
 
-export type suppliersOrdersDestroyResponse = (suppliersOrdersDestroyResponseSuccess)
-
-export const getSuppliersOrdersDestroyUrl = (id: number,) => {
-
-
-
-
+export const getSuppliersOrdersDestroyUrl = (id: number) => {
   return `/api/suppliers/orders/${id}/`
 }
 
-export const suppliersOrdersDestroy = async (id: number, options?: RequestInit): Promise<suppliersOrdersDestroyResponse> => {
-
-  return kyMutator<suppliersOrdersDestroyResponse>(getSuppliersOrdersDestroyUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getSuppliersOrdersDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['suppliersOrdersDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suppliersOrdersDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  suppliersOrdersDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuppliersOrdersDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof suppliersOrdersDestroy>>>
-
-    export type SuppliersOrdersDestroyMutationError = unknown
-
-    export const useSuppliersOrdersDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suppliersOrdersDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof suppliersOrdersDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getSuppliersOrdersDestroyMutationOptions(options), queryClient);
+export const suppliersOrdersDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<suppliersOrdersDestroyResponse> => {
+  return kyMutator<suppliersOrdersDestroyResponse>(
+    getSuppliersOrdersDestroyUrl(id),
+    {
+      ...options,
+      method: "DELETE",
     }
+  )
+}
+
+export const getSuppliersOrdersDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suppliersOrdersDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suppliersOrdersDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["suppliersOrdersDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suppliersOrdersDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return suppliersOrdersDestroy(id)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SuppliersOrdersDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suppliersOrdersDestroy>>
+>
+
+export type SuppliersOrdersDestroyMutationError = unknown
+
+export const useSuppliersOrdersDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suppliersOrdersDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof suppliersOrdersDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getSuppliersOrdersDestroyMutationOptions(options),
+    queryClient
+  )
+}

@@ -3,22 +3,32 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import type { Salle } from './salle';
-import type { Table } from './table';
+import type { Allergen } from "./allergen"
+import type { DietType } from "./dietType"
 
 export interface Reservation {
-  readonly id: number;
+  readonly id: number
   /** @maxLength 200 */
-  client_name: string;
-  party_size: number;
-  datetime: string;
+  client_name: string
+  party_size: number
+  datetime: string
   /** @maxLength 20 */
-  phone_number?: string;
-  readonly salle: Salle;
-  salle_id: number;
-  readonly table: Table;
+  phone_number?: string
+  salle_id: number
   /** @nullable */
-  table_id?: number | null;
+  table_id?: number | null
+  /** @nullable */
+  note_serveur?: string | null
+  /** @nullable */
+  note_client?: string | null
+  /** @nullable */
+  allergie?: string | null
+  allergy_ids?: number[]
+  diet_type_ids?: number[]
+  readonly allergies: readonly Allergen[]
+  readonly diet_types: readonly DietType[]
 }

@@ -3,11 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -17,19 +17,16 @@ import type {
   QueryKey,
   UndefinedInitialDataOptions,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   EmployeesStatusError,
   EmployeesStatusListParams,
-  EmployeesStatusResponse
-} from '../../schemas';
+  EmployeesStatusResponse,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type employeesStatusListResponse200 = {
   data: EmployeesStatusResponse[]
@@ -41,116 +38,190 @@ export type employeesStatusListResponse400 = {
   status: 400
 }
 
-export type employeesStatusListResponseSuccess = (employeesStatusListResponse200) & {
-  headers: Headers;
-};
-export type employeesStatusListResponseError = (employeesStatusListResponse400) & {
-  headers: Headers;
-};
+export type employeesStatusListResponseSuccess =
+  employeesStatusListResponse200 & {
+    headers: Headers
+  }
+export type employeesStatusListResponseError =
+  employeesStatusListResponse400 & {
+    headers: Headers
+  }
 
-export type employeesStatusListResponse = (employeesStatusListResponseSuccess | employeesStatusListResponseError)
+export type employeesStatusListResponse =
+  | employeesStatusListResponseSuccess
+  | employeesStatusListResponseError
 
-export const getEmployeesStatusListUrl = (params?: EmployeesStatusListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getEmployeesStatusListUrl = (
+  params?: EmployeesStatusListParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/employees/status/?${stringifiedParams}` : `/api/employees/status/`
+  return stringifiedParams.length > 0
+    ? `/api/employees/status/?${stringifiedParams}`
+    : `/api/employees/status/`
 }
 
 /**
  * GET /api/employees/status?restaurant_id=X&date=YYYY-MM-DD
  */
-export const employeesStatusList = async (params?: EmployeesStatusListParams, options?: RequestInit): Promise<employeesStatusListResponse> => {
-
-  return kyMutator<employeesStatusListResponse>(getEmployeesStatusListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getEmployeesStatusListQueryKey = (params?: EmployeesStatusListParams,) => {
-    return [
-    `/api/employees/status/`, ...(params ? [params] : [])
-    ] as const;
+export const employeesStatusList = async (
+  params?: EmployeesStatusListParams,
+  options?: RequestInit
+): Promise<employeesStatusListResponse> => {
+  return kyMutator<employeesStatusListResponse>(
+    getEmployeesStatusListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getEmployeesStatusListQueryOptions = <TData = Awaited<ReturnType<typeof employeesStatusList>>, TError = EmployeesStatusError>(params?: EmployeesStatusListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof employeesStatusList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEmployeesStatusListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof employeesStatusList>>> = ({ signal }) => employeesStatusList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof employeesStatusList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type EmployeesStatusListQueryResult = NonNullable<Awaited<ReturnType<typeof employeesStatusList>>>
+export const getEmployeesStatusListQueryKey = (
+  params?: EmployeesStatusListParams
+) => {
+  return [`/api/employees/status/`, ...(params ? [params] : [])] as const
+}
+
+export const getEmployeesStatusListQueryOptions = <
+  TData = Awaited<ReturnType<typeof employeesStatusList>>,
+  TError = EmployeesStatusError,
+>(
+  params?: EmployeesStatusListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof employeesStatusList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getEmployeesStatusListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof employeesStatusList>>
+  > = ({ signal }) => employeesStatusList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof employeesStatusList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type EmployeesStatusListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof employeesStatusList>>
+>
 export type EmployeesStatusListQueryError = EmployeesStatusError
 
-
-export function useEmployeesStatusList<TData = Awaited<ReturnType<typeof employeesStatusList>>, TError = EmployeesStatusError>(
- params: undefined |  EmployeesStatusListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof employeesStatusList>>, TError, TData>> & Pick<
+export function useEmployeesStatusList<
+  TData = Awaited<ReturnType<typeof employeesStatusList>>,
+  TError = EmployeesStatusError,
+>(
+  params: undefined | EmployeesStatusListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof employeesStatusList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof employeesStatusList>>,
           TError,
           Awaited<ReturnType<typeof employeesStatusList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEmployeesStatusList<TData = Awaited<ReturnType<typeof employeesStatusList>>, TError = EmployeesStatusError>(
- params?: EmployeesStatusListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof employeesStatusList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useEmployeesStatusList<
+  TData = Awaited<ReturnType<typeof employeesStatusList>>,
+  TError = EmployeesStatusError,
+>(
+  params?: EmployeesStatusListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof employeesStatusList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof employeesStatusList>>,
           TError,
           Awaited<ReturnType<typeof employeesStatusList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEmployeesStatusList<TData = Awaited<ReturnType<typeof employeesStatusList>>, TError = EmployeesStatusError>(
- params?: EmployeesStatusListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof employeesStatusList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEmployeesStatusList<TData = Awaited<ReturnType<typeof employeesStatusList>>, TError = EmployeesStatusError>(
- params?: EmployeesStatusListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof employeesStatusList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEmployeesStatusListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useEmployeesStatusList<
+  TData = Awaited<ReturnType<typeof employeesStatusList>>,
+  TError = EmployeesStatusError,
+>(
+  params?: EmployeesStatusListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof employeesStatusList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useEmployeesStatusList<
+  TData = Awaited<ReturnType<typeof employeesStatusList>>,
+  TError = EmployeesStatusError,
+>(
+  params?: EmployeesStatusListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof employeesStatusList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getEmployeesStatusListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}

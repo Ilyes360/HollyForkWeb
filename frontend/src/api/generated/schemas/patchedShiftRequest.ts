@@ -3,14 +3,23 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
+import type { TypeShiftEnum } from "./typeShiftEnum"
 
+/**
+ * Entrée/sortie JSON : employe_id, restaurant_id, start_date, end_date, type_shift, notes.
+En interne, DRF place dans validated_data les clés du `source` (employe, restaurant,
+date_debut, date_fin, type_shift) : le create/update par défaut du ModelSerializer suffit.
+ */
 export interface PatchedShiftRequest {
-  employe_id?: number;
-  restaurant_id?: number;
-  start_date?: string;
-  end_date?: string;
-  shift_type?: string;
-  notes?: string;
+  employe_id?: number
+  restaurant_id?: number
+  start_date?: string
+  end_date?: string
+  type_shift?: TypeShiftEnum
+  /** @nullable */
+  notes?: string | null
 }

@@ -3,105 +3,290 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  faker
-} from '@faker-js/faker';
+import { faker } from "@faker-js/faker"
 
-import {
-  HttpResponse,
-  http
-} from 'msw';
-import type {
-  RequestHandlerOptions
-} from 'msw';
+import { HttpResponse, http } from "msw"
+import type { RequestHandlerOptions } from "msw"
 
 import type {
   CategorieArticle,
-  PaginatedCategorieArticleList
-} from '../../schemas';
+  PaginatedCategorieArticleList,
+} from "../../schemas"
 
+export const getCategoriesListResponseMock = (
+  overrideResponse: Partial<Extract<PaginatedCategorieArticleList, object>> = {}
+): PaginatedCategorieArticleList => ({
+  count: faker.number.int(),
+  next: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  previous: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.url(), null]),
+    undefined,
+  ]),
+  results: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    name: faker.string.alpha({ length: { min: 10, max: 50 } }),
+    display_order: faker.number.int(),
+    description: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+    icon: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      undefined,
+    ]),
+  })),
+  ...overrideResponse,
+})
 
-export const getCategoriesListResponseMock = (overrideResponse: Partial<Extract<PaginatedCategorieArticleList, object>> = {}): PaginatedCategorieArticleList => ({count: faker.number.int(), next: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), previous: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.internet.url(), null]), undefined]), results: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])})), ...overrideResponse})
+export const getCategoriesCreateResponseMock = (
+  overrideResponse: Partial<Extract<CategorieArticle, object>> = {}
+): CategorieArticle => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 50 } }),
+  display_order: faker.number.int(),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  icon: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getCategoriesCreateResponseMock = (overrideResponse: Partial<Extract<CategorieArticle, object>> = {}): CategorieArticle => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
+export const getCategoriesRetrieveResponseMock = (
+  overrideResponse: Partial<Extract<CategorieArticle, object>> = {}
+): CategorieArticle => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 50 } }),
+  display_order: faker.number.int(),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  icon: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getCategoriesRetrieveResponseMock = (overrideResponse: Partial<Extract<CategorieArticle, object>> = {}): CategorieArticle => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
+export const getCategoriesUpdateResponseMock = (
+  overrideResponse: Partial<Extract<CategorieArticle, object>> = {}
+): CategorieArticle => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 50 } }),
+  display_order: faker.number.int(),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  icon: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getCategoriesUpdateResponseMock = (overrideResponse: Partial<Extract<CategorieArticle, object>> = {}): CategorieArticle => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
+export const getCategoriesPartialUpdateResponseMock = (
+  overrideResponse: Partial<Extract<CategorieArticle, object>> = {}
+): CategorieArticle => ({
+  id: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 50 } }),
+  display_order: faker.number.int(),
+  description: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  icon: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    undefined,
+  ]),
+  ...overrideResponse,
+})
 
-export const getCategoriesPartialUpdateResponseMock = (overrideResponse: Partial<Extract<CategorieArticle, object>> = {}): CategorieArticle => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 50}}), display_order: faker.number.int(), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
-
-
-export const getCategoriesListMockHandler = (overrideResponse?: PaginatedCategorieArticleList | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PaginatedCategorieArticleList> | PaginatedCategorieArticleList), options?: RequestHandlerOptions) => {
-  return http.get('*/api/categories/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCategoriesListResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getCategoriesListMockHandler = (
+  overrideResponse?:
+    | PaginatedCategorieArticleList
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) =>
+        | Promise<PaginatedCategorieArticleList>
+        | PaginatedCategorieArticleList),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/categories/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCategoriesListResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getCategoriesCreateMockHandler = (overrideResponse?: CategorieArticle | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CategorieArticle> | CategorieArticle), options?: RequestHandlerOptions) => {
-  return http.post('*/api/categories/', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCategoriesCreateResponseMock(),
-      { status: 201
-      })
-  }, options)
+export const getCategoriesCreateMockHandler = (
+  overrideResponse?:
+    | CategorieArticle
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<CategorieArticle> | CategorieArticle),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/categories/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCategoriesCreateResponseMock(),
+        { status: 201 }
+      )
+    },
+    options
+  )
 }
 
-export const getCategoriesRetrieveMockHandler = (overrideResponse?: CategorieArticle | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<CategorieArticle> | CategorieArticle), options?: RequestHandlerOptions) => {
-  return http.get('*/api/categories/:id/', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCategoriesRetrieveResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getCategoriesRetrieveMockHandler = (
+  overrideResponse?:
+    | CategorieArticle
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0]
+      ) => Promise<CategorieArticle> | CategorieArticle),
+  options?: RequestHandlerOptions
+) => {
+  return http.get(
+    "*/api/categories/:id/",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCategoriesRetrieveResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getCategoriesUpdateMockHandler = (overrideResponse?: CategorieArticle | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<CategorieArticle> | CategorieArticle), options?: RequestHandlerOptions) => {
-  return http.put('*/api/categories/:id/', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCategoriesUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getCategoriesUpdateMockHandler = (
+  overrideResponse?:
+    | CategorieArticle
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0]
+      ) => Promise<CategorieArticle> | CategorieArticle),
+  options?: RequestHandlerOptions
+) => {
+  return http.put(
+    "*/api/categories/:id/",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCategoriesUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getCategoriesPartialUpdateMockHandler = (overrideResponse?: CategorieArticle | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<CategorieArticle> | CategorieArticle), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/categories/:id/', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCategoriesPartialUpdateResponseMock(),
-      { status: 200
-      })
-  }, options)
+export const getCategoriesPartialUpdateMockHandler = (
+  overrideResponse?:
+    | CategorieArticle
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0]
+      ) => Promise<CategorieArticle> | CategorieArticle),
+  options?: RequestHandlerOptions
+) => {
+  return http.patch(
+    "*/api/categories/:id/",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCategoriesPartialUpdateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
 }
 
-export const getCategoriesDestroyMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/categories/:id/', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+export const getCategoriesDestroyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.delete(
+    "*/api/categories/:id/",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
 
-    return new HttpResponse(null,
-      { status: 204
-      })
-  }, options)
+      return new HttpResponse(null, { status: 204 })
+    },
+    options
+  )
 }
 export const getCategoriesMock = () => [
   getCategoriesListMockHandler(),
@@ -109,5 +294,5 @@ export const getCategoriesMock = () => [
   getCategoriesRetrieveMockHandler(),
   getCategoriesUpdateMockHandler(),
   getCategoriesPartialUpdateMockHandler(),
-  getCategoriesDestroyMockHandler()
+  getCategoriesDestroyMockHandler(),
 ]

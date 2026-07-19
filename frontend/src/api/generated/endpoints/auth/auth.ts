@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,8 +20,8 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   AuthRestaurantEmployeesRetrieveParams,
@@ -30,6 +29,7 @@ import type {
   DeviceLoginRequest,
   DeviceLoginResponse,
   DeviceLoginValidationErrors,
+  HealthCheckResponse,
   LoginResponse,
   LoginValidationErrors,
   LogoutResponse,
@@ -49,31 +49,23 @@ import type {
   TokenRefreshRequest,
   UserProfile,
   UserRegistrationRequest,
-  UsernamePasswordLoginRequest
-} from '../../schemas';
+  UsernamePasswordLoginRequest,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type authCsrfTokenRetrieveResponse200 = {
   data: CsrfTokenResponse
   status: 200
 }
 
-export type authCsrfTokenRetrieveResponseSuccess = (authCsrfTokenRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type authCsrfTokenRetrieveResponse = (authCsrfTokenRetrieveResponseSuccess)
+export type authCsrfTokenRetrieveResponseSuccess =
+  authCsrfTokenRetrieveResponse200 & {
+    headers: Headers
+  }
+export type authCsrfTokenRetrieveResponse = authCsrfTokenRetrieveResponseSuccess
 
 export const getAuthCsrfTokenRetrieveUrl = () => {
-
-
-
-
   return `/api/auth/csrf-token/`
 }
 
@@ -81,91 +73,148 @@ export const getAuthCsrfTokenRetrieveUrl = () => {
  * Récupération du token CSRF.
 Aucune authentification utilisateur requise.
  */
-export const authCsrfTokenRetrieve = async ( options?: RequestInit): Promise<authCsrfTokenRetrieveResponse> => {
-
-  return kyMutator<authCsrfTokenRetrieveResponse>(getAuthCsrfTokenRetrieveUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getAuthCsrfTokenRetrieveQueryKey = () => {
-    return [
-    `/api/auth/csrf-token/`
-    ] as const;
+export const authCsrfTokenRetrieve = async (
+  options?: RequestInit
+): Promise<authCsrfTokenRetrieveResponse> => {
+  return kyMutator<authCsrfTokenRetrieveResponse>(
+    getAuthCsrfTokenRetrieveUrl(),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getAuthCsrfTokenRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAuthCsrfTokenRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>> = ({ signal }) => authCsrfTokenRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type AuthCsrfTokenRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>>
+export const getAuthCsrfTokenRetrieveQueryKey = () => {
+  return [`/api/auth/csrf-token/`] as const
+}
+
+export const getAuthCsrfTokenRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getAuthCsrfTokenRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof authCsrfTokenRetrieve>>
+  > = ({ signal }) => authCsrfTokenRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AuthCsrfTokenRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authCsrfTokenRetrieve>>
+>
 export type AuthCsrfTokenRetrieveQueryError = unknown
 
-
-export function useAuthCsrfTokenRetrieve<TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError, TData>> & Pick<
+export function useAuthCsrfTokenRetrieve<
+  TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
           TError,
           Awaited<ReturnType<typeof authCsrfTokenRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthCsrfTokenRetrieve<TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthCsrfTokenRetrieve<
+  TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
           TError,
           Awaited<ReturnType<typeof authCsrfTokenRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthCsrfTokenRetrieve<TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAuthCsrfTokenRetrieve<TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authCsrfTokenRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAuthCsrfTokenRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthCsrfTokenRetrieve<
+  TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useAuthCsrfTokenRetrieve<
+  TData = Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authCsrfTokenRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getAuthCsrfTokenRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type authDeviceLoginCreateResponse200 = {
   data: DeviceLoginResponse
@@ -177,20 +226,20 @@ export type authDeviceLoginCreateResponse400 = {
   status: 400
 }
 
-export type authDeviceLoginCreateResponseSuccess = (authDeviceLoginCreateResponse200) & {
-  headers: Headers;
-};
-export type authDeviceLoginCreateResponseError = (authDeviceLoginCreateResponse400) & {
-  headers: Headers;
-};
+export type authDeviceLoginCreateResponseSuccess =
+  authDeviceLoginCreateResponse200 & {
+    headers: Headers
+  }
+export type authDeviceLoginCreateResponseError =
+  authDeviceLoginCreateResponse400 & {
+    headers: Headers
+  }
 
-export type authDeviceLoginCreateResponse = (authDeviceLoginCreateResponseSuccess | authDeviceLoginCreateResponseError)
+export type authDeviceLoginCreateResponse =
+  | authDeviceLoginCreateResponseSuccess
+  | authDeviceLoginCreateResponseError
 
 export const getAuthDeviceLoginCreateUrl = () => {
-
-
-
-
   return `/api/auth/device-login/`
 }
 
@@ -199,63 +248,248 @@ export const getAuthDeviceLoginCreateUrl = () => {
 Première étape : ID Restaurant + PIN Restaurant → Device Token
 Aucune authentification utilisateur requise.
  */
-export const authDeviceLoginCreate = async (deviceLoginRequest: DeviceLoginRequest, options?: RequestInit): Promise<authDeviceLoginCreateResponse> => {
-
-  return kyMutator<authDeviceLoginCreateResponse>(getAuthDeviceLoginCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      deviceLoginRequest,)
-  }
-);}
-
-
-
-
-export const getAuthDeviceLoginCreateMutationOptions = <TError = DeviceLoginValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authDeviceLoginCreate>>, TError,{data: DeviceLoginRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authDeviceLoginCreate>>, TError,{data: DeviceLoginRequest}, TContext> => {
-
-const mutationKey = ['authDeviceLoginCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authDeviceLoginCreate>>, {data: DeviceLoginRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authDeviceLoginCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthDeviceLoginCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authDeviceLoginCreate>>>
-    export type AuthDeviceLoginCreateMutationBody = DeviceLoginRequest
-    export type AuthDeviceLoginCreateMutationError = DeviceLoginValidationErrors
-
-    export const useAuthDeviceLoginCreate = <TError = DeviceLoginValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authDeviceLoginCreate>>, TError,{data: DeviceLoginRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authDeviceLoginCreate>>,
-        TError,
-        {data: DeviceLoginRequest},
-        TContext
-      > => {
-      return useMutation(getAuthDeviceLoginCreateMutationOptions(options), queryClient);
+export const authDeviceLoginCreate = async (
+  deviceLoginRequest: DeviceLoginRequest,
+  options?: RequestInit
+): Promise<authDeviceLoginCreateResponse> => {
+  return kyMutator<authDeviceLoginCreateResponse>(
+    getAuthDeviceLoginCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(deviceLoginRequest),
     }
-    export type authLoginCreateResponse200 = {
+  )
+}
+
+export const getAuthDeviceLoginCreateMutationOptions = <
+  TError = DeviceLoginValidationErrors,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authDeviceLoginCreate>>,
+    TError,
+    { data: DeviceLoginRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authDeviceLoginCreate>>,
+  TError,
+  { data: DeviceLoginRequest },
+  TContext
+> => {
+  const mutationKey = ["authDeviceLoginCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authDeviceLoginCreate>>,
+    { data: DeviceLoginRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return authDeviceLoginCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type AuthDeviceLoginCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authDeviceLoginCreate>>
+>
+export type AuthDeviceLoginCreateMutationBody = DeviceLoginRequest
+export type AuthDeviceLoginCreateMutationError = DeviceLoginValidationErrors
+
+export const useAuthDeviceLoginCreate = <
+  TError = DeviceLoginValidationErrors,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authDeviceLoginCreate>>,
+      TError,
+      { data: DeviceLoginRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authDeviceLoginCreate>>,
+  TError,
+  { data: DeviceLoginRequest },
+  TContext
+> => {
+  return useMutation(
+    getAuthDeviceLoginCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type authHealthRetrieveResponse200 = {
+  data: HealthCheckResponse
+  status: 200
+}
+
+export type authHealthRetrieveResponseSuccess =
+  authHealthRetrieveResponse200 & {
+    headers: Headers
+  }
+export type authHealthRetrieveResponse = authHealthRetrieveResponseSuccess
+
+export const getAuthHealthRetrieveUrl = () => {
+  return `/api/auth/health/`
+}
+
+/**
+ * Endpoint de health check simple pour le monitoring.
+Ne nécessite pas d'authentification et renvoie toujours 200 par défaut.
+ */
+export const authHealthRetrieve = async (
+  options?: RequestInit
+): Promise<authHealthRetrieveResponse> => {
+  return kyMutator<authHealthRetrieveResponse>(getAuthHealthRetrieveUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getAuthHealthRetrieveQueryKey = () => {
+  return [`/api/auth/health/`] as const
+}
+
+export const getAuthHealthRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof authHealthRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof authHealthRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getAuthHealthRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof authHealthRetrieve>>
+  > = ({ signal }) => authHealthRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authHealthRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AuthHealthRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authHealthRetrieve>>
+>
+export type AuthHealthRetrieveQueryError = unknown
+
+export function useAuthHealthRetrieve<
+  TData = Awaited<ReturnType<typeof authHealthRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authHealthRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof authHealthRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof authHealthRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthHealthRetrieve<
+  TData = Awaited<ReturnType<typeof authHealthRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authHealthRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof authHealthRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof authHealthRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthHealthRetrieve<
+  TData = Awaited<ReturnType<typeof authHealthRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authHealthRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useAuthHealthRetrieve<
+  TData = Awaited<ReturnType<typeof authHealthRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authHealthRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getAuthHealthRetrieveQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type authLoginCreateResponse200 = {
   data: LoginResponse
   status: 200
 }
@@ -265,20 +499,18 @@ export type authLoginCreateResponse400 = {
   status: 400
 }
 
-export type authLoginCreateResponseSuccess = (authLoginCreateResponse200) & {
-  headers: Headers;
-};
-export type authLoginCreateResponseError = (authLoginCreateResponse400) & {
-  headers: Headers;
-};
+export type authLoginCreateResponseSuccess = authLoginCreateResponse200 & {
+  headers: Headers
+}
+export type authLoginCreateResponseError = authLoginCreateResponse400 & {
+  headers: Headers
+}
 
-export type authLoginCreateResponse = (authLoginCreateResponseSuccess | authLoginCreateResponseError)
+export type authLoginCreateResponse =
+  | authLoginCreateResponseSuccess
+  | authLoginCreateResponseError
 
 export const getAuthLoginCreateUrl = () => {
-
-
-
-
   return `/api/auth/login/`
 }
 
@@ -286,248 +518,324 @@ export const getAuthLoginCreateUrl = () => {
  * Authentification classique par username + password → tokens JWT.
 Ne nécessite pas de device_token ni de PIN.
  */
-export const authLoginCreate = async (usernamePasswordLoginRequest: UsernamePasswordLoginRequest, options?: RequestInit): Promise<authLoginCreateResponse> => {
-
-  return kyMutator<authLoginCreateResponse>(getAuthLoginCreateUrl(),
-  {
+export const authLoginCreate = async (
+  usernamePasswordLoginRequest: UsernamePasswordLoginRequest,
+  options?: RequestInit
+): Promise<authLoginCreateResponse> => {
+  return kyMutator<authLoginCreateResponse>(getAuthLoginCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      usernamePasswordLoginRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(usernamePasswordLoginRequest),
+  })
+}
+
+export const getAuthLoginCreateMutationOptions = <
+  TError = LoginValidationErrors,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authLoginCreate>>,
+    TError,
+    { data: UsernamePasswordLoginRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authLoginCreate>>,
+  TError,
+  { data: UsernamePasswordLoginRequest },
+  TContext
+> => {
+  const mutationKey = ["authLoginCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authLoginCreate>>,
+    { data: UsernamePasswordLoginRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return authLoginCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type AuthLoginCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authLoginCreate>>
+>
+export type AuthLoginCreateMutationBody = UsernamePasswordLoginRequest
+export type AuthLoginCreateMutationError = LoginValidationErrors
 
-
-export const getAuthLoginCreateMutationOptions = <TError = LoginValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLoginCreate>>, TError,{data: UsernamePasswordLoginRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authLoginCreate>>, TError,{data: UsernamePasswordLoginRequest}, TContext> => {
-
-const mutationKey = ['authLoginCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authLoginCreate>>, {data: UsernamePasswordLoginRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authLoginCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthLoginCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authLoginCreate>>>
-    export type AuthLoginCreateMutationBody = UsernamePasswordLoginRequest
-    export type AuthLoginCreateMutationError = LoginValidationErrors
-
-    export const useAuthLoginCreate = <TError = LoginValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLoginCreate>>, TError,{data: UsernamePasswordLoginRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authLoginCreate>>,
-        TError,
-        {data: UsernamePasswordLoginRequest},
-        TContext
-      > => {
-      return useMutation(getAuthLoginCreateMutationOptions(options), queryClient);
-    }
-    export type authLogoutCreateResponse200 = {
+export const useAuthLoginCreate = <
+  TError = LoginValidationErrors,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authLoginCreate>>,
+      TError,
+      { data: UsernamePasswordLoginRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authLoginCreate>>,
+  TError,
+  { data: UsernamePasswordLoginRequest },
+  TContext
+> => {
+  return useMutation(getAuthLoginCreateMutationOptions(options), queryClient)
+}
+export type authLogoutCreateResponse200 = {
   data: LogoutResponse
   status: 200
 }
 
-export type authLogoutCreateResponseSuccess = (authLogoutCreateResponse200) & {
-  headers: Headers;
-};
-;
-
-export type authLogoutCreateResponse = (authLogoutCreateResponseSuccess)
+export type authLogoutCreateResponseSuccess = authLogoutCreateResponse200 & {
+  headers: Headers
+}
+export type authLogoutCreateResponse = authLogoutCreateResponseSuccess
 
 export const getAuthLogoutCreateUrl = () => {
-
-
-
-
   return `/api/auth/logout/`
 }
 
 /**
  * Déconnexion. POST sans body.
  */
-export const authLogoutCreate = async ( options?: RequestInit): Promise<authLogoutCreateResponse> => {
-
-  return kyMutator<authLogoutCreateResponse>(getAuthLogoutCreateUrl(),
-  {
+export const authLogoutCreate = async (
+  options?: RequestInit
+): Promise<authLogoutCreateResponse> => {
+  return kyMutator<authLogoutCreateResponse>(getAuthLogoutCreateUrl(), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  })
+}
 
+export const getAuthLogoutCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authLogoutCreate>>,
+    TError,
+    void,
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authLogoutCreate>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["authLogoutCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authLogoutCreate>>,
+    void
+  > = () => {
+    return authLogoutCreate()
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type AuthLogoutCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authLogoutCreate>>
+>
 
+export type AuthLogoutCreateMutationError = unknown
 
-export const getAuthLogoutCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogoutCreate>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authLogoutCreate>>, TError,void, TContext> => {
-
-const mutationKey = ['authLogoutCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authLogoutCreate>>, void> = () => {
-
-
-          return  authLogoutCreate()
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthLogoutCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authLogoutCreate>>>
-
-    export type AuthLogoutCreateMutationError = unknown
-
-    export const useAuthLogoutCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogoutCreate>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authLogoutCreate>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getAuthLogoutCreateMutationOptions(options), queryClient);
-    }
-    export type authProfileRetrieveResponse200 = {
+export const useAuthLogoutCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authLogoutCreate>>,
+      TError,
+      void,
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authLogoutCreate>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAuthLogoutCreateMutationOptions(options), queryClient)
+}
+export type authProfileRetrieveResponse200 = {
   data: UserProfile
   status: 200
 }
 
-export type authProfileRetrieveResponseSuccess = (authProfileRetrieveResponse200) & {
-  headers: Headers;
-};
-;
-
-export type authProfileRetrieveResponse = (authProfileRetrieveResponseSuccess)
+export type authProfileRetrieveResponseSuccess =
+  authProfileRetrieveResponse200 & {
+    headers: Headers
+  }
+export type authProfileRetrieveResponse = authProfileRetrieveResponseSuccess
 
 export const getAuthProfileRetrieveUrl = () => {
-
-
-
-
   return `/api/auth/profile/`
 }
 
 /**
  * Récupérer le profil de l'utilisateur connecté.
  */
-export const authProfileRetrieve = async ( options?: RequestInit): Promise<authProfileRetrieveResponse> => {
-
-  return kyMutator<authProfileRetrieveResponse>(getAuthProfileRetrieveUrl(),
-  {
+export const authProfileRetrieve = async (
+  options?: RequestInit
+): Promise<authProfileRetrieveResponse> => {
+  return kyMutator<authProfileRetrieveResponse>(getAuthProfileRetrieveUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getAuthProfileRetrieveQueryKey = () => {
-    return [
-    `/api/auth/profile/`
-    ] as const;
-    }
-
-
-export const getAuthProfileRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof authProfileRetrieve>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authProfileRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAuthProfileRetrieveQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authProfileRetrieve>>> = ({ signal }) => authProfileRetrieve({ signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authProfileRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type AuthProfileRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof authProfileRetrieve>>>
+export const getAuthProfileRetrieveQueryKey = () => {
+  return [`/api/auth/profile/`] as const
+}
+
+export const getAuthProfileRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof authProfileRetrieve>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof authProfileRetrieve>>,
+      TError,
+      TData
+    >
+  >
+}) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getAuthProfileRetrieveQueryKey()
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof authProfileRetrieve>>
+  > = ({ signal }) => authProfileRetrieve({ signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authProfileRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AuthProfileRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authProfileRetrieve>>
+>
 export type AuthProfileRetrieveQueryError = unknown
 
-
-export function useAuthProfileRetrieve<TData = Awaited<ReturnType<typeof authProfileRetrieve>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof authProfileRetrieve>>, TError, TData>> & Pick<
+export function useAuthProfileRetrieve<
+  TData = Awaited<ReturnType<typeof authProfileRetrieve>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authProfileRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof authProfileRetrieve>>,
           TError,
           Awaited<ReturnType<typeof authProfileRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthProfileRetrieve<TData = Awaited<ReturnType<typeof authProfileRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authProfileRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthProfileRetrieve<
+  TData = Awaited<ReturnType<typeof authProfileRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authProfileRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof authProfileRetrieve>>,
           TError,
           Awaited<ReturnType<typeof authProfileRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthProfileRetrieve<TData = Awaited<ReturnType<typeof authProfileRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authProfileRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAuthProfileRetrieve<TData = Awaited<ReturnType<typeof authProfileRetrieve>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authProfileRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAuthProfileRetrieveQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthProfileRetrieve<
+  TData = Awaited<ReturnType<typeof authProfileRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authProfileRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useAuthProfileRetrieve<
+  TData = Awaited<ReturnType<typeof authProfileRetrieve>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authProfileRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getAuthProfileRetrieveQueryOptions(options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type authProfilePartialUpdateResponse200 = {
   data: ProfileUpdateResponse
@@ -539,161 +847,198 @@ export type authProfilePartialUpdateResponse400 = {
   status: 400
 }
 
-export type authProfilePartialUpdateResponseSuccess = (authProfilePartialUpdateResponse200) & {
-  headers: Headers;
-};
-export type authProfilePartialUpdateResponseError = (authProfilePartialUpdateResponse400) & {
-  headers: Headers;
-};
+export type authProfilePartialUpdateResponseSuccess =
+  authProfilePartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type authProfilePartialUpdateResponseError =
+  authProfilePartialUpdateResponse400 & {
+    headers: Headers
+  }
 
-export type authProfilePartialUpdateResponse = (authProfilePartialUpdateResponseSuccess | authProfilePartialUpdateResponseError)
+export type authProfilePartialUpdateResponse =
+  | authProfilePartialUpdateResponseSuccess
+  | authProfilePartialUpdateResponseError
 
 export const getAuthProfilePartialUpdateUrl = () => {
-
-
-
-
   return `/api/auth/profile/`
 }
 
 /**
  * Mettre à jour partiellement le profil de l'utilisateur.
  */
-export const authProfilePartialUpdate = async (patchedUserProfileRequest?: PatchedUserProfileRequest, options?: RequestInit): Promise<authProfilePartialUpdateResponse> => {
-
-  return kyMutator<authProfilePartialUpdateResponse>(getAuthProfilePartialUpdateUrl(),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedUserProfileRequest,)
-  }
-);}
-
-
-
-
-export const getAuthProfilePartialUpdateMutationOptions = <TError = ProfileUpdateValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authProfilePartialUpdate>>, TError,{data?: PatchedUserProfileRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authProfilePartialUpdate>>, TError,{data?: PatchedUserProfileRequest}, TContext> => {
-
-const mutationKey = ['authProfilePartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authProfilePartialUpdate>>, {data?: PatchedUserProfileRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authProfilePartialUpdate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthProfilePartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof authProfilePartialUpdate>>>
-    export type AuthProfilePartialUpdateMutationBody = PatchedUserProfileRequest | undefined
-    export type AuthProfilePartialUpdateMutationError = ProfileUpdateValidationErrors
-
-    export const useAuthProfilePartialUpdate = <TError = ProfileUpdateValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authProfilePartialUpdate>>, TError,{data?: PatchedUserProfileRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authProfilePartialUpdate>>,
-        TError,
-        {data?: PatchedUserProfileRequest},
-        TContext
-      > => {
-      return useMutation(getAuthProfilePartialUpdateMutationOptions(options), queryClient);
+export const authProfilePartialUpdate = async (
+  patchedUserProfileRequest?: PatchedUserProfileRequest,
+  options?: RequestInit
+): Promise<authProfilePartialUpdateResponse> => {
+  return kyMutator<authProfilePartialUpdateResponse>(
+    getAuthProfilePartialUpdateUrl(),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedUserProfileRequest),
     }
-    export type authProfileDestroyResponse200 = {
+  )
+}
+
+export const getAuthProfilePartialUpdateMutationOptions = <
+  TError = ProfileUpdateValidationErrors,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authProfilePartialUpdate>>,
+    TError,
+    { data?: PatchedUserProfileRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authProfilePartialUpdate>>,
+  TError,
+  { data?: PatchedUserProfileRequest },
+  TContext
+> => {
+  const mutationKey = ["authProfilePartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authProfilePartialUpdate>>,
+    { data?: PatchedUserProfileRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return authProfilePartialUpdate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type AuthProfilePartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authProfilePartialUpdate>>
+>
+export type AuthProfilePartialUpdateMutationBody =
+  | PatchedUserProfileRequest
+  | undefined
+export type AuthProfilePartialUpdateMutationError =
+  ProfileUpdateValidationErrors
+
+export const useAuthProfilePartialUpdate = <
+  TError = ProfileUpdateValidationErrors,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authProfilePartialUpdate>>,
+      TError,
+      { data?: PatchedUserProfileRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authProfilePartialUpdate>>,
+  TError,
+  { data?: PatchedUserProfileRequest },
+  TContext
+> => {
+  return useMutation(
+    getAuthProfilePartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type authProfileDestroyResponse200 = {
   data: ProfileDeleteResponse
   status: 200
 }
 
-export type authProfileDestroyResponseSuccess = (authProfileDestroyResponse200) & {
-  headers: Headers;
-};
-;
-
-export type authProfileDestroyResponse = (authProfileDestroyResponseSuccess)
+export type authProfileDestroyResponseSuccess =
+  authProfileDestroyResponse200 & {
+    headers: Headers
+  }
+export type authProfileDestroyResponse = authProfileDestroyResponseSuccess
 
 export const getAuthProfileDestroyUrl = () => {
-
-
-
-
   return `/api/auth/profile/`
 }
 
 /**
  * Supprimer le compte de l'utilisateur connecté.
  */
-export const authProfileDestroy = async ( options?: RequestInit): Promise<authProfileDestroyResponse> => {
-
-  return kyMutator<authProfileDestroyResponse>(getAuthProfileDestroyUrl(),
-  {
+export const authProfileDestroy = async (
+  options?: RequestInit
+): Promise<authProfileDestroyResponse> => {
+  return kyMutator<authProfileDestroyResponse>(getAuthProfileDestroyUrl(), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  })
+}
 
+export const getAuthProfileDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authProfileDestroy>>,
+    TError,
+    void,
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authProfileDestroy>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["authProfileDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authProfileDestroy>>,
+    void
+  > = () => {
+    return authProfileDestroy()
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type AuthProfileDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authProfileDestroy>>
+>
 
+export type AuthProfileDestroyMutationError = unknown
 
-export const getAuthProfileDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authProfileDestroy>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authProfileDestroy>>, TError,void, TContext> => {
-
-const mutationKey = ['authProfileDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authProfileDestroy>>, void> = () => {
-
-
-          return  authProfileDestroy()
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthProfileDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof authProfileDestroy>>>
-
-    export type AuthProfileDestroyMutationError = unknown
-
-    export const useAuthProfileDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authProfileDestroy>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authProfileDestroy>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getAuthProfileDestroyMutationOptions(options), queryClient);
-    }
-    export type authQuickLoginCreateResponse200 = {
+export const useAuthProfileDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authProfileDestroy>>,
+      TError,
+      void,
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authProfileDestroy>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAuthProfileDestroyMutationOptions(options), queryClient)
+}
+export type authQuickLoginCreateResponse200 = {
   data: QuickLoginResponse
   status: 200
 }
@@ -703,20 +1048,20 @@ export type authQuickLoginCreateResponse400 = {
   status: 400
 }
 
-export type authQuickLoginCreateResponseSuccess = (authQuickLoginCreateResponse200) & {
-  headers: Headers;
-};
-export type authQuickLoginCreateResponseError = (authQuickLoginCreateResponse400) & {
-  headers: Headers;
-};
+export type authQuickLoginCreateResponseSuccess =
+  authQuickLoginCreateResponse200 & {
+    headers: Headers
+  }
+export type authQuickLoginCreateResponseError =
+  authQuickLoginCreateResponse400 & {
+    headers: Headers
+  }
 
-export type authQuickLoginCreateResponse = (authQuickLoginCreateResponseSuccess | authQuickLoginCreateResponseError)
+export type authQuickLoginCreateResponse =
+  | authQuickLoginCreateResponseSuccess
+  | authQuickLoginCreateResponseError
 
 export const getAuthQuickLoginCreateUrl = () => {
-
-
-
-
   return `/api/auth/quick-login/`
 }
 
@@ -725,63 +1070,86 @@ export const getAuthQuickLoginCreateUrl = () => {
 Utilise le device_token (restaurant déjà configuré) + PIN employé
 Aucune authentification utilisateur requise.
  */
-export const authQuickLoginCreate = async (quickLoginRequest: QuickLoginRequest, options?: RequestInit): Promise<authQuickLoginCreateResponse> => {
-
-  return kyMutator<authQuickLoginCreateResponse>(getAuthQuickLoginCreateUrl(),
-  {
+export const authQuickLoginCreate = async (
+  quickLoginRequest: QuickLoginRequest,
+  options?: RequestInit
+): Promise<authQuickLoginCreateResponse> => {
+  return kyMutator<authQuickLoginCreateResponse>(getAuthQuickLoginCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      quickLoginRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(quickLoginRequest),
+  })
+}
+
+export const getAuthQuickLoginCreateMutationOptions = <
+  TError = QuickLoginValidationErrors,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authQuickLoginCreate>>,
+    TError,
+    { data: QuickLoginRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authQuickLoginCreate>>,
+  TError,
+  { data: QuickLoginRequest },
+  TContext
+> => {
+  const mutationKey = ["authQuickLoginCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authQuickLoginCreate>>,
+    { data: QuickLoginRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return authQuickLoginCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type AuthQuickLoginCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authQuickLoginCreate>>
+>
+export type AuthQuickLoginCreateMutationBody = QuickLoginRequest
+export type AuthQuickLoginCreateMutationError = QuickLoginValidationErrors
 
-
-export const getAuthQuickLoginCreateMutationOptions = <TError = QuickLoginValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authQuickLoginCreate>>, TError,{data: QuickLoginRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authQuickLoginCreate>>, TError,{data: QuickLoginRequest}, TContext> => {
-
-const mutationKey = ['authQuickLoginCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authQuickLoginCreate>>, {data: QuickLoginRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authQuickLoginCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthQuickLoginCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authQuickLoginCreate>>>
-    export type AuthQuickLoginCreateMutationBody = QuickLoginRequest
-    export type AuthQuickLoginCreateMutationError = QuickLoginValidationErrors
-
-    export const useAuthQuickLoginCreate = <TError = QuickLoginValidationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authQuickLoginCreate>>, TError,{data: QuickLoginRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authQuickLoginCreate>>,
-        TError,
-        {data: QuickLoginRequest},
-        TContext
-      > => {
-      return useMutation(getAuthQuickLoginCreateMutationOptions(options), queryClient);
-    }
-    export type authRegisterCreateResponse201 = {
+export const useAuthQuickLoginCreate = <
+  TError = QuickLoginValidationErrors,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authQuickLoginCreate>>,
+      TError,
+      { data: QuickLoginRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authQuickLoginCreate>>,
+  TError,
+  { data: QuickLoginRequest },
+  TContext
+> => {
+  return useMutation(
+    getAuthQuickLoginCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type authRegisterCreateResponse201 = {
   data: RegistrationSuccess
   status: 201
 }
@@ -791,20 +1159,19 @@ export type authRegisterCreateResponse400 = {
   status: 400
 }
 
-export type authRegisterCreateResponseSuccess = (authRegisterCreateResponse201) & {
-  headers: Headers;
-};
-export type authRegisterCreateResponseError = (authRegisterCreateResponse400) & {
-  headers: Headers;
-};
+export type authRegisterCreateResponseSuccess =
+  authRegisterCreateResponse201 & {
+    headers: Headers
+  }
+export type authRegisterCreateResponseError = authRegisterCreateResponse400 & {
+  headers: Headers
+}
 
-export type authRegisterCreateResponse = (authRegisterCreateResponseSuccess | authRegisterCreateResponseError)
+export type authRegisterCreateResponse =
+  | authRegisterCreateResponseSuccess
+  | authRegisterCreateResponseError
 
 export const getAuthRegisterCreateUrl = () => {
-
-
-
-
   return `/api/auth/register/`
 }
 
@@ -812,63 +1179,83 @@ export const getAuthRegisterCreateUrl = () => {
  * Inscription d'un nouvel utilisateur avec création d'employé.
 Aucune authentification utilisateur requise.
  */
-export const authRegisterCreate = async (userRegistrationRequest: UserRegistrationRequest, options?: RequestInit): Promise<authRegisterCreateResponse> => {
-
-  return kyMutator<authRegisterCreateResponse>(getAuthRegisterCreateUrl(),
-  {
+export const authRegisterCreate = async (
+  userRegistrationRequest: UserRegistrationRequest,
+  options?: RequestInit
+): Promise<authRegisterCreateResponse> => {
+  return kyMutator<authRegisterCreateResponse>(getAuthRegisterCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userRegistrationRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userRegistrationRequest),
+  })
+}
+
+export const getAuthRegisterCreateMutationOptions = <
+  TError = RegistrationErrors,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authRegisterCreate>>,
+    TError,
+    { data: UserRegistrationRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authRegisterCreate>>,
+  TError,
+  { data: UserRegistrationRequest },
+  TContext
+> => {
+  const mutationKey = ["authRegisterCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authRegisterCreate>>,
+    { data: UserRegistrationRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return authRegisterCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type AuthRegisterCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authRegisterCreate>>
+>
+export type AuthRegisterCreateMutationBody = UserRegistrationRequest
+export type AuthRegisterCreateMutationError = RegistrationErrors
 
-
-export const getAuthRegisterCreateMutationOptions = <TError = RegistrationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegisterCreate>>, TError,{data: UserRegistrationRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authRegisterCreate>>, TError,{data: UserRegistrationRequest}, TContext> => {
-
-const mutationKey = ['authRegisterCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authRegisterCreate>>, {data: UserRegistrationRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authRegisterCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthRegisterCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authRegisterCreate>>>
-    export type AuthRegisterCreateMutationBody = UserRegistrationRequest
-    export type AuthRegisterCreateMutationError = RegistrationErrors
-
-    export const useAuthRegisterCreate = <TError = RegistrationErrors,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegisterCreate>>, TError,{data: UserRegistrationRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authRegisterCreate>>,
-        TError,
-        {data: UserRegistrationRequest},
-        TContext
-      > => {
-      return useMutation(getAuthRegisterCreateMutationOptions(options), queryClient);
-    }
-    export type authRestaurantEmployeesRetrieveResponse200 = {
+export const useAuthRegisterCreate = <
+  TError = RegistrationErrors,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authRegisterCreate>>,
+      TError,
+      { data: UserRegistrationRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authRegisterCreate>>,
+  TError,
+  { data: UserRegistrationRequest },
+  TContext
+> => {
+  return useMutation(getAuthRegisterCreateMutationOptions(options), queryClient)
+}
+export type authRestaurantEmployeesRetrieveResponse200 = {
   data: RestaurantEmployeesResponse
   status: 200
 }
@@ -883,28 +1270,37 @@ export type authRestaurantEmployeesRetrieveResponse401 = {
   status: 401
 }
 
-export type authRestaurantEmployeesRetrieveResponseSuccess = (authRestaurantEmployeesRetrieveResponse200) & {
-  headers: Headers;
-};
-export type authRestaurantEmployeesRetrieveResponseError = (authRestaurantEmployeesRetrieveResponse400 | authRestaurantEmployeesRetrieveResponse401) & {
-  headers: Headers;
-};
+export type authRestaurantEmployeesRetrieveResponseSuccess =
+  authRestaurantEmployeesRetrieveResponse200 & {
+    headers: Headers
+  }
+export type authRestaurantEmployeesRetrieveResponseError = (
+  | authRestaurantEmployeesRetrieveResponse400
+  | authRestaurantEmployeesRetrieveResponse401
+) & {
+  headers: Headers
+}
 
-export type authRestaurantEmployeesRetrieveResponse = (authRestaurantEmployeesRetrieveResponseSuccess | authRestaurantEmployeesRetrieveResponseError)
+export type authRestaurantEmployeesRetrieveResponse =
+  | authRestaurantEmployeesRetrieveResponseSuccess
+  | authRestaurantEmployeesRetrieveResponseError
 
-export const getAuthRestaurantEmployeesRetrieveUrl = (params: AuthRestaurantEmployeesRetrieveParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getAuthRestaurantEmployeesRetrieveUrl = (
+  params: AuthRestaurantEmployeesRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/auth/restaurant-employees/?${stringifiedParams}` : `/api/auth/restaurant-employees/`
+  return stringifiedParams.length > 0
+    ? `/api/auth/restaurant-employees/?${stringifiedParams}`
+    : `/api/auth/restaurant-employees/`
 }
 
 /**
@@ -912,109 +1308,181 @@ export const getAuthRestaurantEmployeesRetrieveUrl = (params: AuthRestaurantEmpl
 Utilise le device_token pour identifier le restaurant.
 Aucune authentification utilisateur requise.
  */
-export const authRestaurantEmployeesRetrieve = async (params: AuthRestaurantEmployeesRetrieveParams, options?: RequestInit): Promise<authRestaurantEmployeesRetrieveResponse> => {
-
-  return kyMutator<authRestaurantEmployeesRetrieveResponse>(getAuthRestaurantEmployeesRetrieveUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getAuthRestaurantEmployeesRetrieveQueryKey = (params?: AuthRestaurantEmployeesRetrieveParams,) => {
-    return [
-    `/api/auth/restaurant-employees/`, ...(params ? [params] : [])
-    ] as const;
+export const authRestaurantEmployeesRetrieve = async (
+  params: AuthRestaurantEmployeesRetrieveParams,
+  options?: RequestInit
+): Promise<authRestaurantEmployeesRetrieveResponse> => {
+  return kyMutator<authRestaurantEmployeesRetrieveResponse>(
+    getAuthRestaurantEmployeesRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getAuthRestaurantEmployeesRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized>(params: AuthRestaurantEmployeesRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAuthRestaurantEmployeesRetrieveQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>> = ({ signal }) => authRestaurantEmployeesRetrieve(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type AuthRestaurantEmployeesRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>>
-export type AuthRestaurantEmployeesRetrieveQueryError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized
+export const getAuthRestaurantEmployeesRetrieveQueryKey = (
+  params?: AuthRestaurantEmployeesRetrieveParams
+) => {
+  return [
+    `/api/auth/restaurant-employees/`,
+    ...(params ? [params] : []),
+  ] as const
+}
 
+export const getAuthRestaurantEmployeesRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+  TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized,
+>(
+  params: AuthRestaurantEmployeesRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useAuthRestaurantEmployeesRetrieve<TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized>(
- params: AuthRestaurantEmployeesRetrieveParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getAuthRestaurantEmployeesRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>
+  > = ({ signal }) => authRestaurantEmployeesRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AuthRestaurantEmployeesRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>
+>
+export type AuthRestaurantEmployeesRetrieveQueryError =
+  | RestaurantEmployeesError
+  | RestaurantEmployeesUnauthorized
+
+export function useAuthRestaurantEmployeesRetrieve<
+  TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+  TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized,
+>(
+  params: AuthRestaurantEmployeesRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthRestaurantEmployeesRetrieve<TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized>(
- params: AuthRestaurantEmployeesRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthRestaurantEmployeesRetrieve<
+  TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+  TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized,
+>(
+  params: AuthRestaurantEmployeesRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
           TError,
           Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthRestaurantEmployeesRetrieve<TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized>(
- params: AuthRestaurantEmployeesRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAuthRestaurantEmployeesRetrieve<TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized>(
- params: AuthRestaurantEmployeesRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAuthRestaurantEmployeesRetrieveQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useAuthRestaurantEmployeesRetrieve<
+  TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+  TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized,
+>(
+  params: AuthRestaurantEmployeesRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useAuthRestaurantEmployeesRetrieve<
+  TData = Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+  TError = RestaurantEmployeesError | RestaurantEmployeesUnauthorized,
+>(
+  params: AuthRestaurantEmployeesRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof authRestaurantEmployeesRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getAuthRestaurantEmployeesRetrieveQueryOptions(
+    params,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type authTokenRefreshCreateResponse200 = {
   data: TokenRefresh
   status: 200
 }
 
-export type authTokenRefreshCreateResponseSuccess = (authTokenRefreshCreateResponse200) & {
-  headers: Headers;
-};
-;
-
-export type authTokenRefreshCreateResponse = (authTokenRefreshCreateResponseSuccess)
+export type authTokenRefreshCreateResponseSuccess =
+  authTokenRefreshCreateResponse200 & {
+    headers: Headers
+  }
+export type authTokenRefreshCreateResponse =
+  authTokenRefreshCreateResponseSuccess
 
 export const getAuthTokenRefreshCreateUrl = () => {
-
-
-
-
   return `/api/auth/token/refresh/`
 }
 
@@ -1022,59 +1490,82 @@ export const getAuthTokenRefreshCreateUrl = () => {
  * Takes a refresh type JSON web token and returns an access type JSON web
 token if the refresh token is valid.
  */
-export const authTokenRefreshCreate = async (tokenRefreshRequest: TokenRefreshRequest, options?: RequestInit): Promise<authTokenRefreshCreateResponse> => {
-
-  return kyMutator<authTokenRefreshCreateResponse>(getAuthTokenRefreshCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      tokenRefreshRequest,)
-  }
-);}
-
-
-
-
-export const getAuthTokenRefreshCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTokenRefreshCreate>>, TError,{data: TokenRefreshRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authTokenRefreshCreate>>, TError,{data: TokenRefreshRequest}, TContext> => {
-
-const mutationKey = ['authTokenRefreshCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authTokenRefreshCreate>>, {data: TokenRefreshRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authTokenRefreshCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthTokenRefreshCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authTokenRefreshCreate>>>
-    export type AuthTokenRefreshCreateMutationBody = TokenRefreshRequest
-    export type AuthTokenRefreshCreateMutationError = unknown
-
-    export const useAuthTokenRefreshCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTokenRefreshCreate>>, TError,{data: TokenRefreshRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authTokenRefreshCreate>>,
-        TError,
-        {data: TokenRefreshRequest},
-        TContext
-      > => {
-      return useMutation(getAuthTokenRefreshCreateMutationOptions(options), queryClient);
+export const authTokenRefreshCreate = async (
+  tokenRefreshRequest: TokenRefreshRequest,
+  options?: RequestInit
+): Promise<authTokenRefreshCreateResponse> => {
+  return kyMutator<authTokenRefreshCreateResponse>(
+    getAuthTokenRefreshCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(tokenRefreshRequest),
     }
+  )
+}
+
+export const getAuthTokenRefreshCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authTokenRefreshCreate>>,
+    TError,
+    { data: TokenRefreshRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authTokenRefreshCreate>>,
+  TError,
+  { data: TokenRefreshRequest },
+  TContext
+> => {
+  const mutationKey = ["authTokenRefreshCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authTokenRefreshCreate>>,
+    { data: TokenRefreshRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return authTokenRefreshCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type AuthTokenRefreshCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authTokenRefreshCreate>>
+>
+export type AuthTokenRefreshCreateMutationBody = TokenRefreshRequest
+export type AuthTokenRefreshCreateMutationError = unknown
+
+export const useAuthTokenRefreshCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authTokenRefreshCreate>>,
+      TError,
+      { data: TokenRefreshRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof authTokenRefreshCreate>>,
+  TError,
+  { data: TokenRefreshRequest },
+  TContext
+> => {
+  return useMutation(
+    getAuthTokenRefreshCreateMutationOptions(options),
+    queryClient
+  )
+}

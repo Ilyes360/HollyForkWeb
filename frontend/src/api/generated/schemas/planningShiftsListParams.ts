@@ -3,22 +3,32 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import type { PlanningShiftsListTypeShift } from './planningShiftsListTypeShift';
+import type { PlanningShiftsListTypeShift } from "./planningShiftsListTypeShift"
 
 export type PlanningShiftsListParams = {
-employe_id?: number;
-/**
- * A page number within the paginated result set.
- */
-page?: number;
-restaurant_id?: number;
-/**
- * * `MORNING` - Matin
-* `AFTERNOON` - Après-midi
-* `EVENING` - Soir
-* `NIGHT` - Nuit
- */
-type_shift?: PlanningShiftsListTypeShift;
-};
+  /**
+   * Date de début de la semaine (YYYY-MM-DD). Créneau retourné : [date, date+7 jours]. Prioritaire sur week.
+   */
+  date?: string
+  employe_id?: number
+  /**
+   * A page number within the paginated result set.
+   */
+  page?: number
+  restaurant_id?: number
+  /**
+   * * `MORNING` - Matin
+   * `AFTERNOON` - Après-midi
+   * `EVENING` - Soir
+   * `NIGHT` - Nuit
+   */
+  type_shift?: PlanningShiftsListTypeShift
+  /**
+   * Semaine ISO (YYYY-Www). Utilisé si date absent.
+   */
+  week?: string
+}

@@ -3,32 +3,28 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import type { Employe } from './employe';
-import type { LigneCommande } from './ligneCommande';
-import type { Restaurant } from './restaurant';
-import type { Table } from './table';
+import type { LigneCommande } from "./ligneCommande"
 
 export interface Commande {
-  readonly id: number;
-  readonly items_count: number;
+  readonly id: number
+  readonly items_count: number
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly amount: string;
+  readonly amount: string
   /** @nullable */
-  created_at?: string | null;
-  readonly created_by: Employe;
-  readonly restaurant: Restaurant;
-  status: string;
-  kitchen_status?: string;
-  priority?: string;
-  created_by_id: number;
-  restaurant_id: number;
-  readonly lignes: readonly LigneCommande[];
-  readonly table: Table;
+  created_at?: string | null
+  status: string
+  kitchen_status?: string
+  priority?: string
+  created_by_id: number
+  restaurant_id: number
   /** @nullable */
-  table_id: number | null;
+  table_id: number | null
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly total_cost_of_goods_sold: string;
-  readonly is_in_progress: boolean;
+  readonly total_cost_of_goods_sold: string
+  readonly is_in_progress: boolean
+  readonly lines: readonly LigneCommande[]
 }

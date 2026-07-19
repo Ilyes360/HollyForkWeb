@@ -3,31 +3,32 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import type { FactureVatByRate } from './factureVatByRate';
-import type { LigneFacture } from './ligneFacture';
-import type { Restaurant } from './restaurant';
+import type { FactureVatByRate } from "./factureVatByRate"
+import type { LigneFacture } from "./ligneFacture"
 
 export interface Facture {
-  readonly id: number;
-  number: string;
+  readonly id: number
+  number: string
   /** Date d'émission de la facture */
-  date: string;
+  date: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly amount_before_tax: string;
+  readonly amount_before_tax: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly amount_including_tax: string;
+  readonly amount_including_tax: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly vat_amount: string;
+  readonly vat_amount: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly amount_paid: string;
+  readonly amount_paid: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly amount_due: string;
-  readonly restaurant: Restaurant;
-  commande: number;
-  state: string;
-  readonly created_at: string;
-  readonly lignes: readonly LigneFacture[];
-  readonly vat_by_rate: FactureVatByRate;
+  readonly amount_due: string
+  restaurant_id?: number
+  commande: number
+  state: string
+  readonly created_at: string
+  readonly lignes: readonly LigneFacture[]
+  readonly vat_by_rate: FactureVatByRate
 }

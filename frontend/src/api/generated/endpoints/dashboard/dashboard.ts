@@ -3,11 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -17,266 +17,1887 @@ import type {
   QueryKey,
   UndefinedInitialDataOptions,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
-  DashboardKPIsError,
-  DashboardKPIsNotFound,
-  DashboardKPIsResponse,
+  DashboardError,
+  DashboardFinanceResponse,
+  DashboardFinanceRetrieveParams,
   DashboardKpisRetrieveParams,
   DashboardMapResponse,
-  DashboardMapRetrieveParams
-} from '../../schemas';
+  DashboardMapRetrieveParams,
+  DashboardOperationsResponse,
+  DashboardOperationsRetrieveParams,
+  DashboardOverviewResponse,
+  DashboardOverviewRetrieveParams,
+  DashboardReservationsResponse,
+  DashboardReservationsRetrieveParams,
+  DashboardStaffResponse,
+  DashboardStaffRetrieveParams,
+  DashboardStaffShiftResponse,
+  DashboardStaffShiftsRetrieveParams,
+  DashboardSuppliersResponse,
+  DashboardSuppliersRetrieveParams,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
+import { kyMutator } from "../../../mutator"
 
+export type dashboardFinanceRetrieveResponse200 = {
+  data: DashboardFinanceResponse
+  status: 200
+}
 
+export type dashboardFinanceRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
 
+export type dashboardFinanceRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardFinanceRetrieveResponseSuccess =
+  dashboardFinanceRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardFinanceRetrieveResponseError = (
+  | dashboardFinanceRetrieveResponse400
+  | dashboardFinanceRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardFinanceRetrieveResponse =
+  | dashboardFinanceRetrieveResponseSuccess
+  | dashboardFinanceRetrieveResponseError
+
+export const getDashboardFinanceRetrieveUrl = (
+  params: DashboardFinanceRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/finance/?${stringifiedParams}`
+    : `/api/dashboard/finance/`
+}
+
+/**
+ * KPIs financiers du dashboard.
+GET /api/dashboard/finance?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardFinanceRetrieve = async (
+  params: DashboardFinanceRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardFinanceRetrieveResponse> => {
+  return kyMutator<dashboardFinanceRetrieveResponse>(
+    getDashboardFinanceRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardFinanceRetrieveQueryKey = (
+  params?: DashboardFinanceRetrieveParams
+) => {
+  return [`/api/dashboard/finance/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardFinanceRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardFinanceRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardFinanceRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardFinanceRetrieve>>
+  > = ({ signal }) => dashboardFinanceRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardFinanceRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardFinanceRetrieve>>
+>
+export type DashboardFinanceRetrieveQueryError = DashboardError
+
+export function useDashboardFinanceRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardFinanceRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardFinanceRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardFinanceRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardFinanceRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardFinanceRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardFinanceRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardFinanceRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardFinanceRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardFinanceRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardFinanceRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardFinanceRetrieveQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type dashboardKpisRetrieveResponse200 = {
-  data: DashboardKPIsResponse
+  data: DashboardOverviewResponse
   status: 200
 }
 
 export type dashboardKpisRetrieveResponse400 = {
-  data: DashboardKPIsError
+  data: DashboardError
   status: 400
 }
 
 export type dashboardKpisRetrieveResponse404 = {
-  data: DashboardKPIsNotFound
+  data: DashboardError
   status: 404
 }
 
-export type dashboardKpisRetrieveResponseSuccess = (dashboardKpisRetrieveResponse200) & {
-  headers: Headers;
-};
-export type dashboardKpisRetrieveResponseError = (dashboardKpisRetrieveResponse400 | dashboardKpisRetrieveResponse404) & {
-  headers: Headers;
-};
+export type dashboardKpisRetrieveResponseSuccess =
+  dashboardKpisRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardKpisRetrieveResponseError = (
+  | dashboardKpisRetrieveResponse400
+  | dashboardKpisRetrieveResponse404
+) & {
+  headers: Headers
+}
 
-export type dashboardKpisRetrieveResponse = (dashboardKpisRetrieveResponseSuccess | dashboardKpisRetrieveResponseError)
+export type dashboardKpisRetrieveResponse =
+  | dashboardKpisRetrieveResponseSuccess
+  | dashboardKpisRetrieveResponseError
 
-export const getDashboardKpisRetrieveUrl = (params: DashboardKpisRetrieveParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getDashboardKpisRetrieveUrl = (
+  params: DashboardKpisRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/dashboard/kpis/?${stringifiedParams}` : `/api/dashboard/kpis/`
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/kpis/?${stringifiedParams}`
+    : `/api/dashboard/kpis/`
 }
 
 /**
- * Endpoint pour récupérer les KPIs du dashboard.
+ * Alias rétrocompatible vers la vue overview.
 GET /api/dashboard/kpis?restaurant_id=X&date=YYYY-MM-DD
  */
-export const dashboardKpisRetrieve = async (params: DashboardKpisRetrieveParams, options?: RequestInit): Promise<dashboardKpisRetrieveResponse> => {
-
-  return kyMutator<dashboardKpisRetrieveResponse>(getDashboardKpisRetrieveUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getDashboardKpisRetrieveQueryKey = (params?: DashboardKpisRetrieveParams,) => {
-    return [
-    `/api/dashboard/kpis/`, ...(params ? [params] : [])
-    ] as const;
+export const dashboardKpisRetrieve = async (
+  params: DashboardKpisRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardKpisRetrieveResponse> => {
+  return kyMutator<dashboardKpisRetrieveResponse>(
+    getDashboardKpisRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getDashboardKpisRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError = DashboardKPIsError | DashboardKPIsNotFound>(params: DashboardKpisRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDashboardKpisRetrieveQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardKpisRetrieve>>> = ({ signal }) => dashboardKpisRetrieve(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type DashboardKpisRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof dashboardKpisRetrieve>>>
-export type DashboardKpisRetrieveQueryError = DashboardKPIsError | DashboardKPIsNotFound
+export const getDashboardKpisRetrieveQueryKey = (
+  params?: DashboardKpisRetrieveParams
+) => {
+  return [`/api/dashboard/kpis/`, ...(params ? [params] : [])] as const
+}
 
+export const getDashboardKpisRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardKpisRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useDashboardKpisRetrieve<TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError = DashboardKPIsError | DashboardKPIsNotFound>(
- params: DashboardKpisRetrieveParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardKpisRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardKpisRetrieve>>
+  > = ({ signal }) => dashboardKpisRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardKpisRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardKpisRetrieve>>
+>
+export type DashboardKpisRetrieveQueryError = DashboardError
+
+export function useDashboardKpisRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardKpisRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
           TError,
           Awaited<ReturnType<typeof dashboardKpisRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDashboardKpisRetrieve<TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError = DashboardKPIsError | DashboardKPIsNotFound>(
- params: DashboardKpisRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardKpisRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardKpisRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
           TError,
           Awaited<ReturnType<typeof dashboardKpisRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDashboardKpisRetrieve<TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError = DashboardKPIsError | DashboardKPIsNotFound>(
- params: DashboardKpisRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useDashboardKpisRetrieve<TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError = DashboardKPIsError | DashboardKPIsNotFound>(
- params: DashboardKpisRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardKpisRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDashboardKpisRetrieveQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardKpisRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardKpisRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useDashboardKpisRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardKpisRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardKpisRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardKpisRetrieveQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type dashboardMapRetrieveResponse200 = {
   data: DashboardMapResponse
   status: 200
 }
 
-export type dashboardMapRetrieveResponseSuccess = (dashboardMapRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type dashboardMapRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
 
-export type dashboardMapRetrieveResponse = (dashboardMapRetrieveResponseSuccess)
+export type dashboardMapRetrieveResponseSuccess =
+  dashboardMapRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardMapRetrieveResponseError =
+  dashboardMapRetrieveResponse404 & {
+    headers: Headers
+  }
 
-export const getDashboardMapRetrieveUrl = (params?: DashboardMapRetrieveParams,) => {
-  const normalizedParams = new URLSearchParams();
+export type dashboardMapRetrieveResponse =
+  | dashboardMapRetrieveResponseSuccess
+  | dashboardMapRetrieveResponseError
+
+export const getDashboardMapRetrieveUrl = (
+  params?: DashboardMapRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/dashboard/map/?${stringifiedParams}` : `/api/dashboard/map/`
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/map/?${stringifiedParams}`
+    : `/api/dashboard/map/`
 }
 
 /**
  * Endpoint pour récupérer la carte avec restaurants et fournisseurs.
 GET /api/dashboard/map?restaurant_id=X
  */
-export const dashboardMapRetrieve = async (params?: DashboardMapRetrieveParams, options?: RequestInit): Promise<dashboardMapRetrieveResponse> => {
-
-  return kyMutator<dashboardMapRetrieveResponse>(getDashboardMapRetrieveUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getDashboardMapRetrieveQueryKey = (params?: DashboardMapRetrieveParams,) => {
-    return [
-    `/api/dashboard/map/`, ...(params ? [params] : [])
-    ] as const;
+export const dashboardMapRetrieve = async (
+  params?: DashboardMapRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardMapRetrieveResponse> => {
+  return kyMutator<dashboardMapRetrieveResponse>(
+    getDashboardMapRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getDashboardMapRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError = unknown>(params?: DashboardMapRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDashboardMapRetrieveQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardMapRetrieve>>> = ({ signal }) => dashboardMapRetrieve(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type DashboardMapRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof dashboardMapRetrieve>>>
-export type DashboardMapRetrieveQueryError = unknown
+export const getDashboardMapRetrieveQueryKey = (
+  params?: DashboardMapRetrieveParams
+) => {
+  return [`/api/dashboard/map/`, ...(params ? [params] : [])] as const
+}
 
+export const getDashboardMapRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+  TError = DashboardError,
+>(
+  params?: DashboardMapRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
 
-export function useDashboardMapRetrieve<TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError = unknown>(
- params: undefined |  DashboardMapRetrieveParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError, TData>> & Pick<
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardMapRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardMapRetrieve>>
+  > = ({ signal }) => dashboardMapRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardMapRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardMapRetrieve>>
+>
+export type DashboardMapRetrieveQueryError = DashboardError
+
+export function useDashboardMapRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+  TError = DashboardError,
+>(
+  params: undefined | DashboardMapRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof dashboardMapRetrieve>>,
           TError,
           Awaited<ReturnType<typeof dashboardMapRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDashboardMapRetrieve<TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError = unknown>(
- params?: DashboardMapRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardMapRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+  TError = DashboardError,
+>(
+  params?: DashboardMapRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof dashboardMapRetrieve>>,
           TError,
           Awaited<ReturnType<typeof dashboardMapRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDashboardMapRetrieve<TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError = unknown>(
- params?: DashboardMapRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useDashboardMapRetrieve<TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError = unknown>(
- params?: DashboardMapRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dashboardMapRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDashboardMapRetrieveQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardMapRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+  TError = DashboardError,
+>(
+  params?: DashboardMapRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useDashboardMapRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+  TError = DashboardError,
+>(
+  params?: DashboardMapRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardMapRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardMapRetrieveQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
+export type dashboardOperationsRetrieveResponse200 = {
+  data: DashboardOperationsResponse
+  status: 200
+}
 
+export type dashboardOperationsRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
 
+export type dashboardOperationsRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardOperationsRetrieveResponseSuccess =
+  dashboardOperationsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardOperationsRetrieveResponseError = (
+  | dashboardOperationsRetrieveResponse400
+  | dashboardOperationsRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardOperationsRetrieveResponse =
+  | dashboardOperationsRetrieveResponseSuccess
+  | dashboardOperationsRetrieveResponseError
+
+export const getDashboardOperationsRetrieveUrl = (
+  params: DashboardOperationsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/operations/?${stringifiedParams}`
+    : `/api/dashboard/operations/`
+}
+
+/**
+ * KPIs opérationnels du dashboard.
+GET /api/dashboard/operations?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardOperationsRetrieve = async (
+  params: DashboardOperationsRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardOperationsRetrieveResponse> => {
+  return kyMutator<dashboardOperationsRetrieveResponse>(
+    getDashboardOperationsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardOperationsRetrieveQueryKey = (
+  params?: DashboardOperationsRetrieveParams
+) => {
+  return [`/api/dashboard/operations/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardOperationsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOperationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardOperationsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardOperationsRetrieve>>
+  > = ({ signal }) => dashboardOperationsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardOperationsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardOperationsRetrieve>>
+>
+export type DashboardOperationsRetrieveQueryError = DashboardError
+
+export function useDashboardOperationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOperationsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardOperationsRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardOperationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOperationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardOperationsRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardOperationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOperationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardOperationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOperationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOperationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardOperationsRetrieveQueryOptions(
+    params,
+    options
+  )
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type dashboardOverviewRetrieveResponse200 = {
+  data: DashboardOverviewResponse
+  status: 200
+}
+
+export type dashboardOverviewRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
+
+export type dashboardOverviewRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardOverviewRetrieveResponseSuccess =
+  dashboardOverviewRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardOverviewRetrieveResponseError = (
+  | dashboardOverviewRetrieveResponse400
+  | dashboardOverviewRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardOverviewRetrieveResponse =
+  | dashboardOverviewRetrieveResponseSuccess
+  | dashboardOverviewRetrieveResponseError
+
+export const getDashboardOverviewRetrieveUrl = (
+  params: DashboardOverviewRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/overview/?${stringifiedParams}`
+    : `/api/dashboard/overview/`
+}
+
+/**
+ * Vue synthétique du dashboard.
+GET /api/dashboard/overview?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardOverviewRetrieve = async (
+  params: DashboardOverviewRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardOverviewRetrieveResponse> => {
+  return kyMutator<dashboardOverviewRetrieveResponse>(
+    getDashboardOverviewRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardOverviewRetrieveQueryKey = (
+  params?: DashboardOverviewRetrieveParams
+) => {
+  return [`/api/dashboard/overview/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardOverviewRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOverviewRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardOverviewRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardOverviewRetrieve>>
+  > = ({ signal }) => dashboardOverviewRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardOverviewRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardOverviewRetrieve>>
+>
+export type DashboardOverviewRetrieveQueryError = DashboardError
+
+export function useDashboardOverviewRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOverviewRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardOverviewRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardOverviewRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOverviewRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardOverviewRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardOverviewRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOverviewRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardOverviewRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardOverviewRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardOverviewRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardOverviewRetrieveQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type dashboardReservationsRetrieveResponse200 = {
+  data: DashboardReservationsResponse
+  status: 200
+}
+
+export type dashboardReservationsRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
+
+export type dashboardReservationsRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardReservationsRetrieveResponseSuccess =
+  dashboardReservationsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardReservationsRetrieveResponseError = (
+  | dashboardReservationsRetrieveResponse400
+  | dashboardReservationsRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardReservationsRetrieveResponse =
+  | dashboardReservationsRetrieveResponseSuccess
+  | dashboardReservationsRetrieveResponseError
+
+export const getDashboardReservationsRetrieveUrl = (
+  params: DashboardReservationsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/reservations/?${stringifiedParams}`
+    : `/api/dashboard/reservations/`
+}
+
+/**
+ * KPIs réservations du dashboard.
+GET /api/dashboard/reservations?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardReservationsRetrieve = async (
+  params: DashboardReservationsRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardReservationsRetrieveResponse> => {
+  return kyMutator<dashboardReservationsRetrieveResponse>(
+    getDashboardReservationsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardReservationsRetrieveQueryKey = (
+  params?: DashboardReservationsRetrieveParams
+) => {
+  return [`/api/dashboard/reservations/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardReservationsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardReservationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardReservationsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardReservationsRetrieve>>
+  > = ({ signal }) => dashboardReservationsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardReservationsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardReservationsRetrieve>>
+>
+export type DashboardReservationsRetrieveQueryError = DashboardError
+
+export function useDashboardReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardReservationsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardReservationsRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardReservationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardReservationsRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardReservationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardReservationsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardReservationsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardReservationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardReservationsRetrieveQueryOptions(
+    params,
+    options
+  )
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type dashboardStaffRetrieveResponse200 = {
+  data: DashboardStaffResponse
+  status: 200
+}
+
+export type dashboardStaffRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
+
+export type dashboardStaffRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardStaffRetrieveResponseSuccess =
+  dashboardStaffRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardStaffRetrieveResponseError = (
+  | dashboardStaffRetrieveResponse400
+  | dashboardStaffRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardStaffRetrieveResponse =
+  | dashboardStaffRetrieveResponseSuccess
+  | dashboardStaffRetrieveResponseError
+
+export const getDashboardStaffRetrieveUrl = (
+  params: DashboardStaffRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/staff/?${stringifiedParams}`
+    : `/api/dashboard/staff/`
+}
+
+/**
+ * KPIs staff du dashboard.
+GET /api/dashboard/staff?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardStaffRetrieve = async (
+  params: DashboardStaffRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardStaffRetrieveResponse> => {
+  return kyMutator<dashboardStaffRetrieveResponse>(
+    getDashboardStaffRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardStaffRetrieveQueryKey = (
+  params?: DashboardStaffRetrieveParams
+) => {
+  return [`/api/dashboard/staff/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardStaffRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardStaffRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardStaffRetrieve>>
+  > = ({ signal }) => dashboardStaffRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardStaffRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardStaffRetrieve>>
+>
+export type DashboardStaffRetrieveQueryError = DashboardError
+
+export function useDashboardStaffRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardStaffRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardStaffRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardStaffRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardStaffRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardStaffRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardStaffRetrieveQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type dashboardStaffShiftsRetrieveResponse200 = {
+  data: DashboardStaffShiftResponse
+  status: 200
+}
+
+export type dashboardStaffShiftsRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
+
+export type dashboardStaffShiftsRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardStaffShiftsRetrieveResponseSuccess =
+  dashboardStaffShiftsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardStaffShiftsRetrieveResponseError = (
+  | dashboardStaffShiftsRetrieveResponse400
+  | dashboardStaffShiftsRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardStaffShiftsRetrieveResponse =
+  | dashboardStaffShiftsRetrieveResponseSuccess
+  | dashboardStaffShiftsRetrieveResponseError
+
+export const getDashboardStaffShiftsRetrieveUrl = (
+  params: DashboardStaffShiftsRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/staff/shifts/?${stringifiedParams}`
+    : `/api/dashboard/staff/shifts/`
+}
+
+/**
+ * Vue détaillée des employés et de leurs shifts.
+GET /api/dashboard/staff/shifts?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardStaffShiftsRetrieve = async (
+  params: DashboardStaffShiftsRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardStaffShiftsRetrieveResponse> => {
+  return kyMutator<dashboardStaffShiftsRetrieveResponse>(
+    getDashboardStaffShiftsRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardStaffShiftsRetrieveQueryKey = (
+  params?: DashboardStaffShiftsRetrieveParams
+) => {
+  return [`/api/dashboard/staff/shifts/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardStaffShiftsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardStaffShiftsRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>
+  > = ({ signal }) => dashboardStaffShiftsRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardStaffShiftsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>
+>
+export type DashboardStaffShiftsRetrieveQueryError = DashboardError
+
+export function useDashboardStaffShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffShiftsRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardStaffShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardStaffShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardStaffShiftsRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardStaffShiftsRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardStaffShiftsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardStaffShiftsRetrieveQueryOptions(
+    params,
+    options
+  )
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}
+
+export type dashboardSuppliersRetrieveResponse200 = {
+  data: DashboardSuppliersResponse
+  status: 200
+}
+
+export type dashboardSuppliersRetrieveResponse400 = {
+  data: DashboardError
+  status: 400
+}
+
+export type dashboardSuppliersRetrieveResponse404 = {
+  data: DashboardError
+  status: 404
+}
+
+export type dashboardSuppliersRetrieveResponseSuccess =
+  dashboardSuppliersRetrieveResponse200 & {
+    headers: Headers
+  }
+export type dashboardSuppliersRetrieveResponseError = (
+  | dashboardSuppliersRetrieveResponse400
+  | dashboardSuppliersRetrieveResponse404
+) & {
+  headers: Headers
+}
+
+export type dashboardSuppliersRetrieveResponse =
+  | dashboardSuppliersRetrieveResponseSuccess
+  | dashboardSuppliersRetrieveResponseError
+
+export const getDashboardSuppliersRetrieveUrl = (
+  params: DashboardSuppliersRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/suppliers/?${stringifiedParams}`
+    : `/api/dashboard/suppliers/`
+}
+
+/**
+ * KPIs fournisseurs du dashboard.
+GET /api/dashboard/suppliers?restaurant_id=X&date=YYYY-MM-DD
+ */
+export const dashboardSuppliersRetrieve = async (
+  params: DashboardSuppliersRetrieveParams,
+  options?: RequestInit
+): Promise<dashboardSuppliersRetrieveResponse> => {
+  return kyMutator<dashboardSuppliersRetrieveResponse>(
+    getDashboardSuppliersRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getDashboardSuppliersRetrieveQueryKey = (
+  params?: DashboardSuppliersRetrieveParams
+) => {
+  return [`/api/dashboard/suppliers/`, ...(params ? [params] : [])] as const
+}
+
+export const getDashboardSuppliersRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardSuppliersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardSuppliersRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>
+  > = ({ signal }) => dashboardSuppliersRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DashboardSuppliersRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>
+>
+export type DashboardSuppliersRetrieveQueryError = DashboardError
+
+export function useDashboardSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardSuppliersRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardSuppliersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useDashboardSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardSuppliersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+
+export function useDashboardSuppliersRetrieve<
+  TData = Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+  TError = DashboardError,
+>(
+  params: DashboardSuppliersRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardSuppliersRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getDashboardSuppliersRetrieveQueryOptions(
+    params,
+    options
+  )
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+
+  return { ...query, queryKey: queryOptions.queryKey }
+}

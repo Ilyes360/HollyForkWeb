@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Holly Pi API
  * Documentation OpenAPI 3 des endpoints : corps de requête/réponse JSON, en-têtes, authentification JWT.
+
+**Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,8 +20,8 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query"
 
 import type {
   BillingSettings,
@@ -42,1063 +41,1510 @@ import type {
   SettingsRestaurantRetrieveParams,
   SettingsUsersListParams,
   UserProfile,
-  UserRegistrationRequest
-} from '../../schemas';
+  UserRegistrationRequest,
+} from "../../schemas"
 
-import { kyMutator } from '../../../mutator';
-
-
-
+import { kyMutator } from "../../../mutator"
 
 export type settingsBillingListResponse200 = {
   data: PaginatedBillingSettingsList
   status: 200
 }
 
-export type settingsBillingListResponseSuccess = (settingsBillingListResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsBillingListResponseSuccess =
+  settingsBillingListResponse200 & {
+    headers: Headers
+  }
+export type settingsBillingListResponse = settingsBillingListResponseSuccess
 
-export type settingsBillingListResponse = (settingsBillingListResponseSuccess)
-
-export const getSettingsBillingListUrl = (params?: SettingsBillingListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSettingsBillingListUrl = (
+  params?: SettingsBillingListParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/settings/billing/?${stringifiedParams}` : `/api/settings/billing/`
+  return stringifiedParams.length > 0
+    ? `/api/settings/billing/?${stringifiedParams}`
+    : `/api/settings/billing/`
 }
 
-export const settingsBillingList = async (params?: SettingsBillingListParams, options?: RequestInit): Promise<settingsBillingListResponse> => {
-
-  return kyMutator<settingsBillingListResponse>(getSettingsBillingListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsBillingListQueryKey = (params?: SettingsBillingListParams,) => {
-    return [
-    `/api/settings/billing/`, ...(params ? [params] : [])
-    ] as const;
+export const settingsBillingList = async (
+  params?: SettingsBillingListParams,
+  options?: RequestInit
+): Promise<settingsBillingListResponse> => {
+  return kyMutator<settingsBillingListResponse>(
+    getSettingsBillingListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
+  )
+}
 
-
-export const getSettingsBillingListQueryOptions = <TData = Awaited<ReturnType<typeof settingsBillingList>>, TError = unknown>(params?: SettingsBillingListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingList>>, TError, TData>>, }
+export const getSettingsBillingListQueryKey = (
+  params?: SettingsBillingListParams
 ) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsBillingListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsBillingList>>> = ({ signal }) => settingsBillingList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsBillingList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return [`/api/settings/billing/`, ...(params ? [params] : [])] as const
 }
 
-export type SettingsBillingListQueryResult = NonNullable<Awaited<ReturnType<typeof settingsBillingList>>>
+export const getSettingsBillingListQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsBillingList>>,
+  TError = unknown,
+>(
+  params?: SettingsBillingListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsBillingListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsBillingList>>
+  > = ({ signal }) => settingsBillingList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsBillingList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsBillingListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsBillingList>>
+>
 export type SettingsBillingListQueryError = unknown
 
-
-export function useSettingsBillingList<TData = Awaited<ReturnType<typeof settingsBillingList>>, TError = unknown>(
- params: undefined |  SettingsBillingListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingList>>, TError, TData>> & Pick<
+export function useSettingsBillingList<
+  TData = Awaited<ReturnType<typeof settingsBillingList>>,
+  TError = unknown,
+>(
+  params: undefined | SettingsBillingListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsBillingList>>,
           TError,
           Awaited<ReturnType<typeof settingsBillingList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsBillingList<TData = Awaited<ReturnType<typeof settingsBillingList>>, TError = unknown>(
- params?: SettingsBillingListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsBillingList<
+  TData = Awaited<ReturnType<typeof settingsBillingList>>,
+  TError = unknown,
+>(
+  params?: SettingsBillingListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsBillingList>>,
           TError,
           Awaited<ReturnType<typeof settingsBillingList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsBillingList<TData = Awaited<ReturnType<typeof settingsBillingList>>, TError = unknown>(
- params?: SettingsBillingListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsBillingList<TData = Awaited<ReturnType<typeof settingsBillingList>>, TError = unknown>(
- params?: SettingsBillingListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsBillingListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsBillingList<
+  TData = Awaited<ReturnType<typeof settingsBillingList>>,
+  TError = unknown,
+>(
+  params?: SettingsBillingListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsBillingList<
+  TData = Awaited<ReturnType<typeof settingsBillingList>>,
+  TError = unknown,
+>(
+  params?: SettingsBillingListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsBillingListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsBillingCreateResponse201 = {
   data: BillingSettings
   status: 201
 }
 
-export type settingsBillingCreateResponseSuccess = (settingsBillingCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type settingsBillingCreateResponse = (settingsBillingCreateResponseSuccess)
+export type settingsBillingCreateResponseSuccess =
+  settingsBillingCreateResponse201 & {
+    headers: Headers
+  }
+export type settingsBillingCreateResponse = settingsBillingCreateResponseSuccess
 
 export const getSettingsBillingCreateUrl = () => {
-
-
-
-
   return `/api/settings/billing/`
 }
 
-export const settingsBillingCreate = async (billingSettingsRequest?: BillingSettingsRequest, options?: RequestInit): Promise<settingsBillingCreateResponse> => {
-
-  return kyMutator<settingsBillingCreateResponse>(getSettingsBillingCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      billingSettingsRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsBillingCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingCreate>>, TError,{data?: BillingSettingsRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsBillingCreate>>, TError,{data?: BillingSettingsRequest}, TContext> => {
-
-const mutationKey = ['settingsBillingCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsBillingCreate>>, {data?: BillingSettingsRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  settingsBillingCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsBillingCreateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsBillingCreate>>>
-    export type SettingsBillingCreateMutationBody = BillingSettingsRequest | undefined
-    export type SettingsBillingCreateMutationError = unknown
-
-    export const useSettingsBillingCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingCreate>>, TError,{data?: BillingSettingsRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsBillingCreate>>,
-        TError,
-        {data?: BillingSettingsRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsBillingCreateMutationOptions(options), queryClient);
+export const settingsBillingCreate = async (
+  billingSettingsRequest?: BillingSettingsRequest,
+  options?: RequestInit
+): Promise<settingsBillingCreateResponse> => {
+  return kyMutator<settingsBillingCreateResponse>(
+    getSettingsBillingCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(billingSettingsRequest),
     }
-    export type settingsBillingRetrieveResponse200 = {
+  )
+}
+
+export const getSettingsBillingCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsBillingCreate>>,
+    TError,
+    { data?: BillingSettingsRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsBillingCreate>>,
+  TError,
+  { data?: BillingSettingsRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsBillingCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsBillingCreate>>,
+    { data?: BillingSettingsRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return settingsBillingCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsBillingCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsBillingCreate>>
+>
+export type SettingsBillingCreateMutationBody =
+  | BillingSettingsRequest
+  | undefined
+export type SettingsBillingCreateMutationError = unknown
+
+export const useSettingsBillingCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsBillingCreate>>,
+      TError,
+      { data?: BillingSettingsRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsBillingCreate>>,
+  TError,
+  { data?: BillingSettingsRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsBillingCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsBillingRetrieveResponse200 = {
   data: BillingSettings
   status: 200
 }
 
-export type settingsBillingRetrieveResponseSuccess = (settingsBillingRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsBillingRetrieveResponseSuccess =
+  settingsBillingRetrieveResponse200 & {
+    headers: Headers
+  }
+export type settingsBillingRetrieveResponse =
+  settingsBillingRetrieveResponseSuccess
 
-export type settingsBillingRetrieveResponse = (settingsBillingRetrieveResponseSuccess)
-
-export const getSettingsBillingRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getSettingsBillingRetrieveUrl = (id: number) => {
   return `/api/settings/billing/${id}/`
 }
 
-export const settingsBillingRetrieve = async (id: number, options?: RequestInit): Promise<settingsBillingRetrieveResponse> => {
-
-  return kyMutator<settingsBillingRetrieveResponse>(getSettingsBillingRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsBillingRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/settings/billing/${id}/`
-    ] as const;
+export const settingsBillingRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<settingsBillingRetrieveResponse> => {
+  return kyMutator<settingsBillingRetrieveResponse>(
+    getSettingsBillingRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getSettingsBillingRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsBillingRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsBillingRetrieve>>> = ({ signal }) => settingsBillingRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type SettingsBillingRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof settingsBillingRetrieve>>>
+export const getSettingsBillingRetrieveQueryKey = (id: number) => {
+  return [`/api/settings/billing/${id}/`] as const
+}
+
+export const getSettingsBillingRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsBillingRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsBillingRetrieve>>
+  > = ({ signal }) => settingsBillingRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsBillingRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsBillingRetrieve>>
+>
 export type SettingsBillingRetrieveQueryError = unknown
 
-
-export function useSettingsBillingRetrieve<TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError, TData>> & Pick<
+export function useSettingsBillingRetrieve<
+  TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsBillingRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsBillingRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsBillingRetrieve<TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsBillingRetrieve<
+  TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsBillingRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsBillingRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsBillingRetrieve<TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsBillingRetrieve<TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsBillingRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsBillingRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsBillingRetrieve<
+  TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsBillingRetrieve<
+  TData = Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsBillingRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsBillingRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsBillingUpdateResponse200 = {
   data: BillingSettings
   status: 200
 }
 
-export type settingsBillingUpdateResponseSuccess = (settingsBillingUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsBillingUpdateResponseSuccess =
+  settingsBillingUpdateResponse200 & {
+    headers: Headers
+  }
+export type settingsBillingUpdateResponse = settingsBillingUpdateResponseSuccess
 
-export type settingsBillingUpdateResponse = (settingsBillingUpdateResponseSuccess)
-
-export const getSettingsBillingUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSettingsBillingUpdateUrl = (id: number) => {
   return `/api/settings/billing/${id}/`
 }
 
-export const settingsBillingUpdate = async (id: number,
-    billingSettingsRequest?: BillingSettingsRequest, options?: RequestInit): Promise<settingsBillingUpdateResponse> => {
-
-  return kyMutator<settingsBillingUpdateResponse>(getSettingsBillingUpdateUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      billingSettingsRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsBillingUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingUpdate>>, TError,{id: number;data?: BillingSettingsRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsBillingUpdate>>, TError,{id: number;data?: BillingSettingsRequest}, TContext> => {
-
-const mutationKey = ['settingsBillingUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsBillingUpdate>>, {id: number;data?: BillingSettingsRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  settingsBillingUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsBillingUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsBillingUpdate>>>
-    export type SettingsBillingUpdateMutationBody = BillingSettingsRequest | undefined
-    export type SettingsBillingUpdateMutationError = unknown
-
-    export const useSettingsBillingUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingUpdate>>, TError,{id: number;data?: BillingSettingsRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsBillingUpdate>>,
-        TError,
-        {id: number;data?: BillingSettingsRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsBillingUpdateMutationOptions(options), queryClient);
+export const settingsBillingUpdate = async (
+  id: number,
+  billingSettingsRequest?: BillingSettingsRequest,
+  options?: RequestInit
+): Promise<settingsBillingUpdateResponse> => {
+  return kyMutator<settingsBillingUpdateResponse>(
+    getSettingsBillingUpdateUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(billingSettingsRequest),
     }
-    export type settingsBillingPartialUpdateResponse200 = {
+  )
+}
+
+export const getSettingsBillingUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsBillingUpdate>>,
+    TError,
+    { id: number; data?: BillingSettingsRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsBillingUpdate>>,
+  TError,
+  { id: number; data?: BillingSettingsRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsBillingUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsBillingUpdate>>,
+    { id: number; data?: BillingSettingsRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return settingsBillingUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsBillingUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsBillingUpdate>>
+>
+export type SettingsBillingUpdateMutationBody =
+  | BillingSettingsRequest
+  | undefined
+export type SettingsBillingUpdateMutationError = unknown
+
+export const useSettingsBillingUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsBillingUpdate>>,
+      TError,
+      { id: number; data?: BillingSettingsRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsBillingUpdate>>,
+  TError,
+  { id: number; data?: BillingSettingsRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsBillingUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsBillingPartialUpdateResponse200 = {
   data: BillingSettings
   status: 200
 }
 
-export type settingsBillingPartialUpdateResponseSuccess = (settingsBillingPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsBillingPartialUpdateResponseSuccess =
+  settingsBillingPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type settingsBillingPartialUpdateResponse =
+  settingsBillingPartialUpdateResponseSuccess
 
-export type settingsBillingPartialUpdateResponse = (settingsBillingPartialUpdateResponseSuccess)
-
-export const getSettingsBillingPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSettingsBillingPartialUpdateUrl = (id: number) => {
   return `/api/settings/billing/${id}/`
 }
 
-export const settingsBillingPartialUpdate = async (id: number,
-    patchedBillingSettingsRequest?: PatchedBillingSettingsRequest, options?: RequestInit): Promise<settingsBillingPartialUpdateResponse> => {
-
-  return kyMutator<settingsBillingPartialUpdateResponse>(getSettingsBillingPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedBillingSettingsRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsBillingPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingPartialUpdate>>, TError,{id: number;data?: PatchedBillingSettingsRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsBillingPartialUpdate>>, TError,{id: number;data?: PatchedBillingSettingsRequest}, TContext> => {
-
-const mutationKey = ['settingsBillingPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsBillingPartialUpdate>>, {id: number;data?: PatchedBillingSettingsRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  settingsBillingPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsBillingPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsBillingPartialUpdate>>>
-    export type SettingsBillingPartialUpdateMutationBody = PatchedBillingSettingsRequest | undefined
-    export type SettingsBillingPartialUpdateMutationError = unknown
-
-    export const useSettingsBillingPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingPartialUpdate>>, TError,{id: number;data?: PatchedBillingSettingsRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsBillingPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedBillingSettingsRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsBillingPartialUpdateMutationOptions(options), queryClient);
+export const settingsBillingPartialUpdate = async (
+  id: number,
+  patchedBillingSettingsRequest?: PatchedBillingSettingsRequest,
+  options?: RequestInit
+): Promise<settingsBillingPartialUpdateResponse> => {
+  return kyMutator<settingsBillingPartialUpdateResponse>(
+    getSettingsBillingPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedBillingSettingsRequest),
     }
-    export type settingsBillingDestroyResponse204 = {
+  )
+}
+
+export const getSettingsBillingPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsBillingPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedBillingSettingsRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsBillingPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedBillingSettingsRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsBillingPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsBillingPartialUpdate>>,
+    { id: number; data?: PatchedBillingSettingsRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return settingsBillingPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsBillingPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsBillingPartialUpdate>>
+>
+export type SettingsBillingPartialUpdateMutationBody =
+  | PatchedBillingSettingsRequest
+  | undefined
+export type SettingsBillingPartialUpdateMutationError = unknown
+
+export const useSettingsBillingPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsBillingPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedBillingSettingsRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsBillingPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedBillingSettingsRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsBillingPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsBillingDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type settingsBillingDestroyResponseSuccess = (settingsBillingDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type settingsBillingDestroyResponseSuccess =
+  settingsBillingDestroyResponse204 & {
+    headers: Headers
+  }
+export type settingsBillingDestroyResponse =
+  settingsBillingDestroyResponseSuccess
 
-export type settingsBillingDestroyResponse = (settingsBillingDestroyResponseSuccess)
-
-export const getSettingsBillingDestroyUrl = (id: number,) => {
-
-
-
-
+export const getSettingsBillingDestroyUrl = (id: number) => {
   return `/api/settings/billing/${id}/`
 }
 
-export const settingsBillingDestroy = async (id: number, options?: RequestInit): Promise<settingsBillingDestroyResponse> => {
-
-  return kyMutator<settingsBillingDestroyResponse>(getSettingsBillingDestroyUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getSettingsBillingDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsBillingDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['settingsBillingDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsBillingDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  settingsBillingDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsBillingDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof settingsBillingDestroy>>>
-
-    export type SettingsBillingDestroyMutationError = unknown
-
-    export const useSettingsBillingDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsBillingDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsBillingDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getSettingsBillingDestroyMutationOptions(options), queryClient);
+export const settingsBillingDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<settingsBillingDestroyResponse> => {
+  return kyMutator<settingsBillingDestroyResponse>(
+    getSettingsBillingDestroyUrl(id),
+    {
+      ...options,
+      method: "DELETE",
     }
-    export type settingsNotificationsListResponse200 = {
+  )
+}
+
+export const getSettingsBillingDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsBillingDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsBillingDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["settingsBillingDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsBillingDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return settingsBillingDestroy(id)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsBillingDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsBillingDestroy>>
+>
+
+export type SettingsBillingDestroyMutationError = unknown
+
+export const useSettingsBillingDestroy = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsBillingDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsBillingDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getSettingsBillingDestroyMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsNotificationsListResponse200 = {
   data: PaginatedNotificationSettingsList
   status: 200
 }
 
-export type settingsNotificationsListResponseSuccess = (settingsNotificationsListResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsNotificationsListResponseSuccess =
+  settingsNotificationsListResponse200 & {
+    headers: Headers
+  }
+export type settingsNotificationsListResponse =
+  settingsNotificationsListResponseSuccess
 
-export type settingsNotificationsListResponse = (settingsNotificationsListResponseSuccess)
-
-export const getSettingsNotificationsListUrl = (params?: SettingsNotificationsListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSettingsNotificationsListUrl = (
+  params?: SettingsNotificationsListParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/settings/notifications/?${stringifiedParams}` : `/api/settings/notifications/`
+  return stringifiedParams.length > 0
+    ? `/api/settings/notifications/?${stringifiedParams}`
+    : `/api/settings/notifications/`
 }
 
-export const settingsNotificationsList = async (params?: SettingsNotificationsListParams, options?: RequestInit): Promise<settingsNotificationsListResponse> => {
-
-  return kyMutator<settingsNotificationsListResponse>(getSettingsNotificationsListUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsNotificationsListQueryKey = (params?: SettingsNotificationsListParams,) => {
-    return [
-    `/api/settings/notifications/`, ...(params ? [params] : [])
-    ] as const;
+export const settingsNotificationsList = async (
+  params?: SettingsNotificationsListParams,
+  options?: RequestInit
+): Promise<settingsNotificationsListResponse> => {
+  return kyMutator<settingsNotificationsListResponse>(
+    getSettingsNotificationsListUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
+  )
+}
 
-
-export const getSettingsNotificationsListQueryOptions = <TData = Awaited<ReturnType<typeof settingsNotificationsList>>, TError = unknown>(params?: SettingsNotificationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsList>>, TError, TData>>, }
+export const getSettingsNotificationsListQueryKey = (
+  params?: SettingsNotificationsListParams
 ) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsNotificationsListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsNotificationsList>>> = ({ signal }) => settingsNotificationsList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return [`/api/settings/notifications/`, ...(params ? [params] : [])] as const
 }
 
-export type SettingsNotificationsListQueryResult = NonNullable<Awaited<ReturnType<typeof settingsNotificationsList>>>
+export const getSettingsNotificationsListQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsNotificationsList>>,
+  TError = unknown,
+>(
+  params?: SettingsNotificationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsNotificationsListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsNotificationsList>>
+  > = ({ signal }) => settingsNotificationsList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsNotificationsList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsNotificationsListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsNotificationsList>>
+>
 export type SettingsNotificationsListQueryError = unknown
 
-
-export function useSettingsNotificationsList<TData = Awaited<ReturnType<typeof settingsNotificationsList>>, TError = unknown>(
- params: undefined |  SettingsNotificationsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsList>>, TError, TData>> & Pick<
+export function useSettingsNotificationsList<
+  TData = Awaited<ReturnType<typeof settingsNotificationsList>>,
+  TError = unknown,
+>(
+  params: undefined | SettingsNotificationsListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsNotificationsList>>,
           TError,
           Awaited<ReturnType<typeof settingsNotificationsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsNotificationsList<TData = Awaited<ReturnType<typeof settingsNotificationsList>>, TError = unknown>(
- params?: SettingsNotificationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsNotificationsList<
+  TData = Awaited<ReturnType<typeof settingsNotificationsList>>,
+  TError = unknown,
+>(
+  params?: SettingsNotificationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsNotificationsList>>,
           TError,
           Awaited<ReturnType<typeof settingsNotificationsList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsNotificationsList<TData = Awaited<ReturnType<typeof settingsNotificationsList>>, TError = unknown>(
- params?: SettingsNotificationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsNotificationsList<TData = Awaited<ReturnType<typeof settingsNotificationsList>>, TError = unknown>(
- params?: SettingsNotificationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsNotificationsListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsNotificationsList<
+  TData = Awaited<ReturnType<typeof settingsNotificationsList>>,
+  TError = unknown,
+>(
+  params?: SettingsNotificationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsNotificationsList<
+  TData = Awaited<ReturnType<typeof settingsNotificationsList>>,
+  TError = unknown,
+>(
+  params?: SettingsNotificationsListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsNotificationsListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsNotificationsCreateResponse201 = {
   data: NotificationSettings
   status: 201
 }
 
-export type settingsNotificationsCreateResponseSuccess = (settingsNotificationsCreateResponse201) & {
-  headers: Headers;
-};
-;
-
-export type settingsNotificationsCreateResponse = (settingsNotificationsCreateResponseSuccess)
+export type settingsNotificationsCreateResponseSuccess =
+  settingsNotificationsCreateResponse201 & {
+    headers: Headers
+  }
+export type settingsNotificationsCreateResponse =
+  settingsNotificationsCreateResponseSuccess
 
 export const getSettingsNotificationsCreateUrl = () => {
-
-
-
-
   return `/api/settings/notifications/`
 }
 
-export const settingsNotificationsCreate = async (notificationSettingsRequest?: NotificationSettingsRequest, options?: RequestInit): Promise<settingsNotificationsCreateResponse> => {
-
-  return kyMutator<settingsNotificationsCreateResponse>(getSettingsNotificationsCreateUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      notificationSettingsRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsNotificationsCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsCreate>>, TError,{data?: NotificationSettingsRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsCreate>>, TError,{data?: NotificationSettingsRequest}, TContext> => {
-
-const mutationKey = ['settingsNotificationsCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsNotificationsCreate>>, {data?: NotificationSettingsRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  settingsNotificationsCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsNotificationsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsNotificationsCreate>>>
-    export type SettingsNotificationsCreateMutationBody = NotificationSettingsRequest | undefined
-    export type SettingsNotificationsCreateMutationError = unknown
-
-    export const useSettingsNotificationsCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsCreate>>, TError,{data?: NotificationSettingsRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsNotificationsCreate>>,
-        TError,
-        {data?: NotificationSettingsRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsNotificationsCreateMutationOptions(options), queryClient);
+export const settingsNotificationsCreate = async (
+  notificationSettingsRequest?: NotificationSettingsRequest,
+  options?: RequestInit
+): Promise<settingsNotificationsCreateResponse> => {
+  return kyMutator<settingsNotificationsCreateResponse>(
+    getSettingsNotificationsCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(notificationSettingsRequest),
     }
-    export type settingsNotificationsRetrieveResponse200 = {
+  )
+}
+
+export const getSettingsNotificationsCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsNotificationsCreate>>,
+    TError,
+    { data?: NotificationSettingsRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsNotificationsCreate>>,
+  TError,
+  { data?: NotificationSettingsRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsNotificationsCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsNotificationsCreate>>,
+    { data?: NotificationSettingsRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return settingsNotificationsCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsNotificationsCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsNotificationsCreate>>
+>
+export type SettingsNotificationsCreateMutationBody =
+  | NotificationSettingsRequest
+  | undefined
+export type SettingsNotificationsCreateMutationError = unknown
+
+export const useSettingsNotificationsCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsNotificationsCreate>>,
+      TError,
+      { data?: NotificationSettingsRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsNotificationsCreate>>,
+  TError,
+  { data?: NotificationSettingsRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsNotificationsCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsNotificationsRetrieveResponse200 = {
   data: NotificationSettings
   status: 200
 }
 
-export type settingsNotificationsRetrieveResponseSuccess = (settingsNotificationsRetrieveResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsNotificationsRetrieveResponseSuccess =
+  settingsNotificationsRetrieveResponse200 & {
+    headers: Headers
+  }
+export type settingsNotificationsRetrieveResponse =
+  settingsNotificationsRetrieveResponseSuccess
 
-export type settingsNotificationsRetrieveResponse = (settingsNotificationsRetrieveResponseSuccess)
-
-export const getSettingsNotificationsRetrieveUrl = (id: number,) => {
-
-
-
-
+export const getSettingsNotificationsRetrieveUrl = (id: number) => {
   return `/api/settings/notifications/${id}/`
 }
 
-export const settingsNotificationsRetrieve = async (id: number, options?: RequestInit): Promise<settingsNotificationsRetrieveResponse> => {
-
-  return kyMutator<settingsNotificationsRetrieveResponse>(getSettingsNotificationsRetrieveUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsNotificationsRetrieveQueryKey = (id: number,) => {
-    return [
-    `/api/settings/notifications/${id}/`
-    ] as const;
+export const settingsNotificationsRetrieve = async (
+  id: number,
+  options?: RequestInit
+): Promise<settingsNotificationsRetrieveResponse> => {
+  return kyMutator<settingsNotificationsRetrieveResponse>(
+    getSettingsNotificationsRetrieveUrl(id),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getSettingsNotificationsRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsNotificationsRetrieveQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>> = ({ signal }) => settingsNotificationsRetrieve(id, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type SettingsNotificationsRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>>
+export const getSettingsNotificationsRetrieveQueryKey = (id: number) => {
+  return [`/api/settings/notifications/${id}/`] as const
+}
+
+export const getSettingsNotificationsRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsNotificationsRetrieveQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsNotificationsRetrieve>>
+  > = ({ signal }) => settingsNotificationsRetrieve(id, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsNotificationsRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsNotificationsRetrieve>>
+>
 export type SettingsNotificationsRetrieveQueryError = unknown
 
-
-export function useSettingsNotificationsRetrieve<TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError, TData>> & Pick<
+export function useSettingsNotificationsRetrieve<
+  TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsNotificationsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsNotificationsRetrieve<TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsNotificationsRetrieve<
+  TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsNotificationsRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsNotificationsRetrieve<TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsNotificationsRetrieve<TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsNotificationsRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsNotificationsRetrieveQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsNotificationsRetrieve<
+  TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsNotificationsRetrieve<
+  TData = Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsNotificationsRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsNotificationsRetrieveQueryOptions(id, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsNotificationsUpdateResponse200 = {
   data: NotificationSettings
   status: 200
 }
 
-export type settingsNotificationsUpdateResponseSuccess = (settingsNotificationsUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsNotificationsUpdateResponseSuccess =
+  settingsNotificationsUpdateResponse200 & {
+    headers: Headers
+  }
+export type settingsNotificationsUpdateResponse =
+  settingsNotificationsUpdateResponseSuccess
 
-export type settingsNotificationsUpdateResponse = (settingsNotificationsUpdateResponseSuccess)
-
-export const getSettingsNotificationsUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSettingsNotificationsUpdateUrl = (id: number) => {
   return `/api/settings/notifications/${id}/`
 }
 
-export const settingsNotificationsUpdate = async (id: number,
-    notificationSettingsRequest?: NotificationSettingsRequest, options?: RequestInit): Promise<settingsNotificationsUpdateResponse> => {
-
-  return kyMutator<settingsNotificationsUpdateResponse>(getSettingsNotificationsUpdateUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      notificationSettingsRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsNotificationsUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsUpdate>>, TError,{id: number;data?: NotificationSettingsRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsUpdate>>, TError,{id: number;data?: NotificationSettingsRequest}, TContext> => {
-
-const mutationKey = ['settingsNotificationsUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsNotificationsUpdate>>, {id: number;data?: NotificationSettingsRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  settingsNotificationsUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsNotificationsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsNotificationsUpdate>>>
-    export type SettingsNotificationsUpdateMutationBody = NotificationSettingsRequest | undefined
-    export type SettingsNotificationsUpdateMutationError = unknown
-
-    export const useSettingsNotificationsUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsUpdate>>, TError,{id: number;data?: NotificationSettingsRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsNotificationsUpdate>>,
-        TError,
-        {id: number;data?: NotificationSettingsRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsNotificationsUpdateMutationOptions(options), queryClient);
+export const settingsNotificationsUpdate = async (
+  id: number,
+  notificationSettingsRequest?: NotificationSettingsRequest,
+  options?: RequestInit
+): Promise<settingsNotificationsUpdateResponse> => {
+  return kyMutator<settingsNotificationsUpdateResponse>(
+    getSettingsNotificationsUpdateUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(notificationSettingsRequest),
     }
-    export type settingsNotificationsPartialUpdateResponse200 = {
+  )
+}
+
+export const getSettingsNotificationsUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsNotificationsUpdate>>,
+    TError,
+    { id: number; data?: NotificationSettingsRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsNotificationsUpdate>>,
+  TError,
+  { id: number; data?: NotificationSettingsRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsNotificationsUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsNotificationsUpdate>>,
+    { id: number; data?: NotificationSettingsRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return settingsNotificationsUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsNotificationsUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsNotificationsUpdate>>
+>
+export type SettingsNotificationsUpdateMutationBody =
+  | NotificationSettingsRequest
+  | undefined
+export type SettingsNotificationsUpdateMutationError = unknown
+
+export const useSettingsNotificationsUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsNotificationsUpdate>>,
+      TError,
+      { id: number; data?: NotificationSettingsRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsNotificationsUpdate>>,
+  TError,
+  { id: number; data?: NotificationSettingsRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsNotificationsUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsNotificationsPartialUpdateResponse200 = {
   data: NotificationSettings
   status: 200
 }
 
-export type settingsNotificationsPartialUpdateResponseSuccess = (settingsNotificationsPartialUpdateResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsNotificationsPartialUpdateResponseSuccess =
+  settingsNotificationsPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type settingsNotificationsPartialUpdateResponse =
+  settingsNotificationsPartialUpdateResponseSuccess
 
-export type settingsNotificationsPartialUpdateResponse = (settingsNotificationsPartialUpdateResponseSuccess)
-
-export const getSettingsNotificationsPartialUpdateUrl = (id: number,) => {
-
-
-
-
+export const getSettingsNotificationsPartialUpdateUrl = (id: number) => {
   return `/api/settings/notifications/${id}/`
 }
 
-export const settingsNotificationsPartialUpdate = async (id: number,
-    patchedNotificationSettingsRequest?: PatchedNotificationSettingsRequest, options?: RequestInit): Promise<settingsNotificationsPartialUpdateResponse> => {
-
-  return kyMutator<settingsNotificationsPartialUpdateResponse>(getSettingsNotificationsPartialUpdateUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedNotificationSettingsRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsNotificationsPartialUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>, TError,{id: number;data?: PatchedNotificationSettingsRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>, TError,{id: number;data?: PatchedNotificationSettingsRequest}, TContext> => {
-
-const mutationKey = ['settingsNotificationsPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>, {id: number;data?: PatchedNotificationSettingsRequest}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  settingsNotificationsPartialUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsNotificationsPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>>
-    export type SettingsNotificationsPartialUpdateMutationBody = PatchedNotificationSettingsRequest | undefined
-    export type SettingsNotificationsPartialUpdateMutationError = unknown
-
-    export const useSettingsNotificationsPartialUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>, TError,{id: number;data?: PatchedNotificationSettingsRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>,
-        TError,
-        {id: number;data?: PatchedNotificationSettingsRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsNotificationsPartialUpdateMutationOptions(options), queryClient);
+export const settingsNotificationsPartialUpdate = async (
+  id: number,
+  patchedNotificationSettingsRequest?: PatchedNotificationSettingsRequest,
+  options?: RequestInit
+): Promise<settingsNotificationsPartialUpdateResponse> => {
+  return kyMutator<settingsNotificationsPartialUpdateResponse>(
+    getSettingsNotificationsPartialUpdateUrl(id),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedNotificationSettingsRequest),
     }
-    export type settingsNotificationsDestroyResponse204 = {
+  )
+}
+
+export const getSettingsNotificationsPartialUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>,
+    TError,
+    { id: number; data?: PatchedNotificationSettingsRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedNotificationSettingsRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsNotificationsPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>,
+    { id: number; data?: PatchedNotificationSettingsRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return settingsNotificationsPartialUpdate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsNotificationsPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>
+>
+export type SettingsNotificationsPartialUpdateMutationBody =
+  | PatchedNotificationSettingsRequest
+  | undefined
+export type SettingsNotificationsPartialUpdateMutationError = unknown
+
+export const useSettingsNotificationsPartialUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>,
+      TError,
+      { id: number; data?: PatchedNotificationSettingsRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsNotificationsPartialUpdate>>,
+  TError,
+  { id: number; data?: PatchedNotificationSettingsRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsNotificationsPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsNotificationsDestroyResponse204 = {
   data: void
   status: 204
 }
 
-export type settingsNotificationsDestroyResponseSuccess = (settingsNotificationsDestroyResponse204) & {
-  headers: Headers;
-};
-;
+export type settingsNotificationsDestroyResponseSuccess =
+  settingsNotificationsDestroyResponse204 & {
+    headers: Headers
+  }
+export type settingsNotificationsDestroyResponse =
+  settingsNotificationsDestroyResponseSuccess
 
-export type settingsNotificationsDestroyResponse = (settingsNotificationsDestroyResponseSuccess)
-
-export const getSettingsNotificationsDestroyUrl = (id: number,) => {
-
-
-
-
+export const getSettingsNotificationsDestroyUrl = (id: number) => {
   return `/api/settings/notifications/${id}/`
 }
 
-export const settingsNotificationsDestroy = async (id: number, options?: RequestInit): Promise<settingsNotificationsDestroyResponse> => {
-
-  return kyMutator<settingsNotificationsDestroyResponse>(getSettingsNotificationsDestroyUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getSettingsNotificationsDestroyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsDestroy>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsDestroy>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['settingsNotificationsDestroy'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsNotificationsDestroy>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  settingsNotificationsDestroy(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsNotificationsDestroyMutationResult = NonNullable<Awaited<ReturnType<typeof settingsNotificationsDestroy>>>
-
-    export type SettingsNotificationsDestroyMutationError = unknown
-
-    export const useSettingsNotificationsDestroy = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsNotificationsDestroy>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsNotificationsDestroy>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getSettingsNotificationsDestroyMutationOptions(options), queryClient);
+export const settingsNotificationsDestroy = async (
+  id: number,
+  options?: RequestInit
+): Promise<settingsNotificationsDestroyResponse> => {
+  return kyMutator<settingsNotificationsDestroyResponse>(
+    getSettingsNotificationsDestroyUrl(id),
+    {
+      ...options,
+      method: "DELETE",
     }
-    export type settingsRestaurantRetrieveResponse200 = {
+  )
+}
+
+export const getSettingsNotificationsDestroyMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsNotificationsDestroy>>,
+    TError,
+    { id: number },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsNotificationsDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["settingsNotificationsDestroy"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsNotificationsDestroy>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return settingsNotificationsDestroy(id)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsNotificationsDestroyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsNotificationsDestroy>>
+>
+
+export type SettingsNotificationsDestroyMutationError = unknown
+
+export const useSettingsNotificationsDestroy = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsNotificationsDestroy>>,
+      TError,
+      { id: number },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsNotificationsDestroy>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(
+    getSettingsNotificationsDestroyMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsRestaurantRetrieveResponse200 = {
   data: Restaurant
   status: 200
 }
@@ -1113,119 +1559,199 @@ export type settingsRestaurantRetrieveResponse404 = {
   status: 404
 }
 
-export type settingsRestaurantRetrieveResponseSuccess = (settingsRestaurantRetrieveResponse200) & {
-  headers: Headers;
-};
-export type settingsRestaurantRetrieveResponseError = (settingsRestaurantRetrieveResponse400 | settingsRestaurantRetrieveResponse404) & {
-  headers: Headers;
-};
+export type settingsRestaurantRetrieveResponseSuccess =
+  settingsRestaurantRetrieveResponse200 & {
+    headers: Headers
+  }
+export type settingsRestaurantRetrieveResponseError = (
+  | settingsRestaurantRetrieveResponse400
+  | settingsRestaurantRetrieveResponse404
+) & {
+  headers: Headers
+}
 
-export type settingsRestaurantRetrieveResponse = (settingsRestaurantRetrieveResponseSuccess | settingsRestaurantRetrieveResponseError)
+export type settingsRestaurantRetrieveResponse =
+  | settingsRestaurantRetrieveResponseSuccess
+  | settingsRestaurantRetrieveResponseError
 
-export const getSettingsRestaurantRetrieveUrl = (params: SettingsRestaurantRetrieveParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSettingsRestaurantRetrieveUrl = (
+  params: SettingsRestaurantRetrieveParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/settings/restaurant/?${stringifiedParams}` : `/api/settings/restaurant/`
+  return stringifiedParams.length > 0
+    ? `/api/settings/restaurant/?${stringifiedParams}`
+    : `/api/settings/restaurant/`
 }
 
 /**
  * GET /api/settings/restaurant?restaurant_id=X
 PATCH /api/settings/restaurant?restaurant_id=X
  */
-export const settingsRestaurantRetrieve = async (params: SettingsRestaurantRetrieveParams, options?: RequestInit): Promise<settingsRestaurantRetrieveResponse> => {
-
-  return kyMutator<settingsRestaurantRetrieveResponse>(getSettingsRestaurantRetrieveUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsRestaurantRetrieveQueryKey = (params?: SettingsRestaurantRetrieveParams,) => {
-    return [
-    `/api/settings/restaurant/`, ...(params ? [params] : [])
-    ] as const;
+export const settingsRestaurantRetrieve = async (
+  params: SettingsRestaurantRetrieveParams,
+  options?: RequestInit
+): Promise<settingsRestaurantRetrieveResponse> => {
+  return kyMutator<settingsRestaurantRetrieveResponse>(
+    getSettingsRestaurantRetrieveUrl(params),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getSettingsRestaurantRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError = void>(params: SettingsRestaurantRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsRestaurantRetrieveQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>> = ({ signal }) => settingsRestaurantRetrieve(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type SettingsRestaurantRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>>
+export const getSettingsRestaurantRetrieveQueryKey = (
+  params?: SettingsRestaurantRetrieveParams
+) => {
+  return [`/api/settings/restaurant/`, ...(params ? [params] : [])] as const
+}
+
+export const getSettingsRestaurantRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+  TError = void,
+>(
+  params: SettingsRestaurantRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsRestaurantRetrieveQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsRestaurantRetrieve>>
+  > = ({ signal }) => settingsRestaurantRetrieve(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsRestaurantRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsRestaurantRetrieve>>
+>
 export type SettingsRestaurantRetrieveQueryError = void
 
-
-export function useSettingsRestaurantRetrieve<TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError = void>(
- params: SettingsRestaurantRetrieveParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError, TData>> & Pick<
+export function useSettingsRestaurantRetrieve<
+  TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+  TError = void,
+>(
+  params: SettingsRestaurantRetrieveParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsRestaurantRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsRestaurantRetrieve<TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError = void>(
- params: SettingsRestaurantRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsRestaurantRetrieve<
+  TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+  TError = void,
+>(
+  params: SettingsRestaurantRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsRestaurantRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsRestaurantRetrieve<TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError = void>(
- params: SettingsRestaurantRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsRestaurantRetrieve<TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError = void>(
- params: SettingsRestaurantRetrieveParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsRestaurantRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsRestaurantRetrieveQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsRestaurantRetrieve<
+  TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+  TError = void,
+>(
+  params: SettingsRestaurantRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsRestaurantRetrieve<
+  TData = Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+  TError = void,
+>(
+  params: SettingsRestaurantRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsRestaurantRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsRestaurantRetrieveQueryOptions(
+    params,
+    options
+  )
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsRestaurantPartialUpdateResponse200 = {
   data: Restaurant
@@ -1242,207 +1768,323 @@ export type settingsRestaurantPartialUpdateResponse404 = {
   status: 404
 }
 
-export type settingsRestaurantPartialUpdateResponseSuccess = (settingsRestaurantPartialUpdateResponse200) & {
-  headers: Headers;
-};
-export type settingsRestaurantPartialUpdateResponseError = (settingsRestaurantPartialUpdateResponse400 | settingsRestaurantPartialUpdateResponse404) & {
-  headers: Headers;
-};
+export type settingsRestaurantPartialUpdateResponseSuccess =
+  settingsRestaurantPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type settingsRestaurantPartialUpdateResponseError = (
+  | settingsRestaurantPartialUpdateResponse400
+  | settingsRestaurantPartialUpdateResponse404
+) & {
+  headers: Headers
+}
 
-export type settingsRestaurantPartialUpdateResponse = (settingsRestaurantPartialUpdateResponseSuccess | settingsRestaurantPartialUpdateResponseError)
+export type settingsRestaurantPartialUpdateResponse =
+  | settingsRestaurantPartialUpdateResponseSuccess
+  | settingsRestaurantPartialUpdateResponseError
 
-export const getSettingsRestaurantPartialUpdateUrl = (params: SettingsRestaurantPartialUpdateParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSettingsRestaurantPartialUpdateUrl = (
+  params: SettingsRestaurantPartialUpdateParams
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/settings/restaurant/?${stringifiedParams}` : `/api/settings/restaurant/`
+  return stringifiedParams.length > 0
+    ? `/api/settings/restaurant/?${stringifiedParams}`
+    : `/api/settings/restaurant/`
 }
 
 /**
  * GET /api/settings/restaurant?restaurant_id=X
 PATCH /api/settings/restaurant?restaurant_id=X
  */
-export const settingsRestaurantPartialUpdate = async (params: SettingsRestaurantPartialUpdateParams,
-    patchedRestaurantRequest?: PatchedRestaurantRequest, options?: RequestInit): Promise<settingsRestaurantPartialUpdateResponse> => {
-
-  return kyMutator<settingsRestaurantPartialUpdateResponse>(getSettingsRestaurantPartialUpdateUrl(params),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedRestaurantRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsRestaurantPartialUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>, TError,{params: SettingsRestaurantPartialUpdateParams;data?: PatchedRestaurantRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>, TError,{params: SettingsRestaurantPartialUpdateParams;data?: PatchedRestaurantRequest}, TContext> => {
-
-const mutationKey = ['settingsRestaurantPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>, {params: SettingsRestaurantPartialUpdateParams;data?: PatchedRestaurantRequest}> = (props) => {
-          const {params,data} = props ?? {};
-
-          return  settingsRestaurantPartialUpdate(params,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsRestaurantPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>>
-    export type SettingsRestaurantPartialUpdateMutationBody = PatchedRestaurantRequest | undefined
-    export type SettingsRestaurantPartialUpdateMutationError = void
-
-    export const useSettingsRestaurantPartialUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>, TError,{params: SettingsRestaurantPartialUpdateParams;data?: PatchedRestaurantRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>,
-        TError,
-        {params: SettingsRestaurantPartialUpdateParams;data?: PatchedRestaurantRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsRestaurantPartialUpdateMutationOptions(options), queryClient);
+export const settingsRestaurantPartialUpdate = async (
+  params: SettingsRestaurantPartialUpdateParams,
+  patchedRestaurantRequest?: PatchedRestaurantRequest,
+  options?: RequestInit
+): Promise<settingsRestaurantPartialUpdateResponse> => {
+  return kyMutator<settingsRestaurantPartialUpdateResponse>(
+    getSettingsRestaurantPartialUpdateUrl(params),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedRestaurantRequest),
     }
-    export type settingsUsersListResponse200 = {
+  )
+}
+
+export const getSettingsRestaurantPartialUpdateMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>,
+    TError,
+    {
+      params: SettingsRestaurantPartialUpdateParams
+      data?: PatchedRestaurantRequest
+    },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>,
+  TError,
+  {
+    params: SettingsRestaurantPartialUpdateParams
+    data?: PatchedRestaurantRequest
+  },
+  TContext
+> => {
+  const mutationKey = ["settingsRestaurantPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>,
+    {
+      params: SettingsRestaurantPartialUpdateParams
+      data?: PatchedRestaurantRequest
+    }
+  > = (props) => {
+    const { params, data } = props ?? {}
+
+    return settingsRestaurantPartialUpdate(params, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsRestaurantPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>
+>
+export type SettingsRestaurantPartialUpdateMutationBody =
+  | PatchedRestaurantRequest
+  | undefined
+export type SettingsRestaurantPartialUpdateMutationError = void
+
+export const useSettingsRestaurantPartialUpdate = <
+  TError = void,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>,
+      TError,
+      {
+        params: SettingsRestaurantPartialUpdateParams
+        data?: PatchedRestaurantRequest
+      },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsRestaurantPartialUpdate>>,
+  TError,
+  {
+    params: SettingsRestaurantPartialUpdateParams
+    data?: PatchedRestaurantRequest
+  },
+  TContext
+> => {
+  return useMutation(
+    getSettingsRestaurantPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsUsersListResponse200 = {
   data: UserProfile
   status: 200
 }
 
-export type settingsUsersListResponseSuccess = (settingsUsersListResponse200) & {
-  headers: Headers;
-};
-;
+export type settingsUsersListResponseSuccess = settingsUsersListResponse200 & {
+  headers: Headers
+}
+export type settingsUsersListResponse = settingsUsersListResponseSuccess
 
-export type settingsUsersListResponse = (settingsUsersListResponseSuccess)
-
-export const getSettingsUsersListUrl = (params?: SettingsUsersListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSettingsUsersListUrl = (params?: SettingsUsersListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? "null" : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/settings/users/?${stringifiedParams}` : `/api/settings/users/`
+  return stringifiedParams.length > 0
+    ? `/api/settings/users/?${stringifiedParams}`
+    : `/api/settings/users/`
 }
 
 /**
  * GET /api/settings/users?restaurant_id=X — liste des utilisateurs
 POST /api/settings/users — création utilisateur
  */
-export const settingsUsersList = async (params?: SettingsUsersListParams, options?: RequestInit): Promise<settingsUsersListResponse> => {
-
-  return kyMutator<settingsUsersListResponse>(getSettingsUsersListUrl(params),
-  {
+export const settingsUsersList = async (
+  params?: SettingsUsersListParams,
+  options?: RequestInit
+): Promise<settingsUsersListResponse> => {
+  return kyMutator<settingsUsersListResponse>(getSettingsUsersListUrl(params), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsUsersListQueryKey = (params?: SettingsUsersListParams,) => {
-    return [
-    `/api/settings/users/`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSettingsUsersListQueryOptions = <TData = Awaited<ReturnType<typeof settingsUsersList>>, TError = unknown>(params?: SettingsUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUsersList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsUsersListQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsUsersList>>> = ({ signal }) => settingsUsersList(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsUsersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+    method: "GET",
+  })
 }
 
-export type SettingsUsersListQueryResult = NonNullable<Awaited<ReturnType<typeof settingsUsersList>>>
+export const getSettingsUsersListQueryKey = (
+  params?: SettingsUsersListParams
+) => {
+  return [`/api/settings/users/`, ...(params ? [params] : [])] as const
+}
+
+export const getSettingsUsersListQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsUsersList>>,
+  TError = unknown,
+>(
+  params?: SettingsUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUsersList>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsUsersListQueryKey(params)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsUsersList>>
+  > = ({ signal }) => settingsUsersList(params, { signal })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsUsersList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsUsersListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsUsersList>>
+>
 export type SettingsUsersListQueryError = unknown
 
-
-export function useSettingsUsersList<TData = Awaited<ReturnType<typeof settingsUsersList>>, TError = unknown>(
- params: undefined |  SettingsUsersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUsersList>>, TError, TData>> & Pick<
+export function useSettingsUsersList<
+  TData = Awaited<ReturnType<typeof settingsUsersList>>,
+  TError = unknown,
+>(
+  params: undefined | SettingsUsersListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUsersList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsUsersList>>,
           TError,
           Awaited<ReturnType<typeof settingsUsersList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsUsersList<TData = Awaited<ReturnType<typeof settingsUsersList>>, TError = unknown>(
- params?: SettingsUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUsersList>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsUsersList<
+  TData = Awaited<ReturnType<typeof settingsUsersList>>,
+  TError = unknown,
+>(
+  params?: SettingsUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUsersList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsUsersList>>,
           TError,
           Awaited<ReturnType<typeof settingsUsersList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsUsersList<TData = Awaited<ReturnType<typeof settingsUsersList>>, TError = unknown>(
- params?: SettingsUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUsersList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsUsersList<TData = Awaited<ReturnType<typeof settingsUsersList>>, TError = unknown>(
- params?: SettingsUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUsersList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsUsersListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsUsersList<
+  TData = Awaited<ReturnType<typeof settingsUsersList>>,
+  TError = unknown,
+>(
+  params?: SettingsUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUsersList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsUsersList<
+  TData = Awaited<ReturnType<typeof settingsUsersList>>,
+  TError = unknown,
+>(
+  params?: SettingsUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUsersList>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsUsersListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsUsersCreateResponse201 = {
   data: UserProfile
@@ -1454,20 +2096,20 @@ export type settingsUsersCreateResponse400 = {
   status: 400
 }
 
-export type settingsUsersCreateResponseSuccess = (settingsUsersCreateResponse201) & {
-  headers: Headers;
-};
-export type settingsUsersCreateResponseError = (settingsUsersCreateResponse400) & {
-  headers: Headers;
-};
+export type settingsUsersCreateResponseSuccess =
+  settingsUsersCreateResponse201 & {
+    headers: Headers
+  }
+export type settingsUsersCreateResponseError =
+  settingsUsersCreateResponse400 & {
+    headers: Headers
+  }
 
-export type settingsUsersCreateResponse = (settingsUsersCreateResponseSuccess | settingsUsersCreateResponseError)
+export type settingsUsersCreateResponse =
+  | settingsUsersCreateResponseSuccess
+  | settingsUsersCreateResponseError
 
 export const getSettingsUsersCreateUrl = () => {
-
-
-
-
   return `/api/settings/users/`
 }
 
@@ -1475,63 +2117,83 @@ export const getSettingsUsersCreateUrl = () => {
  * GET /api/settings/users?restaurant_id=X — liste des utilisateurs
 POST /api/settings/users — création utilisateur
  */
-export const settingsUsersCreate = async (userRegistrationRequest: UserRegistrationRequest, options?: RequestInit): Promise<settingsUsersCreateResponse> => {
-
-  return kyMutator<settingsUsersCreateResponse>(getSettingsUsersCreateUrl(),
-  {
+export const settingsUsersCreate = async (
+  userRegistrationRequest: UserRegistrationRequest,
+  options?: RequestInit
+): Promise<settingsUsersCreateResponse> => {
+  return kyMutator<settingsUsersCreateResponse>(getSettingsUsersCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userRegistrationRequest,)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userRegistrationRequest),
+  })
+}
+
+export const getSettingsUsersCreateMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsUsersCreate>>,
+    TError,
+    { data: UserRegistrationRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsUsersCreate>>,
+  TError,
+  { data: UserRegistrationRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsUsersCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsUsersCreate>>,
+    { data: UserRegistrationRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return settingsUsersCreate(data)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type SettingsUsersCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsUsersCreate>>
+>
+export type SettingsUsersCreateMutationBody = UserRegistrationRequest
+export type SettingsUsersCreateMutationError = void
 
-
-export const getSettingsUsersCreateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsUsersCreate>>, TError,{data: UserRegistrationRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsUsersCreate>>, TError,{data: UserRegistrationRequest}, TContext> => {
-
-const mutationKey = ['settingsUsersCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsUsersCreate>>, {data: UserRegistrationRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  settingsUsersCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsUsersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsUsersCreate>>>
-    export type SettingsUsersCreateMutationBody = UserRegistrationRequest
-    export type SettingsUsersCreateMutationError = void
-
-    export const useSettingsUsersCreate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsUsersCreate>>, TError,{data: UserRegistrationRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsUsersCreate>>,
-        TError,
-        {data: UserRegistrationRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsUsersCreateMutationOptions(options), queryClient);
-    }
-    export type settingsUserRetrieveResponse200 = {
+export const useSettingsUsersCreate = <TError = void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsUsersCreate>>,
+      TError,
+      { data: UserRegistrationRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsUsersCreate>>,
+  TError,
+  { data: UserRegistrationRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsUsersCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type settingsUserRetrieveResponse200 = {
   data: UserProfile
   status: 200
 }
@@ -1541,20 +2203,20 @@ export type settingsUserRetrieveResponse404 = {
   status: 404
 }
 
-export type settingsUserRetrieveResponseSuccess = (settingsUserRetrieveResponse200) & {
-  headers: Headers;
-};
-export type settingsUserRetrieveResponseError = (settingsUserRetrieveResponse404) & {
-  headers: Headers;
-};
+export type settingsUserRetrieveResponseSuccess =
+  settingsUserRetrieveResponse200 & {
+    headers: Headers
+  }
+export type settingsUserRetrieveResponseError =
+  settingsUserRetrieveResponse404 & {
+    headers: Headers
+  }
 
-export type settingsUserRetrieveResponse = (settingsUserRetrieveResponseSuccess | settingsUserRetrieveResponseError)
+export type settingsUserRetrieveResponse =
+  | settingsUserRetrieveResponseSuccess
+  | settingsUserRetrieveResponseError
 
-export const getSettingsUserRetrieveUrl = (userId: number,) => {
-
-
-
-
+export const getSettingsUserRetrieveUrl = (userId: number) => {
   return `/api/settings/users/${userId}/`
 }
 
@@ -1562,91 +2224,162 @@ export const getSettingsUserRetrieveUrl = (userId: number,) => {
  * GET /api/settings/users/{user_id}/ — détail d'un utilisateur
 PATCH /api/settings/users/{user_id}/ — mise à jour partielle
  */
-export const settingsUserRetrieve = async (userId: number, options?: RequestInit): Promise<settingsUserRetrieveResponse> => {
-
-  return kyMutator<settingsUserRetrieveResponse>(getSettingsUserRetrieveUrl(userId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSettingsUserRetrieveQueryKey = (userId: number,) => {
-    return [
-    `/api/settings/users/${userId}/`
-    ] as const;
+export const settingsUserRetrieve = async (
+  userId: number,
+  options?: RequestInit
+): Promise<settingsUserRetrieveResponse> => {
+  return kyMutator<settingsUserRetrieveResponse>(
+    getSettingsUserRetrieveUrl(userId),
+    {
+      ...options,
+      method: "GET",
     }
-
-
-export const getSettingsUserRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof settingsUserRetrieve>>, TError = void>(userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUserRetrieve>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSettingsUserRetrieveQueryKey(userId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof settingsUserRetrieve>>> = ({ signal }) => settingsUserRetrieve(userId, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof settingsUserRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  )
 }
 
-export type SettingsUserRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof settingsUserRetrieve>>>
+export const getSettingsUserRetrieveQueryKey = (userId: number) => {
+  return [`/api/settings/users/${userId}/`] as const
+}
+
+export const getSettingsUserRetrieveQueryOptions = <
+  TData = Awaited<ReturnType<typeof settingsUserRetrieve>>,
+  TError = void,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUserRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  }
+) => {
+  const { query: queryOptions } = options ?? {}
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSettingsUserRetrieveQueryKey(userId)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof settingsUserRetrieve>>
+  > = ({ signal }) => settingsUserRetrieve(userId, { signal })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof settingsUserRetrieve>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SettingsUserRetrieveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof settingsUserRetrieve>>
+>
 export type SettingsUserRetrieveQueryError = void
 
-
-export function useSettingsUserRetrieve<TData = Awaited<ReturnType<typeof settingsUserRetrieve>>, TError = void>(
- userId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUserRetrieve>>, TError, TData>> & Pick<
+export function useSettingsUserRetrieve<
+  TData = Awaited<ReturnType<typeof settingsUserRetrieve>>,
+  TError = void,
+>(
+  userId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUserRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsUserRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsUserRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsUserRetrieve<TData = Awaited<ReturnType<typeof settingsUserRetrieve>>, TError = void>(
- userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUserRetrieve>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsUserRetrieve<
+  TData = Awaited<ReturnType<typeof settingsUserRetrieve>>,
+  TError = void,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUserRetrieve>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof settingsUserRetrieve>>,
           TError,
           Awaited<ReturnType<typeof settingsUserRetrieve>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSettingsUserRetrieve<TData = Awaited<ReturnType<typeof settingsUserRetrieve>>, TError = void>(
- userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUserRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useSettingsUserRetrieve<TData = Awaited<ReturnType<typeof settingsUserRetrieve>>, TError = void>(
- userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof settingsUserRetrieve>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSettingsUserRetrieveQueryOptions(userId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+        >,
+        "initialData"
+      >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+}
+export function useSettingsUserRetrieve<
+  TData = Awaited<ReturnType<typeof settingsUserRetrieve>>,
+  TError = void,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUserRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
 }
 
+export function useSettingsUserRetrieve<
+  TData = Awaited<ReturnType<typeof settingsUserRetrieve>>,
+  TError = void,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof settingsUserRetrieve>>,
+        TError,
+        TData
+      >
+    >
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>
+} {
+  const queryOptions = getSettingsUserRetrieveQueryOptions(userId, options)
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
 
-
-
+  return { ...query, queryKey: queryOptions.queryKey }
+}
 
 export type settingsUserPartialUpdateResponse200 = {
   data: UserProfile
@@ -1663,20 +2396,22 @@ export type settingsUserPartialUpdateResponse404 = {
   status: 404
 }
 
-export type settingsUserPartialUpdateResponseSuccess = (settingsUserPartialUpdateResponse200) & {
-  headers: Headers;
-};
-export type settingsUserPartialUpdateResponseError = (settingsUserPartialUpdateResponse400 | settingsUserPartialUpdateResponse404) & {
-  headers: Headers;
-};
+export type settingsUserPartialUpdateResponseSuccess =
+  settingsUserPartialUpdateResponse200 & {
+    headers: Headers
+  }
+export type settingsUserPartialUpdateResponseError = (
+  | settingsUserPartialUpdateResponse400
+  | settingsUserPartialUpdateResponse404
+) & {
+  headers: Headers
+}
 
-export type settingsUserPartialUpdateResponse = (settingsUserPartialUpdateResponseSuccess | settingsUserPartialUpdateResponseError)
+export type settingsUserPartialUpdateResponse =
+  | settingsUserPartialUpdateResponseSuccess
+  | settingsUserPartialUpdateResponseError
 
-export const getSettingsUserPartialUpdateUrl = (userId: number,) => {
-
-
-
-
+export const getSettingsUserPartialUpdateUrl = (userId: number) => {
   return `/api/settings/users/${userId}/`
 }
 
@@ -1684,60 +2419,85 @@ export const getSettingsUserPartialUpdateUrl = (userId: number,) => {
  * GET /api/settings/users/{user_id}/ — détail d'un utilisateur
 PATCH /api/settings/users/{user_id}/ — mise à jour partielle
  */
-export const settingsUserPartialUpdate = async (userId: number,
-    patchedUserProfileRequest?: PatchedUserProfileRequest, options?: RequestInit): Promise<settingsUserPartialUpdateResponse> => {
-
-  return kyMutator<settingsUserPartialUpdateResponse>(getSettingsUserPartialUpdateUrl(userId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      patchedUserProfileRequest,)
-  }
-);}
-
-
-
-
-export const getSettingsUserPartialUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsUserPartialUpdate>>, TError,{userId: number;data?: PatchedUserProfileRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof settingsUserPartialUpdate>>, TError,{userId: number;data?: PatchedUserProfileRequest}, TContext> => {
-
-const mutationKey = ['settingsUserPartialUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsUserPartialUpdate>>, {userId: number;data?: PatchedUserProfileRequest}> = (props) => {
-          const {userId,data} = props ?? {};
-
-          return  settingsUserPartialUpdate(userId,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SettingsUserPartialUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsUserPartialUpdate>>>
-    export type SettingsUserPartialUpdateMutationBody = PatchedUserProfileRequest | undefined
-    export type SettingsUserPartialUpdateMutationError = void
-
-    export const useSettingsUserPartialUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsUserPartialUpdate>>, TError,{userId: number;data?: PatchedUserProfileRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
-        TError,
-        {userId: number;data?: PatchedUserProfileRequest},
-        TContext
-      > => {
-      return useMutation(getSettingsUserPartialUpdateMutationOptions(options), queryClient);
+export const settingsUserPartialUpdate = async (
+  userId: number,
+  patchedUserProfileRequest?: PatchedUserProfileRequest,
+  options?: RequestInit
+): Promise<settingsUserPartialUpdateResponse> => {
+  return kyMutator<settingsUserPartialUpdateResponse>(
+    getSettingsUserPartialUpdateUrl(userId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(patchedUserProfileRequest),
     }
+  )
+}
+
+export const getSettingsUserPartialUpdateMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
+    TError,
+    { userId: number; data?: PatchedUserProfileRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
+  TError,
+  { userId: number; data?: PatchedUserProfileRequest },
+  TContext
+> => {
+  const mutationKey = ["settingsUserPartialUpdate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
+    { userId: number; data?: PatchedUserProfileRequest }
+  > = (props) => {
+    const { userId, data } = props ?? {}
+
+    return settingsUserPartialUpdate(userId, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SettingsUserPartialUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settingsUserPartialUpdate>>
+>
+export type SettingsUserPartialUpdateMutationBody =
+  | PatchedUserProfileRequest
+  | undefined
+export type SettingsUserPartialUpdateMutationError = void
+
+export const useSettingsUserPartialUpdate = <TError = void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
+      TError,
+      { userId: number; data?: PatchedUserProfileRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
+  TError,
+  { userId: number; data?: PatchedUserProfileRequest },
+  TContext
+> => {
+  return useMutation(
+    getSettingsUserPartialUpdateMutationOptions(options),
+    queryClient
+  )
+}
