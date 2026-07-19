@@ -306,7 +306,7 @@ export default function MapCard() {
         revenue: kpiData.kpis.monthlyRevenue,
         covers: kpiData.kpis.covers,
         occupancy: kpiData.kpis.occupancyRate,
-        rating: kpiData.kpis.satisfaction,
+        rating: null,
       }
     : null
 

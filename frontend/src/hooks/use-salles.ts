@@ -53,7 +53,7 @@ export function useSalles(restaurantId: number | null) {
 
   const tablesQuery = useQuery({
     queryKey: keys.tables(restaurantId ?? undefined),
-    queryFn: () => fetchAllPages<ApiTable>("tables/", { salleId: undefined }),
+    queryFn: () => fetchAllPages<ApiTable>("tables/", {}),
     enabled: hasToken && !!restaurantId,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,

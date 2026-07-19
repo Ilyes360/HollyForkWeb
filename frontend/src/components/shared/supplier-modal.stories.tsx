@@ -87,6 +87,7 @@ const mockRecipes = [
   {
     id: "r1",
     name: "Salade Caprese",
+    categorieId: 1,
     category: "entree",
     sellingPrice: 12,
     portions: 4,

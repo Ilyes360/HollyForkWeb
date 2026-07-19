@@ -197,8 +197,8 @@ export default function CuisineRecipePage() {
       navigate("/cuisine")
     }
 
-    const onError = (err: Error) =>
-      handleMutationError(err, { setError: form.setError })
+    const onError = (err: unknown) =>
+      handleMutationError(err as Error, { setError: form.setError })
 
     if (isEditing && editRecipe) {
       updateArticle.mutate(

@@ -172,6 +172,7 @@ export function AddRecipeDialog({
   function handleSubmit(data: FormValues) {
     onSubmit({
       name: data.name,
+      categorieId: editRecipe?.categorieId ?? 0,
       category: data.category,
       sellingPrice: data.sellingPrice,
       portions: data.portions,

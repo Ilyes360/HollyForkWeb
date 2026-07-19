@@ -36,8 +36,7 @@ describe("Dashboard queries", () => {
       expect(data.kpis.dailyRevenue).toBe(4250.5)
       expect(data.kpis.occupancyRate).toBe(78.5)
       expect(data.kpis.covers).toBe(142)
-      expect(data.kpis.foodCost).toBe(31.2)
-      expect(data.kpis.satisfaction).toBe(4.6)
+      expect(data.kpis.foodCostRate).toBe(31.2)
     })
 
     it("is disabled when params is null", () => {

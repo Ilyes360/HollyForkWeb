@@ -30,6 +30,7 @@ function makeRecipe(overrides: Partial<Recipe> = {}): Recipe {
   return {
     id: "r1",
     name: "Pavé saumon",
+    categorieId: 1,
     category: "plat",
     sellingPrice: 24,
     portions: 1,
@@ -118,7 +119,10 @@ describe("usePortionCalculator — recipePortions", () => {
     const { result } = renderHook(() =>
       usePortionCalculator(recipes, products, EMPTY_SUPPLIERS)
     )
-    expect(result.current.recipePortions[0].foodCostPercent).toBeCloseTo(20.83, 1)
+    expect(result.current.recipePortions[0].foodCostPercent).toBeCloseTo(
+      20.83,
+      1
+    )
   })
 
   it("passes through isActive", () => {
@@ -172,7 +176,9 @@ describe("usePortionCalculator — recipePortions", () => {
       usePortionCalculator(recipes, products, EMPTY_SUPPLIERS)
     )
     expect(result.current.recipePortions[0].foodCostPercent).toBe(0)
-    expect(Number.isFinite(result.current.recipePortions[0].foodCostPercent)).toBe(true)
+    expect(
+      Number.isFinite(result.current.recipePortions[0].foodCostPercent)
+    ).toBe(true)
   })
 
   it("identifies non-limiting ingredient correctly", () => {
@@ -203,7 +209,11 @@ describe("usePortionCalculator — productPortionSummaries", () => {
     const products = [makeProduct({ id: "p1", quantity: 10 })]
     const recipes = [
       makeRecipe({ id: "r1", name: "Pavé saumon" }),
-      makeRecipe({ id: "r2", name: "Tartare", ingredients: [{ productId: "p1", quantity: 0.5, unit: "kg" }] }),
+      makeRecipe({
+        id: "r2",
+        name: "Tartare",
+        ingredients: [{ productId: "p1", quantity: 0.5, unit: "kg" }],
+      }),
     ]
 
     const { result } = renderHook(() =>
@@ -218,41 +228,61 @@ describe("usePortionCalculator — productPortionSummaries", () => {
   it("computes portionsEnabled per recipe", () => {
     const products = [makeProduct({ id: "p1", quantity: 10 })]
     const recipes = [
-      makeRecipe({ ingredients: [{ productId: "p1", quantity: 2, unit: "kg" }] }),
+      makeRecipe({
+        ingredients: [{ productId: "p1", quantity: 2, unit: "kg" }],
+      }),
     ]
 
     const { result } = renderHook(() =>
       usePortionCalculator(recipes, products, EMPTY_SUPPLIERS)
     )
     // floor(10/2) = 5
-    expect(result.current.productPortionSummaries[0].portionEquivalents[0].portionsEnabled).toBe(5)
+    expect(
+      result.current.productPortionSummaries[0].portionEquivalents[0]
+        .portionsEnabled
+    ).toBe(5)
   })
 
   it("returns empty equivalents for unused product", () => {
     const products = [makeProduct({ id: "p1" })]
     const recipes = [
-      makeRecipe({ ingredients: [{ productId: "p99", quantity: 1, unit: "kg" }] }),
+      makeRecipe({
+        ingredients: [{ productId: "p99", quantity: 1, unit: "kg" }],
+      }),
     ]
 
     const { result } = renderHook(() =>
       usePortionCalculator(recipes, products, EMPTY_SUPPLIERS)
     )
-    expect(result.current.productPortionSummaries[0].portionEquivalents).toHaveLength(0)
-    expect(result.current.productPortionSummaries[0].totalPortionsEnabled).toBe(0)
+    expect(
+      result.current.productPortionSummaries[0].portionEquivalents
+    ).toHaveLength(0)
+    expect(result.current.productPortionSummaries[0].totalPortionsEnabled).toBe(
+      0
+    )
   })
 
   it("sums totalPortionsEnabled across recipes", () => {
     const products = [makeProduct({ id: "p1", quantity: 10 })]
     const recipes = [
-      makeRecipe({ id: "r1", ingredients: [{ productId: "p1", quantity: 2, unit: "kg" }] }),
-      makeRecipe({ id: "r2", name: "R2", ingredients: [{ productId: "p1", quantity: 5, unit: "kg" }] }),
+      makeRecipe({
+        id: "r1",
+        ingredients: [{ productId: "p1", quantity: 2, unit: "kg" }],
+      }),
+      makeRecipe({
+        id: "r2",
+        name: "R2",
+        ingredients: [{ productId: "p1", quantity: 5, unit: "kg" }],
+      }),
     ]
 
     const { result } = renderHook(() =>
       usePortionCalculator(recipes, products, EMPTY_SUPPLIERS)
     )
     // floor(10/2) + floor(10/5) = 5 + 2 = 7
-    expect(result.current.productPortionSummaries[0].totalPortionsEnabled).toBe(7)
+    expect(result.current.productPortionSummaries[0].totalPortionsEnabled).toBe(
+      7
+    )
   })
 })
 
@@ -263,8 +293,15 @@ describe("usePortionCalculator — aggregates", () => {
       makeProduct({ id: "p2", name: "Vide", quantity: 0 }),
     ]
     const recipes = [
-      makeRecipe({ id: "r1", ingredients: [{ productId: "p1", quantity: 1, unit: "kg" }] }),
-      makeRecipe({ id: "r2", name: "Impossible", ingredients: [{ productId: "p2", quantity: 1, unit: "kg" }] }),
+      makeRecipe({
+        id: "r1",
+        ingredients: [{ productId: "p1", quantity: 1, unit: "kg" }],
+      }),
+      makeRecipe({
+        id: "r2",
+        name: "Impossible",
+        ingredients: [{ productId: "p2", quantity: 1, unit: "kg" }],
+      }),
     ]
 
     const { result } = renderHook(() =>
@@ -327,8 +364,15 @@ describe("usePortionCalculator — aggregates", () => {
   it("computes totalPortions across all recipes", () => {
     const products = [makeProduct({ id: "p1", quantity: 10 })]
     const recipes = [
-      makeRecipe({ id: "r1", ingredients: [{ productId: "p1", quantity: 2, unit: "kg" }] }),
-      makeRecipe({ id: "r2", name: "R2", ingredients: [{ productId: "p1", quantity: 5, unit: "kg" }] }),
+      makeRecipe({
+        id: "r1",
+        ingredients: [{ productId: "p1", quantity: 2, unit: "kg" }],
+      }),
+      makeRecipe({
+        id: "r2",
+        name: "R2",
+        ingredients: [{ productId: "p1", quantity: 5, unit: "kg" }],
+      }),
     ]
 
     const { result } = renderHook(() =>
