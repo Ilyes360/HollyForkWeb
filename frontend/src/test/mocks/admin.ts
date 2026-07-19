@@ -35,7 +35,7 @@ export const mockEmployees = [
     salary: "2800.00",
     hire_date: "2020-06-01",
     phone_number: "+33 6 34 56 78 90",
-    user_id: null,
+    user_id: 5,
   },
 ]
 

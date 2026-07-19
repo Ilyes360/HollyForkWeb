@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { renderHook } from "@testing-library/react"
+import { renderHook, waitFor } from "@testing-library/react"
 import { createElement } from "react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { setTokens } from "@/api/client"
@@ -19,37 +19,63 @@ describe("usePermissions (API via MSW)", () => {
     setTokens("test-token", "test-refresh")
   })
 
-  it("fetches permissions and returns combined API + fallback", async () => {
+  it("returns empty permissions before API responds", () => {
     const { result } = renderHook(() => usePermissions(), {
       wrapper: createWrapper(),
     })
 
-    // Permissions should include manage_staff from API response
+    // No fallback — permissions are empty until the API responds
+    expect(result.current.permissions).toEqual([])
+    expect(result.current.role).toBeNull()
+    expect(result.current.can("manage_staff")).toBe(false)
+  })
+
+  it("fetches permissions from API", async () => {
+    const { result } = renderHook(() => usePermissions(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
     expect(result.current.permissions).toContain("manage_staff")
     expect(result.current.permissions).toContain("manage_establishments")
     expect(result.current.permissions).toContain("manage_planning")
   })
 
-  it("can() returns true for granted permissions", () => {
+  it("can() returns true for granted permissions after load", async () => {
     const { result } = renderHook(() => usePermissions(), {
       wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
     expect(result.current.can("manage_staff")).toBe(true)
     expect(result.current.can("manage_stocks")).toBe(true)
   })
 
-  it("canAny() returns true if at least one permission is granted", () => {
+  it("canAny() returns true if at least one permission is granted", async () => {
     const { result } = renderHook(() => usePermissions(), {
       wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
     expect(result.current.canAny("manage_staff", "nonexistent_perm")).toBe(true)
   })
 
-  it("canAll() returns false if a permission is missing", () => {
+  it("canAll() returns false if a permission is missing", async () => {
     const { result } = renderHook(() => usePermissions(), {
       wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
     expect(result.current.canAll("manage_staff", "nonexistent_perm")).toBe(
@@ -57,12 +83,15 @@ describe("usePermissions (API via MSW)", () => {
     )
   })
 
-  it("returns role name from API", async () => {
+  it("returns role name from API after load", async () => {
     const { result } = renderHook(() => usePermissions(), {
       wrapper: createWrapper(),
     })
 
-    // Fallback role while API might still be loading
-    expect(result.current.role).toBeDefined()
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.role).toBe("Gérant")
   })
 })

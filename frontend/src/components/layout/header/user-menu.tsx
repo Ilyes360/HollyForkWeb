@@ -9,6 +9,7 @@ import {
 
 import { useAuthStore } from "@/stores/auth-store"
 import { useLogout } from "@/api/auth/mutations"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -33,8 +34,10 @@ export function UserMenu() {
   const user = useAuthStore((s) => s.user)
   const logoutMutation = useLogout()
   const navigate = useNavigate()
+  const { role } = usePermissions()
 
-  const name = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "Utilisateur"
+  const name =
+    `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "Utilisateur"
   const email = user?.email ?? ""
   const initials = getInitials(name)
 
@@ -59,7 +62,7 @@ export function UserMenu() {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{name}</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {email}
+                  {role ? `${role} · ${email}` : email}
                 </span>
               </div>
             </div>

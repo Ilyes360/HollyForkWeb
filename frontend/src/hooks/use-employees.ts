@@ -18,6 +18,16 @@ export type ApiEmploye = {
   phoneNumber: string | null
 }
 
+type InviteUserResponse = {
+  id: number
+  username: string
+  email: string
+  firstName: string
+  lastName: string
+  dateJoined: string
+  isActive: boolean
+}
+
 export type ApiTypeEmploye = {
   id: number
   typeName: string
@@ -46,6 +56,7 @@ function apiEmployeToEmployee(e: ApiEmploye): Employee {
     salary: parseFloat(e.salary) || 0,
     hireDate: e.hireDate ?? "",
     avatarColor: AVATAR_COLORS[e.id % AVATAR_COLORS.length],
+    hasAccount: e.userId != null,
   }
 }
 
@@ -135,5 +146,52 @@ export function useDeleteEmployee() {
   return useMutationWithDefaults({
     mutationFn: (id: number) => apiDelete(`employes/${id}/`),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+  })
+}
+
+/**
+ * Invite a user: creates User + Employee + RestaurantEmployee in one call.
+ * Uses POST /api/settings/users/ (same schema as register).
+ * Returns the API response augmented with the generated pinCode.
+ */
+export function useInviteUser() {
+  const qc = useQueryClient()
+
+  return useMutationWithDefaults({
+    mutationFn: async (data: {
+      email: string
+      password: string
+      firstName: string
+      lastName: string
+      typeEmployeId: number
+      restaurantId: number
+      salary?: string
+      hireDate?: string
+      phoneNumber?: string
+    }) => {
+      const username = data.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_")
+      const pin = String(Math.floor(1000 + Math.random() * 9000))
+      const response = await apiPost<InviteUserResponse>("settings/users/", {
+        username,
+        email: data.email,
+        password: data.password,
+        password2: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        employeeFirstName: data.firstName,
+        employeeLastName: data.lastName,
+        pinCode: pin,
+        typeEmployeId: data.typeEmployeId,
+        restaurantId: data.restaurantId,
+        salary: data.salary,
+        hireDate: data.hireDate,
+        phoneNumber: data.phoneNumber,
+      })
+      return { ...response, pinCode: pin }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.all })
+      qc.invalidateQueries({ queryKey: ["restaurant-employees"] })
+    },
   })
 }

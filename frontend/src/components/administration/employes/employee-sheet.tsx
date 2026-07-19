@@ -5,7 +5,9 @@ import {
   Delete02Icon,
   UserIcon,
   Briefcase01Icon,
+  Mail01Icon,
 } from "@hugeicons/core-free-icons"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 import {
@@ -89,6 +91,24 @@ export function EmployeeSheet({
         </SheetHeader>
 
         <div className="space-y-5 px-4 py-4">
+          {/* Account status */}
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2.5">
+            <HugeiconsIcon
+              icon={Mail01Icon}
+              strokeWidth={2}
+              className="size-4 text-muted-foreground"
+            />
+            <span className="text-sm text-muted-foreground">
+              Accès dashboard
+            </span>
+            <Badge
+              variant={employee.hasAccount ? "default" : "secondary"}
+              className="ml-auto"
+            >
+              {employee.hasAccount ? "Compte actif" : "Pas de compte"}
+            </Badge>
+          </div>
+
           {/* Identité */}
           <div className="space-y-3">
             <SectionTitle icon={UserIcon}>Identité</SectionTitle>

@@ -9,6 +9,7 @@ import {
   useDeleteEmployee,
 } from "@/hooks/use-employees"
 import { useAllRestaurantAssignments } from "@/hooks/use-restaurant-employees"
+import { usePermissions } from "@/hooks/use-permissions"
 import { AdminLayoutContext } from "./index"
 import { EmployesFilters } from "@/components/administration/employes/employes-filters"
 import { EmployesTable } from "@/components/administration/employes/employes-table"
@@ -28,6 +29,8 @@ export default function EmployesPage() {
   const { data: employeeTypes } = useEmployeeTypes()
   const { data: assignments } = useAllRestaurantAssignments()
   const deleteEmployeeMutation = useDeleteEmployee()
+  const { can } = usePermissions()
+  const canManageStaff = can("manage_staff")
 
   const { setOnAdd } = useContext(AdminLayoutContext)
 
@@ -131,9 +134,9 @@ export default function EmployesPage() {
   }, [navigate])
 
   useEffect(() => {
-    setOnAdd(handleAdd)
+    setOnAdd(canManageStaff ? handleAdd : null)
     return () => setOnAdd(null)
-  }, [setOnAdd, handleAdd])
+  }, [setOnAdd, handleAdd, canManageStaff])
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -200,8 +203,8 @@ export default function EmployesPage() {
                     employees={group.employees}
                     establishments={establishments}
                     onSelect={handleSelect}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onEdit={canManageStaff ? handleEdit : undefined}
+                    onDelete={canManageStaff ? handleDelete : undefined}
                   />
                 </div>
               </CollapsibleContent>
@@ -215,7 +218,7 @@ export default function EmployesPage() {
         onOpenChange={setSheetOpen}
         employee={selectedEmployee}
         establishments={establishments}
-        onDelete={handleDelete}
+        onDelete={canManageStaff ? handleDelete : undefined}
       />
     </div>
   )

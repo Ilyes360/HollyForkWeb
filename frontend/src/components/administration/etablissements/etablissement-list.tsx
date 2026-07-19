@@ -5,7 +5,7 @@ interface EtablissementListProps {
   establishments: Establishment[]
   employees: Employee[]
   onToggleActive: (id: string) => void
-  onDelete: (id: string) => void
+  onDelete?: (id: string) => void
 }
 
 export function EtablissementList({

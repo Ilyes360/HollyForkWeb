@@ -4,6 +4,7 @@ import {
   useDeleteEstablishment,
 } from "@/hooks/use-establishments"
 import { useEmployees } from "@/hooks/use-employees"
+import { usePermissions } from "@/hooks/use-permissions"
 import { toast } from "sonner"
 import { AdminLayoutContext } from "./index"
 import { EtablissementList } from "@/components/administration/etablissements/etablissement-list"
@@ -14,6 +15,8 @@ export default function EtablissementsPage() {
   const { data: establishments } = useEstablishments()
   const { data: employees } = useEmployees()
   const { mutate: deleteEstablishment } = useDeleteEstablishment()
+  const { can } = usePermissions()
+  const canManage = can("manage_establishments")
 
   const { setOnAdd } = useContext(AdminLayoutContext)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -26,9 +29,9 @@ export default function EtablissementsPage() {
   const openAddDialog = useCallback(() => setAddDialogOpen(true), [])
 
   useEffect(() => {
-    setOnAdd(openAddDialog)
+    setOnAdd(canManage ? openAddDialog : null)
     return () => setOnAdd(null)
-  }, [setOnAdd, openAddDialog])
+  }, [setOnAdd, openAddDialog, canManage])
 
   const handleToggleActive = useCallback((_id: string) => {
     // Backend doesn't have isActive field — no-op
@@ -64,7 +67,7 @@ export default function EtablissementsPage() {
         establishments={establishments}
         employees={employees}
         onToggleActive={handleToggleActive}
-        onDelete={handleDelete}
+        onDelete={canManage ? handleDelete : undefined}
       />
 
       <CreateRestaurantDialog

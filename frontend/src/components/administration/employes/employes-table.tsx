@@ -32,8 +32,8 @@ interface EmployesTableProps {
   employees: Employee[]
   establishments: Establishment[]
   onSelect: (employee: Employee) => void
-  onEdit: (employee: Employee) => void
-  onDelete: (id: string) => void
+  onEdit?: (employee: Employee) => void
+  onDelete?: (id: string) => void
 }
 
 export function EmployesTable({
@@ -154,9 +154,17 @@ export function EmployesTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">
-                    {employee.typeEmployeName || "—"}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="secondary">
+                      {employee.typeEmployeName || "—"}
+                    </Badge>
+                    {employee.hasAccount && (
+                      <span
+                        className="size-2 rounded-full bg-emerald-500"
+                        title="Accès dashboard actif"
+                      />
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {est?.name ?? "—"}
@@ -168,48 +176,54 @@ export function EmployesTable({
                     : "—"}
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                        />
-                      }
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    >
-                      <HugeiconsIcon
-                        icon={MoreHorizontalIcon}
-                        strokeWidth={2}
-                        className="size-4"
-                      />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    >
-                      <DropdownMenuItem onSelect={() => onEdit(employee)}>
-                        <HugeiconsIcon
-                          icon={ViewIcon}
-                          strokeWidth={2}
-                          className="size-4"
-                        />
-                        Modifier
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onSelect={() => onDelete(employee.id)}
+                  {(onEdit || onDelete) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                          />
+                        }
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       >
                         <HugeiconsIcon
-                          icon={Delete02Icon}
+                          icon={MoreHorizontalIcon}
                           strokeWidth={2}
                           className="size-4"
                         />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      >
+                        {onEdit && (
+                          <DropdownMenuItem onSelect={() => onEdit(employee)}>
+                            <HugeiconsIcon
+                              icon={ViewIcon}
+                              strokeWidth={2}
+                              className="size-4"
+                            />
+                            Modifier
+                          </DropdownMenuItem>
+                        )}
+                        {onDelete && (
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onSelect={() => onDelete(employee.id)}
+                          >
+                            <HugeiconsIcon
+                              icon={Delete02Icon}
+                              strokeWidth={2}
+                              className="size-4"
+                            />
+                            Supprimer
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </TableCell>
               </TableRow>
             )

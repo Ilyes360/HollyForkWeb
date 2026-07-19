@@ -79,6 +79,7 @@ export interface Employee {
   salary: number // Monthly salary (€) — as returned by API
   hireDate: string
   avatarColor: string
+  hasAccount: boolean // true if a User is linked (userId != null)
   // Resolved from /api/restaurant-employes/ (optional)
   establishmentId?: string
 }
