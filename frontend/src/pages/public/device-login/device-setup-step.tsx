@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -7,11 +7,14 @@ import { HTTPError } from "ky"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Loading03Icon, Store04Icon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
-
 import { Link } from "react-router"
+import { useQuery } from "@tanstack/react-query"
 
 import { useDeviceLogin } from "@/api/auth/mutations"
 import type { DeviceLoginResponse } from "@/api/auth/types"
+import { getAccessToken } from "@/api/client"
+import { fetchAllPages } from "@/api/pagination"
+import type { ApiRestaurant } from "@/hooks/use-establishments"
 import { PinPad } from "@/components/ui/pin-pad"
 import { Input } from "@/components/ui/input"
 import {
@@ -38,10 +41,33 @@ const fadeUp = {
   show: { opacity: 1, y: 0 },
 }
 
+function useRestaurantOptions() {
+  const hasToken = !!getAccessToken()
+
+  const { data } = useQuery({
+    queryKey: ["device-setup", "restaurants"],
+    queryFn: () => fetchAllPages<ApiRestaurant>("restaurants/", {}),
+    enabled: hasToken,
+    staleTime: 5 * 60_000,
+  })
+
+  return useMemo(
+    () =>
+      (data ?? [])
+        .filter((r) => r.pin && r.pin.length === 6)
+        .map((r) => ({
+          id: r.restaurantId,
+          label: r.city ? `${r.name} — ${r.city}` : r.name,
+        })),
+    [data]
+  )
+}
+
 export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
   const [pin, setPin] = useState("")
   const [pinError, setPinError] = useState("")
   const deviceLoginMutation = useDeviceLogin()
+  const restaurantOptions = useRestaurantOptions()
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod 4 + @hookform/resolvers type mismatch with z.coerce
@@ -70,7 +96,7 @@ export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
           if (err instanceof HTTPError) {
             const status = err.response.status
             if (status === 400) {
-              setPinError("ID ou PIN restaurant incorrect")
+              setPinError("Restaurant ou PIN incorrect")
             } else if (status === 429) {
               toast.error("Trop de tentatives. Veuillez patienter.")
             } else {
@@ -113,27 +139,54 @@ export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
               name="restaurantId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Identifiant du restaurant</FormLabel>
+                  <FormLabel>Restaurant</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <HugeiconsIcon
-                        icon={Store04Icon}
-                        className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
-                      />
-                      <Input
-                        {...field}
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="Ex : 2"
-                        className="pl-10"
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
-                    </div>
+                    {restaurantOptions.length > 0 ? (
+                      <div className="relative">
+                        <HugeiconsIcon
+                          icon={Store04Icon}
+                          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+                        />
+                        <select
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          className="h-9 w-full appearance-none rounded-lg border border-input bg-background py-1 pr-8 pl-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        >
+                          <option value="" disabled>
+                            Sélectionnez un restaurant
+                          </option>
+                          {restaurantOptions.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <HugeiconsIcon
+                          icon={Store04Icon}
+                          className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+                        />
+                        <Input
+                          {...field}
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="ID du restaurant"
+                          className="pl-10"
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </div>
+                    )}
                   </FormControl>
                   <FormMessage />
-                  <p className="text-xs text-muted-foreground">
-                    Disponible dans Administration &gt; Etablissements
-                  </p>
+                  {restaurantOptions.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Disponible dans Administration &gt; Etablissements
+                    </p>
+                  )}
                 </FormItem>
               )}
             />
