@@ -29,7 +29,7 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const formSchema = z.object({
-  email: z.string().min(1, "L'email est requis").email("Email invalide"),
+  username: z.string().min(1, "L'identifiant est requis"),
   password: z.string().min(1, "Le mot de passe est requis"),
 })
 
@@ -45,7 +45,7 @@ export default function LoginPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   })
@@ -53,7 +53,7 @@ export default function LoginPage() {
   const onSubmit = (data: FormValues) => {
     form.clearErrors("root")
     loginMutation.mutate(
-      { username: data.email, password: data.password },
+      { username: data.username, password: data.password },
       {
         onSuccess: () => {
           navigate(from, { replace: true })
@@ -63,11 +63,11 @@ export default function LoginPage() {
             const status = err.response.status
             if (status === 401) {
               form.setError("root", {
-                message: "Email ou mot de passe incorrect",
+                message: "Identifiant ou mot de passe incorrect",
               })
             } else if (status === 400) {
               form.setError("root", {
-                message: "Email ou mot de passe incorrect",
+                message: "Identifiant ou mot de passe incorrect",
               })
             } else if (status === 429) {
               toast.error(
@@ -144,10 +144,10 @@ export default function LoginPage() {
                   <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="sr-only">Email</FormLabel>
+                          <FormLabel className="sr-only">Identifiant</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <HugeiconsIcon
@@ -156,10 +156,10 @@ export default function LoginPage() {
                               />
                               <Input
                                 {...field}
-                                type="email"
-                                autoComplete="email"
+                                type="text"
+                                autoComplete="username"
                                 className="pl-10"
-                                placeholder="Email"
+                                placeholder="Identifiant"
                               />
                             </div>
                           </FormControl>
