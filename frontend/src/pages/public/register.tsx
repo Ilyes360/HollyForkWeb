@@ -29,8 +29,8 @@ import {
 } from "@/components/ui/form"
 import { usePageTitle } from "@/hooks/use-page-title"
 
-// Admin Établissement — rôle par défaut à l'inscription
-const DEFAULT_EMPLOYEE_TYPE_ID = 2
+// Manager Salle — rôle par défaut à l'inscription (ID sur hollyfork.org)
+const DEFAULT_EMPLOYEE_TYPE_ID = 384
 
 /**
  * Placeholder restaurant ID — backend requires restaurant_id on registration.
