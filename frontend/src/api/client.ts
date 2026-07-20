@@ -51,19 +51,42 @@ if (authChannel) {
   }
 }
 
-// ── Device token (sessionStorage — clears when tab closes) ──
+// ── Device token (localStorage — persists across tab closes for shared iPads) ──
 const DEVICE_TOKEN_KEY = "holy_device_token"
+const DEVICE_RESTAURANT_KEY = "holy_device_restaurant"
+const DEVICE_SESSION_KEY = "holy_device_session"
 
 export function getDeviceToken(): string | null {
-  return sessionStorage.getItem(DEVICE_TOKEN_KEY)
+  return localStorage.getItem(DEVICE_TOKEN_KEY)
 }
 
-export function setDeviceToken(token: string): void {
-  sessionStorage.setItem(DEVICE_TOKEN_KEY, token)
+export function getDeviceRestaurantName(): string | null {
+  return localStorage.getItem(DEVICE_RESTAURANT_KEY)
+}
+
+export function setDeviceToken(token: string, restaurantName?: string): void {
+  localStorage.setItem(DEVICE_TOKEN_KEY, token)
+  if (restaurantName) {
+    localStorage.setItem(DEVICE_RESTAURANT_KEY, restaurantName)
+  }
 }
 
 export function clearDeviceToken(): void {
-  sessionStorage.removeItem(DEVICE_TOKEN_KEY)
+  localStorage.removeItem(DEVICE_TOKEN_KEY)
+  localStorage.removeItem(DEVICE_RESTAURANT_KEY)
+  localStorage.removeItem(DEVICE_SESSION_KEY)
+}
+
+export function isDeviceSession(): boolean {
+  return localStorage.getItem(DEVICE_SESSION_KEY) === "true"
+}
+
+export function setDeviceSession(): void {
+  localStorage.setItem(DEVICE_SESSION_KEY, "true")
+}
+
+export function clearDeviceSession(): void {
+  localStorage.removeItem(DEVICE_SESSION_KEY)
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api"

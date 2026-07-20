@@ -10,6 +10,7 @@ import {
 
 import { useAuthStore } from "@/stores/auth-store"
 import { useLogout } from "@/api/auth/mutations"
+import { isDeviceSession, getDeviceToken } from "@/api/client"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -42,7 +43,8 @@ export function NavUser() {
   const logoutMutation = useLogout()
   const navigate = useNavigate()
 
-  const name = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "Utilisateur"
+  const name =
+    `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "Utilisateur"
   const email = user?.email ?? ""
   const initials = getInitials(name)
 
@@ -104,7 +106,9 @@ export function NavUser() {
                 <HugeiconsIcon icon={Settings01Icon} strokeWidth={2} />
                 Mon compte
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings/notifications")}>
+              <DropdownMenuItem
+                onClick={() => navigate("/settings/notifications")}
+              >
                 <HugeiconsIcon icon={Notification03Icon} strokeWidth={2} />
                 Notifications
               </DropdownMenuItem>
@@ -118,7 +122,10 @@ export function NavUser() {
               variant="destructive"
               onClick={() => {
                 logoutMutation.mutate(undefined, {
-                  onSettled: () => navigate("/login"),
+                  onSettled: () => {
+                    const backToDevice = isDeviceSession() && !!getDeviceToken()
+                    navigate(backToDevice ? "/device" : "/login")
+                  },
                 })
               }}
             >

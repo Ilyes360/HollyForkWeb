@@ -3,7 +3,16 @@ import { Navigate, Outlet, useLocation, useNavigate } from "react-router"
 import { useAuthStore } from "@/stores/auth-store"
 import { useDevModeStore } from "@/stores/dev-mode-store"
 import { useProfile } from "@/api/auth/queries"
-import { getAccessToken, clearTokens } from "@/api/client"
+import {
+  getAccessToken,
+  clearTokens,
+  isDeviceSession,
+  getDeviceToken,
+} from "@/api/client"
+
+function getLogoutRedirect(): string {
+  return isDeviceSession() && !!getDeviceToken() ? "/device" : "/login"
+}
 
 export default function AuthGuard() {
   const location = useLocation()
@@ -17,7 +26,7 @@ export default function AuthGuard() {
   useEffect(() => {
     function handleLogout() {
       clearUser()
-      navigate("/login", { replace: true })
+      navigate(getLogoutRedirect(), { replace: true })
     }
     window.addEventListener("auth:logout", handleLogout)
     return () => window.removeEventListener("auth:logout", handleLogout)
@@ -28,9 +37,16 @@ export default function AuthGuard() {
     return <Outlet />
   }
 
-  // No token at all → login
+  // No token at all → redirect to device or login
   if (!token) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    const redirect = getLogoutRedirect()
+    return (
+      <Navigate
+        to={redirect}
+        state={redirect === "/login" ? { from: location.pathname } : undefined}
+        replace
+      />
+    )
   }
 
   // Token present, verifying profile
@@ -46,7 +62,14 @@ export default function AuthGuard() {
   if (isError) {
     clearTokens()
     clearUser()
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    const redirect = getLogoutRedirect()
+    return (
+      <Navigate
+        to={redirect}
+        state={redirect === "/login" ? { from: location.pathname } : undefined}
+        replace
+      />
+    )
   }
 
   // Check for pending restaurant from register wizard

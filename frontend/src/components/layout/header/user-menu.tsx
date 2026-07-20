@@ -9,6 +9,7 @@ import {
 
 import { useAuthStore } from "@/stores/auth-store"
 import { useLogout } from "@/api/auth/mutations"
+import { isDeviceSession, getDeviceToken } from "@/api/client"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -88,7 +89,10 @@ export function UserMenu() {
           variant="destructive"
           onClick={() => {
             logoutMutation.mutate(undefined, {
-              onSettled: () => navigate("/login"),
+              onSettled: () => {
+                const backToDevice = isDeviceSession() && !!getDeviceToken()
+                navigate(backToDevice ? "/device" : "/login")
+              },
             })
           }}
         >

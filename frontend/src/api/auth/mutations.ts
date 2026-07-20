@@ -1,6 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
-import { apiPost, setTokens, clearTokens, setDeviceToken } from "../client"
+import {
+  apiPost,
+  setTokens,
+  clearTokens,
+  setDeviceToken,
+  setDeviceSession,
+  clearDeviceSession,
+} from "../client"
 import { toAuthUser, toAuthUserFromQuickLogin } from "./types"
 import type {
   LoginRequest,
@@ -25,6 +32,7 @@ export function useLogin() {
     mutationFn: (data: LoginRequest) =>
       apiPost<LoginResponse>("auth/login/", data),
     onSuccess: (result) => {
+      clearDeviceSession()
       setTokens(result.accessToken, result.refreshToken)
       setUser(toAuthUser(result))
     },
@@ -49,7 +57,7 @@ export function useDeviceLogin() {
     mutationFn: (data: DeviceLoginRequest) =>
       apiPost<DeviceLoginResponse>("auth/device-login/", data),
     onSuccess: (result) => {
-      setDeviceToken(result.deviceToken)
+      setDeviceToken(result.deviceToken, result.restaurantName)
     },
   })
 }
@@ -64,6 +72,7 @@ export function useQuickLogin() {
     mutationFn: (data: QuickLoginRequest) =>
       apiPost<QuickLoginResponse>("auth/quick-login/", data),
     onSuccess: (result) => {
+      setDeviceSession()
       setTokens(result.accessToken, result.refreshToken)
       setUser(toAuthUserFromQuickLogin(result))
     },

@@ -2,7 +2,11 @@ import { useState, useCallback } from "react"
 import { AnimatePresence } from "motion/react"
 
 import type { DeviceLoginResponse, RestaurantEmployee } from "@/api/auth/types"
-import { clearDeviceToken } from "@/api/client"
+import {
+  clearDeviceToken,
+  getDeviceToken,
+  getDeviceRestaurantName,
+} from "@/api/client"
 import { AuthImagePanel } from "@/components/shared/auth-image-panel"
 import { ThemeSwitch } from "@/components/layout/header/theme-switch"
 import { usePageTitle } from "@/hooks/use-page-title"
@@ -18,11 +22,26 @@ type DeviceState = {
   restaurantName: string
 }
 
+function getInitialState(): { step: Step; deviceState: DeviceState | null } {
+  const savedToken = getDeviceToken()
+  const savedName = getDeviceRestaurantName()
+  if (savedToken && savedName) {
+    return {
+      step: 1,
+      deviceState: { deviceToken: savedToken, restaurantName: savedName },
+    }
+  }
+  return { step: 0, deviceState: null }
+}
+
 export default function DeviceLoginPage() {
   usePageTitle("Connexion tablette")
 
-  const [step, setStep] = useState<Step>(0)
-  const [deviceState, setDeviceState] = useState<DeviceState | null>(null)
+  const initial = getInitialState()
+  const [step, setStep] = useState<Step>(initial.step)
+  const [deviceState, setDeviceState] = useState<DeviceState | null>(
+    initial.deviceState
+  )
   const [selectedEmployee, setSelectedEmployee] =
     useState<RestaurantEmployee | null>(null)
 
