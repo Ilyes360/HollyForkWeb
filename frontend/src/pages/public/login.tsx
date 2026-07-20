@@ -29,7 +29,7 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const formSchema = z.object({
-  username: z.string().min(1, "L'email est requis"),
+  username: z.string().min(1, "L'email ou identifiant est requis"),
   password: z.string().min(1, "Le mot de passe est requis"),
 })
 
@@ -151,7 +151,9 @@ export default function LoginPage() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="sr-only">Email</FormLabel>
+                          <FormLabel className="sr-only">
+                            Email ou identifiant
+                          </FormLabel>
                           <FormControl>
                             <div className="relative">
                               <HugeiconsIcon
@@ -160,10 +162,10 @@ export default function LoginPage() {
                               />
                               <Input
                                 {...field}
-                                type="email"
-                                autoComplete="email"
+                                type="text"
+                                autoComplete="username"
                                 className="pl-10"
-                                placeholder="Email"
+                                placeholder="Email ou identifiant"
                               />
                             </div>
                           </FormControl>
