@@ -29,7 +29,7 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const formSchema = z.object({
-  username: z.string().min(1, "L'identifiant est requis"),
+  email: z.string().min(1, "L'email est requis").email("Email invalide"),
   password: z.string().min(1, "Le mot de passe est requis"),
 })
 
@@ -45,7 +45,7 @@ export default function LoginPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   })
@@ -53,7 +53,7 @@ export default function LoginPage() {
   const onSubmit = (data: FormValues) => {
     form.clearErrors("root")
     loginMutation.mutate(
-      { username: data.username, password: data.password },
+      { email: data.email, password: data.password },
       {
         onSuccess: () => {
           navigate(from, { replace: true })
@@ -144,10 +144,10 @@ export default function LoginPage() {
                   <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="username"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="sr-only">Identifiant</FormLabel>
+                          <FormLabel className="sr-only">Email</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <HugeiconsIcon
@@ -156,10 +156,10 @@ export default function LoginPage() {
                               />
                               <Input
                                 {...field}
-                                type="text"
-                                autoComplete="username"
+                                type="email"
+                                autoComplete="email"
                                 className="pl-10"
-                                placeholder="Identifiant"
+                                placeholder="Email"
                               />
                             </div>
                           </FormControl>
