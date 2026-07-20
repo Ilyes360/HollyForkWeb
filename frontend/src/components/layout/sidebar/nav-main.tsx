@@ -17,6 +17,7 @@ import {
   UserGroupIcon,
   Settings01Icon,
   ArrowRight01Icon,
+  SmartPhoneLandscapeIcon,
 } from "@hugeicons/core-free-icons"
 
 import {
@@ -97,6 +98,11 @@ export const navItems: NavGroup[] = [
           { to: "/admin/employes", label: "Employés" },
           { to: "/admin/roles", label: "Rôles & Accès" },
         ],
+      },
+      {
+        to: "/device",
+        label: "Connexion tablette",
+        icon: SmartPhoneLandscapeIcon,
       },
       {
         to: "/settings",
