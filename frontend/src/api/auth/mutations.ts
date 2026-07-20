@@ -1,14 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useMutationWithDefaults } from "@/lib/use-mutation-defaults"
-import { apiPost } from "../client"
-import { setTokens, clearTokens } from "../client"
-import { toAuthUser } from "./types"
+import { apiPost, setTokens, clearTokens, setDeviceToken } from "../client"
+import { toAuthUser, toAuthUserFromQuickLogin } from "./types"
 import type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
   LogoutResponse,
+  DeviceLoginRequest,
+  DeviceLoginResponse,
+  QuickLoginRequest,
+  QuickLoginResponse,
 } from "./types"
 import { useAuthStore } from "@/stores/auth-store"
 
@@ -35,6 +38,35 @@ export function useRegister() {
   return useMutationWithDefaults({
     mutationFn: (data: RegisterRequest) =>
       apiPost<RegisterResponse>("auth/register/", data),
+  })
+}
+
+/**
+ * Device login — Step 1: associate iPad to restaurant.
+ */
+export function useDeviceLogin() {
+  return useMutationWithDefaults({
+    mutationFn: (data: DeviceLoginRequest) =>
+      apiPost<DeviceLoginResponse>("auth/device-login/", data),
+    onSuccess: (result) => {
+      setDeviceToken(result.deviceToken)
+    },
+  })
+}
+
+/**
+ * Quick login — Step 3: employee PIN login.
+ */
+export function useQuickLogin() {
+  const setUser = useAuthStore((s) => s.setUser)
+
+  return useMutationWithDefaults({
+    mutationFn: (data: QuickLoginRequest) =>
+      apiPost<QuickLoginResponse>("auth/quick-login/", data),
+    onSuccess: (result) => {
+      setTokens(result.accessToken, result.refreshToken)
+      setUser(toAuthUserFromQuickLogin(result))
+    },
   })
 }
 

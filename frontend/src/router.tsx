@@ -36,6 +36,7 @@ import { Navigate } from "react-router"
 
 import LoginPage from "@/pages/public/login"
 import RegisterPage from "@/pages/public/register"
+import DeviceLoginPage from "@/pages/public/device-login"
 import OnboardingPage from "@/pages/public/onboarding-flow/page"
 
 export const router = createBrowserRouter([
@@ -140,6 +141,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
+      { path: "device", element: <DeviceLoginPage /> },
     ],
   },
   { path: "forgot-password", element: <Navigate to="/login" replace /> },

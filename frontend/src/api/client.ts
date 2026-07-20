@@ -51,6 +51,21 @@ if (authChannel) {
   }
 }
 
+// ── Device token (sessionStorage — clears when tab closes) ──
+const DEVICE_TOKEN_KEY = "holy_device_token"
+
+export function getDeviceToken(): string | null {
+  return sessionStorage.getItem(DEVICE_TOKEN_KEY)
+}
+
+export function setDeviceToken(token: string): void {
+  sessionStorage.setItem(DEVICE_TOKEN_KEY, token)
+}
+
+export function clearDeviceToken(): void {
+  sessionStorage.removeItem(DEVICE_TOKEN_KEY)
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api"
 
 function getCsrfToken(): string | null {

@@ -97,6 +97,64 @@ export type LogoutResponse = {
   message: string
 }
 
+// ─── Device Login (iPad — step 1) ────────────────────────────────────────────
+
+export type DeviceLoginRequest = {
+  restaurantId: number
+  pinRestaurant: string
+}
+
+export type DeviceLoginResponse = {
+  message: string
+  deviceToken: string
+  restaurantId: number
+  restaurantName: string
+  restaurantVille: string | null
+  nextStep: string
+}
+
+// ─── Restaurant Employees (step 2) ──────────────────────────────────────────
+
+export type RestaurantEmployee = {
+  employeeId: number
+  employeeName: string
+  employeeFirstName: string
+  employeeLastName: string
+  employeeType: string
+  employeeTypeId: number
+  hasPin: boolean
+}
+
+export type RestaurantEmployeesResponse = {
+  restaurantId: number
+  restaurantName: string
+  employees: RestaurantEmployee[]
+  total: number
+}
+
+// ─── Quick Login (step 3) ────────────────────────────────────────────────────
+
+export type QuickLoginRequest = {
+  deviceToken: string
+  pinCode: string
+}
+
+export type QuickLoginResponse = {
+  message: string
+  accessToken: string
+  refreshToken: string
+  userId: number
+  username: string
+  employeeId: number
+  employeeName: string
+  employeeFirstName: string
+  employeeLastName: string
+  employeeType: string
+  employeeTypeId: number
+  restaurantId: number
+  restaurantName: string
+}
+
 // ─── Mapping helper ─────────────────────────────────────────────────────────
 
 /**
@@ -109,6 +167,25 @@ export function toAuthUser(data: LoginResponse): AuthUser {
     email: data.email,
     firstName: data.firstName,
     lastName: data.lastName,
+    employeeId: data.employeeId,
+    employeeName: data.employeeName,
+    employeeType: data.employeeType,
+    employeeTypeId: data.employeeTypeId,
+    restaurantId: data.restaurantId,
+    restaurantName: data.restaurantName,
+  }
+}
+
+/**
+ * Mappe une QuickLoginResponse vers un AuthUser pour le store Zustand.
+ */
+export function toAuthUserFromQuickLogin(data: QuickLoginResponse): AuthUser {
+  return {
+    id: data.userId,
+    username: data.username,
+    email: "",
+    firstName: data.employeeFirstName,
+    lastName: data.employeeLastName,
     employeeId: data.employeeId,
     employeeName: data.employeeName,
     employeeType: data.employeeType,

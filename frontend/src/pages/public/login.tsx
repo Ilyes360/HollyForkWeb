@@ -230,6 +230,18 @@ export default function LoginPage() {
                 Créer un compte
               </Link>
             </motion.div>
+
+            <motion.div
+              className="text-center text-sm"
+              variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
+            >
+              <Link
+                to="/device"
+                className="text-muted-foreground underline hover:text-foreground"
+              >
+                Connexion tablette
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </div>
