@@ -48,9 +48,17 @@ export function EtablissementCard({
     >
       <CardHeader className="flex-row items-start justify-between gap-2">
         <div className="min-w-0 space-y-1">
-          <h3 className="truncate leading-none font-medium">
-            {establishment.name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="truncate leading-none font-medium">
+              {establishment.name}
+            </h3>
+            <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground tabular-nums">
+              ID{" "}
+              {establishment.id ??
+                (establishment as unknown as { restaurantId: number })
+                  .restaurantId}
+            </span>
+          </div>
           <p className="truncate text-sm text-muted-foreground">
             {formatAddress(establishment)}
           </p>

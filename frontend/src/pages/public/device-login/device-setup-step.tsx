@@ -113,7 +113,7 @@ export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
               name="restaurantId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID Restaurant</FormLabel>
+                  <FormLabel>Identifiant du restaurant</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <HugeiconsIcon
@@ -124,13 +124,16 @@ export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
                         {...field}
                         type="number"
                         inputMode="numeric"
-                        placeholder="Entrez l'ID du restaurant"
+                        placeholder="Ex : 2"
                         className="pl-10"
                         onChange={(e) => field.onChange(e.target.value)}
                       />
                     </div>
                   </FormControl>
                   <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Disponible dans Administration &gt; Etablissements
+                  </p>
                 </FormItem>
               )}
             />

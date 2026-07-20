@@ -184,6 +184,9 @@ export default function EtablissementDetailPage() {
         <h1 className="font-display text-lg font-semibold tracking-tight">
           {establishment.name}
         </h1>
+        <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+          ID : {id}
+        </span>
       </motion.div>
 
       <Form {...form}>
