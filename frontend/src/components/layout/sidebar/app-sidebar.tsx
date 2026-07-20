@@ -46,14 +46,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const { restaurantId, restaurants, setRestaurantId } = useActiveRestaurant()
 
-
   const selectedRestaurant = restaurants.find(
-    (r) => r.restaurantId === restaurantId,
+    (r) => r.restaurantId === restaurantId
   )
   const displayName =
-    selectedRestaurant?.name
-    ?? user?.restaurantName
-    ?? "Restaurant"
+    selectedRestaurant?.name ?? user?.restaurantName ?? "Restaurant"
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false)
@@ -75,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuTrigger
                 render={
                   <SidebarMenuButton
-                    className="hover:text-sidebar-foreground h-10"
+                    className="h-10 hover:text-sidebar-foreground"
                     tooltip={displayName}
                   />
                 }
@@ -83,8 +80,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-[10px] font-bold text-sidebar-primary-foreground">
                   {restaurantId === null ? "★" : displayName.charAt(0)}
                 </span>
-                <span className="truncate text-sidebar-foreground font-semibold group-data-[collapsible=icon]:hidden">
-                  {displayName}
+                <span className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+                  <span className="truncate font-semibold text-sidebar-foreground">
+                    {displayName}
+                  </span>
+                  {restaurantId !== null && (
+                    <span className="text-[10px] text-sidebar-foreground/40">
+                      ID : {restaurantId}
+                    </span>
+                  )}
                 </span>
                 <HugeiconsIcon
                   icon={ArrowDown01Icon}
@@ -93,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="min-w-56 max-h-[70vh] flex flex-col rounded-lg"
+                className="flex max-h-[70vh] min-w-56 flex-col rounded-lg"
                 side={isMobile ? "bottom" : "right"}
                 align="start"
                 sideOffset={4}
@@ -112,9 +116,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       >
                         <div className="flex size-8 items-center justify-center rounded-md border">
                           <HugeiconsIcon
-                            icon={restaurant.restaurantId === restaurantId ? Tick02Icon : Store04Icon}
+                            icon={
+                              restaurant.restaurantId === restaurantId
+                                ? Tick02Icon
+                                : Store04Icon
+                            }
                             strokeWidth={2}
-                            className="text-muted-foreground size-4"
+                            className="size-4 text-muted-foreground"
                           />
                         </div>
                         <div className="flex flex-col">
@@ -139,7 +147,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <HugeiconsIcon
                         icon={Add01Icon}
                         strokeWidth={2}
-                        className="text-muted-foreground size-4"
+                        className="size-4 text-muted-foreground"
                       />
                     </div>
                     <span className="text-sm font-medium text-muted-foreground">
