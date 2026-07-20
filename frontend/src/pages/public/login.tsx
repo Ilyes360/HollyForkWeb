@@ -29,7 +29,7 @@ import {
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const formSchema = z.object({
-  username: z.string().min(1, "L'identifiant est requis"),
+  username: z.string().min(1, "L'email est requis"),
   password: z.string().min(1, "Le mot de passe est requis"),
 })
 
@@ -52,8 +52,12 @@ export default function LoginPage() {
 
   const onSubmit = (data: FormValues) => {
     form.clearErrors("root")
+    // If user typed an email, derive the username the same way register does
+    const username = data.username.includes("@")
+      ? data.username.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_")
+      : data.username
     loginMutation.mutate(
-      { username: data.username, password: data.password },
+      { username, password: data.password },
       {
         onSuccess: () => {
           navigate(from, { replace: true })
@@ -63,11 +67,11 @@ export default function LoginPage() {
             const status = err.response.status
             if (status === 401) {
               form.setError("root", {
-                message: "Identifiant ou mot de passe incorrect",
+                message: "Email ou mot de passe incorrect",
               })
             } else if (status === 400) {
               form.setError("root", {
-                message: "Identifiant ou mot de passe incorrect",
+                message: "Email ou mot de passe incorrect",
               })
             } else if (status === 429) {
               toast.error(
@@ -147,7 +151,7 @@ export default function LoginPage() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="sr-only">Identifiant</FormLabel>
+                          <FormLabel className="sr-only">Email</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <HugeiconsIcon
@@ -156,10 +160,10 @@ export default function LoginPage() {
                               />
                               <Input
                                 {...field}
-                                type="text"
-                                autoComplete="username"
+                                type="email"
+                                autoComplete="email"
                                 className="pl-10"
-                                placeholder="Identifiant"
+                                placeholder="Email"
                               />
                             </div>
                           </FormControl>
