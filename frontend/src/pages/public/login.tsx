@@ -53,7 +53,7 @@ export default function LoginPage() {
   const onSubmit = (data: FormValues) => {
     form.clearErrors("root")
     loginMutation.mutate(
-      { email: data.email, password: data.password },
+      { username: data.email, password: data.password },
       {
         onSuccess: () => {
           navigate(from, { replace: true })
