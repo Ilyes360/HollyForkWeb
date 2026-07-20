@@ -141,8 +141,9 @@ export const router = createBrowserRouter([
     children: [
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
-      { path: "device", element: <DeviceLoginPage /> },
     ],
   },
+  // Device login accessible whether logged in or not
+  { path: "device", element: <DeviceLoginPage /> },
   { path: "forgot-password", element: <Navigate to="/login" replace /> },
 ])
