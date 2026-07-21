@@ -1,28 +1,22 @@
-import { http, HttpResponse } from "msw"
+import { http as rawHttp, HttpResponse } from "msw"
+import { http } from "../api-http"
 import { mockLoginResponse, mockProfile } from "../mocks/auth"
 
-const API = "*/api"
-
 export const authHandlers = [
-  // Login
-  http.post(`${API}/auth/login/`, async ({ request }) => {
-    const body = (await request.json()) as {
-      username?: string
-      password?: string
-    }
+  // Login — typed against OpenAPI schema
+  http.post("/api/auth/login/", async ({ request, response }) => {
+    const body = await request.json()
 
     if (!body.username || !body.password) {
-      return HttpResponse.json(
-        { detail: "Email et mot de passe requis" },
-        { status: 400 }
-      )
+      return response(400).json({
+        detail: { username: "Ce champ est obligatoire." },
+      })
     }
 
     if (body.username === "bad") {
-      return HttpResponse.json(
-        { detail: "Email ou mot de passe incorrect" },
-        { status: 401 }
-      )
+      return response(400).json({
+        detail: { non_field_errors: "Identifiants invalides" },
+      })
     }
 
     if (body.username === "rate_limited") {
@@ -39,11 +33,11 @@ export const authHandlers = [
       )
     }
 
-    return HttpResponse.json(mockLoginResponse)
+    return response(200).json(mockLoginResponse)
   }),
 
-  // Profile
-  http.get(`${API}/auth/profile/`, ({ request }) => {
+  // Profile — typed
+  http.get("/api/auth/profile/", ({ request, response }) => {
     const authHeader = request.headers.get("Authorization")
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return HttpResponse.json({ detail: "Non authentifié" }, { status: 401 })
@@ -54,16 +48,16 @@ export const authHandlers = [
       return HttpResponse.json({ detail: "Token expiré" }, { status: 401 })
     }
 
-    return HttpResponse.json(mockProfile)
+    return response(200).json(mockProfile)
   }),
 
-  // Logout
-  http.post(`${API}/auth/logout/`, () => {
-    return HttpResponse.json({ message: "Déconnexion réussie" })
+  // Logout — typed
+  http.post("/api/auth/logout/", ({ response }) => {
+    return response(200).json({ message: "Déconnexion réussie" })
   }),
 
-  // Token refresh
-  http.post(`${API}/auth/token/refresh/`, async ({ request }) => {
+  // Token refresh — untyped (uses raw http, non-standard response shape)
+  rawHttp.post("*/api/auth/token/refresh/", async ({ request }) => {
     const body = (await request.json()) as { refresh?: string }
 
     if (body.refresh === "valid-refresh-token") {
@@ -73,8 +67,8 @@ export const authHandlers = [
     return HttpResponse.json({ detail: "Token invalide" }, { status: 401 })
   }),
 
-  // CSRF
-  http.get(`${API}/auth/csrf-token/`, () => {
-    return new HttpResponse(null, { status: 204 })
+  // CSRF — typed
+  http.get("/api/auth/csrf-token/", () => {
+    return new HttpResponse(null, { status: 200 })
   }),
 ]

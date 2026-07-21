@@ -12,4 +12,4 @@ import type { paths } from "@/types/api"
  * For endpoints not yet in the schema or error scenarios, use:
  *   import { http as rawHttp } from "msw"
  */
-export const http = createOpenApiHttp<paths>()
+export const http = createOpenApiHttp<paths>({ baseUrl: "*" })
