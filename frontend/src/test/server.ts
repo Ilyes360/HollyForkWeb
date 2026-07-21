@@ -15,6 +15,7 @@ import { paiementHandlers } from "./handlers/paiements"
 import { reportHandlers } from "./handlers/reports"
 import { employeesStatusHandlers } from "./handlers/employees-status"
 import { restaurantEmployeHandlers } from "./handlers/restaurant-employes"
+import { deviceLoginHandlers } from "./handlers/device-login"
 
 export const server = setupServer(
   ...authHandlers,
@@ -33,4 +34,5 @@ export const server = setupServer(
   ...reportHandlers,
   ...employeesStatusHandlers,
   ...restaurantEmployeHandlers,
+  ...deviceLoginHandlers
 )
