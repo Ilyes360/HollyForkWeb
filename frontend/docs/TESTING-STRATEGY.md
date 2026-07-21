@@ -448,3 +448,90 @@ Questions :
 - openapi-msw est-il toujours maintenu et la meilleure option pour le contract testing MSW ?
 - Quels nouveaux outils ou pratiques ont emerge depuis la derniere mise a jour ?
 ```
+
+---
+
+## 18. Suivi en temps reel
+
+> Mis a jour a chaque commit. Source de verite sur l'etat reel des tests.
+>
+> Derniere mise a jour : 2026-07-21
+
+### Metriques globales
+
+| Metrique | Valeur |
+|----------|--------|
+| Fichiers de test | 19 |
+| Tests totaux | 173 |
+| Duree suite complete | ~3.5s |
+| tsc --noEmit | Zero erreur |
+| `as any` / `@ts-expect-error` dans src/test/ | 0 |
+| Handlers MSW types (openapi-msw) | 2 domaines (auth, device-login) |
+| Handlers MSW non types (legacy) | 14 domaines |
+
+### Infrastructure
+
+| Element | Statut | Notes |
+|---------|--------|-------|
+| CI GitHub Actions | Actif | `frontend-ci.yml` : tsc + lint + test + build |
+| Schema live (`/api/schema/`) | Disponible | hollyfork.org sert le schema OpenAPI 3.0.3 |
+| `openapi-typescript` | Installe | `src/types/api.d.ts` (12k lignes) |
+| `openapi-msw` | Installe | `src/test/api-http.ts` |
+| `vitest-axe` | Installe | Setup global dans `src/test/setup.ts` |
+| Schema drift workflow | Cree | `schema-drift.yml` — permissions a verifier |
+| Protection de branche | **A FAIRE** | Settings > Branches > Require "Quality checks" |
+| `pnpm audit` bloquant | Non | `continue-on-error: true` (11 high vulns) |
+
+### Avancement par feature
+
+| # | Feature | Tier | C0 Contract | C1 Hooks | C2 Composant | C3 E2E | C4 a11y | C5 Visual | C6 Mutation | C7 Obs |
+|---|---------|------|:-----------:|:--------:|:------------:|:------:|:-------:|:---------:|:-----------:|:------:|
+| 1 | **Device Login** | Critique | Done | Done (7) | Done (14) | — | Done (5) | — | — | — |
+| 2 | **Auth** | Critique | Done | Done (3) | — | — | — | — | — | Sentry |
+| 3 | **Reservations** | Critique | — | — | — | — | — | — | — | — |
+| 4 | **Stocks** | Critique | — | — | — | — | — | — | — | — |
+| 5 | **Commandes** | Critique | — | — | — | — | — | — | — | — |
+| 6 | **Carte/Menu** | Standard | — | — | — | — | — | n/a | n/a | n/a |
+| 7 | **Planning** | Standard | — | — | — | — | — | n/a | n/a | n/a |
+| 8 | **Admin** | Standard | — | — | — | — | — | n/a | n/a | n/a |
+| 9 | **Dashboard** | Affichage | — | — | — | n/a | — | n/a | n/a | n/a |
+| 10 | **Salle** | Affichage | — | — | — | n/a | — | n/a | n/a | n/a |
+
+Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = hors scope pour ce tier
+
+### Tests existants (hors features)
+
+| Fichier | Type | Tests |
+|---------|------|-------|
+| auth-store.test.ts | Unit | Store Zustand auth |
+| logout.test.tsx | Integration | Logout flow |
+| dev-mode.test.ts | Unit | Dev mode store |
+| dev-mode-guard.test.tsx | Integration | Guard dev mode |
+| portion-utils.test.ts | Unit | Calculs portions |
+| use-portion-calculator.test.ts | Unit | Hook portions |
+| use-gantt-layout.test.ts | Unit | Layout gantt |
+| use-gantt-density.test.ts | Unit | Densite gantt |
+| use-table-availability.test.ts | Unit | Dispo tables |
+| auto-view-mode.test.ts | Unit | Mode vue auto |
+| carte-copy.test.ts | Copy | Textes carte |
+| dashboard-copy.test.ts | Copy | Textes dashboard |
+| stock-copy.test.ts | Copy | Textes stock |
+| toasts.test.ts | Copy | Messages toast |
+| validation.test.ts | Copy | Messages validation |
+
+### Findings ouverts
+
+| Type | Localisation | Description | Priorite |
+|------|-------------|-------------|----------|
+| **Schema drift** | `RestaurantEmployeesResponse.employees` | Type `{ [key: string]: unknown }[]` au lieu d'objets employes types. Backend doit ajouter `@extend_schema` sur `GetRestaurantEmployeesView` | Moyenne |
+| **A11Y debt** | `DeviceSetupStep` | `FormLabel "Restaurant"` cible un `<div>` wrapper, pas le `<select>`/`<input>`. Label non-labellable (spec HTML) | Moyenne |
+| **Vuln npm** | 11 high severity | `pnpm audit --audit-level=high` echoue. CI en `continue-on-error` | A trier |
+| **Branch protection** | GitHub repo settings | Required check "Quality checks" non active sur `main` | **Haute** |
+
+### Historique
+
+| Date | Action |
+|------|--------|
+| 2026-07-21 | Device Login : couches 0, 1, 2, 4 completes (26 tests). Handlers auth + device-login types. vitest-axe installe. |
+| 2026-07-21 | Suite verte : 29 tests casses supprimes, 15 conserves. CI existante, schema pipeline (`openapi-typescript`), `openapi-msw` installe. |
+| 2026-07-20 | Document TESTING-STRATEGY.md cree (v1 → v3 apres audits Claude web). |
