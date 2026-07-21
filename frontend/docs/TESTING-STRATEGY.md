@@ -173,17 +173,20 @@ pnpm add -D @vitest/browser @vitest/browser-playwright vitest-browser-react
 
 **Les E2E ne verifient PAS le contrat API** — c'est le role du contract testing (couche 0).
 Les E2E verifient que le **frontend fonctionne de bout en bout** : routing, guards, state, navigation.
-Ils tournent contre MSW (env ephemere), pas contre le vrai backend.
+
+**Statut actuel : DIFFERE.** Pas d'environnement ephemere configure. Le chemin prevu :
+`vite preview` + MSW service worker (`msw/browser`, demarre si `VITE_E2E=true`).
+Device login sera le premier E2E quand l'infra sera prete.
 
 **IMPORTANT : NE PAS tester contre la prod.**
 Donnees polluees, effets de bord, flakiness, pas de reset.
 
-**Deux modes distincts :**
+**Deux modes distincts (cible) :**
 
 | | E2E pre-merge | Synthetic monitoring prod |
 |---|---|---|
 | **Quand** | Chaque PR | 24/7, toutes les 5-15 min |
-| **Contre** | MSW (env ephemere seede) | Prod reelle |
+| **Contre** | `vite preview` + MSW browser | Prod reelle |
 | **But** | Valider le flow UI | Detecter les pannes |
 | **Bloquant** | Oui (required check) | Non (alerte) |
 | **Outil** | Playwright en CI | Checkly / Datadog Synthetics |
@@ -356,30 +359,35 @@ La prod est la derniere couche de test.
 
 ```
 src/
-├── components/carte/
-│   ├── recipe-card.tsx
-│   ├── recipe-card.test.tsx          # Colocated : test a cote du composant
-│   └── recipe-card.browser.test.tsx  # Browser Mode si DOM/CSS-dependant
-├── hooks/
-│   ├── use-articles.ts
-│   └── use-articles.test.ts          # Colocated
+├── __tests__/
+│   ├── features/                     # Tests par feature (couches 1-2-4)
+│   │   ├── device-login/
+│   │   │   ├── hooks.test.tsx        # useDeviceLogin, useQuickLogin, useRestaurantEmployees
+│   │   │   ├── pin-pad.test.tsx      # PinPad composant
+│   │   │   └── steps.test.tsx        # DeviceSetupStep, EmployeeSelectStep, PinLoginStep
+│   │   ├── auth/
+│   │   │   └── hooks.test.tsx        # useLogin, useProfile
+│   │   └── reservations/             # (a venir)
+│   └── (unit tests existants)        # portion-utils, gantt, copy, etc.
 ├── test/
-│   ├── setup.ts                      # MSW lifecycle
+│   ├── setup.ts                      # MSW lifecycle + vitest-axe matchers
 │   ├── render.tsx                    # Helper renderWithProviders
-│   ├── server.ts                     # MSW server
-│   ├── handlers/                     # MSW handlers (openapi-msw)
-│   └── mocks/                        # Fixtures par domaine
+│   ├── api-http.ts                   # createOpenApiHttp<paths> (typed MSW)
+│   ├── server.ts                     # MSW server avec tous les handlers
+│   ├── handlers/                     # MSW handlers par domaine (openapi-msw)
+│   └── mocks/                        # Fixtures snake_case par domaine
 └── types/
-    └── api.d.ts                      # Genere par openapi-typescript
+    └── api.d.ts                      # Genere par openapi-typescript (read-only)
 
-e2e/                                  # Playwright E2E (env ephemere)
+e2e/                                  # Playwright E2E (a venir)
 ├── device-login.spec.ts
-├── auth.spec.ts
-└── fixtures/                         # Playwright fixtures (auth, seeding)
+└── fixtures/
 ```
 
-**Colocalisation** : les tests composant/hook vivent a cote du code.
-Les E2E Playwright et les handlers MSW globaux restent dans des dossiers dedies.
+**Convention : tests par feature, pas par fichier source.** Chaque feature traverse
+plusieurs composants et hooks — un dossier par feature reflete mieux ce qui est teste.
+Le risque d'orphelinat (test qui survit a la suppression du code) est couvert par la CI
+qui casse bruyamment sur les imports manquants.
 
 ---
 
@@ -523,8 +531,8 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 
 | Type | Localisation | Description | Priorite |
 |------|-------------|-------------|----------|
-| **Schema drift** | `RestaurantEmployeesResponse.employees` | Type `{ [key: string]: unknown }[]` au lieu d'objets employes types. Backend doit ajouter `@extend_schema` sur `GetRestaurantEmployeesView` | Moyenne |
-| **A11Y debt** | `DeviceSetupStep` | `FormLabel "Restaurant"` cible un `<div>` wrapper, pas le `<select>`/`<input>`. Label non-labellable (spec HTML) | Moyenne |
+| **Schema drift** | `RestaurantEmployeesResponse.employees` | Type `{ [key: string]: unknown }[]` au lieu d'objets employes types. Backend doit ajouter `@extend_schema` sur `GetRestaurantEmployeesView`. A remonter au dev backend. | Moyenne |
+| **~~A11Y debt~~** | ~~`DeviceSetupStep`~~ | ~~FormLabel sur div~~ → **CORRIGE** : `aria-label="Restaurant"` sur le `<select>` et `<input>` directement | ~~Moyenne~~ Done |
 | **Vuln npm** | 11 high severity | `pnpm audit --audit-level=high` echoue. CI en `continue-on-error` | A trier |
 | **Branch protection** | GitHub repo settings | Required check "Quality checks" non active sur `main` | **Haute** |
 
@@ -532,7 +540,7 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 
 | Date | Action |
 |------|--------|
-| 2026-07-21 | Device Login : couches 0, 1, 2, 4 completes (34 tests). Interactions reelles testees (saisie PIN, clic employe, erreurs, back, session expiree). |
+| 2026-07-21 | Device Login COMPLETE : 34 tests (couches 0-1-2-4). Fix a11y FormLabel. Schema drift documente. Convention structure par feature actee. |
 | 2026-07-21 | Device Login v1 : couches 0, 1, 2, 4 (26 tests). Handlers auth + device-login types. vitest-axe installe. |
 | 2026-07-21 | Suite verte : 29 tests casses supprimes, 15 conserves. CI existante, schema pipeline (`openapi-typescript`), `openapi-msw` installe. |
 | 2026-07-20 | Document TESTING-STRATEGY.md cree (v1 → v3 apres audits Claude web). |

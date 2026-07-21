@@ -17,14 +17,7 @@ import { fetchAllPages } from "@/api/pagination"
 import type { ApiRestaurant } from "@/hooks/use-establishments"
 import { PinPad } from "@/components/ui/pin-pad"
 import { Input } from "@/components/ui/input"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form"
 
 const schema = z.object({
   restaurantId: z.coerce.number().int("ID invalide").positive("ID invalide"),
@@ -139,48 +132,46 @@ export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
               name="restaurantId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Restaurant</FormLabel>
-                  <FormControl>
-                    {restaurantOptions.length > 0 ? (
-                      <div className="relative">
-                        <HugeiconsIcon
-                          icon={Store04Icon}
-                          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
-                        />
-                        <select
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                          className="h-9 w-full appearance-none rounded-lg border border-input bg-background py-1 pr-8 pl-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        >
-                          <option value="" disabled>
-                            Sélectionnez un restaurant
+                  <p className="text-sm font-medium">Restaurant</p>
+                  {restaurantOptions.length > 0 ? (
+                    <div className="relative">
+                      <HugeiconsIcon
+                        icon={Store04Icon}
+                        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+                      />
+                      <select
+                        aria-label="Restaurant"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className="h-9 w-full appearance-none rounded-lg border border-input bg-background py-1 pr-8 pl-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                      >
+                        <option value="" disabled>
+                          Sélectionnez un restaurant
+                        </option>
+                        {restaurantOptions.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.label}
                           </option>
-                          {restaurantOptions.map((r) => (
-                            <option key={r.id} value={r.id}>
-                              {r.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <HugeiconsIcon
-                          icon={Store04Icon}
-                          className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
-                        />
-                        <Input
-                          {...field}
-                          type="number"
-                          inputMode="numeric"
-                          placeholder="ID du restaurant"
-                          className="pl-10"
-                          onChange={(e) => field.onChange(e.target.value)}
-                        />
-                      </div>
-                    )}
-                  </FormControl>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <HugeiconsIcon
+                        icon={Store04Icon}
+                        className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+                      />
+                      <Input
+                        {...field}
+                        aria-label="Restaurant"
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="ID du restaurant"
+                        className="pl-10"
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <FormMessage />
                   {restaurantOptions.length === 0 && (
                     <p className="text-xs text-muted-foreground">

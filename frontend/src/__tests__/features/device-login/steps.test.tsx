@@ -41,8 +41,6 @@ describe("DeviceSetupStep", () => {
   it("renders restaurant field and PIN pad", () => {
     render(<DeviceSetupStep onSuccess={vi.fn()} />, { wrapper: Wrapper })
 
-    // NOTE: "Restaurant" label targets a <div> wrapper, not the input/select
-    // directly. This is an A11Y DEBT — the label is non-labellable.
     expect(screen.getByText("Restaurant")).toBeInTheDocument()
     expect(screen.getByText("PIN Restaurant (6 chiffres)")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument()
