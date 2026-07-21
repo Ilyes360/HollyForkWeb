@@ -18,4 +18,5 @@ export interface LigneCommande {
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
   readonly cost_of_goods_sold: string
   awaiting_service?: boolean
+  envoyer_en_cuisine?: boolean
 }

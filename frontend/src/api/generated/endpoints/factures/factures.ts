@@ -798,8 +798,7 @@ export const getFacturesMarquerPayeePartialUpdateUrl = (id: number) => {
 }
 
 /**
- * Marque une facture comme payée.
-Permission requise: PROCESS_PAYMENTS ou PROCESS_CASH
+ * Marque une facture comme payée et imprime le ticket de caisse (soft-fail).
  * @summary Marquer une facture comme payée
  */
 export const facturesMarquerPayeePartialUpdate = async (

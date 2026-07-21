@@ -16,4 +16,12 @@ export interface Ingredient {
   unit: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
   unit_price: string
+  /** @nullable */
+  category_id?: number | null
+  /** @nullable */
+  readonly category_name: string | null
+  /** @nullable */
+  supplier_id?: number | null
+  /** @nullable */
+  readonly supplier_name: string | null
 }

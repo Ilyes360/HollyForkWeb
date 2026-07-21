@@ -45,6 +45,16 @@ export interface RestaurantRequest {
    * @nullable
    */
   naf_code?: string | null
+  /** @maxLength 20 */
+  vat_number?: string
+  /** @maxLength 255 */
+  legal_name?: string
+  /** @maxLength 64 */
+  legal_form?: string
+  /** @maxLength 64 */
+  share_capital?: string
+  /** @maxLength 128 */
+  rcs?: string
   /**
    * @minLength 1
    * @maxLength 6

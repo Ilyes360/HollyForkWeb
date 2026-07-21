@@ -79,6 +79,10 @@ export const getCommandesListResponseMock = (
         faker.datatype.boolean(),
         undefined,
       ]),
+      envoyer_en_cuisine: faker.helpers.arrayElement([
+        faker.datatype.boolean(),
+        undefined,
+      ]),
     })),
   })),
   ...overrideResponse,
@@ -129,6 +133,10 @@ export const getCommandesCreateResponseMock = (
       "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
     ),
     awaiting_service: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
       faker.datatype.boolean(),
       undefined,
     ]),
@@ -184,6 +192,10 @@ export const getCommandesRetrieveResponseMock = (
       faker.datatype.boolean(),
       undefined,
     ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
   })),
   ...overrideResponse,
 })
@@ -236,6 +248,10 @@ export const getCommandesUpdateResponseMock = (
       faker.datatype.boolean(),
       undefined,
     ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
   })),
   ...overrideResponse,
 })
@@ -285,6 +301,10 @@ export const getCommandesPartialUpdateResponseMock = (
       "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
     ),
     awaiting_service: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
       faker.datatype.boolean(),
       undefined,
     ]),
@@ -347,6 +367,10 @@ export const getCommandesDeplacerCreateResponseMock = (
       faker.datatype.boolean(),
       undefined,
     ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
   })),
   ...overrideResponse,
 })
@@ -396,6 +420,10 @@ export const getCommandesKitchenUpdateStatusPartialUpdateResponseMock = (
       "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
     ),
     awaiting_service: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
       faker.datatype.boolean(),
       undefined,
     ]),
@@ -450,6 +478,10 @@ export const getCommandesKitchenOrdersRetrieveResponseMock = (): Commande[] =>
         "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
       ),
       awaiting_service: faker.helpers.arrayElement([
+        faker.datatype.boolean(),
+        undefined,
+      ]),
+      envoyer_en_cuisine: faker.helpers.arrayElement([
         faker.datatype.boolean(),
         undefined,
       ]),

@@ -12,6 +12,7 @@ import { faker } from "@faker-js/faker"
 import { HttpResponse, http } from "msw"
 import type { RequestHandlerOptions } from "msw"
 
+import { CanalEnum, StatusEnum } from "../../schemas"
 import type { PaginatedReservationList, Reservation } from "../../schemas"
 
 export const getReservationsListResponseMock = (
@@ -36,6 +37,23 @@ export const getReservationsListResponseMock = (
     datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
     phone_number: faker.helpers.arrayElement([
       faker.string.alpha({ length: { min: 10, max: 20 } }),
+      undefined,
+    ]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    status: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(StatusEnum)),
+      undefined,
+    ]),
+    canal: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(CanalEnum)),
+      undefined,
+    ]),
+    estimatedDurationMinutes: faker.helpers.arrayElement([
+      faker.number.int({ min: 1 }),
+      undefined,
+    ]),
+    clientEmail: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.internet.email(), null]),
       undefined,
     ]),
     salle_id: faker.number.int(),
@@ -109,6 +127,23 @@ export const getReservationsCreateResponseMock = (
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     undefined,
   ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  status: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(StatusEnum)),
+    undefined,
+  ]),
+  canal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(CanalEnum)),
+    undefined,
+  ]),
+  estimatedDurationMinutes: faker.helpers.arrayElement([
+    faker.number.int({ min: 1 }),
+    undefined,
+  ]),
+  clientEmail: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
+    undefined,
+  ]),
   salle_id: faker.number.int(),
   table_id: faker.helpers.arrayElement([
     faker.helpers.arrayElement([faker.number.int(), null]),
@@ -177,6 +212,23 @@ export const getReservationsRetrieveResponseMock = (
   datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
   phone_number: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  status: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(StatusEnum)),
+    undefined,
+  ]),
+  canal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(CanalEnum)),
+    undefined,
+  ]),
+  estimatedDurationMinutes: faker.helpers.arrayElement([
+    faker.number.int({ min: 1 }),
+    undefined,
+  ]),
+  clientEmail: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
     undefined,
   ]),
   salle_id: faker.number.int(),
@@ -249,6 +301,23 @@ export const getReservationsUpdateResponseMock = (
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     undefined,
   ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  status: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(StatusEnum)),
+    undefined,
+  ]),
+  canal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(CanalEnum)),
+    undefined,
+  ]),
+  estimatedDurationMinutes: faker.helpers.arrayElement([
+    faker.number.int({ min: 1 }),
+    undefined,
+  ]),
+  clientEmail: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
+    undefined,
+  ]),
   salle_id: faker.number.int(),
   table_id: faker.helpers.arrayElement([
     faker.helpers.arrayElement([faker.number.int(), null]),
@@ -317,6 +386,23 @@ export const getReservationsPartialUpdateResponseMock = (
   datetime: faker.date.past().toISOString().slice(0, 19) + "Z",
   phone_number: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  status: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(StatusEnum)),
+    undefined,
+  ]),
+  canal: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(CanalEnum)),
+    undefined,
+  ]),
+  estimatedDurationMinutes: faker.helpers.arrayElement([
+    faker.number.int({ min: 1 }),
+    undefined,
+  ]),
+  clientEmail: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
     undefined,
   ]),
   salle_id: faker.number.int(),

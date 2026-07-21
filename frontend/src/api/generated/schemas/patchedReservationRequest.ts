@@ -7,6 +7,8 @@
 **Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
+import type { CanalEnum } from "./canalEnum"
+import type { StatusEnum } from "./statusEnum"
 
 export interface PatchedReservationRequest {
   /**
@@ -18,6 +20,12 @@ export interface PatchedReservationRequest {
   datetime?: string
   /** @maxLength 20 */
   phone_number?: string
+  status?: StatusEnum
+  canal?: CanalEnum
+  /** @minimum 1 */
+  estimatedDurationMinutes?: number
+  /** @nullable */
+  clientEmail?: string | null
   salle_id?: number
   /** @nullable */
   table_id?: number | null

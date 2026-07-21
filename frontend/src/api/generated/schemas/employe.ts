@@ -22,4 +22,6 @@ export interface Employe {
   hire_date?: string
   /** @maxLength 20 */
   phone_number?: string
+  /** @nullable */
+  readonly email: string | null
 }

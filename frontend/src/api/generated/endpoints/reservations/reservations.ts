@@ -60,7 +60,7 @@ export const getReservationsListUrl = (params?: ReservationsListParams) => {
 }
 
 /**
- * Liste des réservations avec filtres optionnels : id, restaurant_id, salle_id, table_id, date (YYYY-MM-DD), service (midi|soir).
+ * Liste des réservations avec filtres optionnels : id, restaurant_id, salle_id, table_id, date (YYYY-MM-DD), service (midi|soir), status, canal.
  * @summary Liste des réservations
  */
 export const reservationsList = async (

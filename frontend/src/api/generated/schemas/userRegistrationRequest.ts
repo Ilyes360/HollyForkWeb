@@ -46,5 +46,6 @@ export interface UserRegistrationRequest {
    */
   pin_code: string
   type_employe_id: number
-  restaurant_id: number
+  /** @nullable */
+  restaurant_id?: number | null
 }

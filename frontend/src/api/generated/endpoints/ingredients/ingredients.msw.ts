@@ -34,6 +34,28 @@ export const getIngredientsListResponseMock = (
     name: faker.string.alpha({ length: { min: 10, max: 200 } }),
     unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
     unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+    category_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      undefined,
+    ]),
+    category_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
+    supplier_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      undefined,
+    ]),
+    supplier_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
   })),
   ...overrideResponse,
 })
@@ -45,6 +67,28 @@ export const getIngredientsCreateResponseMock = (
   name: faker.string.alpha({ length: { min: 10, max: 200 } }),
   unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
   unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   ...overrideResponse,
 })
 
@@ -55,6 +99,28 @@ export const getIngredientsRetrieveResponseMock = (
   name: faker.string.alpha({ length: { min: 10, max: 200 } }),
   unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
   unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   ...overrideResponse,
 })
 
@@ -65,6 +131,28 @@ export const getIngredientsUpdateResponseMock = (
   name: faker.string.alpha({ length: { min: 10, max: 200 } }),
   unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
   unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   ...overrideResponse,
 })
 
@@ -75,6 +163,28 @@ export const getIngredientsPartialUpdateResponseMock = (
   name: faker.string.alpha({ length: { min: 10, max: 200 } }),
   unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
   unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+  category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   ...overrideResponse,
 })
 

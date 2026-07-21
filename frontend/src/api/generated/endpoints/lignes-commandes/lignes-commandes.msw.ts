@@ -12,7 +12,11 @@ import { faker } from "@faker-js/faker"
 import { HttpResponse, http } from "msw"
 import type { RequestHandlerOptions } from "msw"
 
-import type { LigneCommande, PaginatedLigneCommandeList } from "../../schemas"
+import type {
+  LigneCommande,
+  LignesEnvoyerCuisineResponse,
+  PaginatedLigneCommandeList,
+} from "../../schemas"
 
 export const getLignesCommandesListResponseMock = (
   overrideResponse: Partial<Extract<PaginatedLigneCommandeList, object>> = {}
@@ -42,6 +46,10 @@ export const getLignesCommandesListResponseMock = (
       faker.datatype.boolean(),
       undefined,
     ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
   })),
   ...overrideResponse,
 })
@@ -56,6 +64,10 @@ export const getLignesCommandesCreateResponseMock = (
   article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
   awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  envoyer_en_cuisine: faker.helpers.arrayElement([
     faker.datatype.boolean(),
     undefined,
   ]),
@@ -75,6 +87,10 @@ export const getLignesCommandesRetrieveResponseMock = (
     faker.datatype.boolean(),
     undefined,
   ]),
+  envoyer_en_cuisine: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
   ...overrideResponse,
 })
 
@@ -88,6 +104,10 @@ export const getLignesCommandesUpdateResponseMock = (
   article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
   awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  envoyer_en_cuisine: faker.helpers.arrayElement([
     faker.datatype.boolean(),
     undefined,
   ]),
@@ -107,6 +127,10 @@ export const getLignesCommandesPartialUpdateResponseMock = (
     faker.datatype.boolean(),
     undefined,
   ]),
+  envoyer_en_cuisine: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
   ...overrideResponse,
 })
 
@@ -123,6 +147,10 @@ export const getLignesCommandesDeplacerCreateResponseMock = (
     faker.datatype.boolean(),
     undefined,
   ]),
+  envoyer_en_cuisine: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
   ...overrideResponse,
 })
 
@@ -136,6 +164,10 @@ export const getLignesCommandesReclamerCreateResponseMock = (
   article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   cost_of_goods_sold: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
   awaiting_service: faker.helpers.arrayElement([
+    faker.datatype.boolean(),
+    undefined,
+  ]),
+  envoyer_en_cuisine: faker.helpers.arrayElement([
     faker.datatype.boolean(),
     undefined,
   ]),
@@ -160,7 +192,41 @@ export const getLignesCommandesDeplacerSelectionCreateResponseMock =
         faker.datatype.boolean(),
         undefined,
       ]),
+      envoyer_en_cuisine: faker.helpers.arrayElement([
+        faker.datatype.boolean(),
+        undefined,
+      ]),
     }))
+
+export const getLignesCommandesEnvoyerEnCuisineCreateResponseMock = (
+  overrideResponse: Partial<Extract<LignesEnvoyerCuisineResponse, object>> = {}
+): LignesEnvoyerCuisineResponse => ({
+  lines: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1
+  ).map(() => ({
+    id: faker.number.int(),
+    quantity: faker.number.int(),
+    unit_price: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,2})?$"),
+    article_id: faker.number.int(),
+    article_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    cost_of_goods_sold: faker.helpers.fromRegExp(
+      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
+    ),
+    awaiting_service: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+    envoyer_en_cuisine: faker.helpers.arrayElement([
+      faker.datatype.boolean(),
+      undefined,
+    ]),
+  })),
+  print_status: {
+    [faker.string.alphanumeric(5)]: {},
+  },
+  ...overrideResponse,
+})
 
 export const getLignesCommandesListMockHandler = (
   overrideResponse?:
@@ -374,6 +440,32 @@ export const getLignesCommandesDeplacerSelectionCreateMockHandler = (
     options
   )
 }
+
+export const getLignesCommandesEnvoyerEnCuisineCreateMockHandler = (
+  overrideResponse?:
+    | LignesEnvoyerCuisineResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) =>
+        | Promise<LignesEnvoyerCuisineResponse>
+        | LignesEnvoyerCuisineResponse),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/lignes-commandes/envoyer-en-cuisine/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getLignesCommandesEnvoyerEnCuisineCreateResponseMock(),
+        { status: 200 }
+      )
+    },
+    options
+  )
+}
 export const getLignesCommandesMock = () => [
   getLignesCommandesListMockHandler(),
   getLignesCommandesCreateMockHandler(),
@@ -384,4 +476,5 @@ export const getLignesCommandesMock = () => [
   getLignesCommandesDeplacerCreateMockHandler(),
   getLignesCommandesReclamerCreateMockHandler(),
   getLignesCommandesDeplacerSelectionCreateMockHandler(),
+  getLignesCommandesEnvoyerEnCuisineCreateMockHandler(),
 ]

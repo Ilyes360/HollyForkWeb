@@ -1,0 +1,53 @@
+name: Schema drift detection
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5" # Weekdays at 6am UTC
+  workflow_dispatch: # Manual trigger
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  drift:
+    name: Sync API schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # Download fresh schema with --fail (don't swallow 502/503)
+      - name: Fetch live schema
+        run: |
+          curl -sf https://hollyfork.org/api/schema/ -o docs/api/openapi.yml
+          head -1 docs/api/openapi.yml | grep -q '^openapi:' || (echo "Invalid schema" && exit 1)
+
+      - name: Regenerate types
+        run: npx openapi-typescript docs/api/openapi.yml -o src/types/api.d.ts
+
+      - name: Open PR if schema changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "chore: sync API types with live schema"
+          body: |
+            The OpenAPI schema on `hollyfork.org` has changed.
+            This PR updates `docs/api/openapi.yml` and `src/types/api.d.ts`.
+
+            If `tsc` fails, the backend made a breaking change that affects the frontend.
+          branch: schema-sync
+          commit-message: "chore: sync API schema from hollyfork.org"
+          delete-branch: true

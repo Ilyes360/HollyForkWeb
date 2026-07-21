@@ -34,6 +34,9 @@ import type {
   LignesDeplacerSelectionError,
   LignesDeplacerSelectionNotFound,
   LignesDeplacerSelectionRequestRequest,
+  LignesEnvoyerCuisineError,
+  LignesEnvoyerCuisineRequestRequest,
+  LignesEnvoyerCuisineResponse,
   PaginatedLigneCommandeList,
   PatchedLigneCommandeRequest,
 } from "../../schemas"
@@ -1158,6 +1161,126 @@ export const useLignesCommandesDeplacerSelectionCreate = <
 > => {
   return useMutation(
     getLignesCommandesDeplacerSelectionCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type lignesCommandesEnvoyerEnCuisineCreateResponse200 = {
+  data: LignesEnvoyerCuisineResponse
+  status: 200
+}
+
+export type lignesCommandesEnvoyerEnCuisineCreateResponse400 = {
+  data: LignesEnvoyerCuisineError
+  status: 400
+}
+
+export type lignesCommandesEnvoyerEnCuisineCreateResponseSuccess =
+  lignesCommandesEnvoyerEnCuisineCreateResponse200 & {
+    headers: Headers
+  }
+export type lignesCommandesEnvoyerEnCuisineCreateResponseError =
+  lignesCommandesEnvoyerEnCuisineCreateResponse400 & {
+    headers: Headers
+  }
+
+export type lignesCommandesEnvoyerEnCuisineCreateResponse =
+  | lignesCommandesEnvoyerEnCuisineCreateResponseSuccess
+  | lignesCommandesEnvoyerEnCuisineCreateResponseError
+
+export const getLignesCommandesEnvoyerEnCuisineCreateUrl = () => {
+  return `/api/lignes-commandes/envoyer-en-cuisine/`
+}
+
+/**
+ * Marque une liste de lignes de commande comme envoyées en cuisine.
+Met ``envoyer_en_cuisine`` à True (idempotent) en une seule requête UPDATE.
+Imprime automatiquement (soft-fail) uniquement les lignes nouvellement envoyées.
+ * @summary Envoyer des lignes commande en cuisine (bulk)
+ */
+export const lignesCommandesEnvoyerEnCuisineCreate = async (
+  lignesEnvoyerCuisineRequestRequest: LignesEnvoyerCuisineRequestRequest,
+  options?: RequestInit
+): Promise<lignesCommandesEnvoyerEnCuisineCreateResponse> => {
+  return kyMutator<lignesCommandesEnvoyerEnCuisineCreateResponse>(
+    getLignesCommandesEnvoyerEnCuisineCreateUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(lignesEnvoyerCuisineRequestRequest),
+    }
+  )
+}
+
+export const getLignesCommandesEnvoyerEnCuisineCreateMutationOptions = <
+  TError = LignesEnvoyerCuisineError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof lignesCommandesEnvoyerEnCuisineCreate>>,
+    TError,
+    { data: LignesEnvoyerCuisineRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof lignesCommandesEnvoyerEnCuisineCreate>>,
+  TError,
+  { data: LignesEnvoyerCuisineRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["lignesCommandesEnvoyerEnCuisineCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof lignesCommandesEnvoyerEnCuisineCreate>>,
+    { data: LignesEnvoyerCuisineRequestRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return lignesCommandesEnvoyerEnCuisineCreate(data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type LignesCommandesEnvoyerEnCuisineCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof lignesCommandesEnvoyerEnCuisineCreate>>
+>
+export type LignesCommandesEnvoyerEnCuisineCreateMutationBody =
+  LignesEnvoyerCuisineRequestRequest
+export type LignesCommandesEnvoyerEnCuisineCreateMutationError =
+  LignesEnvoyerCuisineError
+
+/**
+ * @summary Envoyer des lignes commande en cuisine (bulk)
+ */
+export const useLignesCommandesEnvoyerEnCuisineCreate = <
+  TError = LignesEnvoyerCuisineError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof lignesCommandesEnvoyerEnCuisineCreate>>,
+      TError,
+      { data: LignesEnvoyerCuisineRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof lignesCommandesEnvoyerEnCuisineCreate>>,
+  TError,
+  { data: LignesEnvoyerCuisineRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getLignesCommandesEnvoyerEnCuisineCreateMutationOptions(options),
     queryClient
   )
 }

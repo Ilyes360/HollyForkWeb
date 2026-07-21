@@ -21,6 +21,7 @@ export interface CommandeFournisseur {
   total_amount?: string
   /** @nullable */
   notes?: string | null
+  readonly lines: string
   readonly created_at: string
   readonly updated_at: string
 }

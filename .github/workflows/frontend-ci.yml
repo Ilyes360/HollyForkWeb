@@ -37,15 +37,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Check generated code freshness
+      - name: Check generated code freshness (orval)
         run: |
           pnpm gen:api
           git diff --exit-code src/api/generated || (echo "Generated code is stale. Run 'pnpm gen:api' and commit." && exit 1)
 
-      - name: Refresh API schema & types
+      # Offline check: types must match the committed schema (no network dependency)
+      - name: Types match committed schema
         run: |
-          pnpm gen:schema
-          git diff --exit-code src/types/api.d.ts || (echo "API types are stale. Run 'pnpm gen:schema' and commit." && exit 1)
+          npx openapi-typescript docs/api/openapi.yml -o /tmp/api.d.ts
+          diff -q /tmp/api.d.ts src/types/api.d.ts || (echo "Types are stale vs committed schema. Run 'pnpm gen:types' and commit." && exit 1)
 
       - name: Typecheck
         run: pnpm typecheck

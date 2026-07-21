@@ -13,4 +13,5 @@ export interface LigneCommandeRequest {
   quantity: number
   article_id: number
   awaiting_service?: boolean
+  envoyer_en_cuisine?: boolean
 }

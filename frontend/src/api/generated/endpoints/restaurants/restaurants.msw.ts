@@ -44,6 +44,26 @@ export const getRestaurantsListResponseMock = (
       ]),
       undefined,
     ]),
+    vat_number: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      undefined,
+    ]),
+    legal_name: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 255 } }),
+      undefined,
+    ]),
+    legal_form: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 64 } }),
+      undefined,
+    ]),
+    share_capital: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 64 } }),
+      undefined,
+    ]),
+    rcs: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 128 } }),
+      undefined,
+    ]),
     pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
     logo_url: faker.helpers.arrayElement([
       faker.helpers.arrayElement([faker.internet.url(), null]),
@@ -68,6 +88,26 @@ export const getRestaurantsCreateResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 10 } }),
       null,
     ]),
+    undefined,
+  ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
     undefined,
   ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
@@ -95,6 +135,26 @@ export const getRestaurantsRetrieveResponseMock = (
     ]),
     undefined,
   ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
+    undefined,
+  ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
   logo_url: faker.helpers.arrayElement([
     faker.helpers.arrayElement([faker.internet.url(), null]),
@@ -118,6 +178,26 @@ export const getRestaurantsUpdateResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 10 } }),
       null,
     ]),
+    undefined,
+  ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
     undefined,
   ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
@@ -145,6 +225,26 @@ export const getRestaurantsPartialUpdateResponseMock = (
     ]),
     undefined,
   ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
+    undefined,
+  ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
   logo_url: faker.helpers.arrayElement([
     faker.helpers.arrayElement([faker.internet.url(), null]),
@@ -170,6 +270,26 @@ export const getRestaurantsLogoRetrieveResponseMock = (
     ]),
     undefined,
   ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
+    undefined,
+  ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
   logo_url: faker.helpers.arrayElement([
     faker.helpers.arrayElement([faker.internet.url(), null]),
@@ -193,6 +313,26 @@ export const getRestaurantsVerifyRetrieveResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 10 } }),
       null,
     ]),
+    undefined,
+  ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
     undefined,
   ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),

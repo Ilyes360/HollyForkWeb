@@ -9,10 +9,23 @@
  */
 
 export type StocksListParams = {
+  /**
+   * @nullable
+   */
+  ingredient__categorie_id?: number | null
+  /**
+   * Fournisseur principal de cet ingrédient
+   * @nullable
+   */
+  ingredient__fournisseur_id?: number | null
   ingredient_id?: number
   /**
    * A page number within the paginated result set.
    */
   page?: number
   restaurant_id?: number
+  /**
+   * @nullable
+   */
+  zone_id?: number | null
 }

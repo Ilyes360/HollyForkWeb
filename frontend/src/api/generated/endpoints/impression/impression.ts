@@ -26,6 +26,9 @@ import type {
 import type {
   ClientPrintRequestRequest,
   ClientTicketResponse,
+  FacturePrintNoteRequestRequest,
+  FacturePrintTicketRequestRequest,
+  HistoricPrintTicketRequestRequest,
   ImprimanteReseau,
   ImprimanteReseauCreateError,
   ImprimanteReseauPatchError,
@@ -44,6 +47,125 @@ import type {
 
 import { kyMutator } from "../../../mutator"
 
+export type commandesHistoriquePrintTicketCreateResponse200 = {
+  data: void
+  status: 200
+}
+
+export type commandesHistoriquePrintTicketCreateResponse404 = {
+  data: void
+  status: 404
+}
+
+export type commandesHistoriquePrintTicketCreateResponseSuccess =
+  commandesHistoriquePrintTicketCreateResponse200 & {
+    headers: Headers
+  }
+export type commandesHistoriquePrintTicketCreateResponseError =
+  commandesHistoriquePrintTicketCreateResponse404 & {
+    headers: Headers
+  }
+
+export type commandesHistoriquePrintTicketCreateResponse =
+  | commandesHistoriquePrintTicketCreateResponseSuccess
+  | commandesHistoriquePrintTicketCreateResponseError
+
+export const getCommandesHistoriquePrintTicketCreateUrl = (id: number) => {
+  return `/api/commandes-historique/${id}/print/ticket/`
+}
+
+/**
+ * Requête une facture payée liée à cette commande historique et réimprime le ticket. 404 si aucune facture payée.
+ * @summary Réimprimer le ticket de caisse d'une commande clôturée
+ */
+export const commandesHistoriquePrintTicketCreate = async (
+  id: number,
+  historicPrintTicketRequestRequest?: HistoricPrintTicketRequestRequest,
+  options?: RequestInit
+): Promise<commandesHistoriquePrintTicketCreateResponse> => {
+  return kyMutator<commandesHistoriquePrintTicketCreateResponse>(
+    getCommandesHistoriquePrintTicketCreateUrl(id),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(historicPrintTicketRequestRequest),
+    }
+  )
+}
+
+export const getCommandesHistoriquePrintTicketCreateMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof commandesHistoriquePrintTicketCreate>>,
+    TError,
+    { id: number; data?: HistoricPrintTicketRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof commandesHistoriquePrintTicketCreate>>,
+  TError,
+  { id: number; data?: HistoricPrintTicketRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["commandesHistoriquePrintTicketCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof commandesHistoriquePrintTicketCreate>>,
+    { id: number; data?: HistoricPrintTicketRequestRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return commandesHistoriquePrintTicketCreate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CommandesHistoriquePrintTicketCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof commandesHistoriquePrintTicketCreate>>
+>
+export type CommandesHistoriquePrintTicketCreateMutationBody =
+  | HistoricPrintTicketRequestRequest
+  | undefined
+export type CommandesHistoriquePrintTicketCreateMutationError = void
+
+/**
+ * @summary Réimprimer le ticket de caisse d'une commande clôturée
+ */
+export const useCommandesHistoriquePrintTicketCreate = <
+  TError = void,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof commandesHistoriquePrintTicketCreate>>,
+      TError,
+      { id: number; data?: HistoricPrintTicketRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof commandesHistoriquePrintTicketCreate>>,
+  TError,
+  { id: number; data?: HistoricPrintTicketRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getCommandesHistoriquePrintTicketCreateMutationOptions(options),
+    queryClient
+  )
+}
 export type commandesClientPrintCreateResponse200 = {
   data: ClientTicketResponse
   status: 200
@@ -305,6 +427,252 @@ export const useCommandesKitchenPrintCreate = <
 > => {
   return useMutation(
     getCommandesKitchenPrintCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type facturesPrintNoteCreateResponse200 = {
+  data: void
+  status: 200
+}
+
+export type facturesPrintNoteCreateResponse400 = {
+  data: void
+  status: 400
+}
+
+export type facturesPrintNoteCreateResponse502 = {
+  data: void
+  status: 502
+}
+
+export type facturesPrintNoteCreateResponseSuccess =
+  facturesPrintNoteCreateResponse200 & {
+    headers: Headers
+  }
+export type facturesPrintNoteCreateResponseError = (
+  | facturesPrintNoteCreateResponse400
+  | facturesPrintNoteCreateResponse502
+) & {
+  headers: Headers
+}
+
+export type facturesPrintNoteCreateResponse =
+  | facturesPrintNoteCreateResponseSuccess
+  | facturesPrintNoteCreateResponseError
+
+export const getFacturesPrintNoteCreateUrl = (id: number) => {
+  return `/api/factures/${id}/print/note/`
+}
+
+/**
+ * Réimprime la note (même si la facture est déjà payée). Sans cible : ticket_b64. Avec printer_ip ou printer_categorie : envoi (comportement strict). Sans cible d'override : tentative auto soft-fail vers CAISSE.
+ * @summary Réimprimer la note / addition
+ */
+export const facturesPrintNoteCreate = async (
+  id: number,
+  facturePrintNoteRequestRequest?: FacturePrintNoteRequestRequest,
+  options?: RequestInit
+): Promise<facturesPrintNoteCreateResponse> => {
+  return kyMutator<facturesPrintNoteCreateResponse>(
+    getFacturesPrintNoteCreateUrl(id),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(facturePrintNoteRequestRequest),
+    }
+  )
+}
+
+export const getFacturesPrintNoteCreateMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof facturesPrintNoteCreate>>,
+    TError,
+    { id: number; data?: FacturePrintNoteRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof facturesPrintNoteCreate>>,
+  TError,
+  { id: number; data?: FacturePrintNoteRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["facturesPrintNoteCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof facturesPrintNoteCreate>>,
+    { id: number; data?: FacturePrintNoteRequestRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return facturesPrintNoteCreate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type FacturesPrintNoteCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof facturesPrintNoteCreate>>
+>
+export type FacturesPrintNoteCreateMutationBody =
+  | FacturePrintNoteRequestRequest
+  | undefined
+export type FacturesPrintNoteCreateMutationError = void
+
+/**
+ * @summary Réimprimer la note / addition
+ */
+export const useFacturesPrintNoteCreate = <TError = void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof facturesPrintNoteCreate>>,
+      TError,
+      { id: number; data?: FacturePrintNoteRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof facturesPrintNoteCreate>>,
+  TError,
+  { id: number; data?: FacturePrintNoteRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getFacturesPrintNoteCreateMutationOptions(options),
+    queryClient
+  )
+}
+export type facturesPrintTicketCreateResponse200 = {
+  data: void
+  status: 200
+}
+
+export type facturesPrintTicketCreateResponse400 = {
+  data: void
+  status: 400
+}
+
+export type facturesPrintTicketCreateResponse502 = {
+  data: void
+  status: 502
+}
+
+export type facturesPrintTicketCreateResponseSuccess =
+  facturesPrintTicketCreateResponse200 & {
+    headers: Headers
+  }
+export type facturesPrintTicketCreateResponseError = (
+  | facturesPrintTicketCreateResponse400
+  | facturesPrintTicketCreateResponse502
+) & {
+  headers: Headers
+}
+
+export type facturesPrintTicketCreateResponse =
+  | facturesPrintTicketCreateResponseSuccess
+  | facturesPrintTicketCreateResponseError
+
+export const getFacturesPrintTicketCreateUrl = (id: number) => {
+  return `/api/factures/${id}/print/ticket/`
+}
+
+/**
+ * Réimprime le ticket de caisse. La facture doit être payée.
+ * @summary Réimprimer le ticket de caisse
+ */
+export const facturesPrintTicketCreate = async (
+  id: number,
+  facturePrintTicketRequestRequest?: FacturePrintTicketRequestRequest,
+  options?: RequestInit
+): Promise<facturesPrintTicketCreateResponse> => {
+  return kyMutator<facturesPrintTicketCreateResponse>(
+    getFacturesPrintTicketCreateUrl(id),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(facturePrintTicketRequestRequest),
+    }
+  )
+}
+
+export const getFacturesPrintTicketCreateMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof facturesPrintTicketCreate>>,
+    TError,
+    { id: number; data?: FacturePrintTicketRequestRequest },
+    TContext
+  >
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof facturesPrintTicketCreate>>,
+  TError,
+  { id: number; data?: FacturePrintTicketRequestRequest },
+  TContext
+> => {
+  const mutationKey = ["facturesPrintTicketCreate"]
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof facturesPrintTicketCreate>>,
+    { id: number; data?: FacturePrintTicketRequestRequest }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return facturesPrintTicketCreate(id, data)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type FacturesPrintTicketCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof facturesPrintTicketCreate>>
+>
+export type FacturesPrintTicketCreateMutationBody =
+  | FacturePrintTicketRequestRequest
+  | undefined
+export type FacturesPrintTicketCreateMutationError = void
+
+/**
+ * @summary Réimprimer le ticket de caisse
+ */
+export const useFacturesPrintTicketCreate = <TError = void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof facturesPrintTicketCreate>>,
+      TError,
+      { id: number; data?: FacturePrintTicketRequestRequest },
+      TContext
+    >
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof facturesPrintTicketCreate>>,
+  TError,
+  { id: number; data?: FacturePrintTicketRequestRequest },
+  TContext
+> => {
+  return useMutation(
+    getFacturesPrintTicketCreateMutationOptions(options),
     queryClient
   )
 }

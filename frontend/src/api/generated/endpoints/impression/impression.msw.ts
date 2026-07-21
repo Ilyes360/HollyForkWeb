@@ -168,6 +168,27 @@ export const getPrintersDiscoverRetrieveResponseMock = (
   ...overrideResponse,
 })
 
+export const getCommandesHistoriquePrintTicketCreateMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/commandes-historique/:id/print/ticket/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
+
+      return new HttpResponse(null, { status: 200 })
+    },
+    options
+  )
+}
+
 export const getCommandesClientPrintCreateMockHandler = (
   overrideResponse?:
     | ClientTicketResponse
@@ -211,6 +232,48 @@ export const getCommandesKitchenPrintCreateMockHandler = (
           : getCommandesKitchenPrintCreateResponseMock(),
         { status: 200 }
       )
+    },
+    options
+  )
+}
+
+export const getFacturesPrintNoteCreateMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/factures/:id/print/note/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
+
+      return new HttpResponse(null, { status: 200 })
+    },
+    options
+  )
+}
+
+export const getFacturesPrintTicketCreateMockHandler = (
+  overrideResponse?:
+    | void
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0]
+      ) => Promise<void> | void),
+  options?: RequestHandlerOptions
+) => {
+  return http.post(
+    "*/api/factures/:id/print/ticket/",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info)
+      }
+
+      return new HttpResponse(null, { status: 200 })
     },
     options
   )
@@ -383,8 +446,11 @@ export const getPrintersDiscoverRetrieveMockHandler = (
   )
 }
 export const getImpressionMock = () => [
+  getCommandesHistoriquePrintTicketCreateMockHandler(),
   getCommandesClientPrintCreateMockHandler(),
   getCommandesKitchenPrintCreateMockHandler(),
+  getFacturesPrintNoteCreateMockHandler(),
+  getFacturesPrintTicketCreateMockHandler(),
   getImprimantesReseauListMockHandler(),
   getImprimantesReseauCreateMockHandler(),
   getImprimantesReseauRetrieveMockHandler(),

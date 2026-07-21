@@ -14,8 +14,18 @@ export interface Stock {
   ingredient_id: number
   readonly ingredient_name: string
   readonly ingredient_unit: string
-  /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
-  readonly ingredient_unit_price: string
+  /** @nullable */
+  readonly ingredient_category_id: number | null
+  /** @nullable */
+  readonly ingredient_category_name: string | null
+  /** @nullable */
+  readonly supplier_id: number | null
+  /** @nullable */
+  readonly supplier_name: string | null
+  /** @nullable */
+  zone_id?: number | null
+  /** @nullable */
+  readonly zone_name: string | null
   /** @pattern ^-?\d{0,8}(?:\.\d{0,4})?$ */
   quantity_in_stock: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,4})?$ */

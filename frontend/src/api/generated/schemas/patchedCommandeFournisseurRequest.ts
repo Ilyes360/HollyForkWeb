@@ -7,6 +7,7 @@
 **Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
+import type { PatchedCommandeFournisseurRequestItemsItem } from "./patchedCommandeFournisseurRequestItemsItem"
 
 export interface PatchedCommandeFournisseurRequest {
   fournisseur_id?: number
@@ -20,4 +21,6 @@ export interface PatchedCommandeFournisseurRequest {
   total_amount?: string
   /** @nullable */
   notes?: string | null
+  /** Lignes de commande : [{"ingredient_id": 5, "quantite": 10, "prix_unitaire": "3.80"}, ...] */
+  items?: PatchedCommandeFournisseurRequestItemsItem[]
 }

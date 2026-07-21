@@ -3,7 +3,7 @@ import { defineConfig } from "orval"
 export default defineConfig({
   holyFork: {
     input: {
-      target: "./docs/api/openapi.json",
+      target: "./docs/api/openapi.yml",
     },
     output: {
       target: "./src/api/generated/endpoints",

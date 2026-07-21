@@ -11,6 +11,8 @@
 export interface PatchedStockRequest {
   restaurant_id?: number
   ingredient_id?: number
+  /** @nullable */
+  zone_id?: number | null
   /** @pattern ^-?\d{0,8}(?:\.\d{0,4})?$ */
   quantity_in_stock?: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,4})?$ */

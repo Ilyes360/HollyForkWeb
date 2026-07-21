@@ -41,9 +41,39 @@ export const getStocksListResponseMock = (
     ingredient_id: faker.number.int(),
     ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
     ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    ingredient_unit_price: faker.helpers.fromRegExp(
-      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
-    ),
+    ingredient_category_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      null,
+    ]),
+    ingredient_category_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
+    supplier_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      null,
+    ]),
+    supplier_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
+    zone_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      undefined,
+    ]),
+    zone_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
     quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
     alert_threshold: faker.helpers.arrayElement([
       faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
@@ -64,9 +94,39 @@ export const getStocksCreateResponseMock = (
   ingredient_id: faker.number.int(),
   ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ingredient_unit_price: faker.helpers.fromRegExp(
-    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
-  ),
+  ingredient_category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  ingredient_category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  zone_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  zone_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
   alert_threshold: faker.helpers.arrayElement([
     faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
@@ -86,9 +146,39 @@ export const getStocksRetrieveResponseMock = (
   ingredient_id: faker.number.int(),
   ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ingredient_unit_price: faker.helpers.fromRegExp(
-    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
-  ),
+  ingredient_category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  ingredient_category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  zone_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  zone_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
   alert_threshold: faker.helpers.arrayElement([
     faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
@@ -108,9 +198,39 @@ export const getStocksUpdateResponseMock = (
   ingredient_id: faker.number.int(),
   ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ingredient_unit_price: faker.helpers.fromRegExp(
-    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
-  ),
+  ingredient_category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  ingredient_category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  zone_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  zone_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
   alert_threshold: faker.helpers.arrayElement([
     faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
@@ -130,9 +250,39 @@ export const getStocksPartialUpdateResponseMock = (
   ingredient_id: faker.number.int(),
   ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ingredient_unit_price: faker.helpers.fromRegExp(
-    "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
-  ),
+  ingredient_category_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  ingredient_category_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  supplier_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    null,
+  ]),
+  supplier_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
+  zone_id: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.number.int(), null]),
+    undefined,
+  ]),
+  zone_name: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    null,
+  ]),
   quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
   alert_threshold: faker.helpers.arrayElement([
     faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
@@ -154,9 +304,39 @@ export const getStocksAdjustCreateResponseMock = (
     ingredient_id: faker.number.int(),
     ingredient_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
     ingredient_unit: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    ingredient_unit_price: faker.helpers.fromRegExp(
-      "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
-    ),
+    ingredient_category_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      null,
+    ]),
+    ingredient_category_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
+    supplier_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      null,
+    ]),
+    supplier_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
+    zone_id: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.number.int(), null]),
+      undefined,
+    ]),
+    zone_name: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      null,
+    ]),
     quantity_in_stock: faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),
     alert_threshold: faker.helpers.arrayElement([
       faker.helpers.fromRegExp("^-?\\d{0,8}(?:\\.\\d{0,4})?$"),

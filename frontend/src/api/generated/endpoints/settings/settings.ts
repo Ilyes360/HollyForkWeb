@@ -24,16 +24,17 @@ import type {
 } from "@tanstack/react-query"
 
 import type {
+  AdminUserUpdate,
   BillingSettings,
   BillingSettingsRequest,
   NotificationSettings,
   NotificationSettingsRequest,
   PaginatedBillingSettingsList,
   PaginatedNotificationSettingsList,
+  PatchedAdminUserUpdateRequest,
   PatchedBillingSettingsRequest,
   PatchedNotificationSettingsRequest,
   PatchedRestaurantRequest,
-  PatchedUserProfileRequest,
   Restaurant,
   SettingsBillingListParams,
   SettingsNotificationsListParams,
@@ -1932,8 +1933,8 @@ export const getSettingsUsersListUrl = (params?: SettingsUsersListParams) => {
 }
 
 /**
- * GET /api/settings/users?restaurant_id=X — liste des utilisateurs
-POST /api/settings/users — création utilisateur
+ * Filtre par `restaurant_id` si fourni, sinon par les restaurants accessibles au demandeur (via PermissionChecker).
+ * @summary Lister les utilisateurs
  */
 export const settingsUsersList = async (
   params?: SettingsUsersListParams,
@@ -2057,6 +2058,9 @@ export function useSettingsUsersList<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>
 }
+/**
+ * @summary Lister les utilisateurs
+ */
 
 export function useSettingsUsersList<
   TData = Awaited<ReturnType<typeof settingsUsersList>>,
@@ -2096,14 +2100,21 @@ export type settingsUsersCreateResponse400 = {
   status: 400
 }
 
+export type settingsUsersCreateResponse403 = {
+  data: void
+  status: 403
+}
+
 export type settingsUsersCreateResponseSuccess =
   settingsUsersCreateResponse201 & {
     headers: Headers
   }
-export type settingsUsersCreateResponseError =
-  settingsUsersCreateResponse400 & {
-    headers: Headers
-  }
+export type settingsUsersCreateResponseError = (
+  | settingsUsersCreateResponse400
+  | settingsUsersCreateResponse403
+) & {
+  headers: Headers
+}
 
 export type settingsUsersCreateResponse =
   | settingsUsersCreateResponseSuccess
@@ -2114,8 +2125,8 @@ export const getSettingsUsersCreateUrl = () => {
 }
 
 /**
- * GET /api/settings/users?restaurant_id=X — liste des utilisateurs
-POST /api/settings/users — création utilisateur
+ * Requiert la permission `manage_staff`. `restaurant_id` est optionnel. Envoie un email d'invitation.
+ * @summary Créer un utilisateur (invitation admin)
  */
 export const settingsUsersCreate = async (
   userRegistrationRequest: UserRegistrationRequest,
@@ -2172,6 +2183,9 @@ export type SettingsUsersCreateMutationResult = NonNullable<
 export type SettingsUsersCreateMutationBody = UserRegistrationRequest
 export type SettingsUsersCreateMutationError = void
 
+/**
+ * @summary Créer un utilisateur (invitation admin)
+ */
 export const useSettingsUsersCreate = <TError = void, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
@@ -2222,7 +2236,8 @@ export const getSettingsUserRetrieveUrl = (userId: number) => {
 
 /**
  * GET /api/settings/users/{user_id}/ — détail d'un utilisateur
-PATCH /api/settings/users/{user_id}/ — mise à jour partielle
+PATCH /api/settings/users/{user_id}/ — mise à jour partielle (MANAGE_STAFF)
+ * @summary Détail d'un utilisateur
  */
 export const settingsUserRetrieve = async (
   userId: number,
@@ -2352,6 +2367,9 @@ export function useSettingsUserRetrieve<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>
 }
+/**
+ * @summary Détail d'un utilisateur
+ */
 
 export function useSettingsUserRetrieve<
   TData = Awaited<ReturnType<typeof settingsUserRetrieve>>,
@@ -2382,13 +2400,18 @@ export function useSettingsUserRetrieve<
 }
 
 export type settingsUserPartialUpdateResponse200 = {
-  data: UserProfile
+  data: AdminUserUpdate
   status: 200
 }
 
 export type settingsUserPartialUpdateResponse400 = {
   data: void
   status: 400
+}
+
+export type settingsUserPartialUpdateResponse403 = {
+  data: void
+  status: 403
 }
 
 export type settingsUserPartialUpdateResponse404 = {
@@ -2402,6 +2425,7 @@ export type settingsUserPartialUpdateResponseSuccess =
   }
 export type settingsUserPartialUpdateResponseError = (
   | settingsUserPartialUpdateResponse400
+  | settingsUserPartialUpdateResponse403
   | settingsUserPartialUpdateResponse404
 ) & {
   headers: Headers
@@ -2416,12 +2440,12 @@ export const getSettingsUserPartialUpdateUrl = (userId: number) => {
 }
 
 /**
- * GET /api/settings/users/{user_id}/ — détail d'un utilisateur
-PATCH /api/settings/users/{user_id}/ — mise à jour partielle
+ * Requiert `manage_staff`. Permet notamment de modifier `is_active` pour activer/désactiver un compte.
+ * @summary Mettre à jour un utilisateur (admin)
  */
 export const settingsUserPartialUpdate = async (
   userId: number,
-  patchedUserProfileRequest?: PatchedUserProfileRequest,
+  patchedAdminUserUpdateRequest?: PatchedAdminUserUpdateRequest,
   options?: RequestInit
 ): Promise<settingsUserPartialUpdateResponse> => {
   return kyMutator<settingsUserPartialUpdateResponse>(
@@ -2430,7 +2454,7 @@ export const settingsUserPartialUpdate = async (
       ...options,
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...options?.headers },
-      body: JSON.stringify(patchedUserProfileRequest),
+      body: JSON.stringify(patchedAdminUserUpdateRequest),
     }
   )
 }
@@ -2442,13 +2466,13 @@ export const getSettingsUserPartialUpdateMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
     TError,
-    { userId: number; data?: PatchedUserProfileRequest },
+    { userId: number; data?: PatchedAdminUserUpdateRequest },
     TContext
   >
 }): UseMutationOptions<
   Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
   TError,
-  { userId: number; data?: PatchedUserProfileRequest },
+  { userId: number; data?: PatchedAdminUserUpdateRequest },
   TContext
 > => {
   const mutationKey = ["settingsUserPartialUpdate"]
@@ -2462,7 +2486,7 @@ export const getSettingsUserPartialUpdateMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
-    { userId: number; data?: PatchedUserProfileRequest }
+    { userId: number; data?: PatchedAdminUserUpdateRequest }
   > = (props) => {
     const { userId, data } = props ?? {}
 
@@ -2476,16 +2500,19 @@ export type SettingsUserPartialUpdateMutationResult = NonNullable<
   Awaited<ReturnType<typeof settingsUserPartialUpdate>>
 >
 export type SettingsUserPartialUpdateMutationBody =
-  | PatchedUserProfileRequest
+  | PatchedAdminUserUpdateRequest
   | undefined
 export type SettingsUserPartialUpdateMutationError = void
 
+/**
+ * @summary Mettre à jour un utilisateur (admin)
+ */
 export const useSettingsUserPartialUpdate = <TError = void, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
       TError,
-      { userId: number; data?: PatchedUserProfileRequest },
+      { userId: number; data?: PatchedAdminUserUpdateRequest },
       TContext
     >
   },
@@ -2493,7 +2520,7 @@ export const useSettingsUserPartialUpdate = <TError = void, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof settingsUserPartialUpdate>>,
   TError,
-  { userId: number; data?: PatchedUserProfileRequest },
+  { userId: number; data?: PatchedAdminUserUpdateRequest },
   TContext
 > => {
   return useMutation(

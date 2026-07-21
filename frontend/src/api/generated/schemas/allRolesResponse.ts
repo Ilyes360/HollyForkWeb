@@ -7,9 +7,9 @@
 **Impression** : groupe « Impression » dans Swagger — découverte réseau (`GET /api/printers/discover/`, sans JWT), configuration des imprimantes par restaurant (`/api/imprimantes-reseau/`), et envoi de tickets ESC/POS depuis les actions `kitchen/print` et `client/print` sur les commandes.
  * OpenAPI spec version: 1.0.0
  */
-import type { AllRolesResponseRolesItem } from "./allRolesResponseRolesItem"
+import type { RoleItem } from "./roleItem"
 
 export interface AllRolesResponse {
-  roles: AllRolesResponseRolesItem[]
+  roles: RoleItem[]
   count: number
 }

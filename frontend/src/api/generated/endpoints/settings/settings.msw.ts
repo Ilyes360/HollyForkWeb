@@ -13,6 +13,7 @@ import { HttpResponse, http } from "msw"
 import type { RequestHandlerOptions } from "msw"
 
 import type {
+  AdminUserUpdate,
   BillingSettings,
   NotificationSettings,
   PaginatedBillingSettingsList,
@@ -328,6 +329,26 @@ export const getSettingsRestaurantRetrieveResponseMock = (
     ]),
     undefined,
   ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
+    undefined,
+  ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
   logo_url: faker.helpers.arrayElement([
     faker.helpers.arrayElement([faker.internet.url(), null]),
@@ -351,6 +372,26 @@ export const getSettingsRestaurantPartialUpdateResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 10 } }),
       null,
     ]),
+    undefined,
+  ]),
+  vat_number: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    undefined,
+  ]),
+  legal_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 255 } }),
+    undefined,
+  ]),
+  legal_form: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  share_capital: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 64 } }),
+    undefined,
+  ]),
+  rcs: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 128 } }),
     undefined,
   ]),
   pin: faker.string.alpha({ length: { min: 10, max: 6 } }),
@@ -419,8 +460,8 @@ export const getSettingsUserRetrieveResponseMock = (
 })
 
 export const getSettingsUserPartialUpdateResponseMock = (
-  overrideResponse: Partial<Extract<UserProfile, object>> = {}
-): UserProfile => ({
+  overrideResponse: Partial<Extract<AdminUserUpdate, object>> = {}
+): AdminUserUpdate => ({
   id: faker.number.int(),
   username: faker.string.alpha({ length: { min: 10, max: 20 } }),
   email: faker.helpers.arrayElement([faker.internet.email(), undefined]),
@@ -433,7 +474,7 @@ export const getSettingsUserPartialUpdateResponseMock = (
     undefined,
   ]),
   date_joined: faker.date.past().toISOString().slice(0, 19) + "Z",
-  is_active: faker.datatype.boolean(),
+  is_active: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]),
   ...overrideResponse,
 })
 
@@ -845,10 +886,10 @@ export const getSettingsUserRetrieveMockHandler = (
 
 export const getSettingsUserPartialUpdateMockHandler = (
   overrideResponse?:
-    | UserProfile
+    | AdminUserUpdate
     | ((
         info: Parameters<Parameters<typeof http.patch>[1]>[0]
-      ) => Promise<UserProfile> | UserProfile),
+      ) => Promise<AdminUserUpdate> | AdminUserUpdate),
   options?: RequestHandlerOptions
 ) => {
   return http.patch(

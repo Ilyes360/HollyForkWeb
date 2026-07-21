@@ -9,5 +9,8 @@
  */
 
 export type SettingsUsersListParams = {
+  /**
+   * Filtrer les utilisateurs liés à ce restaurant.
+   */
   restaurant_id?: number
 }

@@ -21,4 +21,8 @@ export interface IngredientRequest {
   unit: string
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */
   unit_price: string
+  /** @nullable */
+  category_id?: number | null
+  /** @nullable */
+  supplier_id?: number | null
 }

@@ -8,7 +8,9 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { Allergen } from "./allergen"
+import type { CanalEnum } from "./canalEnum"
 import type { DietType } from "./dietType"
+import type { StatusEnum } from "./statusEnum"
 
 export interface Reservation {
   readonly id: number
@@ -18,6 +20,13 @@ export interface Reservation {
   datetime: string
   /** @maxLength 20 */
   phone_number?: string
+  readonly created_at: string
+  status?: StatusEnum
+  canal?: CanalEnum
+  /** @minimum 1 */
+  estimatedDurationMinutes?: number
+  /** @nullable */
+  clientEmail?: string | null
   salle_id: number
   /** @nullable */
   table_id?: number | null

@@ -45,6 +45,10 @@ export const getEmployesListResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 20 } }),
       undefined,
     ]),
+    email: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([faker.internet.email(), null]),
+      null,
+    ]),
   })),
   ...overrideResponse,
 })
@@ -67,6 +71,10 @@ export const getEmployesCreateResponseMock = (
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     undefined,
   ]),
+  email: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
+    null,
+  ]),
   ...overrideResponse,
 })
 
@@ -87,6 +95,10 @@ export const getEmployesRetrieveResponseMock = (
   phone_number: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     undefined,
+  ]),
+  email: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
+    null,
   ]),
   ...overrideResponse,
 })
@@ -109,6 +121,10 @@ export const getEmployesUpdateResponseMock = (
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     undefined,
   ]),
+  email: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
+    null,
+  ]),
   ...overrideResponse,
 })
 
@@ -129,6 +145,10 @@ export const getEmployesPartialUpdateResponseMock = (
   phone_number: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),
     undefined,
+  ]),
+  email: faker.helpers.arrayElement([
+    faker.helpers.arrayElement([faker.internet.email(), null]),
+    null,
   ]),
   ...overrideResponse,
 })

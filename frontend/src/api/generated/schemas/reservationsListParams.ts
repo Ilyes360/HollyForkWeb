@@ -10,6 +10,10 @@
 
 export type ReservationsListParams = {
   /**
+   * Canal : site|telephone|thefork|walk_in
+   */
+  canal?: string
+  /**
    * Date au format YYYY-MM-DD
    */
   date?: string
@@ -33,6 +37,10 @@ export type ReservationsListParams = {
    * Service : 'midi' (heure < 15h) ou 'soir' (heure >= 15h)
    */
   service?: string
+  /**
+   * Statut : en_attente|confirmee|arrivee|annulee|no_show
+   */
+  status?: string
   /**
    * ID de la table réservée
    */
