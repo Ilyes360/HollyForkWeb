@@ -462,8 +462,8 @@ Questions :
 | Metrique | Valeur |
 |----------|--------|
 | Fichiers de test | 19 |
-| Tests totaux | 173 |
-| Duree suite complete | ~3.5s |
+| Tests totaux | 181 |
+| Duree suite complete | ~4s |
 | tsc --noEmit | Zero erreur |
 | `as any` / `@ts-expect-error` dans src/test/ | 0 |
 | Handlers MSW types (openapi-msw) | 2 domaines (auth, device-login) |
@@ -486,7 +486,7 @@ Questions :
 
 | # | Feature | Tier | C0 Contract | C1 Hooks | C2 Composant | C3 E2E | C4 a11y | C5 Visual | C6 Mutation | C7 Obs |
 |---|---------|------|:-----------:|:--------:|:------------:|:------:|:-------:|:---------:|:-----------:|:------:|
-| 1 | **Device Login** | Critique | Done | Done (7) | Done (14) | — | Done (5) | — | — | — |
+| 1 | **Device Login** | Critique | Done | Done (9) | Done (20) | — | Done (5) | — | — | — |
 | 2 | **Auth** | Critique | Done | Done (3) | — | — | — | — | — | Sentry |
 | 3 | **Reservations** | Critique | — | — | — | — | — | — | — | — |
 | 4 | **Stocks** | Critique | — | — | — | — | — | — | — | — |
@@ -532,6 +532,7 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 
 | Date | Action |
 |------|--------|
-| 2026-07-21 | Device Login : couches 0, 1, 2, 4 completes (26 tests). Handlers auth + device-login types. vitest-axe installe. |
+| 2026-07-21 | Device Login : couches 0, 1, 2, 4 completes (34 tests). Interactions reelles testees (saisie PIN, clic employe, erreurs, back, session expiree). |
+| 2026-07-21 | Device Login v1 : couches 0, 1, 2, 4 (26 tests). Handlers auth + device-login types. vitest-axe installe. |
 | 2026-07-21 | Suite verte : 29 tests casses supprimes, 15 conserves. CI existante, schema pipeline (`openapi-typescript`), `openapi-msw` installe. |
 | 2026-07-20 | Document TESTING-STRATEGY.md cree (v1 → v3 apres audits Claude web). |

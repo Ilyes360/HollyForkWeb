@@ -82,6 +82,15 @@ describe("Device Login hooks (typed MSW)", () => {
     expect(result.current.data!.total).toBe(0)
   })
 
+  it("returns 401 on expired device token", async () => {
+    const { result } = renderHook(
+      () => useRestaurantEmployees("expired-token"),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+  })
+
   it("is disabled when device token is null", () => {
     const { result } = renderHook(() => useRestaurantEmployees(null), {
       wrapper: createWrapper(),
@@ -125,5 +134,21 @@ describe("Device Login hooks (typed MSW)", () => {
     await waitFor(() => expect(result.current.isError).toBe(true))
 
     expect(getAccessToken()).toBeNull()
+  })
+
+  it("returns 401 on expired device token for quick login", async () => {
+    const { result } = renderHook(() => useQuickLogin(), {
+      wrapper: createWrapper(),
+    })
+
+    result.current.mutate({
+      deviceToken: "expired-token",
+      pinCode: "1234",
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+
+    expect(getAccessToken()).toBeNull()
+    expect(isDeviceSession()).toBe(false)
   })
 })
