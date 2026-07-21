@@ -9,6 +9,10 @@ defaults:
   run:
     working-directory: frontend
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   drift:
     name: Sync API schema
