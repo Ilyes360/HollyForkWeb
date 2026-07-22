@@ -44,6 +44,9 @@ export const reservationHandlers = [
       note_serveur: body.note_serveur ?? null,
       note_client: null,
       allergie: null,
+      created_at: "2026-07-21T12:00:00Z",
+      allergies: [],
+      diet_types: [],
     })
   }),
 
