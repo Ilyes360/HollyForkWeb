@@ -469,13 +469,13 @@ Questions :
 
 | Metrique | Valeur |
 |----------|--------|
-| Fichiers de test | 19 |
-| Tests totaux | 181 |
-| Duree suite complete | ~4s |
+| Fichiers de test | 21 |
+| Tests totaux | 206 |
+| Duree suite complete | ~4.7s |
 | tsc --noEmit | Zero erreur |
 | `as any` / `@ts-expect-error` dans src/test/ | 0 |
-| Handlers MSW types (openapi-msw) | 2 domaines (auth, device-login) |
-| Handlers MSW non types (legacy) | 14 domaines |
+| Handlers MSW types (openapi-msw) | 3 domaines (auth, device-login, reservations) |
+| Handlers MSW non types (legacy) | 13 domaines |
 
 ### Infrastructure
 
@@ -496,7 +496,7 @@ Questions :
 |---|---------|------|:-----------:|:--------:|:------------:|:------:|:-------:|:---------:|:-----------:|:------:|
 | 1 | **Device Login** | Critique | Done | Done (9) | Done (20) | — | Done (5) | — | — | — |
 | 2 | **Auth** | Critique | Done | Done (3) | — | — | — | — | — | Sentry |
-| 3 | **Reservations** | Critique | — | — | — | — | — | — | — | — |
+| 3 | **Reservations** | Critique | Done | Done (6) | — | — | — | — | — | — |
 | 4 | **Stocks** | Critique | — | — | — | — | — | — | — | — |
 | 5 | **Commandes** | Critique | — | — | — | — | — | — | — | — |
 | 6 | **Carte/Menu** | Standard | — | — | — | — | — | n/a | n/a | n/a |
@@ -533,6 +533,8 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 |------|-------------|-------------|----------|
 | **Schema drift** | `RestaurantEmployeesResponse.employees` | Type `{ [key: string]: unknown }[]` au lieu d'objets employes types. Backend doit ajouter `@extend_schema` sur `GetRestaurantEmployeesView`. A remonter au dev backend. | Moyenne |
 | **~~A11Y debt~~** | ~~`DeviceSetupStep`~~ | ~~FormLabel sur div~~ → **CORRIGE** : `aria-label="Restaurant"` sur le `<select>` et `<input>` directement | ~~Moyenne~~ Done |
+| **Bug prod** | `reservations.tsx` `handleStatusChange` | Le statut (confirmee/arrivee/annulee) est stocke en `localOverrides` (state React) et **NON persiste** via l'API. Un refresh efface les changements de statut. Le TODO dans le code confirme : "backend Reservation model does not have a status field yet". A remonter au dev backend. **Ne PAS tester comme comportement voulu.** | **Haute** |
+| **Mapping extrait** | `mapApiReservation` | Extrait de `reservations.tsx` vers `components/reservations/mapping.ts`. 19 tests unitaires couvrent datetime, service, table resolution, cas limites. | Done |
 | **Vuln npm** | 11 high severity | `pnpm audit --audit-level=high` echoue. CI en `continue-on-error` | A trier |
 | **Branch protection** | GitHub repo settings | Required check "Quality checks" non active sur `main` | **Haute** |
 
@@ -540,6 +542,7 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 
 | Date | Action |
 |------|--------|
+| 2026-07-21 | Reservations passe A : mapping extrait (19 tests), handlers types, hooks (6 tests). Bug prod localOverrides documente. |
 | 2026-07-21 | Device Login COMPLETE : 34 tests (couches 0-1-2-4). Fix a11y FormLabel. Schema drift documente. Convention structure par feature actee. |
 | 2026-07-21 | Device Login v1 : couches 0, 1, 2, 4 (26 tests). Handlers auth + device-login types. vitest-axe installe. |
 | 2026-07-21 | Suite verte : 29 tests casses supprimes, 15 conserves. CI existante, schema pipeline (`openapi-typescript`), `openapi-msw` installe. |

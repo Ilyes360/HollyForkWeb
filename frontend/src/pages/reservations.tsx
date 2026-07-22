@@ -11,61 +11,11 @@ import {
   useDeleteReservation,
   useSalles,
   useTables,
-  type ApiReservation,
 } from "@/hooks/use-reservations"
+import { mapApiReservation } from "@/components/reservations/mapping"
 import type { RestaurantTable } from "@/components/reservations/types"
 import { useActiveRestaurant } from "@/hooks/use-active-restaurant"
 import { toast } from "sonner"
-
-/**
- * Maps API reservation (camelized from backend schema) to frontend Reservation type.
- * Backend returns `datetime` (ISO 8601) — we split into separate `date` and `time`.
- * Backend returns `partySize` — we map to `covers`.
- */
-function mapApiReservation(
-  api: ApiReservation,
-  tables: { id: number; numero: number }[]
-): Reservation {
-  // Parse datetime: "2026-05-16T12:00:00" → date="2026-05-16", time="12:00"
-  const dt = api.datetime ?? ""
-  const date = dt.slice(0, 10) // "YYYY-MM-DD"
-  const time = dt.slice(11, 16) // "HH:MM"
-  const hour = parseInt(time.split(":")[0] ?? "12", 10)
-  const service: ServiceType = hour < 16 ? "midi" : "soir"
-
-  // Resolve table PK → display number (numero)
-  const tableId = api.tableId ?? null
-  const matchedTable =
-    tableId !== null ? tables.find((t) => t.id === tableId) : null
-  const tableNumber = matchedTable ? matchedTable.numero : null
-
-  return {
-    id: String(api.id),
-    clientName: api.clientName ?? "",
-    clientPhone: api.phoneNumber ?? "",
-    clientEmail: undefined, // not in backend schema
-    date,
-    time,
-    service,
-    covers: api.partySize ?? 0,
-    tableId,
-    tableNumber,
-    canal: "telephone", // not in backend schema — default
-    status: "confirmee", // not in backend schema — default
-    notes: api.noteServeur ?? api.noteClient ?? "",
-    allergies: (api.allergies ?? []).map((a) => ({
-      id: a.id,
-      code: a.code,
-      label: a.label,
-    })),
-    dietTypes: (api.dietTypes ?? []).map((d) => ({
-      id: d.id,
-      code: d.code,
-      label: d.label,
-    })),
-    createdAt: "",
-  }
-}
 import type {
   Reservation,
   ReservationStatus,
