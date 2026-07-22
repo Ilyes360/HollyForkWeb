@@ -2,6 +2,14 @@ import { http as rawHttp, HttpResponse } from "msw"
 import { http } from "../api-http"
 import { mockLoginResponse, mockProfile } from "../mocks/auth"
 
+// Error helper — returns a plain Response to avoid openapi-msw typed response conflicts
+function errorJson(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
+}
+
 export const authHandlers = [
   // Login — typed against OpenAPI schema
   http.post("/api/auth/login/", async ({ request, response }) => {
@@ -20,17 +28,11 @@ export const authHandlers = [
     }
 
     if (body.username === "rate_limited") {
-      return HttpResponse.json(
-        { detail: "Trop de tentatives" },
-        { status: 429 }
-      )
+      return errorJson({ detail: "Trop de tentatives" }, 429)
     }
 
     if (body.username === "error") {
-      return HttpResponse.json(
-        { detail: "Internal server error" },
-        { status: 500 }
-      )
+      return errorJson({ detail: "Internal server error" }, 500)
     }
 
     return response(200).json(mockLoginResponse)
@@ -40,12 +42,12 @@ export const authHandlers = [
   http.get("/api/auth/profile/", ({ request, response }) => {
     const authHeader = request.headers.get("Authorization")
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json({ detail: "Non authentifié" }, { status: 401 })
+      return errorJson({ detail: "Non authentifié" }, 401)
     }
 
     const token = authHeader.replace("Bearer ", "")
     if (token === "expired-token") {
-      return HttpResponse.json({ detail: "Token expiré" }, { status: 401 })
+      return errorJson({ detail: "Token expiré" }, 401)
     }
 
     return response(200).json(mockProfile)

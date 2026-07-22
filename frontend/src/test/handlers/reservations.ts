@@ -2,8 +2,15 @@ import { HttpResponse } from "msw"
 import { http } from "../api-http"
 import { mockReservations, mockSalles, mockTables } from "../mocks/reservations"
 
+function errorJson(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
+}
+
 export const reservationHandlers = [
-  // Reservations list — typed against OpenAPI schema
+  // Reservations list — typed
   http.get("/api/reservations/", ({ request, response }) => {
     const url = new URL(request.url)
     const dateFilter = url.searchParams.get("date")
@@ -21,12 +28,11 @@ export const reservationHandlers = [
     })
   }),
 
-  // Reservation detail — typed
+  // Reservation detail — typed (200), plain Response (404)
   http.get("/api/reservations/{id}/", ({ params, response }) => {
     const id = Number(params.id)
     const resa = mockReservations.find((r) => r.id === id)
-    if (!resa)
-      return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
+    if (!resa) return errorJson({ detail: "Non trouvé" }, 404)
     return response(200).json(resa)
   }),
 
@@ -50,17 +56,13 @@ export const reservationHandlers = [
     })
   }),
 
-  // Patch reservation — typed
-  http.patch(
-    "/api/reservations/{id}/",
-    async ({ request, params, response }) => {
-      const body = await request.json()
-      const resa = mockReservations.find((r) => r.id === Number(params.id))
-      if (!resa)
-        return HttpResponse.json({ detail: "Non trouvé" }, { status: 404 })
-      return response(200).json({ ...resa, ...body })
-    }
-  ),
+  // Patch reservation — raw Response (typed response rejects spread of partial body)
+  http.patch("/api/reservations/{id}/", async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const resa = mockReservations.find((r) => r.id === Number(params.id))
+    if (!resa) return errorJson({ detail: "Non trouvé" }, 404)
+    return Response.json({ ...resa, ...body })
+  }),
 
   // Delete reservation — typed
   http.delete("/api/reservations/{id}/", () => {

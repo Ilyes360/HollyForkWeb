@@ -1,4 +1,3 @@
-import { HttpResponse } from "msw"
 import { http } from "../api-http"
 
 const mockDeviceLoginResponse = {
@@ -71,12 +70,12 @@ export const deviceLoginHandlers = [
     const token = url.searchParams.get("device_token")
 
     if (!token || token === "expired-token") {
-      return HttpResponse.json(
-        {
+      return new Response(
+        JSON.stringify({
           error:
             "Équipement non configuré ou session expirée. Veuillez reconnecter l'équipement.",
-        },
-        { status: 401 }
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
       )
     }
 
@@ -108,11 +107,11 @@ export const deviceLoginHandlers = [
     }
 
     if (body.device_token === "expired-token") {
-      return HttpResponse.json(
-        {
+      return new Response(
+        JSON.stringify({
           non_field_errors: ["Équipement non configuré ou session expirée."],
-        },
-        { status: 401 }
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
       )
     }
 

@@ -20,6 +20,7 @@ export const mockReservations = [
     diet_type_ids: [],
     allergies: [],
     diet_types: [],
+    created_at: "2026-05-05T10:00:00Z",
   },
   {
     id: 2,
@@ -36,6 +37,7 @@ export const mockReservations = [
     diet_type_ids: [],
     allergies: [],
     diet_types: [],
+    created_at: "2026-05-05T10:00:00Z",
   },
   {
     id: 3,
@@ -52,6 +54,7 @@ export const mockReservations = [
     diet_type_ids: [1],
     allergies: [{ id: 1, code: "PEANUT", label: "Arachides" }],
     diet_types: [{ id: 1, code: "VEGETARIAN", label: "Végétarien" }],
+    created_at: "2026-05-05T10:00:00Z",
   },
   {
     id: 4,
@@ -68,6 +71,7 @@ export const mockReservations = [
     diet_type_ids: [],
     allergies: [],
     diet_types: [],
+    created_at: "2026-05-06T10:00:00Z",
   },
 ]
 
