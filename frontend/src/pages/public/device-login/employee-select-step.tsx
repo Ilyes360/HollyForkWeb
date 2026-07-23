@@ -1,11 +1,17 @@
+import { useState, useMemo } from "react"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowLeft02Icon, Loading03Icon } from "@hugeicons/core-free-icons"
+import {
+  ArrowLeft02Icon,
+  Loading03Icon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 
 import { useRestaurantEmployees } from "@/api/auth/queries"
 import type { RestaurantEmployee } from "@/api/auth/types"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 type EmployeeSelectStepProps = {
@@ -44,6 +50,18 @@ export function EmployeeSelectStep({
   onBack,
 }: EmployeeSelectStepProps) {
   const { data, isLoading, error } = useRestaurantEmployees(deviceToken)
+  const [search, setSearch] = useState("")
+
+  const filtered = useMemo(() => {
+    if (!data?.employees) return []
+    if (!search.trim()) return data.employees
+    const q = search.toLowerCase()
+    return data.employees.filter(
+      (e) =>
+        e.employeeFirstName.toLowerCase().includes(q) ||
+        e.employeeLastName.toLowerCase().includes(q)
+    )
+  }, [data, search])
 
   if (error) {
     const httpError = error as unknown as { response?: { status?: number } }
@@ -53,6 +71,8 @@ export function EmployeeSelectStep({
       return null
     }
   }
+
+  const showSearch = (data?.employees.length ?? 0) > 8
 
   return (
     <motion.div
@@ -64,11 +84,38 @@ export function EmployeeSelectStep({
         hidden: {},
         show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
       }}
-      className="w-full max-w-lg space-y-6 px-6 py-12"
+      className="flex w-full max-w-2xl flex-col px-6 py-6"
     >
-      <motion.div className="text-center" variants={fadeUp}>
-        <h2 className="font-display text-3xl font-bold">Qui êtes-vous ?</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{restaurantName}</p>
+      {/* Header sticky: back + restaurant name + search */}
+      <motion.div
+        className="sticky top-0 z-10 flex items-center gap-3 bg-muted/40 pb-4"
+        variants={fadeUp}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          aria-label="Changer d'établissement"
+        >
+          <HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
+        </Button>
+        <span className="text-sm font-medium">{restaurantName}</span>
+        {showSearch && (
+          <div className="relative ml-auto w-48">
+            <HugeiconsIcon
+              icon={Search01Icon}
+              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+              strokeWidth={2}
+            />
+            <Input
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 pl-8 text-sm"
+              aria-label="Rechercher un employé"
+            />
+          </div>
+        )}
       </motion.div>
 
       {isLoading && (
@@ -89,17 +136,17 @@ export function EmployeeSelectStep({
 
       {!isLoading && data && (
         <motion.div
-          className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+          className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5"
           variants={fadeUp}
         >
-          {data.employees.map((employee) => (
+          {filtered.map((employee) => (
             <button
               key={employee.employeeId}
               type="button"
               disabled={!employee.hasPin}
               onClick={() => onSelect(employee)}
               className={cn(
-                "flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors",
+                "flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-colors",
                 employee.hasPin
                   ? "hover:border-primary hover:bg-muted/50 active:bg-muted"
                   : "cursor-not-allowed opacity-40"
@@ -112,7 +159,7 @@ export function EmployeeSelectStep({
             >
               <div
                 className={cn(
-                  "flex size-14 items-center justify-center rounded-full text-lg font-semibold",
+                  "flex size-10 items-center justify-center rounded-full text-sm font-semibold",
                   getAvatarColor(employee.employeeId)
                 )}
               >
@@ -122,10 +169,10 @@ export function EmployeeSelectStep({
                 )}
               </div>
               <div className="text-center">
-                <p className="text-sm leading-tight font-medium">
+                <p className="text-xs leading-tight font-medium">
                   {employee.employeeFirstName} {employee.employeeLastName}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
                   {employee.employeeType}
                 </p>
               </div>
@@ -134,21 +181,16 @@ export function EmployeeSelectStep({
         </motion.div>
       )}
 
-      {!isLoading && data && data.employees.length === 0 && (
+      {!isLoading && data && filtered.length === 0 && (
         <motion.p
           className="py-8 text-center text-sm text-muted-foreground"
           variants={fadeUp}
         >
-          Aucun employé avec un PIN configuré.
+          {search.trim()
+            ? "Aucun employé trouvé."
+            : "Aucun employé avec un PIN configuré."}
         </motion.p>
       )}
-
-      <motion.div className="flex justify-center" variants={fadeUp}>
-        <Button variant="ghost" onClick={onBack}>
-          <HugeiconsIcon icon={ArrowLeft02Icon} size={16} />
-          Changer d'établissement
-        </Button>
-      </motion.div>
     </motion.div>
   )
 }
