@@ -469,9 +469,9 @@ Questions :
 
 | Metrique | Valeur |
 |----------|--------|
-| Fichiers de test | 24 |
-| Tests totaux | 250 |
-| Duree suite complete | ~4.5s |
+| Fichiers de test | 26 |
+| Tests totaux | 296 |
+| Duree suite complete | ~4.8s |
 | tsc --noEmit | Zero erreur |
 | `as any` / `@ts-expect-error` dans src/test/ | 0 |
 | Handlers MSW types (openapi-msw) | 3 domaines (auth, device-login, reservations) |
@@ -497,7 +497,7 @@ Questions :
 | 1 | **Device Login** | Critique | Done | Done (9) | Done (20) | — | Done (5) | — | — | — |
 | 2 | **Auth** | Critique | Done | Done (3) | — | — | — | — | — | Sentry |
 | 3 | **Reservations** | Critique | Done | Done (6) | Done (33) | — | Done (3) | — | — | — |
-| 4 | **Stocks** | Critique | — | — | — | — | — | — | — | — |
+| 4 | **Stocks** | Critique | Done | Done (24) | — | — | — | — | — | — |
 | 5 | **Commandes** | Critique | — | — | — | — | — | — | — | — |
 | 6 | **Carte/Menu** | Standard | — | — | — | — | — | n/a | n/a | n/a |
 | 7 | **Planning** | Standard | — | — | — | — | — | n/a | n/a | n/a |
@@ -540,11 +540,13 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 | **A11Y debt** | `reservations-table.tsx` `ActionIcon` | Icon-only action buttons (Confirmer, Marquer arrivee, Annuler, No-show) use `TooltipTrigger` without `aria-label`. Tooltip content is not programmatically connected to the button. Fix: add `aria-label={label}` to the rendered `<Button>`. | **Moyenne** |
 | **A11Y debt** | `reservations-table.tsx` `<TableHead>` | Empty `<th>` for the actions column. Fix: add `aria-label="Actions"` or visually hidden text. | Basse |
 | **A11Y debt** | `reservation-detail.tsx` `AlertDialogTrigger` | `AlertDialogTrigger` wraps `<Button>` creating a duplicate button in the DOM (trigger + inner button). The `disabled` prop on the inner `<Button>` is not propagated to the outer trigger. | Basse |
+| **Mapping extrait** | `apiStockToProduct` + `toProductUnit` | Extrait de `use-stocks.ts` vers `components/stock/mapping.ts`. 22 tests unitaires couvrent unit mapping (13 variantes), numeric parsing, fallbacks, defaults. | Done |
 
 ### Historique
 
 | Date | Action |
 |------|--------|
+| 2026-07-23 | Stocks passe A : mapping extrait (22 tests), hooks stocks/ingredients/suppliers (24 tests). apiStockToProduct + toProductUnit → mapping.ts. Handlers existants réutilisés (articles.ts, commandes.ts). |
 | 2026-07-23 | Reservations passe B : composants (33 tests) + a11y (3 tests). NewReservationDialog (11), ReservationDetail (18), ReservationsTable (15). A11y findings: icon-only buttons, empty th, AlertDialogTrigger double-button. Gantt reporté passe C (Browser Mode). |
 | 2026-07-21 | Reservations passe A : mapping extrait (19 tests), handlers types, hooks (6 tests). Bug prod localOverrides documente. |
 | 2026-07-21 | Device Login COMPLETE : 34 tests (couches 0-1-2-4). Fix a11y FormLabel. Schema drift documente. Convention structure par feature actee. |

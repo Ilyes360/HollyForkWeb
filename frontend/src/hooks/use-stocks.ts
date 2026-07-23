@@ -8,59 +8,11 @@ import {
   apiDelete,
   getAccessToken,
 } from "@/api/client"
-import type { Product, ProductUnit } from "@/components/stock/types"
 import { fetchAllPages } from "@/api/pagination"
+import { apiStockToProduct } from "@/components/stock/mapping"
+import type { ApiStock } from "@/components/stock/mapping"
 
-// API response shape (flat, after camelizeKeys)
-export type ApiStock = {
-  id: number
-  restaurantId: number
-  ingredientId: number
-  ingredientName: string
-  ingredientUnit: string
-  ingredientUnitPrice: string
-  quantityInStock: string
-  alertThreshold: string
-  weightedAverageCost: string
-}
-
-const VALID_UNITS: Set<string> = new Set<string>([
-  "kg",
-  "L",
-  "btl",
-  "unites",
-  "pieces",
-])
-
-function toProductUnit(raw: string): ProductUnit {
-  if (VALID_UNITS.has(raw)) return raw as ProductUnit
-  // Map common backend variants
-  if (raw === "litre" || raw === "l") return "L"
-  if (raw === "bouteille") return "btl"
-  if (raw === "piece" || raw === "pièce" || raw === "pcs") return "pieces"
-  if (raw === "unite" || raw === "unité") return "unites"
-  return "kg"
-}
-
-function apiStockToProduct(s: ApiStock): Product {
-  const quantity = parseFloat(s.quantityInStock) || 0
-  const minStock = parseFloat(s.alertThreshold) || 0
-  const unitPrice =
-    parseFloat(s.ingredientUnitPrice) || parseFloat(s.weightedAverageCost) || 0
-  return {
-    id: String(s.id),
-    name: s.ingredientName,
-    quantity,
-    unit: toProductUnit(s.ingredientUnit),
-    minStock,
-    maxStock: minStock * 3 || 100,
-    unitPrice,
-    supplierId: "",
-    category: "epicerie",
-    storageZone: "reserve_seche",
-    notes: "",
-  }
-}
+export type { ApiStock }
 
 const keys = {
   stocks: (restaurantId?: number) => ["stocks", restaurantId] as const,
