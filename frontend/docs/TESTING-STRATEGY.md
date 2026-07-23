@@ -494,6 +494,8 @@ Questions :
 
 Chaque sous-feature a un fichier de detail dans `docs/testing/{domaine}.md` qui liste chaque unite testable (hook, composant, util) avec son etat.
 
+**Tests manuels** : [manual-scenarios.md](testing/manual-scenarios.md) — scenarios de bout en bout a executer contre le vrai backend apres chaque deploy.
+
 | # | Sous-feature | Tier | C0 | C1 Hooks | C2 Composant | C3 E2E | C4 a11y | Detail |
 |---|-------------|------|:--:|:--------:|:------------:|:------:|:-------:|--------|
 | 1 | **Device Login** | Critique | ✅ | ✅ (9) | ✅ (20) | — | ✅ (5) | [auth.md](testing/auth.md) |
