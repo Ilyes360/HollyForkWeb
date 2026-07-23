@@ -490,22 +490,32 @@ Questions :
 | Protection de branche | **A FAIRE** | Settings > Branches > Require "Quality checks" |
 | `pnpm audit` bloquant | Non | `continue-on-error: true` (11 high vulns) |
 
-### Avancement par feature
+### Avancement par sous-feature
 
-| # | Feature | Tier | C0 Contract | C1 Hooks | C2 Composant | C3 E2E | C4 a11y | C5 Visual | C6 Mutation | C7 Obs |
-|---|---------|------|:-----------:|:--------:|:------------:|:------:|:-------:|:---------:|:-----------:|:------:|
-| 1 | **Device Login** | Critique | Done | Done (9) | Done (20) | — | Done (5) | — | — | — |
-| 2 | **Auth** | Critique | Done | Done (3) | — | — | — | — | — | Sentry |
-| 3 | **Reservations** | Critique | Done | Done (6) | Done (33) | — | Done (3) | — | — | — |
-| 4 | **Stocks** | Critique | Done | Done (24) | — | — | — | — | — | — |
-| 5 | **Commandes** | Critique | — | — | — | — | — | — | — | — |
-| 6 | **Carte/Menu** | Standard | — | — | — | — | — | n/a | n/a | n/a |
-| 7 | **Planning** | Standard | — | — | — | — | — | n/a | n/a | n/a |
-| 8 | **Admin** | Standard | — | — | — | — | — | n/a | n/a | n/a |
-| 9 | **Dashboard** | Affichage | — | — | — | n/a | — | n/a | n/a | n/a |
-| 10 | **Salle** | Affichage | — | — | — | n/a | — | n/a | n/a | n/a |
+Chaque sous-feature a un fichier de detail dans `docs/testing/{domaine}.md` qui liste chaque unite testable (hook, composant, util) avec son etat.
 
-Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = hors scope pour ce tier
+| # | Sous-feature | Tier | C0 | C1 Hooks | C2 Composant | C3 E2E | C4 a11y | Detail |
+|---|-------------|------|:--:|:--------:|:------------:|:------:|:-------:|--------|
+| 1 | **Device Login** | Critique | ✅ | ✅ (9) | ✅ (20) | — | ✅ (5) | [auth.md](testing/auth.md) |
+| 2a | **Auth Login/Register** | Critique | ✅ | ✅ (3) | — | — | — | [auth.md](testing/auth.md) |
+| 2b | **Auth Guards** | Critique | — | — | — | — | — | [auth.md](testing/auth.md) |
+| 3a | **Reservations CRUD** | Critique | ✅ | ✅ (6) | ✅ (33) | — | ✅ (3) | [reservations.md](testing/reservations.md) |
+| 3b | **Reservations Gantt** | Critique | — | — | — | — | — | [reservations.md](testing/reservations.md) |
+| 4 | **Stocks** | Critique | ✅ | ✅ (24) | — | — | — | [stocks.md](testing/stocks.md) |
+| 5 | **Commandes** | Critique | — | — | — | — | — | [commandes.md](testing/commandes.md) |
+| 6a | **Carte Editeur** | Standard | — | — | — | — | — | [carte.md](testing/carte.md) |
+| 6b | **Carte Operationnelle** | Standard | — | — | — | — | — | [carte.md](testing/carte.md) |
+| 7a | **Planning Editeur** | Standard | — | — | — | — | — | [planning.md](testing/planning.md) |
+| 7b | **Planning Gantt** | Standard | — | — | — | — | — | [planning.md](testing/planning.md) |
+| 7c | **Planning Consultation** | Standard | — | — | — | — | — | [planning.md](testing/planning.md) |
+| 8a | **Admin Etablissements** | Standard | — | — | — | — | — | [admin.md](testing/admin.md) |
+| 8b | **Admin Employes** | Standard | — | — | — | — | — | [admin.md](testing/admin.md) |
+| 8c | **Admin Roles** | Standard | — | — | — | — | — | [admin.md](testing/admin.md) |
+| 9 | **Dashboard** | Affichage | — | — | — | n/a | — | [dashboard.md](testing/dashboard.md) |
+| 10a | **Salle Consultation** | Affichage | — | — | — | n/a | — | [salle.md](testing/salle.md) |
+| 10b | **Salle Editeur** | Affichage | — | — | — | n/a | — | [salle.md](testing/salle.md) |
+
+Legende : ✅ = couvert, (N) = nombre de tests, — = pas encore fait, n/a = hors scope pour ce tier
 
 ### Tests existants (hors features)
 
@@ -546,6 +556,7 @@ Legende : Done = couvert, (N) = nombre de tests, — = pas encore fait, n/a = ho
 
 | Date | Action |
 |------|--------|
+| 2026-07-23 | Restructuration suivi : 10 features → 18 sous-features. Fichiers detail par domaine dans docs/testing/ (auth, reservations, stocks, commandes, carte, planning, admin, dashboard, salle). Chaque unite testable (hook, composant, util) individuellement trackee. |
 | 2026-07-23 | Stocks passe A : mapping extrait (22 tests), hooks stocks/ingredients/suppliers (24 tests). apiStockToProduct + toProductUnit → mapping.ts. Handlers existants réutilisés (articles.ts, commandes.ts). |
 | 2026-07-23 | Reservations passe B : composants (33 tests) + a11y (3 tests). NewReservationDialog (11), ReservationDetail (18), ReservationsTable (15). A11y findings: icon-only buttons, empty th, AlertDialogTrigger double-button. Gantt reporté passe C (Browser Mode). |
 | 2026-07-21 | Reservations passe A : mapping extrait (19 tests), handlers types, hooks (6 tests). Bug prod localOverrides documente. |
