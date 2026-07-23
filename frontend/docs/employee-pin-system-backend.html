@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Refonte PIN Employe — Specs Backend</title>
+<style>
+  @page { margin: 1.5cm; size: A4; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; max-width: 700px; margin: 0 auto; padding: 2em; }
+  h1 { font-size: 18pt; border-bottom: 2px solid #e24b4a; padding-bottom: 6px; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 10pt; margin-bottom: 24px; }
+  h2 { font-size: 13pt; color: #e24b4a; margin-top: 28px; margin-bottom: 8px; }
+  h3 { font-size: 11pt; margin-top: 18px; margin-bottom: 6px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10pt; }
+  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+  code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }
+  pre { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-size: 9pt; overflow-x: auto; line-height: 1.4; }
+  .box { border-radius: 6px; padding: 12px 16px; margin: 16px 0; }
+  .box-red { border: 1px solid #e24b4a; background: #fef7f7; }
+  .box-green { border: 1px solid #22c55e; background: #f0fdf4; }
+  .box-title { font-weight: 700; margin-bottom: 4px; }
+  .box-red .box-title { color: #a32d2d; }
+  .box-green .box-title { color: #166534; }
+  ul, ol { padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 8pt; padding: 1px 6px; border-radius: 3px; font-weight: 600; vertical-align: middle; }
+  .tag-new { background: #dcfce7; color: #166534; }
+  .tag-change { background: #fef3e2; color: #ba7517; }
+  .tag-delete { background: #fde8e8; color: #a32d2d; }
+  .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 9pt; color: #999; }
+  .flow { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 16px; margin: 10px 0; font-family: monospace; font-size: 9pt; white-space: pre; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>Refonte PIN Employe — Specs Backend</h1>
+<p class="subtitle">Holy Fork | 23 juillet 2026</p>
+
+<div class="box box-red">
+  <div class="box-title">Probleme actuel</div>
+  <ul style="margin:4px 0">
+    <li>Le PIN employe est <strong>auto-genere par le frontend</strong> a la creation du compte (<code>Math.random()</code>)</li>
+    <li>Le PIN est affiche <strong>une seule fois</strong> apres la creation — si le manager ferme le dialog, le PIN est perdu</li>
+    <li>L'employe <strong>ne choisit jamais</strong> son propre PIN</li>
+    <li>Aucun moyen de retrouver, changer ou reinitialiser le PIN apres la creation</li>
+    <li>Un employe sans PIN est <strong>bloque</strong> sur l'ecran device login (bouton grise)</li>
+  </ul>
+</div>
+
+<div class="box box-green">
+  <div class="box-title">Nouveau systeme</div>
+  <ul style="margin:4px 0">
+    <li>L'employe <strong>definit lui-meme son PIN</strong> lors de sa premiere connexion sur la tablette</li>
+    <li>Le PIN est cree avec <strong>double saisie</strong> (confirmation) directement sur le device</li>
+    <li>Le manager peut voir le <strong>statut du PIN</strong> (actif/non defini) et le <strong>reinitialiser</strong> depuis la fiche employe</li>
+    <li>L'employe peut <strong>changer son PIN</strong> depuis son profil</li>
+    <li>Plus de generation aleatoire cote frontend</li>
+  </ul>
+</div>
+
+<h2>1. Nouveau flow device login</h2>
+
+<div class="flow">
+Tablette en salle — /device
+
+Etape 1 : PIN Restaurant (inchange)
+  POST /api/auth/device-login/
+  { restaurant_id, pin_restaurant }
+  → deviceToken
+
+Etape 2 : Selection employe (inchange)
+  GET /api/auth/restaurant-employees/
+  → liste employes avec has_pin: true/false
+
+Etape 3 : Selon has_pin
+
+  SI has_pin == true :
+    → Ecran "Entrez votre PIN" (inchange)
+    POST /api/auth/quick-login/
+    { device_token, pin_code }
+    → JWT
+
+  SI has_pin == false :                          ← NOUVEAU
+    → Ecran "Definir votre code PIN"
+    L'employe tape 4 chiffres + confirme
+    POST /api/auth/set-pin/                      ← NOUVEL ENDPOINT
+    { device_token, employee_id, pin_code }
+    → JWT (login automatique apres definition)
+</div>
+
+<h2>2. Endpoints a creer / modifier</h2>
+
+<h3>Endpoint 1 : Definir son PIN <span class="tag tag-new">NOUVEAU</span></h3>
+
+<table>
+  <tr><th style="width:120px">Route</th><td><code>POST /api/auth/set-pin/</code></td></tr>
+  <tr><th>Authentification</th><td>Aucune (meme principe que device-login : le <code>device_token</code> fait office de preuve)</td></tr>
+  <tr><th>Rate-limiting</th><td>5/min par IP + device_token</td></tr>
+</table>
+
+<p><strong>Request :</strong></p>
+<pre>
+{
+  "device_token": "abc123...",
+  "employee_id": 42,
+  "pin_code": "1031"
+}
+</pre>
+
+<p><strong>Validations backend :</strong></p>
+<ol>
+  <li>Le <code>device_token</code> est valide et non expire</li>
+  <li>L'<code>employee_id</code> appartient au restaurant associe au device_token</li>
+  <li>L'employe n'a <strong>pas deja un PIN</strong> (<code>has_pin == false</code>). Si un PIN existe deja → 400 "PIN deja defini"</li>
+  <li>Le <code>pin_code</code> fait exactement 4 chiffres (<code>^\d{4}$</code>)</li>
+</ol>
+
+<p><strong>Responses :</strong></p>
+<pre>
+// 200 — Succes (meme format que quick-login → login auto)
+{
+  "message": "PIN defini avec succes",
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user_id": 15,
+  "employee_id": 42,
+  "employee_name": "Nicolas ROUVROY",
+  "employee_type": "Manager Salle"
+}
+
+// 400 — PIN deja defini
+{ "detail": "Cet employe a deja un PIN. Utilisez change-pin pour le modifier." }
+
+// 400 — PIN invalide
+{ "detail": "Le PIN doit contenir exactement 4 chiffres." }
+
+// 401 — Device token invalide
+{ "detail": "Session appareil expiree." }
+
+// 404 — Employe non trouve dans ce restaurant
+{ "detail": "Employe introuvable." }
+</pre>
+
+<p><strong>Logique backend :</strong></p>
+<pre>
+class SetPinView(APIView):
+    throttle_classes = [DeviceLoginThrottle]
+
+    def post(self, request):
+        device_token = request.data.get('device_token')
+        employee_id = request.data.get('employee_id')
+        pin_code = request.data.get('pin_code')
+
+        # 1. Valider device_token → recuperer restaurant
+        restaurant = validate_device_token(device_token)
+        if not restaurant:
+            return Response({"detail": "Session appareil expiree."}, 401)
+
+        # 2. Verifier que l'employe appartient au restaurant
+        employee = get_employee_for_restaurant(employee_id, restaurant)
+        if not employee:
+            return Response({"detail": "Employe introuvable."}, 404)
+
+        # 3. Verifier qu'il n'a pas deja un PIN
+        if employee.user and employee.user.pin_code:
+            return Response({"detail": "PIN deja defini."}, 400)
+
+        # 4. Valider format PIN
+        if not re.match(r'^\d{4}$', pin_code):
+            return Response({"detail": "Le PIN doit contenir 4 chiffres."}, 400)
+
+        # 5. Sauvegarder le PIN + generer JWT
+        employee.user.pin_code = pin_code  # ou hash si souhaite
+        employee.user.save()
+
+        tokens = generate_jwt_for_user(employee.user)
+        return Response({
+            "message": "PIN defini avec succes",
+            "access_token": tokens.access,
+            "refresh_token": tokens.refresh,
+            ...
+        })
+</pre>
+
+<hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;">
+
+<h3>Endpoint 2 : Changer son PIN <span class="tag tag-new">NOUVEAU</span></h3>
+
+<table>
+  <tr><th style="width:120px">Route</th><td><code>POST /api/auth/change-pin/</code></td></tr>
+  <tr><th>Authentification</th><td>JWT requis (employe connecte)</td></tr>
+  <tr><th>Rate-limiting</th><td>5/min par user</td></tr>
+</table>
+
+<p><strong>Request :</strong></p>
+<pre>
+{
+  "old_pin_code": "1031",
+  "new_pin_code": "5678"
+}
+</pre>
+
+<p><strong>Validations :</strong></p>
+<ol>
+  <li>L'utilisateur connecte a un PIN existant</li>
+  <li><code>old_pin_code</code> correspond au PIN actuel (comparaison constante : <code>hmac.compare_digest</code>)</li>
+  <li><code>new_pin_code</code> fait 4 chiffres, different de l'ancien</li>
+</ol>
+
+<p><strong>Responses :</strong></p>
+<pre>
+// 200
+{ "message": "PIN modifie avec succes." }
+
+// 400 — Ancien PIN incorrect
+{ "detail": "PIN actuel incorrect." }
+
+// 400 — Meme PIN
+{ "detail": "Le nouveau PIN doit etre different de l'ancien." }
+</pre>
+
+<hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;">
+
+<h3>Endpoint 3 : Reset PIN par un admin <span class="tag tag-new">NOUVEAU</span></h3>
+
+<table>
+  <tr><th style="width:120px">Route</th><td><code>POST /api/employes/{id}/reset-pin/</code></td></tr>
+  <tr><th>Authentification</th><td>JWT requis, permission manager/admin</td></tr>
+</table>
+
+<p><strong>Request :</strong></p>
+<pre>
+{}   // Pas de body — le reset supprime le PIN
+</pre>
+
+<p><strong>Logique :</strong></p>
+<ol>
+  <li>Mettre le <code>pin_code</code> de l'employe a <code>null</code> / vide</li>
+  <li>L'employe redevient <code>has_pin: false</code></li>
+  <li>A sa prochaine connexion device, il repassera par le flow "Definir votre PIN"</li>
+</ol>
+
+<p><strong>Responses :</strong></p>
+<pre>
+// 200
+{ "message": "PIN reinitialise. L'employe devra definir un nouveau PIN." }
+
+// 403 — Pas les droits
+{ "detail": "Permission refusee." }
+</pre>
+
+<hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;">
+
+<h3>Modification : Register / Invite User <span class="tag tag-change">MODIFIER</span></h3>
+
+<p>Le champ <code>pin_code</code> ne doit <strong>plus etre obligatoire</strong> a la creation d'un utilisateur :</p>
+
+<pre>
+# Avant (actuel)
+class UserRegistrationSerializer:
+    pin_code = serializers.CharField(required=True, min_length=4, max_length=4)
+
+# Apres
+class UserRegistrationSerializer:
+    pin_code = serializers.CharField(required=False, allow_null=True,
+                                     allow_blank=True, min_length=4, max_length=4)
+</pre>
+
+<p>Si <code>pin_code</code> n'est pas fourni → l'utilisateur est cree avec <code>has_pin = false</code>. Il definira son PIN lui-meme sur le device.</p>
+
+<hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;">
+
+<h3>Modification : GET restaurant-employees <span class="tag tag-change">MODIFIER</span></h3>
+
+<p>Le champ <code>has_pin</code> existe deja dans la reponse — <strong>rien a changer</strong>. Verifier juste qu'il reflete bien la realite (<code>has_pin = bool(user.pin_code)</code>).</p>
+
+<h2>3. Resume des changements backend</h2>
+
+<table>
+  <tr>
+    <th>Type</th>
+    <th>Endpoint / Fichier</th>
+    <th>Effort</th>
+  </tr>
+  <tr>
+    <td><span class="tag tag-new">NOUVEAU</span></td>
+    <td><code>POST /api/auth/set-pin/</code></td>
+    <td>~30 min</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-new">NOUVEAU</span></td>
+    <td><code>POST /api/auth/change-pin/</code></td>
+    <td>~20 min</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-new">NOUVEAU</span></td>
+    <td><code>POST /api/employes/{id}/reset-pin/</code></td>
+    <td>~15 min</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-change">MODIFIER</span></td>
+    <td><code>UserRegistrationSerializer</code> — <code>pin_code</code> optionnel</td>
+    <td>~5 min</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-delete">SUPPRIMER</span></td>
+    <td>Le frontend n'enverra plus de <code>pin_code</code> a la creation</td>
+    <td>Rien cote backend</td>
+  </tr>
+</table>
+
+<p><strong>Effort total backend estime : ~1h15</strong></p>
+
+<h2>4. Ce que le frontend fera de son cote</h2>
+
+<p>Pas d'action requise cote backend pour ces points — juste pour information :</p>
+
+<ul>
+  <li><strong>Nouvel ecran "Definir votre PIN"</strong> sur <code>/device</code> quand <code>has_pin == false</code> — double saisie (PIN + confirmation) puis appel <code>POST /api/auth/set-pin/</code></li>
+  <li><strong>Fiche employe</strong> (admin) : afficher statut PIN (actif / non defini) + bouton "Reinitialiser le PIN" qui appelle <code>POST /api/employes/{id}/reset-pin/</code></li>
+  <li><strong>Profil employe</strong> : bouton "Modifier mon PIN" qui appelle <code>POST /api/auth/change-pin/</code></li>
+  <li><strong>Suppression de <code>generatePin()</code></strong> dans register.tsx et employe-detail.tsx — le frontend n'enverra plus de <code>pin_code</code> a la creation</li>
+</ul>
+
+<h2>5. Ordre d'implementation suggere</h2>
+
+<ol>
+  <li><strong>Backend</strong> : rendre <code>pin_code</code> optionnel dans le serializer registration</li>
+  <li><strong>Backend</strong> : creer <code>POST /api/auth/set-pin/</code></li>
+  <li><strong>Frontend</strong> : supprimer <code>generatePin()</code>, creer l'ecran "Definir votre PIN"</li>
+  <li><strong>Backend</strong> : creer <code>POST /api/employes/{id}/reset-pin/</code></li>
+  <li><strong>Frontend</strong> : ajouter bouton reset sur la fiche employe</li>
+  <li><strong>Backend</strong> : creer <code>POST /api/auth/change-pin/</code></li>
+  <li><strong>Frontend</strong> : ajouter "Modifier mon PIN" dans le profil</li>
+</ol>
+
+<div class="footer">
+  Document genere dans le cadre de l'audit testing frontend Holy Fork. Contact : equipe frontend.
+</div>
+
+</body>
+</html>

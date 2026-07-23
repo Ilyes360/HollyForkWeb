@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Device Login — Actions Backend Requises</title>
+<style>
+  @page { margin: 1.5cm; size: A4; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; max-width: 700px; margin: 0 auto; padding: 2em; }
+  h1 { font-size: 18pt; border-bottom: 2px solid #e24b4a; padding-bottom: 6px; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 10pt; margin-bottom: 24px; }
+  h2 { font-size: 13pt; color: #e24b4a; margin-top: 28px; margin-bottom: 8px; }
+  h3 { font-size: 11pt; margin-top: 18px; margin-bottom: 6px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10pt; }
+  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+  .critical { background: #fde8e8; color: #a32d2d; font-weight: 600; }
+  .high { background: #fef3e2; color: #ba7517; font-weight: 600; }
+  .medium { background: #e8f4fd; color: #2563eb; }
+  code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }
+  pre { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-size: 9pt; overflow-x: auto; line-height: 1.4; }
+  .box { border: 1px solid #e24b4a; border-radius: 6px; padding: 12px 16px; margin: 16px 0; background: #fef7f7; }
+  .box-title { font-weight: 700; color: #a32d2d; margin-bottom: 4px; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 9pt; color: #999; }
+</style>
+</head>
+<body>
+
+<h1>Device Login — Actions Backend Requises</h1>
+<p class="subtitle">Holy Fork | Audit securite frontend | 23 juillet 2026</p>
+
+<div class="box">
+  <div class="box-title">Contexte</div>
+  <p style="margin:4px 0">Le device login permet a une tablette en salle de se connecter sans compte utilisateur classique. Le flow en 3 etapes :</p>
+  <ol style="margin:4px 0">
+    <li><strong>Etape 1</strong> — <code>POST /api/auth/device-login/</code> : ID restaurant + PIN 6 chiffres &rarr; <code>deviceToken</code></li>
+    <li><strong>Etape 2</strong> — <code>GET /api/auth/restaurant-employees/</code> : liste des employes du restaurant</li>
+    <li><strong>Etape 3</strong> — <code>POST /api/auth/quick-login/</code> : PIN employe 4 chiffres &rarr; JWT (access + refresh)</li>
+  </ol>
+</div>
+
+<h2>1. Problemes identifies</h2>
+
+<table>
+  <tr>
+    <th style="width:60px">Sev.</th>
+    <th>Probleme</th>
+    <th>Impact</th>
+  </tr>
+  <tr>
+    <td class="critical">P0</td>
+    <td><strong>Pas de contrainte unique sur le PIN restaurant</strong></td>
+    <td>Deux restaurants peuvent avoir le meme PIN. Un attaquant qui brute-force un PIN peut tomber sur un restaurant qui n'est pas le sien.</td>
+  </tr>
+  <tr>
+    <td class="critical">P0</td>
+    <td><strong>Pas de rate-limiting sur <code>/api/auth/device-login/</code></strong></td>
+    <td>Le PIN est 6 chiffres = 1 million de combinaisons. Sans throttle, un script peut tout tester en quelques minutes.</td>
+  </tr>
+  <tr>
+    <td class="high">P1</td>
+    <td><strong>Le PIN est renvoye en clair dans <code>GET /api/restaurants/</code></strong></td>
+    <td>Le champ <code>pin</code> est dans la reponse API. Visible dans le cache frontend (DevTools, TanStack Query).</td>
+  </tr>
+  <tr>
+    <td class="high">P1</td>
+    <td><strong>L'ID restaurant est un auto-increment previsible</strong></td>
+    <td>Un attaquant peut iterer les IDs (1, 2, 3...) pour trouver des restaurants valides.</td>
+  </tr>
+  <tr>
+    <td class="medium">P2</td>
+    <td><strong>Messages d'erreur distincts (enumeration)</strong></td>
+    <td>Si le backend renvoie un message different pour "restaurant introuvable" vs "PIN incorrect", un attaquant peut identifier les IDs valides.</td>
+  </tr>
+</table>
+
+<h2>2. Actions requises</h2>
+
+<h3>Action 1 — Contrainte unique sur le PIN <span class="critical" style="font-size:9pt;padding:2px 6px;border-radius:3px">P0</span></h3>
+
+<p>Ajouter <code>unique=True</code> sur le champ <code>pin</code> du modele <code>Restaurant</code> :</p>
+
+<pre>
+# models.py
+class Restaurant(models.Model):
+    pin = models.CharField(max_length=6, unique=True)  # &larr; ajouter unique=True
+</pre>
+
+<pre>
+# migration
+python manage.py makemigrations
+python manage.py migrate
+</pre>
+
+<p><strong>Pourquoi :</strong> Avec ~1000 restaurants max et 1M de combinaisons possibles (6 chiffres), la probabilite de collision est negligeable. La contrainte unique garantit qu'un couple (ID, PIN) identifie toujours exactement 1 restaurant.</p>
+
+<p><strong>Si 2 restaurants ont deja le meme PIN :</strong> la migration echouera. Il faudra d'abord regenerer le PIN du doublon (<code>Restaurant.objects.filter(pin=X)</code>).</p>
+
+<h3>Action 2 — Rate-limiting sur device-login <span class="critical" style="font-size:9pt;padding:2px 6px;border-radius:3px">P0</span></h3>
+
+<p>Appliquer un throttle DRF sur l'endpoint <code>/api/auth/device-login/</code> :</p>
+
+<pre>
+# throttles.py
+from rest_framework.throttling import AnonRateThrottle
+
+class DeviceLoginThrottle(AnonRateThrottle):
+    rate = '5/min'  # 5 tentatives par minute par IP
+
+    def get_cache_key(self, request, view):
+        # Throttle par IP + restaurant_id pour plus de precision
+        restaurant_id = request.data.get('restaurant_id', '')
+        ident = f"{self.get_ident(request)}:{restaurant_id}"
+        return self.cache_format % {'scope': self.scope, 'ident': ident}
+
+
+# views.py
+class DeviceLoginView(APIView):
+    throttle_classes = [DeviceLoginThrottle]
+    # ...
+</pre>
+
+<p><strong>Pourquoi :</strong> 6 chiffres = 1M combinaisons. A 5 essais/min, il faudrait 138 jours pour tout tester. Sans throttle, c'est faisable en minutes avec un script.</p>
+
+<p><strong>Le frontend gere deja le 429</strong> — le code affiche "Trop de tentatives. Veuillez patienter." quand le backend renvoie HTTP 429.</p>
+
+<h3>Action 3 — Retirer le PIN des reponses API <span class="high" style="font-size:9pt;padding:2px 6px;border-radius:3px">P1</span></h3>
+
+<p>Ne plus renvoyer le champ <code>pin</code> dans le serializer <code>RestaurantSerializer</code> utilise par <code>GET /api/restaurants/</code> :</p>
+
+<pre>
+# serializers.py
+class RestaurantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Restaurant
+        exclude = ['pin']  # &larr; retirer pin de la reponse
+        # OU :
+        # fields = ['restaurant_id', 'name', 'address', ...]  (sans 'pin')
+</pre>
+
+<p>Si le PIN doit etre visible dans l'admin (pour le configurer), creer un serializer dedie :</p>
+
+<pre>
+class RestaurantAdminSerializer(serializers.ModelSerializer):
+    """Serializer avec PIN — uniquement pour les endpoints admin."""
+    class Meta:
+        model = Restaurant
+        fields = '__all__'
+</pre>
+
+<p><strong>Pourquoi :</strong> Aujourd'hui le PIN est envoye en clair dans la reponse <code>GET /api/restaurants/</code>. Il se retrouve dans le cache du navigateur (TanStack Query), visible dans les DevTools. Un employe qui ouvre les DevTools voit les PINs de tous ses restaurants.</p>
+
+<h3>Action 4 — Message d'erreur unique <span class="medium" style="font-size:9pt;padding:2px 6px;border-radius:3px">P2</span></h3>
+
+<p>La vue <code>DeviceLoginView</code> doit renvoyer le <strong>meme message</strong> que l'ID soit invalide ou que le PIN soit faux :</p>
+
+<pre>
+# views.py — DeviceLoginView.post()
+try:
+    restaurant = Restaurant.objects.get(pk=restaurant_id)
+except Restaurant.DoesNotExist:
+    return Response({"detail": "Identifiants invalides"}, status=400)
+
+if not hmac.compare_digest(restaurant.pin, pin_restaurant):
+    return Response({"detail": "Identifiants invalides"}, status=400)
+#                    ^^^ meme message dans les 2 cas
+</pre>
+
+<p><strong>Pourquoi :</strong> Si les messages sont differents ("Restaurant introuvable" vs "PIN incorrect"), un attaquant peut d'abord identifier les IDs valides, puis brute-forcer le PIN. Avec un message unique, il ne sait pas lequel est faux.</p>
+
+<p><strong>Bonus :</strong> <code>hmac.compare_digest()</code> fait une comparaison en temps constant, ce qui empeche les timing attacks (mesurer le temps de reponse pour deviner le PIN caractere par caractere).</p>
+
+<h2>3. Amelioration optionnelle — Code public</h2>
+
+<p>Remplacer l'exposition du PK sequentiel (<code>restaurant_id: 2</code>) par un code public non predictible :</p>
+
+<pre>
+# models.py
+import uuid
+
+class Restaurant(models.Model):
+    public_code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    # ...
+
+
+# Le device login utilise public_code au lieu de restaurant_id
+# POST /api/auth/device-login/
+# { "public_code": "a1b2c3d4-...", "pin_restaurant": "951001" }
+</pre>
+
+<p><strong>Pourquoi :</strong> Un auto-increment (1, 2, 3...) est devinable. Un UUID est imprevisible. L'attaquant ne peut plus iterer les IDs pour trouver des restaurants valides. C'est une couche de defense supplementaire, pas un remplacement du rate-limiting.</p>
+
+<h2>4. Resume des actions</h2>
+
+<table>
+  <tr>
+    <th>Priorite</th>
+    <th>Action</th>
+    <th>Effort</th>
+    <th>Fichiers</th>
+  </tr>
+  <tr>
+    <td class="critical">P0</td>
+    <td><code>unique=True</code> sur <code>Restaurant.pin</code></td>
+    <td>5 min + migration</td>
+    <td><code>models.py</code></td>
+  </tr>
+  <tr>
+    <td class="critical">P0</td>
+    <td>Throttle 5/min sur <code>device-login</code></td>
+    <td>15 min</td>
+    <td><code>throttles.py</code>, <code>views.py</code></td>
+  </tr>
+  <tr>
+    <td class="high">P1</td>
+    <td>Retirer <code>pin</code> du serializer Restaurant</td>
+    <td>5 min</td>
+    <td><code>serializers.py</code></td>
+  </tr>
+  <tr>
+    <td class="medium">P2</td>
+    <td>Message d'erreur unique + <code>hmac.compare_digest</code></td>
+    <td>10 min</td>
+    <td><code>views.py</code></td>
+  </tr>
+  <tr>
+    <td style="color:#666">Optionnel</td>
+    <td>UUID public au lieu du PK sequentiel</td>
+    <td>30 min</td>
+    <td><code>models.py</code>, <code>serializers.py</code>, <code>views.py</code></td>
+  </tr>
+</table>
+
+<p><strong>Impact frontend :</strong> Les actions P0, P1 et P2 ne cassent rien cote frontend. L'action optionnelle (UUID) necessite de modifier le champ <code>restaurantId</code> dans le formulaire device login — on s'en charge cote frontend une fois le backend pret.</p>
+
+<div class="footer">
+  Document genere dans le cadre de l'audit testing frontend Holy Fork. Contact : equipe frontend.
+</div>
+
+</body>
+</html>
