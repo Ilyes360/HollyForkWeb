@@ -64,7 +64,7 @@ export function EmployeeSelectStep({
         hidden: {},
         show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
       }}
-      className="w-full max-w-lg space-y-6 px-6"
+      className="w-full max-w-lg space-y-6 px-6 py-12"
     >
       <motion.div className="text-center" variants={fadeUp}>
         <h2 className="font-display text-3xl font-bold">Qui êtes-vous ?</h2>

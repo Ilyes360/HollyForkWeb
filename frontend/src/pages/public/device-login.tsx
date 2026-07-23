@@ -74,7 +74,7 @@ export default function DeviceLoginPage() {
     <div className="relative flex h-svh overflow-hidden bg-muted/40 p-4">
       <AuthImagePanel />
 
-      <div className="relative flex w-full items-center justify-center lg:w-1/2">
+      <div className="relative flex w-full items-center justify-center overflow-y-auto lg:w-1/2">
         <div className="absolute top-4 right-4 z-20">
           <ThemeSwitch />
         </div>
