@@ -32,6 +32,11 @@ export function PinPad({
     (key: string) => {
       if (disabled) return
 
+      // Haptic feedback for touch devices (iPad)
+      if ("vibrate" in navigator) {
+        navigator.vibrate(key === "delete" ? 15 : 8)
+      }
+
       if (key === "delete") {
         onChange(value.slice(0, -1))
         return
