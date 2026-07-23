@@ -245,10 +245,8 @@ describe("PinLoginStep", () => {
       { wrapper: Wrapper }
     )
 
-    expect(
-      screen.getByRole("heading", { name: /jean dupont/i })
-    ).toBeInTheDocument()
-    expect(screen.getByText(/PIN pour vous connecter/)).toBeInTheDocument()
+    expect(screen.getByText(/Jean Dupont/)).toBeInTheDocument()
+    expect(screen.getByText(/Entrez votre PIN/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument()
   })
 

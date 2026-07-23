@@ -92,27 +92,30 @@ export function PinLoginStep({
         hidden: {},
         show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
       }}
-      className="w-full max-w-md space-y-8 px-6"
+      className="w-full max-w-md space-y-6 px-6 py-6"
     >
-      <motion.div
-        className="flex flex-col items-center gap-3"
-        variants={fadeUp}
-      >
+      <motion.div className="flex items-center gap-3" variants={fadeUp}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          aria-label="Retour"
+        >
+          <HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
+        </Button>
         <div
           className={cn(
-            "flex size-20 items-center justify-center rounded-full text-2xl font-semibold",
+            "flex size-10 items-center justify-center rounded-full text-sm font-semibold",
             getAvatarColor(employee.employeeId)
           )}
         >
           {getInitials(employee.employeeFirstName, employee.employeeLastName)}
         </div>
-        <div className="text-center">
-          <h2 className="font-display text-2xl font-bold">
+        <div>
+          <p className="text-sm font-medium">
             {employee.employeeFirstName} {employee.employeeLastName}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Entrez votre PIN pour vous connecter
           </p>
+          <p className="text-xs text-muted-foreground">Entrez votre PIN</p>
         </div>
       </motion.div>
 
@@ -125,13 +128,6 @@ export function PinLoginStep({
           error={pinError}
           disabled={quickLoginMutation.isPending}
         />
-      </motion.div>
-
-      <motion.div className="flex justify-center" variants={fadeUp}>
-        <Button variant="ghost" onClick={onBack}>
-          <HugeiconsIcon icon={ArrowLeft02Icon} size={16} />
-          Retour
-        </Button>
       </motion.div>
     </motion.div>
   )

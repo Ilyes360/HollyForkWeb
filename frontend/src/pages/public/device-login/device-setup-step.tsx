@@ -113,20 +113,15 @@ export function DeviceSetupStep({ onSuccess }: DeviceSetupStepProps) {
         hidden: {},
         show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
       }}
-      className="w-full max-w-md space-y-8 px-6"
+      className="w-full max-w-md space-y-6 px-6 py-6"
     >
-      <motion.div className="text-center" variants={fadeUp}>
-        <h2 className="font-display text-3xl font-bold">
-          Configurer l'appareil
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Associez cette tablette à votre restaurant
-        </p>
+      <motion.div variants={fadeUp}>
+        <h2 className="text-sm font-medium">Configurer l'appareil</h2>
       </motion.div>
 
       <motion.div variants={fadeUp}>
         <Form {...form}>
-          <div className="space-y-6">
+          <div className="space-y-5">
             <FormField
               control={form.control}
               name="restaurantId"
