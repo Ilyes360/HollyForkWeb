@@ -117,6 +117,14 @@ n'est **pas** concerne, reste sur MSW.
   (email unique via timestamp) — pollution DB assumee, pas de nettoyage automatique.
 - **Non teste (documente, pas contourne)** : 429 (risque de lockout du compte partage),
   token vraiment expire (pas de clé de signature disponible cote frontend).
+- **⚠️ Piege observe en conditions reelles** : le backend applique un throttle global
+  `anon: 100/hour` (DRF, `holly_pi/settings.py`). Relancer la suite `pages.test.tsx` +
+  `guards.test.tsx` plusieurs fois d'affilée (chacune fait ~15-20 vrais appels HTTP)
+  + des `curl` manuels de verification peut epuiser ce quota en quelques minutes → tous
+  les tests echouent alors sur `ensureBackendReachable()` (429), sans rapport avec le
+  code. Solution : attendre (le quota se libere progressivement, `Retry-After` dans la
+  reponse indique combien de temps), pas relancer en boucle (chaque tentative ajoute
+  des requetes et peut prolonger l'attente).
 
 ---
 
