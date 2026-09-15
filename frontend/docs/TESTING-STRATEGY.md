@@ -38,11 +38,13 @@ a condition que le schema soit fort et verifie des deux cotes.
 
 ## 2. Tiers de criticite
 
-| Tier | Features | Couches appliquees |
-|------|----------|-------------------|
-| **Critique** (argent, donnees, securite) | Auth, Reservations, Stocks, Commandes fournisseurs, Device Login | 0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 |
-| **Standard** (coeur metier) | Carte/Menu, Planning, Admin (etablissements, employes) | 0 + 1 + 2 + 3 + 4 |
-| **Affichage** (lecture seule) | Dashboard KPIs, Salle (canvas) | 0 + 1 + 2 + 4 |
+| Tier | Features (domaine) | Couches |
+|------|--------------------|---------|
+| **Critique** | Device Login, Auth, Reservations, Stocks, Commandes | 0–7 selon unite |
+| **Standard** | Carte, Planning, Admin | 0–4 |
+| **Affichage** | Dashboard, Salle | 0–2–4 |
+
+Les **unites de travail** (maille QA) sont listees en §12 — plus fines que les domaines ci-dessus.
 
 ---
 
@@ -315,20 +317,40 @@ La prod est la derniere couche de test.
 
 ---
 
-## 12. Ordre des features a couvrir
+## 12. Ordre des unites de travail (auto → manuel)
 
-| # | Feature | Tier | Couches |
-|---|---------|------|---------|
-| 1 | **Device Login** | Critique | 0-1-2-3-4-5-6-7 |
-| 2 | **Auth** (login, register, logout, guards) | Critique | 0-1-2-3-4-5-6-7 |
-| 3 | **Reservations** (CRUD, filtres, gantt) | Critique | 0-1-2-3-4-5-6-7 |
-| 4 | **Stocks** (CRUD, alertes, reappro) | Critique | 0-1-2-3-4-5-6-7 |
-| 5 | **Commandes fournisseurs** (CRUD, statuts) | Critique | 0-1-2-3-4-5-6-7 |
-| 6 | **Carte/Menu** (articles, recettes) | Standard | 0-1-2-3-4 |
-| 7 | **Planning** (shifts, gantt) | Standard | 0-1-2-3-4 |
-| 8 | **Admin** (etablissements, employes) | Standard | 0-1-2-3-4 |
-| 9 | **Dashboard** (KPIs, charts, carte) | Affichage | 0-1-2-4 |
-| 10 | **Salle** (plan Konva, tables) | Affichage | 0-1-2-4 |
+> **Regle** : 1 unite = 1 cycle `tests auto → manuel associe → sign-off` avant la suivante.
+> Ne pas regrouper plusieurs unites dans une meme PR/plan.
+
+| # | Unite de travail | Tier | Manuel | Statut auto |
+|---|------------------|------|--------|-------------|
+| 1 | Device Login | Critique | [manual-device-login.md](testing/manual-device-login.md) | Done (A) |
+| 2a-hooks | Auth hooks (login/register/logout/profile) | Critique | partiel auth | Done (A-) |
+| 2a-pages | Auth pages (Login / Register / Forgot) | Critique | [manual-auth.md](testing/manual-auth.md) | Done (A-) |
+| 2b | Auth Guards | Critique | manual-auth (guards) | Done (A) |
+| 2c-mfa | Auth MFA (setup / verify / disable) | Critique | etendre manual-auth | A faire (si MFA en prod) |
+| 3a | Reservations CRUD | Critique | [manual-reservations.md](testing/manual-reservations.md) hors gantt | Done (A-) |
+| 3b | Reservations Gantt | Critique | manual-reservations (gantt) | A faire |
+| 4a | Stocks hooks + mapping | Critique | partiel stocks | Done (A-) |
+| 4b | Stocks UI liste / dialogs | Critique | [manual-stocks.md](testing/manual-stocks.md) | A faire |
+| 4c | Stocks zones / config | Critique | manual-stocks (config) | A faire |
+| 5a | Commandes fournisseurs utils | Critique | — (pas de UI) | A faire |
+| 5b | Commandes fournisseurs hooks | Critique | partiel | A faire |
+| 5b-clients | Commandes clients cuisine hooks | Critique | partiel | A faire |
+| 5c | Commandes fournisseurs UI | Critique | [manual-commandes.md](testing/manual-commandes.md) | A faire |
+| 6a-utils | Carte utils (food cost, portions) | Standard | — | A faire |
+| 6a | Carte Editeur UI | Standard | [manual-carte.md](testing/manual-carte.md) | A faire |
+| 6b | Carte Operationnelle | Standard | manual-carte | A faire |
+| 7c | Planning Consultation | Standard | [manual-planning.md](testing/manual-planning.md) | A faire (prioritaire planning) |
+| 7a | Planning Editeur (+ utils planning) | Standard | manual-planning | A faire |
+| 7b | Planning Gantt | Standard | manual-planning | A faire |
+| 8b | Admin Employes (+ utils admin) | Standard | [manual-admin.md](testing/manual-admin.md) | A faire (prioritaire admin) |
+| 8a | Admin Etablissements | Standard | manual-admin | A faire |
+| 8c | Admin Roles | Standard | manual-admin | A faire |
+| 9a | Dashboard KPIs / charts | Affichage | [manual-dashboard.md](testing/manual-dashboard.md) | A faire |
+| 9b | Dashboard Map | Affichage | manual-dashboard | A faire |
+| 10a | Salle Consultation | Affichage | [manual-salle.md](testing/manual-salle.md) | A faire |
+| 10b | Salle Editeur (+ utils salle) | Affichage | manual-salle | A faire |
 
 ---
 
@@ -463,19 +485,21 @@ Questions :
 
 > Mis a jour a chaque commit. Source de verite sur l'etat reel des tests.
 >
-> Derniere mise a jour : 2026-07-23
+> Derniere mise a jour : 2026-09-15
 
 ### Metriques globales
 
 | Metrique | Valeur |
 |----------|--------|
-| Fichiers de test | 26 |
-| Tests totaux | 296 |
-| Duree suite complete | ~4.8s |
+| Fichiers de test | 28 |
+| Tests totaux | 352 |
+| Duree suite complete | ~7s |
 | tsc --noEmit | Zero erreur |
 | `as any` / `@ts-expect-error` dans src/test/ | 0 |
-| Handlers MSW types (openapi-msw) | 3 domaines (auth, device-login, reservations) |
-| Handlers MSW non types (legacy) | 13 domaines |
+| Handlers MSW types (openapi-msw) | auth, device-login, reservations, stocks, ingredients, suppliers |
+| Handlers MSW non types (legacy) | domaines restants (articles hors ingredients, commandes orders, etc.) |
+| Infra commune | `src/test/hook-wrapper.tsx` + `src/test/assertions.ts` |
+| fast-check | Installé — mapping résas + toProductUnit |
 
 ### Infrastructure
 
@@ -490,41 +514,59 @@ Questions :
 | Protection de branche | **A FAIRE** | Settings > Branches > Require "Quality checks" |
 | `pnpm audit` bloquant | Non | `continue-on-error: true` (11 high vulns) |
 
-### Avancement par sous-feature
+### Avancement par unite de travail
 
-Chaque sous-feature a un fichier de detail dans `docs/testing/{domaine}.md` qui liste chaque unite testable (hook, composant, util) avec son etat.
+> **Unite de travail** = plus petite maille QA : auto puis manuel, puis sign-off.
+> Detail technique dans `docs/testing/{domaine}.md`.
 
-**Tests manuels** : [manual-scenarios.md](testing/manual-scenarios.md) — scenarios de bout en bout a executer contre le vrai backend apres chaque deploy.
+**Tests manuels** : [manual-scenarios.md](testing/manual-scenarios.md)
 
-| # | Sous-feature | Tier | C0 | C1 Hooks | C2 Composant | C3 E2E | C4 a11y | Detail |
-|---|-------------|------|:--:|:--------:|:------------:|:------:|:-------:|--------|
-| 1 | **Device Login** | Critique | ✅ | ✅ (9) | ✅ (20) | — | ✅ (5) | [auth.md](testing/auth.md) |
-| 2a | **Auth Login/Register** | Critique | ✅ | ✅ (3) | — | — | — | [auth.md](testing/auth.md) |
-| 2b | **Auth Guards** | Critique | — | — | — | — | — | [auth.md](testing/auth.md) |
-| 3a | **Reservations CRUD** | Critique | ✅ | ✅ (6) | ✅ (33) | — | ✅ (3) | [reservations.md](testing/reservations.md) |
-| 3b | **Reservations Gantt** | Critique | — | — | — | — | — | [reservations.md](testing/reservations.md) |
-| 4 | **Stocks** | Critique | ✅ | ✅ (24) | — | — | — | [stocks.md](testing/stocks.md) |
-| 5 | **Commandes** | Critique | — | — | — | — | — | [commandes.md](testing/commandes.md) |
-| 6a | **Carte Editeur** | Standard | — | — | — | — | — | [carte.md](testing/carte.md) |
-| 6b | **Carte Operationnelle** | Standard | — | — | — | — | — | [carte.md](testing/carte.md) |
-| 7a | **Planning Editeur** | Standard | — | — | — | — | — | [planning.md](testing/planning.md) |
-| 7b | **Planning Gantt** | Standard | — | — | — | — | — | [planning.md](testing/planning.md) |
-| 7c | **Planning Consultation** | Standard | — | — | — | — | — | [planning.md](testing/planning.md) |
-| 8a | **Admin Etablissements** | Standard | — | — | — | — | — | [admin.md](testing/admin.md) |
-| 8b | **Admin Employes** | Standard | — | — | — | — | — | [admin.md](testing/admin.md) |
-| 8c | **Admin Roles** | Standard | — | — | — | — | — | [admin.md](testing/admin.md) |
-| 9 | **Dashboard** | Affichage | — | — | — | n/a | — | [dashboard.md](testing/dashboard.md) |
-| 10a | **Salle Consultation** | Affichage | — | — | — | n/a | — | [salle.md](testing/salle.md) |
-| 10b | **Salle Editeur** | Affichage | — | — | — | n/a | — | [salle.md](testing/salle.md) |
+| # | Unite | Tier | C0 | C1 | C2 | C4 | Manuel | Sign-off |
+|---|-------|------|:--:|:--:|:--:|:--:|--------|----------|
+| 1 | Device Login | Critique | ✅ | ✅ | ✅ | ✅ | [device](testing/manual-device-login.md) | apres manuel |
+| 2a-hooks | Auth hooks | Critique | ✅ | ✅ | n/a | n/a | partiel | non (pages manquent) |
+| 2a-pages | Auth pages | Critique | ✅ | n/a | ✅ | ✅ | [auth](testing/manual-auth.md) | non (manuel a faire) |
+| 2b | Auth Guards | Critique | ✅ | n/a | ✅ | n/a | auth (guards) | non (manuel a faire) |
+| 2c-mfa | Auth MFA | Critique | — | — | — | — | auth (MFA) | si MFA en prod |
+| 3a | Reservations CRUD | Critique | ✅ | ✅ | ✅ | ✅ | [reservations](testing/manual-reservations.md) | apres manuel (hors gantt ; bug statut known) |
+| 3b | Reservations Gantt | Critique | — | — | — | — | reservations (gantt) | — |
+| 4a | Stocks hooks+mapping | Critique | ✅ | ✅ | n/a | n/a | partiel | non (UI manque) |
+| 4b | Stocks UI liste/dialogs | Critique | — | — | — | — | [stocks](testing/manual-stocks.md) | — |
+| 4c | Stocks zones/config | Critique | — | — | — | — | stocks (config) | — |
+| 5a | Commandes utils | Critique | — | — | n/a | n/a | n/a | — |
+| 5b | Commandes fournisseurs hooks | Critique | — | — | n/a | n/a | partiel | — |
+| 5b-clients | Commandes clients cuisine hooks | Critique | — | — | n/a | n/a | partiel | — |
+| 5c | Commandes fournisseurs UI | Critique | — | — | — | — | [commandes](testing/manual-commandes.md) | — |
+| 6a-utils | Carte utils | Standard | — | — | n/a | n/a | n/a | — |
+| 6a | Carte Editeur UI | Standard | — | — | — | — | [carte](testing/manual-carte.md) | — |
+| 6b | Carte Operationnelle | Standard | — | — | — | — | carte | — |
+| 7c | Planning Consultation | Standard | — | — | — | — | [planning](testing/manual-planning.md) | — |
+| 7a | Planning Editeur (+ utils) | Standard | — | — | — | — | planning | — |
+| 7b | Planning Gantt | Standard | — | — | — | — | planning | — |
+| 8b | Admin Employes (+ utils) | Standard | — | — | — | — | [admin](testing/manual-admin.md) | — |
+| 8a | Admin Etablissements | Standard | — | — | — | — | admin | — |
+| 8c | Admin Roles | Standard | — | — | — | — | admin | — |
+| 9a | Dashboard KPIs | Affichage | — | — | — | — | [dashboard](testing/manual-dashboard.md) | — |
+| 9b | Dashboard Map | Affichage | — | — | — | — | dashboard | n/a C3 |
+| 10a | Salle Consultation | Affichage | — | — | — | — | [salle](testing/manual-salle.md) | n/a C3 |
+| 10b | Salle Editeur (+ utils) | Affichage | — | — | — | — | salle | n/a C3 |
 
-Legende : ✅ = couvert, (N) = nombre de tests, — = pas encore fait, n/a = hors scope pour ce tier
+Legende : ✅ = auto couvert, — = a faire, n/a = hors scope pour cette unite/tier
+
+### DoD zone couverte (qualité durcie)
+
+- [x] Mutation : happy + erreur + invalidation/side-effect (auth, résas, stocks)
+- [x] Composant : userEvent + empty/error ; axe vert ou dette listée
+- [x] Handlers domaine critiques en openapi-msw
+- [x] Aucun test qui fige le bug `localOverrides`
+- [x] `pnpm test` vert (352 — necessite le backend local `localhost:8000` lance pour `features/auth/pages.test.tsx` + `guards.test.tsx`, voir `docs/testing/auth.md`)
 
 ### Tests existants (hors features)
 
 | Fichier | Type | Tests |
 |---------|------|-------|
 | auth-store.test.ts | Unit | Store Zustand auth |
-| logout.test.tsx | Integration | Logout flow |
+| logout.test.tsx | Smoke | Redirect post-logout |
 | dev-mode.test.ts | Unit | Dev mode store |
 | dev-mode-guard.test.tsx | Integration | Guard dev mode |
 | portion-utils.test.ts | Unit | Calculs portions |
@@ -544,20 +586,29 @@ Legende : ✅ = couvert, (N) = nombre de tests, — = pas encore fait, n/a = hor
 | Type | Localisation | Description | Priorite |
 |------|-------------|-------------|----------|
 | **Schema drift** | `RestaurantEmployeesResponse.employees` | Type `{ [key: string]: unknown }[]` au lieu d'objets employes types. Backend doit ajouter `@extend_schema` sur `GetRestaurantEmployeesView`. A remonter au dev backend. | Moyenne |
-| **~~A11Y debt~~** | ~~`DeviceSetupStep`~~ | ~~FormLabel sur div~~ → **CORRIGE** : `aria-label="Restaurant"` sur le `<select>` et `<input>` directement | ~~Moyenne~~ Done |
-| **Bug prod** | `reservations.tsx` `handleStatusChange` | Le statut (confirmee/arrivee/annulee) est stocke en `localOverrides` (state React) et **NON persiste** via l'API. Un refresh efface les changements de statut. Le TODO dans le code confirme : "backend Reservation model does not have a status field yet". A remonter au dev backend. **Ne PAS tester comme comportement voulu.** | **Haute** |
-| **Mapping extrait** | `mapApiReservation` | Extrait de `reservations.tsx` vers `components/reservations/mapping.ts`. 19 tests unitaires couvrent datetime, service, table resolution, cas limites. | Done |
+| **~~A11Y debt~~** | ~~`DeviceSetupStep`~~ | ~~FormLabel sur div~~ → **CORRIGE** | ~~Moyenne~~ Done |
+| **Bug prod** | `reservations.tsx` `handleStatusChange` | Le statut (confirmee/arrivee/annulee) est stocke en `localOverrides` (state React) et **NON persiste** via l'API. Un refresh efface les changements de statut. **Ne PAS tester comme comportement voulu.** | **Haute** |
+| **Mapping extrait** | `mapApiReservation` | Extrait vers `components/reservations/mapping.ts`. Property tests fast-check ajoutés. | Done |
 | **Vuln npm** | 11 high severity | `pnpm audit --audit-level=high` echoue. CI en `continue-on-error` | A trier |
 | **Branch protection** | GitHub repo settings | Required check "Quality checks" non active sur `main` | **Haute** |
-| **A11Y debt** | `reservations-table.tsx` `ActionIcon` | Icon-only action buttons (Confirmer, Marquer arrivee, Annuler, No-show) use `TooltipTrigger` without `aria-label`. Tooltip content is not programmatically connected to the button. Fix: add `aria-label={label}` to the rendered `<Button>`. | **Moyenne** |
-| **A11Y debt** | `reservations-table.tsx` `<TableHead>` | Empty `<th>` for the actions column. Fix: add `aria-label="Actions"` or visually hidden text. | Basse |
-| **A11Y debt** | `reservation-detail.tsx` `AlertDialogTrigger` | `AlertDialogTrigger` wraps `<Button>` creating a duplicate button in the DOM (trigger + inner button). The `disabled` prop on the inner `<Button>` is not propagated to the outer trigger. | Basse |
-| **Mapping extrait** | `apiStockToProduct` + `toProductUnit` | Extrait de `use-stocks.ts` vers `components/stock/mapping.ts`. 22 tests unitaires couvrent unit mapping (13 variantes), numeric parsing, fallbacks, defaults. | Done |
+| **~~A11Y debt~~** | ~~`reservations-table.tsx` `ActionIcon`~~ | → **CORRIGÉ** : `aria-label={label}` + header Actions sr-only | ~~Moyenne~~ Done |
+| **~~A11Y debt~~** | ~~`reservations-table.tsx` `<TableHead>`~~ | → **CORRIGÉ** | ~~Basse~~ Done |
+| **A11Y debt** | `reservation-detail.tsx` `AlertDialogTrigger` | `AlertDialogTrigger` wraps `<Button>` creating a duplicate button in the DOM. | Basse |
+| **Mapping extrait** | `apiStockToProduct` + `toProductUnit` | Extrait vers `components/stock/mapping.ts`. Property test toProductUnit. | Done |
+| **Feature non implementee** | `forgot-password.tsx` | Page placeholder : champ email et bouton `disabled`, `<form>` sans `onSubmit`. Aucun flux Zod/API a tester tant que la feature n'est pas branchee cote backend. Voir `docs/testing/auth.md` §2a-pages. | Basse |
+| **Bug UX pre-existant** | `register.tsx` champ email (`type="email"`) | La validation HTML5 native bloque le `submit` avant que React Hook Form/Zod ne s'execute pour une valeur non-vide au mauvais format — le message Zod "Adresse email invalide" ne s'affiche jamais dans ce cas precis (seule la tooltip navigateur apparaitrait). Decouvert en ecrivant les tests 2a-pages ; non corrige (hors scope, comportement fonctionnel a trancher avec le produit). | Moyenne |
+| **~~A11Y debt~~** | ~~`login.tsx`/`register.tsx`/`forgot-password.tsx` champs a icone~~ | ~~`FormControl` clonait le `<div>` wrapper de l'icone au lieu de l'`<input>`, le `<label htmlFor>` pointait vers un element non labellable~~ → **CORRIGE** (imbrication inversee, `FormControl` wrap directement l'input) | ~~Moyenne~~ Done |
+| **~~A11Y debt~~** | ~~Spinners `AuthGuard`/`PermissionGuard`~~ | ~~Aucun role/label, impossible a cibler sans testid~~ → **CORRIGE** : `role="status" aria-label="Chargement"` | ~~Basse~~ Done |
 
 ### Historique
 
 | Date | Action |
 |------|--------|
+| 2026-09-15 | **Deviation assumee du §1/§3 (dual-run)** : sur demande explicite, `features/auth/pages.test.tsx` + `guards.test.tsx` basculent de MSW vers le vrai backend local (`API_PROXY_TARGET` de `.env.local`). Nouveau helper `src/test/real-backend.ts` (passthrough MSW cible + login reel). Compte de test dedie `root`/`root`. Scenario 429 retire (risque de lockout compte partage). Bug bloquant decouvert et documente : `RegisterPage` hardcode un `type_employe_id` (383) inexistant sur ce backend — voir `docs/testing/BUG-register-employee-type-id.md`, pinne par un test qui reproduit le comportement casse. Le reste de la suite (321+ tests) reste sur MSW, inchange — cette bascule est scopee a Auth pages/guards uniquement, pas une decision generale de retirer MSW du projet. 352 tests, necessite le backend local lance. |
+| 2026-09-15 | Auth 2a-pages + 2b passent Done (auto) : `features/auth/pages.test.tsx` (18 tests — Login/Register/ForgotPassword, C2+C4) et `features/auth/guards.test.tsx` (15 tests — AuthGuard/GuestGuard/PermissionGuard). Fix a11y label sur champs a icone (`FormControl` wrap direct de l'input) + spinners `role="status"`. Dette documentee : ForgotPasswordPage placeholder non fonctionnel, bug UX validation HTML5 email sur register. 353 tests. MFA non touche (hors scope, pas de code MFA en prod). |
+| 2026-09-15 | Complements unites : 2c-mfa, 5b-clients, 6a-utils ; utils planning/admin/salle rattaches a 7a/8b/10b ; fiches domaine harmonisees. |
+| 2026-09-15 | Resegmentation unites de travail QA : Auth 2a-hooks/2a-pages, Stocks 4a/4b/4c, Commandes 5a/5b/5c, Dashboard 9a/9b. Regle 1 unite = auto → manuel → sign-off. |
+| 2026-09-15 | Qualité durcie zones couvertes (P0–P5) : hook-wrapper + assertions, Device Login A, Auth hooks A-, Résas CRUD A- (invalidation/a11y/fast-check), Stocks hooks A- (openapi-msw + invalidation). 321 tests. |
 | 2026-07-23 | Restructuration suivi : 10 features → 18 sous-features. Fichiers detail par domaine dans docs/testing/ (auth, reservations, stocks, commandes, carte, planning, admin, dashboard, salle). Chaque unite testable (hook, composant, util) individuellement trackee. |
 | 2026-07-23 | Stocks passe A : mapping extrait (22 tests), hooks stocks/ingredients/suppliers (24 tests). apiStockToProduct + toProductUnit → mapping.ts. Handlers existants réutilisés (articles.ts, commandes.ts). |
 | 2026-07-23 | Reservations passe B : composants (33 tests) + a11y (3 tests). NewReservationDialog (11), ReservationDetail (18), ReservationsTable (15). A11y findings: icon-only buttons, empty th, AlertDialogTrigger double-button. Gantt reporté passe C (Browser Mode). |

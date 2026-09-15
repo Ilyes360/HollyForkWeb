@@ -227,20 +227,20 @@ function StepAccount({ form }: StepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="sr-only">Prénom</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <HugeiconsIcon
-                    icon={UserIcon}
-                    className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
-                  />
+              <div className="relative">
+                <HugeiconsIcon
+                  icon={UserIcon}
+                  className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+                />
+                <FormControl>
                   <Input
                     {...field}
                     type="text"
                     className="pl-10"
                     placeholder="Prénom"
                   />
-                </div>
-              </FormControl>
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -265,12 +265,12 @@ function StepAccount({ form }: StepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="sr-only">Adresse email</FormLabel>
-            <FormControl>
-              <div className="relative">
-                <HugeiconsIcon
-                  icon={Mail01Icon}
-                  className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
-                />
+            <div className="relative">
+              <HugeiconsIcon
+                icon={Mail01Icon}
+                className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+              />
+              <FormControl>
                 <Input
                   {...field}
                   type="email"
@@ -278,8 +278,8 @@ function StepAccount({ form }: StepProps) {
                   className="pl-10"
                   placeholder="Adresse email"
                 />
-              </div>
-            </FormControl>
+              </FormControl>
+            </div>
             <FormMessage />
           </FormItem>
         )}
@@ -290,20 +290,20 @@ function StepAccount({ form }: StepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="sr-only">Mot de passe</FormLabel>
-            <FormControl>
-              <div className="relative">
-                <HugeiconsIcon
-                  icon={LockPasswordIcon}
-                  className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 opacity-30"
-                />
+            <div className="relative">
+              <HugeiconsIcon
+                icon={LockPasswordIcon}
+                className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 opacity-30"
+              />
+              <FormControl>
                 <PasswordInput
                   {...field}
                   autoComplete="new-password"
                   className="pl-10"
                   placeholder="Mot de passe"
                 />
-              </div>
-            </FormControl>
+              </FormControl>
+            </div>
             <FormMessage />
           </FormItem>
         )}
@@ -314,20 +314,20 @@ function StepAccount({ form }: StepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="sr-only">Confirmer le mot de passe</FormLabel>
-            <FormControl>
-              <div className="relative">
-                <HugeiconsIcon
-                  icon={LockPasswordIcon}
-                  className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 opacity-30"
-                />
+            <div className="relative">
+              <HugeiconsIcon
+                icon={LockPasswordIcon}
+                className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 opacity-30"
+              />
+              <FormControl>
                 <PasswordInput
                   {...field}
                   autoComplete="new-password"
                   className="pl-10"
                   placeholder="Confirmer le mot de passe"
                 />
-              </div>
-            </FormControl>
+              </FormControl>
+            </div>
             <FormMessage />
           </FormItem>
         )}

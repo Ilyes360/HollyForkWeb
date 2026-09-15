@@ -56,12 +56,12 @@ export default function ForgotPasswordPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="sr-only">Adresse email</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <HugeiconsIcon
-                        icon={Mail01Icon}
-                        className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
-                      />
+                  <div className="relative">
+                    <HugeiconsIcon
+                      icon={Mail01Icon}
+                      className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-30"
+                    />
+                    <FormControl>
                       <Input
                         {...field}
                         type="email"
@@ -70,8 +70,8 @@ export default function ForgotPasswordPage() {
                         placeholder="Adresse email"
                         disabled
                       />
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

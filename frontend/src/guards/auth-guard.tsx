@@ -52,7 +52,11 @@ export default function AuthGuard() {
   // Token present, verifying profile
   if (isLoading) {
     return (
-      <div className="flex min-h-svh items-center justify-center">
+      <div
+        role="status"
+        aria-label="Chargement"
+        className="flex min-h-svh items-center justify-center"
+      >
         <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )

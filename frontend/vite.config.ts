@@ -21,7 +21,11 @@ export default defineConfig(({ mode }) => {
       environment: "jsdom",
       setupFiles: "./src/test/setup.ts",
       env: {
-        VITE_API_BASE_URL: "http://localhost:3000/api",
+        // Real backend from .env.local (API_PROXY_TARGET) — MSW handlers use
+        // wildcard host patterns ("*/api/...") so this doesn't affect mocked
+        // tests. Tests that explicitly bypass MSW (passthrough) hit this URL
+        // for real, so it must point at a running backend.
+        VITE_API_BASE_URL: `${apiProxyTarget.replace(/\/$/, "")}/api`,
       },
       coverage: {
         provider: "v8",
