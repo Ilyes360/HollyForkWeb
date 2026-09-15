@@ -53,7 +53,7 @@ Manuel : [manual-auth.md](manual-auth.md) (+ register / forgot a completer).
 | Page | C2 | C4 a11y | Tests | Notes |
 |------|:--:|:-------:|-------|-------|
 | LoginPage | ✅ | ✅ | 9 | Rendu, validation vide, redirect `from`/`/`, transform email→username (reel), 400 reel (mauvais mdp), liens register/device, loading disabled |
-| RegisterPage | ✅ | ✅ | 5 | Rendu, validation vide (Requis/email/8 car.), mismatch password, 400 reel (email dupliquee), **bug bloquant pinné** (voir ci-dessous) |
+| RegisterPage | ✅ | ✅ | 5 | Rendu, validation vide (Requis/email/8 car.), mismatch password, 400 reel (email dupliquee), **happy path reel** (inscription reussie) |
 | ForgotPasswordPage | ✅ | ✅ | 3 | Page **placeholder non fonctionnelle** en prod (input+bouton `disabled`, `<form>` sans `onSubmit`) — voir dette ci-dessous |
 
 Fichier test : `features/auth/pages.test.tsx` (17 tests — 9+5+3).
@@ -64,7 +64,7 @@ Fichier test : `features/auth/pages.test.tsx` (17 tests — 9+5+3).
 
 **Dette documentee — double toast sur erreur login/register :** `useLogin`/`useRegister` utilisent `useMutationWithDefaults`, qui applique un `onError` par defaut (toast generique via `handleMutationError`) *en plus* du `onError` specifique passe au call-site (`mutate(data, { onError })`). Les deux se declenchent sur toute erreur. Comportement pre-existant, hors scope de cette unite — les tests assertent sur le comportement cible (message de champ / toast attendu), pas sur "un seul toast".
 
-**🔴 Bug bloquant pinné par un test — RegisterPage happy path :** `DEFAULT_EMPLOYEE_TYPE_ID = 383` (hardcode) ne correspond a aucune ligne `TypeEmploye` sur ce backend local (IDs reels : 25-32). Une inscription pourtant valide echoue silencieusement (400 sur un champ absent du formulaire, seul un toast technique generique s'affiche). Voir [BUG-register-employee-type-id.md](BUG-register-employee-type-id.md) pour l'analyse complete. Le test `RegisterPage > KNOWN BUG ...` **pinne ce comportement actuel** (il doit etre MIS A JOUR, pas supprime, une fois le bug corrige cote backend/frontend).
+**✅ Bug corrigé (2026-09-15) — RegisterPage happy path :** `DEFAULT_EMPLOYEE_TYPE_ID = 383` (hardcode) ne correspondait a aucune ligne `TypeEmploye` sur certains backends. Corrige des deux cotes : le backend (`holly_pi`, `UserRegistrationSerializer`) resout desormais "Super Admin Groupe" lui-meme par son nom quand `type_employe_id` est omis (garde-fou : toujours requis pour l'invitation admin) ; le frontend n'envoie plus ce champ a l'inscription publique. Voir [BUG-register-employee-type-id.md](BUG-register-employee-type-id.md) pour l'historique complet et les deux docs d'action associees. Le test `RegisterPage > registers successfully...` verifie desormais un vrai succes d'inscription de bout en bout.
 
 **Scenario retire — 429 (rate limit) :** impossible a provoquer de façon sure contre le compte de test partage `root` sans risquer un verrouillage qui casserait tous les autres tests. Retire de la suite plutot que fabrique.
 

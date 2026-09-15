@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Inscription publique cassee — Actions Backend</title>
+<style>
+  @page { margin: 1.5cm; size: A4; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; max-width: 700px; margin: 0 auto; padding: 2em; }
+  h1 { font-size: 16pt; border-bottom: 2px solid #e24b4a; padding-bottom: 6px; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 10pt; margin-bottom: 20px; }
+  h2 { font-size: 12pt; color: #e24b4a; margin-top: 24px; margin-bottom: 6px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 10pt; }
+  th, td { border: 1px solid #ddd; padding: 5px 8px; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+  code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }
+  pre { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-size: 9pt; overflow-x: auto; line-height: 1.4; }
+  .box { border-radius: 6px; padding: 10px 14px; margin: 12px 0; }
+  .box-red { border: 1px solid #e24b4a; background: #fef7f7; }
+  .box-title { font-weight: 700; color: #a32d2d; margin-bottom: 4px; }
+  ul { padding-left: 18px; margin: 4px 0; }
+  li { margin-bottom: 3px; }
+  .footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 9pt; color: #999; }
+  .tag { display: inline-block; font-size: 8pt; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+  .tag-new { background: #dcfce7; color: #166534; }
+  .tag-change { background: #fef3e2; color: #ba7517; }
+  .tag-break { background: #fee2e2; color: #991b1b; }
+  hr { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<h1>Inscription publique cassee — Actions Backend</h1>
+<p class="subtitle">Holy Fork | 15 septembre 2026</p>
+
+<div class="box box-red">
+  <div class="box-title">Probleme</div>
+  <ul>
+    <li>Le frontend envoie <code>type_employe_id: 383</code> en dur sur <code>POST /api/auth/register/</code> (inscription publique, gerant qui cree son compte)</li>
+    <li><code>383</code> est un ID auto-incremente de <code>TypeEmploye</code>, pas une valeur stable — il n'existe pas sur toutes les bases (confirme en local : IDs reels 25-32, <code>383</code> absent)</li>
+    <li>Resultat : <code>400 {"type_employe_id": ["Cle primaire « 383 » non valide - l'objet n'existe pas."]}</code> — inscription impossible, et l'erreur n'est meme pas affichable proprement cote frontend (le champ n'existe pas dans le formulaire)</li>
+    <li>Testable en 3 lignes : voir §4</li>
+  </ul>
+</div>
+
+<h2>1. Rendre <code>type_employe_id</code> optionnel a l'inscription publique <span class="tag tag-change">MODIFIER</span></h2>
+
+<p><code>UserRegistrationSerializer</code> (<code>apps/authentication/serializers.py</code>) est partage par deux flux :</p>
+<ul>
+  <li><code>UserRegistrationView</code> (<code>apps/authentication/views.py</code>, <code>AllowAny</code>) — inscription publique, appelee par le frontend <code>/register</code>. C'est le flux casse.</li>
+  <li>L'invitation admin (<code>apps/settings/views.py</code>, <code>IsAuthenticated</code>) — instancie le meme serializer avec <code>context={'is_admin_invite': True}</code>, et choisit explicitement le role de l'employe invite. <b>Ce flux doit continuer d'exiger <code>type_employe_id</code>.</b></li>
+</ul>
+
+<p>Rendre le champ optionnel, et resoudre "Super Admin Groupe" cote serveur quand il est absent (uniquement pour l'inscription publique) :</p>
+
+<pre>
+# apps/authentication/serializers.py — UserRegistrationSerializer
+
+DEFAULT_SELF_REGISTER_ROLE = "Super Admin Groupe"
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    # ... champs existants inchanges ...
+
+    type_employe_id = serializers.PrimaryKeyRelatedField(
+        queryset=TypeEmploye.objects.all(),
+        required=False,   # ← etait required=True
+        write_only=True
+    )
+
+    def validate(self, attrs):
+        # ... validations existantes (password2, PIN unique) inchangees ...
+
+        # L'invitation admin doit toujours choisir un role explicitement.
+        # Seule l'inscription publique (self-register) peut s'en passer.
+        if self.context.get('is_admin_invite') and not attrs.get('type_employe_id'):
+            raise serializers.ValidationError({
+                "type_employe_id": "Ce champ est obligatoire pour une invitation."
+            })
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password2', None)
+        employee_last_name = validated_data.pop('employee_last_name')
+        employee_first_name = validated_data.pop('employee_first_name')
+        pin_code = validated_data.pop('pin_code')
+        type_employe = validated_data.pop('type_employe_id', None)
+        restaurant = validated_data.pop('restaurant_id', None)
+
+        if type_employe is None:
+            # Inscription publique : le gerant qui s'inscrit doit avoir
+            # tous les droits — resolu par nom, pas par un PK fige.
+            type_employe = TypeEmploye.objects.get(nom_type=DEFAULT_SELF_REGISTER_ROLE)
+
+        user = User.objects.create_user(...)  # inchange
+        employe = Employe.objects.create(
+            user=user,
+            nom=employee_last_name,
+            prenom=employee_first_name,
+            pin_code=pin_code,
+            type_employe=type_employe,
+        )
+        # ... reste inchange ...
+</pre>
+
+<p><b>Pourquoi resoudre par <code>nom_type</code> et pas par ID :</b> <code>TypeEmploye.nom_type</code> a deja une contrainte <code>unique=True</code> (voir <code>apps/staff/models.py</code>) — c'est la seule valeur stable disponible sur ce modele, contrairement a l'ID auto-incremente qui varie selon l'historique de chaque base.</p>
+
+<hr>
+
+<h2>2. Garde-fou si le role par defaut n'existe pas <span class="tag tag-new">RECOMMANDE</span></h2>
+
+<p>Si <code>TypeEmploye.objects.get(nom_type="Super Admin Groupe")</code> leve <code>DoesNotExist</code> (base mal seedee), retourner une erreur explicite plutot qu'un 500 :</p>
+
+<pre>
+from django.core.exceptions import ObjectDoesNotExist
+
+if type_employe is None:
+    try:
+        type_employe = TypeEmploye.objects.get(nom_type=DEFAULT_SELF_REGISTER_ROLE)
+    except ObjectDoesNotExist:
+        raise serializers.ValidationError({
+            "non_field_errors": (
+                f"Configuration serveur incomplete : le role "
+                f"'{DEFAULT_SELF_REGISTER_ROLE}' n'existe pas en base."
+            )
+        })
+</pre>
+
+<hr>
+
+<h2>3. Effet de bord a verifier : <code>type_employe_id</code> optionnel dans le schema OpenAPI</h2>
+
+<table>
+  <tr><th style="width:160px">Avant</th><td><code>type_employe_id</code> requis dans <code>UserRegistrationSerializer</code> → present dans <code>required: [...]</code> du schema genere</td></tr>
+  <tr><th>Apres</th><td>retire de <code>required</code> — regenerer le schema (<code>spectacular --validate</code>) et le publier pour que le frontend le recupere (voir doc frontend correspondante)</td></tr>
+</table>
+
+<p>C'est un changement <b>non-breaking</b> pour l'invitation admin (elle envoie toujours le champ), et <b>breaking pour aucun consommateur existant</b> puisqu'on assouplit une contrainte (optionnel au lieu de requis), pas l'inverse.</p>
+
+<hr>
+
+<h2>4. Comment verifier le fix</h2>
+
+<pre>
+# Avant le fix — echoue en 400 :
+curl -X POST http://localhost:8000/api/auth/register/ -H "Content-Type: application/json" -d '{
+  "username": "qa_test", "email": "qa_test@example.com",
+  "password": "SecurePass1!", "password2": "SecurePass1!",
+  "employee_first_name": "QA", "employee_last_name": "Test",
+  "pin_code": "1234", "restaurant_id": 1
+}'
+# → {"type_employe_id": ["Ce champ est obligatoire."]}  (avant : PK 383 invalide)
+
+# Apres le fix — meme requete, SANS type_employe_id → 201, role assigne = "Super Admin Groupe"
+curl -X POST http://localhost:8000/api/auth/register/ ... (meme body, sans type_employe_id)
+# → 201 {"message": "...", "employee_type": "Super Admin Groupe", ...}
+
+# L'invitation admin continue d'exiger le champ :
+curl -X POST http://localhost:8000/api/settings/... -H "Authorization: Bearer $ADMIN_TOKEN" -d '{... sans type_employe_id ...}'
+# → 400 {"type_employe_id": "Ce champ est obligatoire pour une invitation."}
+</pre>
+
+<h2>5. Resume</h2>
+
+<table>
+  <tr><th>Action</th><th>Fichier</th><th>Effort</th></tr>
+  <tr><td><span class="tag tag-change">MODIFIER</span> <code>type_employe_id</code> optionnel + resolution par nom</td><td><code>apps/authentication/serializers.py</code></td><td>15 min</td></tr>
+  <tr><td><span class="tag tag-new">AJOUTER</span> Garde-fou role manquant</td><td><code>apps/authentication/serializers.py</code></td><td>5 min</td></tr>
+  <tr><td><span class="tag tag-break">VERIFIER</span> Regenerer + publier le schema OpenAPI</td><td>CI / <code>spectacular</code></td><td>5 min</td></tr>
+</table>
+
+<p><b>Effort total : ~25 min.</b> Une fois livre, le frontend a une action correspondante a faire — voir <code>register-employee-type-id-frontend.md</code> (dossier <code>docs/</code> du repo frontend).</p>
+
+<div class="footer">
+  Audit testing frontend Holy Fork — equipe frontend. Contexte complet : docs/testing/BUG-register-employee-type-id.md (repo frontend).
+</div>
+
+</body>
+</html>

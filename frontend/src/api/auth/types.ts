@@ -42,7 +42,11 @@ export type RegisterRequest = {
   employeeFirstName: string
   employeeLastName: string
   pinCode: string
-  typeEmployeId: number
+  /**
+   * Omis pour l'inscription publique (le backend assigne "Super Admin
+   * Groupe" lui-même) — requis uniquement pour l'invitation admin.
+   */
+  typeEmployeId?: number
   restaurantId: number
 }
 

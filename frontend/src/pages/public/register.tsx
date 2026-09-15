@@ -29,9 +29,6 @@ import {
 } from "@/components/ui/form"
 import { usePageTitle } from "@/hooks/use-page-title"
 
-// Super Admin Groupe — un gérant qui s'inscrit doit avoir tous les droits
-const DEFAULT_EMPLOYEE_TYPE_ID = 383
-
 /**
  * Placeholder restaurant ID — backend requires restaurant_id on registration.
  * The real restaurant is created post-login via the onboarding wizard.
@@ -88,7 +85,6 @@ export default function RegisterPage() {
         employeeFirstName: data.firstName,
         employeeLastName: data.lastName,
         pinCode: generatePin(),
-        typeEmployeId: DEFAULT_EMPLOYEE_TYPE_ID,
         restaurantId: PLACEHOLDER_RESTAURANT_ID,
       },
       {

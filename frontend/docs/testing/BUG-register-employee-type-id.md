@@ -1,8 +1,25 @@
 # Bug bloquant — Inscription publique cassée par un ID hardcodé
 
-> Statut : **ouvert, bloquant**. Trouvé le 2026-09-15 en écrivant des tests d'intégration
+> Statut : **✅ résolu le 2026-09-15**. Trouvé en écrivant des tests d'intégration
 > Auth contre un vrai backend (`localhost:8000`), au lieu de mocks MSW.
 > Périmètre : Auth — unité 2a-pages (RegisterPage).
+>
+> **Correction appliquée :**
+> - Backend (`holly_pi`, branche `dev`) → `apps/authentication/serializers.py`,
+>   `UserRegistrationSerializer` : `type_employe_id` devient optionnel à
+>   l'inscription publique, résolu côté serveur par `nom_type="Super Admin Groupe"`
+>   (garde-fou : toujours requis pour l'invitation admin via `is_admin_invite`).
+>   Détail complet : [`docs/register-employee-type-id-backend.html`](../register-employee-type-id-backend.html).
+> - Frontend (ce repo) → `register.tsx` n'envoie plus `type_employe_id` ;
+>   `RegisterRequest.typeEmployeId` devient optionnel dans
+>   `src/api/auth/types.ts`. Détail complet :
+>   [`docs/register-employee-type-id-frontend.md`](../register-employee-type-id-frontend.md).
+> - Vérifié en réel (curl) : inscription publique sans le champ → `201`,
+>   rôle assigné = "Super Admin Groupe" ; invitation admin sans le champ →
+>   `400` explicite ; invitation admin avec le champ → `201`.
+> - Test `RegisterPage > registers successfully...` (`pages.test.tsx`) vérifie
+>   désormais un vrai succès d'inscription de bout en bout contre le vrai
+>   backend, à la place de l'ancien test qui pinnait le bug.
 
 ## Problème
 

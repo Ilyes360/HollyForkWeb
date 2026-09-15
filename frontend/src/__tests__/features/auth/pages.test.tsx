@@ -392,15 +392,16 @@ describe("RegisterPage", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("KNOWN BUG (see docs/testing/BUG-register-employee-type-id.md): a fully valid new registration silently fails", async () => {
-    // register.tsx hardcodes type_employe_id=383, which does not exist on
-    // this backend (local seed only has ids 25-32). The real backend
-    // rejects the request, but type_employe_id isn't a form field, so no
-    // error message reaches the user at all. This test pins that actual
-    // (broken) behavior — it must be updated, not deleted, once the bug is
-    // fixed, since a real fix would make the registration succeed.
+  it("registers successfully against the real backend and navigates to /login", async () => {
+    // Regression test for docs/testing/BUG-register-employee-type-id.md:
+    // register.tsx used to hardcode a stale type_employe_id (383), which
+    // doesn't exist on every backend and made public registration fail
+    // silently. The backend now resolves the default role ("Super Admin
+    // Groupe") itself when the field is omitted — see
+    // docs/register-employee-type-id-backend.html. This test proves a
+    // fully valid registration actually succeeds end to end.
     const user = userEvent.setup()
-    const toastErrorSpy = vi.spyOn(toast, "error")
+    const toastSuccessSpy = vi.spyOn(toast, "success")
     const uniqueEmail = `qa.register.${Date.now()}@holyfork.fr`
     renderRegisterPage()
 
@@ -409,18 +410,10 @@ describe("RegisterPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /créer mon compte/i })
-      ).not.toBeDisabled()
+        screen.getByRole("heading", { name: "Login Page" })
+      ).toBeInTheDocument()
     })
-    expect(
-      screen.queryByRole("heading", { name: "Login Page" })
-    ).not.toBeInTheDocument()
-    // No form field exists for type_employe_id, so register.tsx's own
-    // onError can't surface it. The only visible trace is the *generic*
-    // fallback toast fired by useMutationWithDefaults's default onError —
-    // a raw ky/HTTP message, not the actual "type_employe_id invalide"
-    // reason. The user sees no actionable explanation of what went wrong.
-    expect(toastErrorSpy).toHaveBeenCalledWith(expect.stringContaining("400"))
+    expect(toastSuccessSpy).toHaveBeenCalledWith("Compte créé avec succès !")
   })
 })
 
